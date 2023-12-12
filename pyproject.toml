@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools_scm[toml]"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "polymath"
+name = "rms-polymath"
 dynamic = ["version"]
 description = "Wrapper for NumPy that adds easy masks and vector computation"
 readme = "README.md"
