@@ -381,7 +381,7 @@ def _validate_pickle_reference(references):
 # Support for fpzip compression and decompression
 ################################################################################
 
-def fpzip_compress(array, digits=16, dtype=np.float_):
+def fpzip_compress(array, digits=16, dtype=np.float64):
     """Return an fpzip-compressed array plus the number of bits that have been
     zeroed.
     """
@@ -486,7 +486,7 @@ def fpzip_decompress(fpzip_bytes, shape, bits):
     bias.
     """
 
-    floats = fpzip.decompress(fpzip_bytes).astype(np.float_).reshape(shape)
+    floats = fpzip.decompress(fpzip_bytes).astype(np.float64).reshape(shape)
 
     if bits == 0:
         return floats
@@ -663,7 +663,7 @@ def _encode_floats(values, rank, digits, reference):
 
     # Deal with a small object quickly
     if values.size <= FPZIP_ENCODING_CUTOFF:
-        array = np.require(values, dtype=np.float_, requirements=['C', 'A'])
+        array = np.require(values, dtype=np.float64, requirements=['C', 'A'])
         return ('literal', array)
 
     # Handle "single" and "double"

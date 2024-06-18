@@ -355,7 +355,7 @@ def stack(*args, **keywords):
 
     # Construct the array
     if floats_found:
-        dtype = np.float_
+        dtype = np.float64
     elif ints_found:
         dtype = np.int_
     else:
