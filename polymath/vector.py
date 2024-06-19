@@ -789,7 +789,7 @@ class Vector(Qube):
             scalars.append(scalar)
             newshape += list(scalar._shape_)
             if scalar.is_float():
-                dtype = np.float_
+                dtype = np.float64
 
         newshape = tuple(newshape)
         newrank = len(newshape)

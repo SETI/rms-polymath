@@ -747,7 +747,7 @@ class Qube(object):
             if dtype == 'float':
                 if arg.dtype.kind == 'f':
                     return arg
-                return np.asfarray(arg)
+                return np.asarray(arg, dtype=np.double)
 
             if dtype == 'int':
                 if arg.dtype.kind in ('i', 'u'):
@@ -2070,7 +2070,7 @@ class Qube(object):
                 obj.__init__(values.astype(np.int_), self._mask_)
             elif self.FLOATS_OK:
                 obj = Qube.__new__(type(self))
-                obj.__init__(values.astype(np.float_), self._mask_)
+                obj.__init__(values.astype(np.float64), self._mask_)
             else:
                 obj = Qube.SCALAR_CLASS(values.astype(np.int_), self._mask_,
                                         op='as_numeric()')
@@ -2115,7 +2115,7 @@ class Qube(object):
         if isinstance(values, np.ndarray):
             if self.FLOATS_OK:
                 obj = Qube.__new__(type(self))
-                obj.__init__(values.astype(np.float_), self._mask_,
+                obj.__init__(values.astype(np.float64), self._mask_,
                              derivs=self._derivs_, example=self)
             else:
                 raise TypeError('%s object cannot have data type float'
@@ -4330,7 +4330,7 @@ class Qube(object):
         # Array case
         else:
             if self.is_float():
-                new_value = np.zeros(self._item_, dtype=np.float_)
+                new_value = np.zeros(self._item_, dtype=np.float64)
             else:
                 new_value = np.zeros(self._item_, dtype=np.int_)
 
@@ -4823,7 +4823,7 @@ class Qube(object):
 
             # Remember any floats encountered
             if scalar.is_float():
-                dtype = np.float_
+                dtype = np.float64
 
         # Construct the values array
         new_drank = len(new_denom)
