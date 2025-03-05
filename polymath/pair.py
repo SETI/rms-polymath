@@ -11,7 +11,20 @@ from polymath.scalar import Scalar
 from polymath.vector import Vector
 
 class Pair(Vector):
-    """A PolyMath subclass containing coordinate pairs or 2-vectors.
+    """Represent coordinate pairs or 2-vectors in the PolyMath framework.
+
+    This class provides specialized functionality for working with 2-element vectors,
+    including coordinate pair operations and 2D transformations.
+
+    Attributes:
+        NRANK (int): The number of numerator axes, which is 1 for pairs.
+        NUMER (tuple): Shape of the numerator (2,).
+        FLOATS_OK (bool): True as floating-point numbers are allowed.
+        INTS_OK (bool): True as integers are allowed.
+        BOOLS_OK (bool): False as booleans are not allowed.
+        UNITS_OK (bool): True as units are allowed.
+        DERIVS_OK (bool): True as derivatives are allowed.
+        DEFAULT_VALUE (ndarray): Default value [1,1] for unspecified elements.
     """
 
     NRANK = 1           # the number of numerator axes.
@@ -30,12 +43,19 @@ class Pair(Vector):
     #===========================================================================
     @staticmethod
     def as_pair(arg, recursive=True):
-        """The argument converted to Pair if possible.
+        """Convert the argument to Pair if possible.
 
-        If recursive is True, derivatives will also be converted.
+        Parameters:
+            arg (object): The object to convert to Pair.
+            recursive (bool, optional): If True, derivatives will also be
+                converted. Default is True.
 
-        As a special case as_pair() of a single value returns a Pair with the
-        value repeated.
+        Returns:
+            Pair: The converted Pair object.
+
+        Note:
+            As a special case, as_pair() of a single value returns a Pair with the
+            value repeated.
         """
 
         # Pair: just return the input arg
@@ -70,21 +90,25 @@ class Pair(Vector):
     #===========================================================================
     @staticmethod
     def from_scalars(x, y, recursive=True, readonly=False):
-        """A Pair constructed by combining two scalars.
+        """Construct a Pair by combining two scalars.
 
-        Inputs:
-            args        any number of Scalars or arguments that can be casted
-                        to Scalars. They need not have the same shape, but it
-                        must be possible to cast them to the same shape. A value
-                        of None is converted to a zero-valued Scalar that
-                        matches the denominator shape of the other arguments.
+        Parameters:
+            x (Scalar or convertible): First component of the pair.
+            y (Scalar or convertible): Second component of the pair.
+            recursive (bool, optional): True to include all the derivatives. The
+                returned object will have derivatives representing the union of
+                all the derivatives found amongst the scalars. Default is True.
+            readonly (bool, optional): True to return a read-only object; False
+                to return something potentially writable. Default is False.
 
-            recursive   True to include all the derivatives. The returned object
-                        will have derivatives representing the union of all the
-                        derivatives found amongst the scalars. Default is True.
+        Returns:
+            Pair: A new Pair object constructed from the two scalars.
 
-            readonly    True to return a read-only object; False (the default)
-                        to return something potentially writable.
+        Note:
+            Input arguments need not have the same shape, but it must be possible
+            to cast them to the same shape. A value of None is converted to a
+            zero-valued Scalar that matches the denominator shape of the other
+            arguments.
         """
 
         return Qube.from_scalars(x, y, recursive=recursive, readonly=readonly,
@@ -92,9 +116,14 @@ class Pair(Vector):
 
     #===========================================================================
     def swapxy(self, recursive=True):
-        """A pair object in which the first and second values are switched.
+        """Return a pair object in which the first and second values are switched.
 
-        If recursive is True, derivatives will also be swapped.
+        Parameters:
+            recursive (bool, optional): If True, derivatives will also be swapped.
+                Default is True.
+
+        Returns:
+            Pair: A new Pair with x and y values swapped.
         """
 
         if not recursive:
@@ -123,9 +152,14 @@ class Pair(Vector):
 
     #===========================================================================
     def rot90(self, recursive=True):
-        """A pair object rotated 90 degrees from the origin, (x,y) -> (y,-x).
+        """Return a pair object rotated 90 degrees from the origin, (x,y) -> (y,-x).
 
-        If recursive is True, derivatives will also be rotated.
+        Parameters:
+            recursive (bool, optional): If True, derivatives will also be rotated.
+                Default is True.
+
+        Returns:
+            Pair: A new Pair rotated 90 degrees counterclockwise.
         """
 
         # Roll the array axis to the end
@@ -152,13 +186,17 @@ class Pair(Vector):
 
     #===========================================================================
     def angle(self, recursive=True):
-        """Polar angle of this Pair as measured from the X-axis toward the
+        """Return the polar angle of this Pair measured from the X-axis toward the
         Y-axis.
 
         The returned value will always fall between zero and 2*pi.
 
-        Inputs:
-            recursive   True to include the derivatives. Default is True.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            Scalar: The angle in radians, between 0 and 2π.
         """
 
         (x, y) = self.to_scalars(recursive=recursive)
@@ -166,20 +204,25 @@ class Pair(Vector):
 
     #===========================================================================
     def clip2d(self, lower, upper, remask=False):
-        """A copy with values clipped to fall within 2D limits.
+        """Return a copy with values clipped to fall within 2D limits.
 
         Values get moved to the nearest location within a rectangle defined by
         the lower and upper limits.
 
-        Optionally, the clipped values can also be masked.
+        Parameters:
+            lower (Pair or None): Coordinates of the lower limit. None or masked
+                value to ignore.
+            upper (Pair or None): Coordinates of the upper limit (inclusive). None
+                or masked value to ignore.
+            remask (bool, optional): True to include the new mask into the object's
+                mask; False to replace the values but leave them unmasked.
+                Default is False.
 
-        Inputs:
-            lower           coordinates of the lower limit. None or masked value
-                            to ignore.
-            upper           coordinates of the upper limit (inclusive). None or
-                            masked value to ignore.
-            remask          True to include the new mask into the object's mask;
-                            False to replace the values but leave them unmasked.
+        Returns:
+            Pair: A new Pair with values clipped to the specified limits.
+
+        Raises:
+            ValueError: If lower or upper has more than two values.
         """
 
         # Make sure the lower limit is either None or an unmasked Pair

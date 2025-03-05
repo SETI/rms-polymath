@@ -10,8 +10,21 @@ from polymath.scalar import Scalar
 from polymath.units  import Units
 
 class Vector(Qube):
+    """Represent 1-D vectors of arbitrary length in the PolyMath framework.
+
+    This class handles arbitrary length one-dimensional vectors and provides
+    operations for vector arithmetic, dot products, and other mathematical
+    operations.
+
+    Attributes:
+        NRANK (int): The number of numerator axes, which is 1 for vectors.
+        NUMER (None): Shape of the numerator, defined by subclasses.
+        FLOATS_OK (bool): True as floating-point numbers are allowed.
+        INTS_OK (bool): True as integers are allowed.
+        BOOLS_OK (bool): False as booleans are not allowed.
+        UNITS_OK (bool): True as units are allowed.
+        DERIVS_OK (bool): True as derivatives are allowed.
     """
-    A PolyMath subclass containing 1-D vectors of arbitrary length."""
 
     NRANK = 1           # the number of numerator axes.
     NUMER = None        # shape of the numerator.
@@ -27,8 +40,22 @@ class Vector(Qube):
     #===========================================================================
     def __init__(self, arg, mask=False, derivs={}, units=None,
                        nrank=None, drank=None, example=None, default=None):
-        """Tweak the default constructor to convert a Python scalar to an array
-        of shape (1,).
+        """Initialize a Vector object.
+
+        Parameters:
+            arg (ndarray, float, int, list, or tuple): The input data to construct
+                the Vector. A Python scalar will be converted to an array of shape (1,).
+            mask (bool or ndarray, optional): True or boolean array indicating which
+                values in the Vector should be masked. Default is False.
+            derivs (dict, optional): Dictionary of derivatives. Default is empty.
+            units (Units, optional): The units associated with the values.
+                Default is None.
+            nrank (int, optional): The number of numerator axes. Default is None.
+            drank (int, optional): The number of denominator axes. Default is None.
+            example (Qube, optional): Optional Qube to use as a template for
+                constructing this Vector. Default is None.
+            default (ndarray, optional): Default value to use if no value is
+                provided. Default is None.
         """
 
         if isinstance(arg, (float,int)):
@@ -41,10 +68,15 @@ class Vector(Qube):
     #===========================================================================
     @staticmethod
     def as_vector(arg, recursive=True):
-        """The argument converted to Scalar if possible.
+        """Convert the argument to a Vector if possible.
 
-        If recursive is True, derivatives will also be converted. However, note
-        that derivatives are not necessarily removed when recursive is False.
+        Parameters:
+            arg (object): The object to convert to Vector.
+            recursive (bool, optional): If True, derivatives will also be
+                converted. Default is True.
+
+        Returns:
+            Vector: The converted Vector object.
         """
 
         if isinstance(arg, Vector):
@@ -94,21 +126,29 @@ class Vector(Qube):
 
     #===========================================================================
     def to_scalar(self, indx, recursive=True):
-        """One of the components of a Vector as a Scalar.
+        """Return one of the components of this Vector as a Scalar.
 
-        Input:
-            indx        index of the vector component.
-            recursive   True to extract the derivatives as well.
+        Parameters:
+            indx (int): Index of the vector component.
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            Scalar: The component at the specified index.
         """
 
         return self.extract_numer(0, indx, Scalar, recursive=recursive)
 
     #===========================================================================
     def to_scalars(self, recursive=True):
-        """All the components of a Vector as a tuple of Scalars.
+        """Return all the components of this Vector as a tuple of Scalars.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            tuple: A tuple containing each component as a Scalar.
         """
 
         results = []
@@ -120,10 +160,19 @@ class Vector(Qube):
 
     #===========================================================================
     def to_pair(self, axes=(0,1), recursive=True):
-        """A Pair containing two selected components of a Vector.
+        """Return a Pair containing two selected components of this Vector.
 
         Overrides the default method to include an 'axes' argument, which can
         extract any two components of a Vector very efficiently.
+
+        Parameters:
+            axes (tuple, optional): Indices of the two components to extract.
+                Default is (0,1).
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Pair: A Pair object containing the two selected components.
         """
 
         i0 = axes[0]
@@ -145,38 +194,43 @@ class Vector(Qube):
     #===========================================================================
     @staticmethod
     def from_scalars(*args, **keywords):
-        """A Vector constructed by combining scalars.
+        """Construct a Vector by combining scalar components.
 
-        Inputs:
-            x, y, z     Three Scalars defining the vector's x, y and z
-                        components. They need not have the same shape, but it
-                        must be possible to cast them to the same shape. A value
-                        of None is converted to a zero-valued Scalar that
-                        matches the denominator shape of the other arguments.
+        Parameters:
+            *args: Scalar objects defining the vector's components. They need not
+                have the same shape, but it must be possible to cast them to the
+                same shape. A value of None is converted to a zero-valued Scalar
+                that matches the denominator shape of the other arguments.
+            **keywords: Additional keyword arguments:
+                recursive (bool, optional): True to include all the derivatives.
+                    The returned object will have derivatives representing the
+                    union of all the derivatives found among the arguments.
+                    Default is True.
+                readonly (bool, optional): True to return a read-only object;
+                    False to return something potentially writable. Default is
+                    False.
 
-            recursive   True to include all the derivatives. The returned object
-                        will have derivatives representing the union of all the
-                        derivatives found among x, y and z. Default is True.
-
-            readonly    True to return a read-only object; False (the default)
-                        to return something potentially writable.
+        Returns:
+            Vector: A vector constructed from the provided scalar components.
         """
 
         return Qube.from_scalars(*args, classes=[Vector], **keywords)
 
     #===========================================================================
     def as_index(self, masked=None):
-        """This object made suitable for indexing an N-dimensional NumPy array.
+        """Convert this object to a form suitable for indexing a NumPy array.
 
-        The returned object is a tuple of NumPy arrays, each of the same shape.
-        Each array contains indices along the corresponding axis of the array
-        being indexed.
+        The returned object is a tuple of NumPy arrays, each containing indices
+        along the corresponding axis of the array being indexed.
 
-        Input:
-            masked      the index or list/tuple/array of indices to insert in
-                        the place of a masked item. If None and the object
-                        contains masked elements, the array will be flattened
-                        and masked elements will be skipped over.
+        Parameters:
+            masked (scalar, list, tuple, or array, optional): The index or indices to
+                insert in place of masked items. If None and the object contains masked
+                elements, the array will be flattened and masked elements will be
+                skipped over.
+
+        Returns:
+            tuple: A tuple of NumPy arrays suitable for indexing.
         """
 
         (index, mask) = self.as_index_and_mask((masked is None), masked)
@@ -184,18 +238,23 @@ class Vector(Qube):
 
     #===========================================================================
     def as_index_and_mask(self, purge=False, masked=None):
-        """This object made suitable for indexing and masking an N-dimensional
-        array.
+        """Convert this object to a form suitable for indexing and masking an array.
 
-        Input:
-            purge           True to eliminate masked elements from the index;
-                            False to retain them but leave them masked.
-            masked          the index value to insert in place of any masked.
-                            item. This may be needed because each value in the
-                            returned index array must be an integer and in
-                            range. If None (the default), then masked values
-                            in the index will retain their unmasked values when
-                            the index is applied.
+        Parameters:
+            purge (bool, optional): True to eliminate masked elements from the index;
+                False to retain them but leave them masked. Default is False.
+            masked (scalar, optional): The index value to insert in place of any masked
+                item. This may be needed because each value in the returned index array
+                must be an integer and in range. If None (the default), then masked values
+                in the index will retain their unmasked values when the index is applied.
+
+        Returns:
+            tuple: A tuple containing (index, mask), where index is suitable for
+                indexing a NumPy ndarray and mask indicates which values are masked.
+
+        Raises:
+            IndexError: If this object contains floating-point values.
+            ValueError: If this object has a denominator.
         """
 
         if self.is_float():
@@ -239,28 +298,33 @@ class Vector(Qube):
     #===========================================================================
     def int(self, top=None, remask=False, clip=False, inclusive=True,
                   shift=None):
-        """An integer (floor) version of this Vector or subclass.
+        """Return an integer (floor) version of this Vector.
 
         If this object already contains integers, it is returned as is.
-        Otherwise, a copy is returned. Derivatives are always removed. Units
-        are disallowed.
+        Otherwise, a copy is returned with values converted to integers.
+        Derivatives are always removed and units are disallowed.
 
-        Inputs:
-            top         Optional tuple of nominal maximum integer values,
-                        equivalent to the array shape.
-            remask      If True, values less than zero or greater than the
-                        specified top values (if provided) are masked.
-            clip        If True, values less than zero or greater than the
-                        specified top values are clipped. Use a tuple of
-                        booleans to handle the axes differently.
-            inclusive   True to leave the top limits unmasked; False to mask
-                        them. Use a tuple of booleans to handle the axes
-                        differently.
-            shift       True to shift any occurrences of the top limit down by
-                        one; False to leave them unchanged. Use a tuple of
-                        booleans to handle the axes differently. shift=True
-                        implies inclusive=True. Default None lets shift match
-                        the input value of inclusive.
+        Parameters:
+            top (tuple, optional): Tuple of maximum integer values for each
+                component, equivalent to the array shape. Default is None.
+            remask (bool, optional): If True, values less than zero or greater than
+                the specified top values (if provided) are masked. Default is False.
+            clip (bool or tuple of bool, optional): If True, values less than zero
+                or greater than the specified top values are clipped. Use a tuple
+                of booleans to handle the axes differently. Default is False.
+            inclusive (bool or tuple of bool, optional): True to leave the top
+                limits unmasked; False to mask them. Use a tuple of booleans to
+                handle the axes differently. Default is True.
+            shift (bool or tuple of bool, optional): True to shift any occurrences
+                of the top limit down by one; False to leave them unchanged. Use a
+                tuple of booleans to handle the axes differently. Default is None,
+                which sets shift to match the value of inclusive.
+
+        Returns:
+            Vector: An integer version of this Vector.
+
+        Raises:
+            ValueError: If this Vector has units or denominators.
         """
 
         def _as_tuple(item, name):
@@ -337,8 +401,12 @@ class Vector(Qube):
     def as_column(self, recursive=True):
         """Convert the Vector to an Nx1 column matrix.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Matrix: An Nx1 matrix representation of this Vector.
         """
 
         return self.reshape_numer(self._numer_ + (1,), Qube.MATRIX_CLASS,
@@ -348,8 +416,12 @@ class Vector(Qube):
     def as_row(self, recursive=True):
         """Convert the Vector to a 1xN row matrix.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Matrix: A 1xN matrix representation of this Vector.
         """
 
         return self.reshape_numer((1,) + self._numer_, Qube.MATRIX_CLASS,
@@ -359,18 +431,28 @@ class Vector(Qube):
     def as_diagonal(self, recursive=True):
         """Convert the vector to a diagonal matrix.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Matrix: A diagonal matrix where the diagonal elements are the components
+                of this Vector.
         """
 
         return Qube.as_diagonal(self, 0, Qube.MATRIX_CLASS, recursive=recursive)
 
     #===========================================================================
     def dot(self, arg, recursive=True):
-        """The dot product of this vector and another as a Scalar.
+        """Calculate the dot product of this vector and another.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            arg (Vector or vector-like): The vector to dot with this one.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Scalar: The dot product as a Scalar.
         """
 
         arg = self.as_this_type(arg, recursive=recursive, coerce=False)
@@ -378,32 +460,42 @@ class Vector(Qube):
 
     #===========================================================================
     def norm(self, recursive=True):
-        """The length of this Vector as a Scalar.
+        """Calculate the Euclidean length (magnitude) of this Vector.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Scalar: The Euclidean norm of this Vector.
         """
 
         return Qube.norm(self, 0, Scalar, recursive=recursive)
 
     #===========================================================================
     def norm_sq(self, recursive=True):
-        """The squared length of this Vector as a Scalar.
+        """Calculate the squared length of this Vector.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Scalar: The squared Euclidean norm of this Vector.
         """
 
         return Qube.norm_sq(self, 0, Scalar, recursive=recursive)
 
     #===========================================================================
     def unit(self, recursive=True):
-        """This vector converted to unit length.
+        """Convert this vector to a unit vector (normalized to length 1).
 
-        The returned object is an instance of the same subclass as this object.
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Input:
-            recursive   True to include the derivatives.
+        Returns:
+            Vector: A unit vector in the same direction as this Vector.
         """
 
         if recursive:
@@ -413,12 +505,16 @@ class Vector(Qube):
 
     #===========================================================================
     def with_norm(self, norm=1., recursive=True):
-        """This vector scaled to the specified length.
+        """Scale this vector to the specified length.
 
-        The returned object is an instance of the same subclass as this object.
+        Parameters:
+            norm (float or Scalar, optional): The desired length. Default is 1.0.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Input:
-            recursive   True to include the derivatives.
+        Returns:
+            Vector: A vector in the same direction as this one but with the specified
+                length.
         """
 
         norm = Scalar.as_scalar(norm, recursive=recursive)
@@ -430,12 +526,16 @@ class Vector(Qube):
 
     #===========================================================================
     def cross(self, arg, recursive=True):
-        """The cross product of this vector with another.
+        """Calculate the cross product of this vector with another.
 
-        The returned object is an instance of the same subclass as this object.
+        Parameters:
+            arg (Vector or vector-like): The vector to cross with this one.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Input:
-            recursive   True to include the derivatives.
+        Returns:
+            Vector: The cross product vector. For 3-vectors, returns a Vector; for
+                2-vectors, returns a Scalar.
         """
 
         arg = self.as_this_type(arg, recursive=recursive, coerce=False)
@@ -446,23 +546,32 @@ class Vector(Qube):
 
     #===========================================================================
     def ucross(self, arg, recursive=True):
-        """The unit vector in the direction of the cross product.
+        """Calculate the unit vector in the direction of the cross product.
 
-        Works only for vectors of length 3. The returned object is an instance
-        of the same subclass as this object.
+        Works only for vectors of length 3.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            arg (Vector or vector-like): The vector to cross with this one.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Vector: A unit vector in the direction of the cross product.
         """
 
         return self.cross(arg, recursive=recursive).unit(recursive=recursive)
 
     #===========================================================================
     def outer(self, arg, recursive=True):
-        """The outer multiply of two Vectors, returning a Matrix.
+        """Return the outer product of two vectors, resulting in a Matrix.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            arg (Vector or vector-like): The vector to compute the outer product with.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Matrix: The outer product matrix.
         """
 
         arg = Vector.as_vector(arg, recursive=recursive)
@@ -470,12 +579,16 @@ class Vector(Qube):
 
     #===========================================================================
     def perp(self, arg, recursive=True):
-        """The component of this vector perpendicular to another.
+        """Return the component of this vector perpendicular to another.
 
-        The returned object is an instance of the same subclass as this object.
+        Parameters:
+            arg (Vector or vector-like): The vector to calculate perpendicular
+                component with.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Input:
-            recursive   True to include the derivatives.
+        Returns:
+            Vector: The component of this vector perpendicular to the argument.
         """
 
         # Convert arg to a unit vector
@@ -488,12 +601,15 @@ class Vector(Qube):
 
     #===========================================================================
     def proj(self, arg, recursive=True):
-        """The component of this Vector projected into another Vector.
+        """Return the component of this vector projected onto another.
 
-        The returned object is an instance of the same subclass as this object.
+        Parameters:
+            arg (Vector or vector-like): The vector to project onto.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Input:
-            recursive   True to include the derivatives.
+        Returns:
+            Vector: The component of this vector projected onto the argument.
         """
 
         # Convert arg to a unit vector
@@ -504,13 +620,17 @@ class Vector(Qube):
 
     #===========================================================================
     def sep(self, arg, recursive=True):
-        """The separation angle between this vector and another.
+        """Calculate the separation angle between this vector and another.
 
-        The returned object is an instance of the same subclass as this object.
         Works for vectors of length 2 or 3.
 
-        Input:
-            recursive   True to include the derivatives.
+        Parameters:
+            arg (Vector or vector-like): The vector to calculate the separation angle with.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Scalar: The separation angle in radians.
         """
 
         # Translated from the SPICE source code for VSEP().
@@ -533,9 +653,22 @@ class Vector(Qube):
 
     #===========================================================================
     def cross_product_as_matrix(self, recursive=True):
-        """The Matrix whose multiply equals a cross product with this object.
+        """Convert to a Matrix whose multiply equals a cross product with this vector.
 
-        This object must have length 3.
+        This method creates a 3×3 antisymmetric matrix that, when multiplied with
+        another vector, produces the same result as the cross product of this
+        vector with that vector.
+
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Matrix: A 3×3 matrix that represents the cross product operation.
+
+        Raises:
+            ValueError: If this Vector doesn't have exactly 3 components or if it
+                has denominators.
         """
 
         if self._numer_ != (3,):
@@ -578,12 +711,19 @@ class Vector(Qube):
 
     #===========================================================================
     def element_mul(self, arg, recursive=True):
-        """The element-by-element multiply of two vectors.
+        """Perform element-by-element multiplication of two vectors.
 
-        The returned object is an instance of the same subclass as this object.
+        Parameters:
+            arg (Vector or vector-like): The vector to multiply element-wise.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Input:
-            recursive   True to include the derivatives.
+        Returns:
+            Vector: The element-wise product of this vector and the argument.
+
+        Raises:
+            ValueError: If the numerator shapes are incompatible or if both this
+                vector and the argument have denominators.
         """
 
         # Convert to this class if necessary
@@ -644,12 +784,19 @@ class Vector(Qube):
 
     #===========================================================================
     def element_div(self, arg, recursive=True):
-        """The element-by-element division of two vectors.
+        """Perform element-by-element division of two vectors.
 
-        The returned object is an instance of the same subclass as this object.
+        Parameters:
+            arg (Vector or vector-like): The vector to divide by element-wise.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Input:
-            recursive   True to include the derivatives.
+        Returns:
+            Vector: The element-wise division of this vector by the argument.
+
+        Raises:
+            ValueError: If the numerator shapes are incompatible or if the argument
+                has a denominator.
         """
 
         # Convert to this class if necessary
@@ -724,19 +871,18 @@ class Vector(Qube):
 
     #===========================================================================
     def vector_scale(self, factor, recursive=True):
-        """Stretch this Vector along a direction defined by a given scaling
-        vector and and by an amount equal to the magnitude of this vector.
+        """Stretch this Vector along a direction defined by a scaling vector.
 
-        Components of the vector perpendicular to the scaling vector are
-        unchanged.
+        Components of the vector perpendicular to the scaling vector are unchanged.
+        The scaling amount is determined by the magnitude of the scaling vector.
 
-        Input:
-            factor      a Vector defining the direction and magnitude of the
-                        scaling.
-            recursive   True to include the derivatives.
+        Parameters:
+            factor (Vector): A Vector defining the direction and magnitude of the scaling.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Return:         a copy of this Vector scaled according to the scaling
-                        vector
+        Returns:
+            Vector: A copy of this Vector scaled according to the scaling vector.
         """
 
         projected = self.proj(factor, recursive=recursive)
@@ -748,19 +894,18 @@ class Vector(Qube):
 
     #===========================================================================
     def vector_unscale(self, factor, recursive=True):
-        """Un-stretch this Vector along a direction defined by a given scaling
-        vector and and by an amount equal to the magnitude of this vector.
+        """Un-stretch this Vector along a direction defined by a scaling vector.
 
-        Components of the vector perpendicular to the scaling vector are
-        unchanged.
+        Components of the vector perpendicular to the scaling vector are unchanged.
+        The un-scaling amount is determined by the magnitude of the scaling vector.
 
-        Input:
-            factor      a Vector defining the direction and magnitude of the
-                        scaling.
-            recursive   True to include the derivatives.
+        Parameters:
+            factor (Vector): A Vector defining the direction and magnitude of the scaling.
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
 
-        Return:         a copy of this Vector scaled according to the scaling
-                        vector
+        Returns:
+            Vector: A copy of this Vector un-scaled according to the scaling vector.
         """
 
         return self.vector_scale(factor/factor.norm_sq(recursive=recursive),
@@ -769,12 +914,20 @@ class Vector(Qube):
     #===========================================================================
     @classmethod
     def combos(cls, *args):
-        """A vector with every combination of components of given scalars.
+        """Create a vector with every combination of components of given scalars.
 
-        Masks are also combined in the analogous manner.
+        Masks are also combined in the analogous manner. Units and derivatives
+        are ignored.
 
-        The returned object will have a shape defined by concatenating the
-        shapes of all the arguments. Units and derivatives are ignored.
+        Parameters:
+            *args: Scalar objects to combine.
+
+        Returns:
+            Vector: A vector with shape defined by concatenating the shapes of all
+                the arguments.
+
+        Raises:
+            ValueError: If any scalar input has a denominator.
         """
 
         scalars = []
@@ -815,22 +968,24 @@ class Vector(Qube):
 
     #===========================================================================
     def mask_where_component_le(self, axis, limit, replace=None, remask=True):
-        """A copy of this object where values of a specified component <= a
-        limit value are masked.
+        """Return a copy with masked values where a component is <= a limit.
 
-        Instead of or in addition to masking the items, the values can be
-        replaced. If no items need to be masked, this object is returned
-        unchanged.
+        Creates a copy of this object where values of a specified component that
+        are less than or equal to a limit value are masked.
 
-        Inputs:
-            axis            the index of the component to use for comparison.
-            limit           the limiting value or a Scalar of limiting values.
-            replace         a single replacement value or an array of
-                            replacement values, inserted into the returned
-                            object at every masked location. Use None (the
-                            default) to leave values unchanged.
-            remask          True to include the new mask into the object's mask;
-                            False to replace the values but leave them unmasked.
+        Parameters:
+            axis (int): The index of the component to use for comparison.
+            limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
+            replace (scalar or array, optional): A single replacement value or an array
+                of replacement values, inserted at every masked location. Use None
+                (the default) to leave values unchanged.
+            remask (bool, optional): True to include the new mask in the object's mask;
+                False to replace the values but leave them unmasked. Default is True.
+
+        Returns:
+            Vector: A copy with masked or replaced values where the component is
+            less than or equal to the limit. If no items need to be masked, this
+            object is returned unchanged.
         """
 
         scalar = self.to_scalar(axis)
@@ -838,22 +993,24 @@ class Vector(Qube):
 
     #===========================================================================
     def mask_where_component_ge(self, axis, limit, replace=None, remask=True):
-        """A copy of this object where values of a specified component >= a
-        limit value are masked.
+        """Return a copy with masked values where a component is >= a limit.
 
-        Instead of or in addition to masking the items, the values can be
-        replaced. If no items need to be masked, this object is returned
-        unchanged.
+        Creates a copy of this object where values of a specified component that
+        are greater than or equal to a limit value are masked.
 
-        Inputs:
-            axis            the index of the component to use for comparison.
-            limit           the limiting value or a Scalar of limiting values.
-            replace         a single replacement value or an array of
-                            replacement values, inserted into the returned
-                            object at every masked location. Use None (the
-                            default) to leave values unchanged.
-            remask          True to include the new mask into the object's mask;
-                            False to replace the values but leave them unmasked.
+        Parameters:
+            axis (int): The index of the component to use for comparison.
+            limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
+            replace (scalar or array, optional): A single replacement value or an array
+                of replacement values, inserted at every masked location. Use None
+                (the default) to leave values unchanged.
+            remask (bool, optional): True to include the new mask in the object's mask;
+                False to replace the values but leave them unmasked. Default is True.
+
+        Returns:
+            Vector: A copy with masked or replaced values where the component is
+            greater than or equal to the limit. If no items need to be masked, this
+            object is returned unchanged.
         """
 
         scalar = self.to_scalar(axis)
@@ -861,22 +1018,24 @@ class Vector(Qube):
 
     #===========================================================================
     def mask_where_component_lt(self, axis, limit, replace=None, remask=True):
-        """A copy of this object where values of a specified component < a
-        limit value are masked.
+        """Return a copy with masked values where a component is < a limit.
 
-        Instead of or in addition to masking the items, the values can be
-        replaced. If no items need to be masked, this object is returned
-        unchanged.
+        Creates a copy of this object where values of a specified component that
+        are less than a limit value are masked.
 
-        Inputs:
-            axis            the index of the component to use for comparison.
-            limit           the limiting value or a Scalar of limiting values.
-            replace         a single replacement value or an array of
-                            replacement values, inserted into the returned
-                            object at every masked location. Use None (the
-                            default) to leave values unchanged.
-            remask          True to include the new mask into the object's mask;
-                            False to replace the values but leave them unmasked.
+        Parameters:
+            axis (int): The index of the component to use for comparison.
+            limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
+            replace (scalar or array, optional): A single replacement value or an array
+                of replacement values, inserted at every masked location. Use None
+                (the default) to leave values unchanged.
+            remask (bool, optional): True to include the new mask in the object's mask;
+                False to replace the values but leave them unmasked. Default is True.
+
+        Returns:
+            Vector: A copy with masked or replaced values where the component is
+            less than the limit. If no items need to be masked, this
+            object is returned unchanged.
         """
 
         scalar = self.to_scalar(axis)
@@ -884,22 +1043,24 @@ class Vector(Qube):
 
     #===========================================================================
     def mask_where_component_gt(self, axis, limit, replace=None, remask=True):
-        """A copy of this object where values of a specified component > a
-        limit value are masked.
+        """Return a copy with masked values where a component is > a limit.
 
-        Instead of or in addition to masking the items, the values can be
-        replaced. If no items need to be masked, this object is returned
-        unchanged.
+        Creates a copy of this object where values of a specified component that
+        are greater than a limit value are masked.
 
-        Inputs:
-            axis            the index of the component to use for comparison.
-            limit           the limiting value or a Scalar of limiting values.
-            replace         a single replacement value or an array of
-                            replacement values, inserted into the returned
-                            object at every masked location. Use None (the
-                            default) to leave values unchanged.
-            remask          True to include the new mask into the object's mask;
-                            False to replace the values but leave them unmasked.
+        Parameters:
+            axis (int): The index of the component to use for comparison.
+            limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
+            replace (scalar or array, optional): A single replacement value or an array
+                of replacement values, inserted at every masked location. Use None
+                (the default) to leave values unchanged.
+            remask (bool, optional): True to include the new mask in the object's mask;
+                False to replace the values but leave them unmasked. Default is True.
+
+        Returns:
+            Vector: A copy with masked or replaced values where the component is
+            greater than the limit. If no items need to be masked, this
+            object is returned unchanged.
         """
 
         scalar = self.to_scalar(axis)
@@ -907,23 +1068,29 @@ class Vector(Qube):
 
     #===========================================================================
     def clip_component(self, axis, lower, upper, remask=False):
-        """A copy of this object where values of a specified component outside
-        a given range are shifted to the closest in-range value.
+        """Return a copy with component values clipped to specified range.
 
-        Optionally, the clipped items can also be masked.
+        Creates a copy of this object where values of a specified component that are
+        outside a given range are shifted to the closest in-range value.
 
-        If no items need to be clipped, this object is returned unchanged.
+        Parameters:
+            axis (int): The index of the component to use for comparison.
+            lower (scalar or Scalar): The lower limit for clipping; None to ignore.
+                This can be a single scalar or a Scalar object of the same shape as
+                the object.
+            upper (scalar or Scalar): The upper limit for clipping; None to ignore.
+                This can be a single scalar or a Scalar object of the same shape as
+                the object.
+            remask (bool, optional): True to mask the clipped values in the object's
+                mask; False to replace the values but leave them unmasked. Default
+                is False.
 
-        Inputs:
-            axis            the index of the component to use for comparison.
-            lower           the lower limit for clipping; None to ignore. This
-                            can be a single scalar or a Scalar object of the
-                            same shape as the object.
-            upper           the upper limit for clipping; None to ignore. This
-                            can be a single scalar or a Scalar object of the
-                            same shape as the object.
-            remask          True to include the new mask into the object's mask;
-                            False to replace the values but leave them unmasked.
+        Returns:
+            Vector: A copy with clipped component values. If no items need to be
+            clipped, this object is returned unchanged.
+
+        Raises:
+            ValueError: If this Vector has denominators.
         """
 
         if self._drank_:
@@ -972,14 +1139,38 @@ class Vector(Qube):
     ############################################################################
 
     def __abs__(self, recursive=True):
+        """Return the Euclidean norm of this Vector.
+
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+
+        Returns:
+            Scalar: The Euclidean norm (magnitude) of the Vector.
+        """
         return self.norm(recursive)
 
     def identity(self):
+        """Raise an error as identity is not supported for Vectors.
+
+        Raises:
+            ValueError: Always, as identity operation is not supported for Vectors.
+        """
         Qube._raise_unsupported_op('identity()', self)
 
     def reciprocal(self, recursive=True, nozeros=False):
-        """Treat a Vector subclass with drank=1 as a Matrix inversion."""
+        """Return the reciprocal of this Vector.
 
+        Parameters:
+            recursive (bool, optional): If True, include derivatives in the result.
+                Default is True.
+            nozeros (bool, optional): If True, zeros in the vector are replaced with
+                ones in the returned object. Default is False.
+
+        Returns:
+            Vector: A Vector where each component is the reciprocal of the
+            corresponding component in this Vector.
+        """
         if self._drank_ != 1:
             Qube._raise_unsupported_op('reciprocal()', self)
 

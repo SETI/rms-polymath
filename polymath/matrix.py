@@ -14,7 +14,22 @@ from polymath.vector3 import Vector3
 from polymath.units   import Units
 
 class Matrix(Qube):
-    """A Qube of arbitrary 2-D matrices."""
+    """A Qube of arbitrary 2-D matrices.
+
+    This class represents arbitrary 2D matrices in the PolyMath framework and provides
+    operations for matrix arithmetic, transposition, and inversion.
+
+    Attributes:
+        NRANK (int): The number of numerator axes, which is 2 for matrices.
+        NUMER (None): Shape of the numerator, defined by subclasses.
+        FLOATS_OK (bool): True as floating-point numbers are allowed.
+        INTS_OK (bool): False as integers are not allowed.
+        BOOLS_OK (bool): False as booleans are not allowed.
+        UNITS_OK (bool): True as units are allowed.
+        DERIVS_OK (bool): True as derivatives are allowed.
+        DEBUG (bool): Set to True for some debugging tasks.
+        DELTA (float): Cutoff used in unary operations.
+    """
 
     NRANK = 2           # the number of numerator axes.
     NUMER = None        # shape of the numerator.
@@ -33,7 +48,16 @@ class Matrix(Qube):
     #===========================================================================
     @staticmethod
     def as_matrix(arg, recursive=True):
-        """The argument converted to Matrix if possible."""
+        """Convert the argument to a Matrix if possible.
+
+        Parameters:
+            arg: The object to convert to a Matrix.
+            recursive (bool, optional): True to include derivatives in the result.
+                Defaults to True.
+
+        Returns:
+            Matrix: The argument converted to a Matrix.
+        """
 
         if type(arg) == Matrix:
             if recursive:
@@ -55,33 +79,39 @@ class Matrix(Qube):
 
     #===========================================================================
     def row_vector(self, row, recursive=True, classes=(Vector3,Vector)):
-        """The selected row of a Matrix as a Vector.
+        """Return the selected row of a Matrix as a Vector.
 
         If the Matrix is M x N, then this will return a Vector of length N. By
         default, if N == 3, it will return a Vector3 object instead.
 
-        Input:
-            row         index of the row to return.
-            recursive   True to return corresponding vectors of derivatives.
-            classes     a list of classes; an instance of the first suitable
-                        class is returned. Default is to return a Vector3 if
-                        the length is 3, otherwise a Vector.
+        Parameters:
+            row: Index of the row to return.
+            recursive (bool, optional): True to return corresponding vectors of
+                derivatives. Defaults to True.
+            classes (tuple, optional): A list of classes; an instance of the first
+                suitable class is returned. Defaults to (Vector3,Vector).
+
+        Returns:
+            Vector or Vector3: The selected row as a vector.
         """
 
         return self.extract_numer(0, row, classes, recursive=recursive)
 
     #===========================================================================
     def row_vectors(self, recursive=True, classes=(Vector3,Vector)):
-        """A tuple of Vector objects, one for each row of this Matrix.
+        """Return a tuple of Vector objects, one for each row of this Matrix.
 
         If the Matrix is M x N, then this will return M Vectors of length N. By
         default, if N == 3, it will return Vector3 objects instead.
 
-        Input:
-            recursive   True to return corresponding vectors of derivatives.
-            classes     a list of classes; instances of the first suitable
-                        class are returned. Default is to return Vector3 objects
-                        if the length is 3, otherwise a Vector.
+        Parameters:
+            recursive (bool, optional): True to return corresponding vectors of
+                derivatives. Defaults to True.
+            classes (tuple, optional): A list of classes; instances of the first
+                suitable class are returned. Defaults to (Vector3,Vector).
+
+        Returns:
+            tuple: A tuple of Vector objects, one for each row.
         """
 
         vectors = []
@@ -93,33 +123,39 @@ class Matrix(Qube):
 
     #===========================================================================
     def column_vector(self, column, recursive=True, classes=(Vector3,Vector)):
-        """The selected column of a Matrix as a Vector.
+        """Return the selected column of a Matrix as a Vector.
 
         If the Matrix is M x N, then this will return a Vector of length M. By
         default, if M == 3, it will return a Vector3 object instead.
 
-        Input:
-            column      index of the column to return.
-            recursive   True to return corresponding vectors of derivatives.
-            classes     a list of classes; an instance of the first suitable
-                        class is returned. Default is to return a Vector3 if
-                        the length is 3, otherwise a Vector.
+        Parameters:
+            column: Index of the column to return.
+            recursive (bool, optional): True to return corresponding vectors of
+                derivatives. Defaults to True.
+            classes (tuple, optional): A list of classes; an instance of the first
+                suitable class is returned. Defaults to (Vector3,Vector).
+
+        Returns:
+            Vector or Vector3: The selected column as a vector.
         """
 
         return self.extract_numer(1, column, classes, recursive=recursive)
 
     #===========================================================================
     def column_vectors(self, recursive=True, classes=(Vector3,Vector)):
-        """A tuple of Vector objects, one for each column of this Matrix.
+        """Return a tuple of Vector objects, one for each column of this Matrix.
 
         If the Matrix is M x N, then this will return N Vectors of length M. By
         default, if M == 3, it will return Vector3 objects instead.
 
-        Input:
-            recursive   True to return corresponding vectors of derivatives.
-            classes     a list of classes; instances of the first suitable
-                        class are returned. Default is to return Vector3 objects
-                        if the length is 3, otherwise a Vector.
+        Parameters:
+            recursive (bool, optional): True to return corresponding vectors of
+                derivatives. Defaults to True.
+            classes (tuple, optional): A list of classes; instances of the first
+                suitable class are returned. Defaults to (Vector3,Vector).
+
+        Returns:
+            tuple: A tuple of Vector objects, one for each column.
         """
 
         vectors = []
@@ -131,14 +167,19 @@ class Matrix(Qube):
 
     #===========================================================================
     def to_vector(self, axis, indx, classes=[], recursive=True):
-        """One of the components of a Matrix as a Vector.
+        """Return one of the components of a Matrix as a Vector.
 
-        Input:
-            axis        axis index from which to extract vector.
-            indx        index of the vector along this axis.
-            classes     a list of the Vector subclasses to return. The first
-                        valid one will be used. Default is Vector.
-            recursive   True to extract the derivatives as well.
+        Parameters:
+            axis: Axis index from which to extract vector.
+            indx: Index of the vector along this axis.
+            classes (list, optional): A list of the Vector subclasses to return.
+                The first valid one will be used. Defaults to empty list, resulting
+                in Vector.
+            recursive (bool, optional): True to extract the derivatives as well.
+                Defaults to True.
+
+        Returns:
+            Vector: One component of the Matrix as a Vector.
         """
 
         return self.extract_numer(axis, indx, list(classes) + [Vector],
@@ -146,12 +187,16 @@ class Matrix(Qube):
 
     #===========================================================================
     def to_scalar(self, indx0, indx1, recursive=True):
-        """One of the elements of a Matrix as a Scalar.
+        """Return one of the elements of a Matrix as a Scalar.
 
-        Input:
-            indx0       index along the first matrix axis.
-            indx1       index along the second matrix axis.
-            recursive   True to extract the derivatives as well.
+        Parameters:
+            indx0: Index along the first matrix axis.
+            indx1: Index along the second matrix axis.
+            recursive (bool, optional): True to extract the derivatives as well.
+                Defaults to True.
+
+        Returns:
+            Scalar: One element of the Matrix as a Scalar.
         """
 
         vector = self.extract_numer(0, indx0, Vector, recursive=recursive)
@@ -160,29 +205,37 @@ class Matrix(Qube):
     #===========================================================================
     @staticmethod
     def from_scalars(*args, **keywords):
-        """A Matrix or subclass constructed by combining scalars.
+        """Construct a Matrix or subclass by combining scalars.
 
-        Inputs:
-            args        any number of Scalars or arguments that can be casted
-                        to Scalars. They need not have the same shape, but it
-                        must be possible to cast them to the same shape. A value
-                        of None is converted to a zero-valued Scalar that
-                        matches the denominator shape of the other arguments.
+        Parameters:
+            *args: Any number of Scalars or arguments that can be casted
+                to Scalars. They need not have the same shape, but it
+                must be possible to cast them to the same shape. A value
+                of None is converted to a zero-valued Scalar that
+                matches the denominator shape of the other arguments.
+            recursive (bool, optional): True to include all the derivatives.
+                The returned object will have derivatives representing the
+                union of all the derivatives found amongst the scalars.
+                Defaults to True.
+            shape (tuple, optional): The Matrix's item shape. If not specified
+                but the number of Scalars is a perfect square, a square matrix
+                is returned.
+            classes (list, optional): An arbitrary list defining the preferred
+                class of the returned object. The first suitable class in the
+                list will be used. Default is Matrix.
 
-            recursive   True to include all the derivatives. The returned object
-                        will have derivatives representing the union of all the
-                        derivatives found amongst the scalars. Default is True.
+        Returns:
+            Matrix: A Matrix constructed from the given scalars.
 
-            shape       The Matrix's item shape. If not specified but the number
-                        of Scalars is a perfect square, a square matrix is
-                        returned.
+        Raises:
+            ValueError: If an unexpected keyword argument is provided.
+            TypeError: If the input would result in an int matrix, which is not
+                allowed.
+            ValueError: If the number of Scalars does not match the specified shape.
 
-            classes     an arbitrary list defining the preferred class of the
-                        returned object. The first suitable class in the list
-                        will be used. Default is Matrix.
-
-        Note that the 'recursive' and 'classes' inputs are handled as keyword
-        arguments in order to distinguish them from the scalar inputs.
+        Note:
+            The 'recursive' and 'classes' inputs are handled as keyword
+            arguments in order to distinguish them from the scalar inputs.
         """
 
         # Search for keyword "shape" and "classes"
@@ -236,16 +289,21 @@ class Matrix(Qube):
 
     #===========================================================================
     def is_diagonal(self, delta=0.):
-        """A Boolean equal to True where the matrix is diagonal.
+        """Return a Boolean equal to True where the matrix is diagonal.
 
         Masked matrices return True.
 
-        Input:
-            delta           the fractional limit on what can be treated as a
-                            equivalent to zero in the off-diagonal terms. It is
-                            scaled by the RMS value of all the elements in the
-                            matrix.
+        Parameters:
+            delta (float, optional): The fractional limit on what can be treated as
+                equivalent to zero in the off-diagonal terms. It is scaled by the
+                RMS value of all the elements in the matrix. Defaults to 0.
 
+        Returns:
+            Boolean: True where the matrix is diagonal.
+
+        Raises:
+            ValueError: If the matrix is not square.
+            ValueError: If the matrix has denominators.
         """
 
         size = self.item[0]
@@ -301,11 +359,14 @@ class Matrix(Qube):
 
     #===========================================================================
     def transpose(self, recursive=True):
-        """Transpose of this matrix.
+        """Return the transpose of this matrix.
 
-        Input:
-            recursive   True to include the transposed derivatives; False to
-                        return an object without derivatives.
+        Parameters:
+            recursive (bool, optional): True to include the transposed derivatives;
+                False to return an object without derivatives. Defaults to True.
+
+        Returns:
+            Matrix: Transpose of this matrix.
         """
 
         return self.transpose_numer(0, 1, recursive=recursive)
@@ -313,21 +374,34 @@ class Matrix(Qube):
     #===========================================================================
     @property
     def T(self):
-        """Shorthand notation for the transpose of a rotation matrix."""
+        """Return the transpose of this matrix.
+
+        Returns:
+            Matrix: Transpose of this matrix with derivatives included.
+        """
 
         return self.transpose_numer(0, 1, recursive=True)
 
     #===========================================================================
     def inverse(self, recursive=True, nozeros=False):
-        """Inverse of this matrix.
+        """Return the inverse of this matrix.
 
         The returned object will have the same subclass as this object.
 
-        Input:
-            recursive   True to include the derivatives of the inverse.
-            nozeros     False (the default) to mask out any matrices with zero-
-                        valued determinants. Set to True only if you know in
-                        advance that all determinants are nonzero.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the inverse.
+                Defaults to True.
+            nozeros (bool, optional): False (the default) to mask out any matrices
+                with zero-valued determinants. Set to True only if you know in
+                advance that all determinants are nonzero. Defaults to False.
+
+        Returns:
+            Matrix: Inverse of this matrix.
+
+        Raises:
+            ValueError: If the matrix is not square.
+            ValueError: If the matrix has denominators.
+            ValueError: If any matrix has a determinant of zero.
         """
 
         # Validate array
@@ -379,7 +453,17 @@ class Matrix(Qube):
 
     #===========================================================================
     def unitary(self):
-        """The nearest unitary matrix as a Matrix3."""
+        """Return the nearest unitary matrix as a Matrix3.
+
+        Uses the algorithm from wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
+
+        Returns:
+            Matrix3: The nearest unitary (orthogonal) matrix.
+
+        Raises:
+            ValueError: If the matrix has denominators.
+            ValueError: If the matrix is not 3x3.
+        """
 
         # Algorithm from
         #    wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
@@ -500,28 +584,88 @@ class Matrix(Qube):
     ############################################################################
 
     def __abs__(self):
+        """Raise an error as absolute value is not defined for matrices.
+
+        Raises:
+            NotImplementedError: Always raised as abs() is not supported.
+        """
         Qube._raise_unsupported_op('abs()', self)
 
     def __floordiv__(self, arg):
+        """Raise an error as floor division is not defined for matrices.
+
+        Parameters:
+            arg: The divisor argument (not used).
+
+        Raises:
+            NotImplementedError: Always raised as // is not supported.
+        """
         Qube._raise_unsupported_op('//', self, arg)
 
     def __rfloordiv__(self, arg):
+        """Raise an error as floor division is not defined for matrices.
+
+        Parameters:
+            arg: The dividend argument (not used).
+
+        Raises:
+            NotImplementedError: Always raised as // is not supported.
+        """
         Qube._raise_unsupported_op('//', arg, self)
 
     def __ifloordiv__(self, arg):
+        """Raise an error as floor division is not defined for matrices.
+
+        Parameters:
+            arg: The divisor argument (not used).
+
+        Raises:
+            NotImplementedError: Always raised as //= is not supported.
+        """
         Qube._raise_unsupported_op('//=', self, arg)
 
     def __mod__(self, arg):
+        """Raise an error as modulo is not defined for matrices.
+
+        Parameters:
+            arg: The divisor argument (not used).
+
+        Raises:
+            NotImplementedError: Always raised as % is not supported.
+        """
         Qube._raise_unsupported_op('%', self, arg)
 
     def __rmod__(self, arg):
+        """Raise an error as modulo is not defined for matrices.
+
+        Parameters:
+            arg: The dividend argument (not used).
+
+        Raises:
+            NotImplementedError: Always raised as % is not supported.
+        """
         Qube._raise_unsupported_op('%', arg, self)
 
     def __imod__(self, arg):
+        """Raise an error as modulo is not defined for matrices.
+
+        Parameters:
+            arg: The divisor argument (not used).
+
+        Raises:
+            NotImplementedError: Always raised as %= is not supported.
+        """
         Qube._raise_unsupported_op('%=', self, arg)
 
     def identity(self):
-        """An identity matrix of the same size and subclass as this."""
+        """Return an identity matrix of the same size and subclass as this.
+
+        Returns:
+            Matrix: An identity matrix of the same size and subclass.
+
+        Raises:
+            ValueError: If the matrix is not square.
+        """
 
         size = self._numer_[0]
 
@@ -544,15 +688,19 @@ class Matrix(Qube):
     ############################################################################
 
     def reciprocal(self, recursive=True, nozeros=False):
-        """An object equivalent to the reciprocal of this object.
+        """Return an object equivalent to the reciprocal of this object.
 
-        Input:
-            recursive   True to return the derivatives of the reciprocal too;
-                        otherwise, derivatives are removed.
-            nozeros     False (the default) to mask out any zero-valued items in
-                        this object prior to the divide. Set to True only if you
-                        know in advance that this object has no zero-valued
-                        items.
+        For a Matrix, the reciprocal is the inverse.
+
+        Parameters:
+            recursive (bool, optional): True to return the derivatives of the
+                reciprocal too; otherwise, derivatives are removed. Defaults to True.
+            nozeros (bool, optional): False (the default) to mask out any matrices
+                with zero-valued determinants. Set to True only if you know in
+                advance that all determinants are nonzero. Defaults to False.
+
+        Returns:
+            Matrix: The matrix inverse.
         """
 
         return self.inverse(recursive=recursive, nozeros=nozeros)
