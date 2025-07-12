@@ -457,7 +457,7 @@ class Matrix3(Matrix):
             try:
                 arg = Scalar.as_scalar(arg)
             except (ValueError, TypeError):
-                Qube.raise_unsupported_op('*', self, original_arg)
+                Qube._raise_unsupported_op('*', self, original_arg)
 
         # Rotate a scalar, returning the scalar unchanged except for new derivs
         if arg._nrank_ == 0:
@@ -489,7 +489,7 @@ class Matrix3(Matrix):
         try:
             arg = Matrix3.as_matrix3(arg)
         except (ValueError, TypeError):
-            Qube.raise_unsupported_op('*=', self, original_arg)
+            Qube._raise_unsupported_op('*=', self, original_arg)
 
         return Qube.__imul__(self, arg)
 

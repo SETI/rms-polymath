@@ -232,6 +232,8 @@ def transpose_numer(self, axis1=0, axis2=1, recursive=True):
         for (key, deriv) in self._derivs_.items():
             obj.insert_deriv(key, deriv.transpose_numer(a1, a2, False))
 
+    return obj
+
 #===============================================================================
 def reshape_numer(self, shape, classes=(), recursive=True):
     """Return this object with a new shape for numerator items.
