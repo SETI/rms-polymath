@@ -16,7 +16,23 @@ EXP_CUTOFF = np.log(sys.float_info.max)
 TWOPI = np.pi * 2.
 
 class Scalar(Qube):
-    """A PolyMath subclass involving dimensionless scalars."""
+    """Represent dimensionless scalar values in the PolyMath framework.
+
+    This class provides functionality for working with scalar values including
+    mathematical operations, trigonometric functions, and statistical methods.
+    Scalars can have units, derivatives, and support masking for undefined
+    values.
+
+    Attributes:
+        NRANK (int): The number of numerator axes, which is 0 for scalars.
+        NUMER (tuple): Shape of the numerator, which is empty for scalars.
+        FLOATS_OK (bool): True as floating-point numbers are allowed.
+        INTS_OK (bool): True as integers are allowed.
+        BOOLS_OK (bool): False as booleans are not allowed.
+        UNITS_OK (bool): True as units are allowed.
+        DERIVS_OK (bool): True as derivatives are allowed.
+        DEFAULT_VALUE (int): Default value 1 for unspecified elements.
+    """
 
     NRANK = 0           # the number of numerator axes.
     NUMER = ()          # shape of the numerator.
@@ -33,7 +49,11 @@ class Scalar(Qube):
 
     #===========================================================================
     def _maxval(self):
-        """Internal method returns the maximum value associated with a dtype."""
+        """Return the maximum value associated with a dtype.
+
+        Returns:
+            float or int: The maximum value for the current data type.
+        """
 
         dtype = self._values_.dtype
         if dtype.kind == 'f':
@@ -49,7 +69,11 @@ class Scalar(Qube):
 
     #===========================================================================
     def _minval(self):
-        """Internal method returns the minimum value associated with a dtype."""
+        """Return the minimum value associated with a dtype.
+
+        Returns:
+            float or int: The minimum value for the current data type.
+        """
 
         # Define constant maxval
         dtype = self._values_.dtype
@@ -67,9 +91,15 @@ class Scalar(Qube):
     #===========================================================================
     @staticmethod
     def as_scalar(arg, recursive=True):
-        """The argument converted to Scalar if possible.
+        """Convert the argument to Scalar if possible.
 
-        If recursive is True, derivatives will also be converted.
+        Parameters:
+            arg: The object to convert to Scalar.
+            recursive (bool, optional): True to include derivatives in the
+                conversion. Defaults to True.
+
+        Returns:
+            Scalar: The converted Scalar object.
         """
 
         if isinstance(arg, Scalar):
@@ -95,12 +125,18 @@ class Scalar(Qube):
 
     #===========================================================================
     def to_scalar(self, indx, recursive=True):
-        """Duplicates the behavior of Vector.to_scalar, in this case returning
-        self.
+        """Return this scalar (duplicates Vector.to_scalar behavior).
 
-        Input:
-            indx        index of the vector component; must be zero
-            recursive   True to include the derivatives.
+        Parameters:
+            indx (int): Index of the vector component; must be zero.
+            recursive (bool, optional): True to include the derivatives.
+                Defaults to True.
+
+        Returns:
+            Scalar: This scalar object.
+
+        Raises:
+            ValueError: If indx is not zero.
         """
 
         if indx != 0:
@@ -113,12 +149,15 @@ class Scalar(Qube):
 
     #===========================================================================
     def as_index(self, masked=None):
-        """This object made suitable for indexing an N-dimensional NumPy array.
+        """Make this object suitable for indexing an N-dimensional NumPy array.
 
-        Input:
-            masked      the value to insert in the place of a masked item. If
-                        None and the object contains masked elements, the array
-                        will be flattened and masked elements will be skipped.
+        Parameters:
+            masked: The value to insert in the place of a masked item. If None
+                and the object contains masked elements, the array will be
+                flattened and masked elements will be skipped.
+
+        Returns:
+            ndarray: An array suitable for indexing.
         """
 
         (index, mask) = self.as_index_and_mask((masked is None), masked)
@@ -126,18 +165,23 @@ class Scalar(Qube):
 
     #===========================================================================
     def as_index_and_mask(self, purge=False, masked=None):
-        """This object made suitable for indexing and masking an N-dimensional
-        array.
+        """Make this object suitable for indexing and masking an N-dimensional array.
 
-        Input:
-            purge           True to eliminate masked elements from the index;
-                            False to retain them but leave them masked.
-            masked          the index value to insert in place of any masked.
-                            item. This may be needed because each value in the
-                            returned index array must be an integer and in
-                            range. If None (the default), then masked values
-                            in the index will retain their unmasked values when
-                            the index is applied.
+        Parameters:
+            purge (bool, optional): True to eliminate masked elements from the
+                index; False to retain them but leave them masked. Defaults to False.
+            masked: The index value to insert in place of any masked item. This
+                may be needed because each value in the returned index array must
+                be an integer and in range. If None (the default), then masked
+                values in the index will retain their unmasked values when the
+                index is applied.
+
+        Returns:
+            tuple: A tuple containing (index_array, mask_array).
+
+        Raises:
+            IndexError: If this object contains floating-point values.
+            ValueError: If this object has a denominator.
         """
 
         if self.is_float():
@@ -182,29 +226,37 @@ class Scalar(Qube):
     #===========================================================================
     def int(self, top=None, remask=False, clip=False, inclusive=True,
                   shift=None, builtins=None, masked=None):
-        """An integer (floor) version of this Scalar.
+        """Return an integer (floor) version of this Scalar.
 
         If this object already contains integers, it is returned as is.
         Otherwise, a copy is returned. Derivatives are always removed. Units
         are disallowed.
 
-        Inputs:
-            top         Optional nominal maximum integer value.
-            remask      If True, values less than zero or greater than the
-                        specified top value (if provided) are masked.
-            clip        If True, values less than zero or greater than the
-                        specified top value are clipped.
-            inclusive   True to leave the top value unmasked; False to mask it.
-            shift       True to shift any occurrences of the top value down by
-                        one; False to leave them unchanged. Default None lets
-                        shift match the input value of inclusive.
-            builtins    If True and the result is a single unmasked scalar,
-                        the result is returned as a Python int instead of an
-                        instance of Scalar. Default is the value specified
-                        by Qube.PREFER_BUILTIN_TYPES.
-            masked      value to return if builtins is True but the returned
-                        value is masked. Default is to return a masked value
-                        instead of a builtin type.
+        Parameters:
+            top (int, optional): Optional nominal maximum integer value.
+            remask (bool, optional): If True, values less than zero or greater
+                than the specified top value (if provided) are masked.
+                Defaults to False.
+            clip (bool, optional): If True, values less than zero or greater
+                than the specified top value are clipped. Defaults to False.
+            inclusive (bool, optional): True to leave the top value unmasked;
+                False to mask it. Defaults to True.
+            shift (bool, optional): True to shift any occurrences of the top
+                value down by one; False to leave them unchanged. Default None
+                lets shift match the input value of inclusive.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, the result is returned as a Python int instead
+                of an instance of Scalar. Default is the value specified by
+                Qube.PREFER_BUILTIN_TYPES.
+            masked: Value to return if builtins is True but the returned value
+                is masked. Default is to return a masked value instead of a
+                builtin type.
+
+        Returns:
+            Scalar or int: The integer version of this scalar.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -272,9 +324,16 @@ class Scalar(Qube):
 
         The returned object is an instance of the same subclass as this object.
 
-        Inputs:
-            recursive   True to include the derivatives of the returned object.
-                        frac() leaves the derivatives unchanged.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                returned object. frac() leaves the derivatives unchanged.
+                Defaults to True.
+
+        Returns:
+            Scalar: An object with fractional components.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -298,9 +357,12 @@ class Scalar(Qube):
     def abs(self, recursive=True):
         """Return the absolute value of each value.
 
-        Inputs:
-            recursive   True to include the derivatives of the absolute values
-                        inside the returned object.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                absolute values inside the returned object. Defaults to True.
+
+        Returns:
+            Scalar: The absolute values.
         """
 
         if recursive:
@@ -312,9 +374,15 @@ class Scalar(Qube):
     def sin(self, recursive=True):
         """Return the sine of each value.
 
-        Inputs:
-            recursive   True to include the derivatives of the sine inside the
-                        returned object.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                sine inside the returned object. Defaults to True.
+
+        Returns:
+            Scalar: The sine values.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -334,9 +402,15 @@ class Scalar(Qube):
     def cos(self, recursive=True):
         """Return the cosine of each value.
 
-        Inputs:
-            recursive   True to include the derivatives of the cosine inside the
-                        returned object.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                cosine inside the returned object. Defaults to True.
+
+        Returns:
+            Scalar: The cosine values.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -356,9 +430,15 @@ class Scalar(Qube):
     def tan(self, recursive=True):
         """Return the tangent of each value.
 
-        Inputs:
-            recursive   True to include the derivatives of the tangent inside
-                        the returned object.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                tangent inside the returned object. Defaults to True.
+
+        Returns:
+            Scalar: The tangent values.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -379,14 +459,22 @@ class Scalar(Qube):
     def arcsin(self, recursive=True, check=True):
         """Return the arcsine of each value.
 
-        Inputs:
-            recursive   True to include the derivatives of the arcsine inside
-                        the returned object.
-            check       True to mask out the locations of any values outside the
-                        domain [-1,1]. If False, a ValueError will be raised if
-                        any value is encountered where the arcsine is undefined.
-                        Check=True is slightly faster if we already know at the
-                        time of the call that all input values are valid.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                arcsine inside the returned object. Defaults to True.
+            check (bool, optional): True to mask out the locations of any
+                values outside the domain [-1,1]. If False, a ValueError will
+                be raised if any value is encountered where the arcsine is
+                undefined. Check=True is slightly faster if we already know at
+                the time of the call that all input values are valid.
+                Defaults to True.
+
+        Returns:
+            Scalar: The arcsine values.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If check is False and any value is outside domain (-1,1).
         """
 
         if self._drank_:
@@ -432,15 +520,22 @@ class Scalar(Qube):
     def arccos(self, recursive=True, check=True):
         """Return the arccosine of each value.
 
-        Inputs:
-            recursive   True to include the derivatives of the arccosine
-                        inside the returned object.
-            check       True to mask out the locations of any values outside the
-                        domain [-1,1]. If False, a ValueError will be raised if
-                        any value is encountered where the arccosine is
-                        undefined. Check=True is slightly faster if we already
-                        know at the time of the call that all input values are
-                        valid.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                arccosine inside the returned object. Defaults to True.
+            check (bool, optional): True to mask out the locations of any
+                values outside the domain [-1,1]. If False, a ValueError will
+                be raised if any value is encountered where the arccosine is
+                undefined. Check=True is slightly faster if we already know at
+                the time of the call that all input values are valid.
+                Defaults to True.
+
+        Returns:
+            Scalar: The arccosine values.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If check is False and any value is outside domain (-1,1).
         """
 
         if self._drank_:
@@ -486,9 +581,15 @@ class Scalar(Qube):
     def arctan(self, recursive=True):
         """Return the arctangent of each value.
 
-        Inputs:
-            recursive   True to include the derivatives of the arctangent
-                        inside the returned object.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                arctangent inside the returned object. Defaults to True.
+
+        Returns:
+            Scalar: The arctangent values.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -511,12 +612,18 @@ class Scalar(Qube):
 
         If this object is read-only, the returned object will also be read-only.
 
-        Inputs:
-            arg         The second argument to arctan2().
-            recursive   True to include the derivatives of the arctangent
-                        inside the returned object. This is the result of
-                        merging the derivatives in both this object and the
-                        argument object.
+        Parameters:
+            arg: The second argument to arctan2().
+            recursive (bool, optional): True to include the derivatives of the
+                arctangent inside the returned object. This is the result of
+                merging the derivatives in both this object and the argument
+                object. Defaults to True.
+
+        Returns:
+            Scalar: The four-quadrant arctangent values.
+
+        Raises:
+            ValueError: If either object has denominators.
         """
 
         y = self
@@ -553,14 +660,21 @@ class Scalar(Qube):
 
         If this object is read-only, the returned object will also be read-only.
 
-        Inputs:
-            recursive   True to include the derivatives of the square root
-                        inside the returned object.
-            check       True to mask out the locations of any values < 0 before
-                        taking the square root. If False, a ValueError will be
-                        raised any negative value encountered. Check=True is
-                        slightly faster if we already know at the time of the
-                        call that all input values are valid.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                square root inside the returned object. Defaults to True.
+            check (bool, optional): True to mask out the locations of any
+                values < 0 before taking the square root. If False, a ValueError
+                will be raised any negative value encountered. Check=True is
+                slightly faster if we already know at the time of the call that
+                all input values are valid. Defaults to True.
+
+        Returns:
+            Scalar: The square root values.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If check is False and any value is negative.
         """
 
         if self._drank_:
@@ -595,14 +709,21 @@ class Scalar(Qube):
 
         If this object is read-only, the returned object will also be read-only.
 
-        Inputs:
-            recursive   True to include the derivatives of the log inside the
-                        returned object.
-            check       True to mask out the locations of any values <= 0 before
-                        taking the log. If False, a ValueError will be raised
-                        any value <= 0 is encountered. Check=True is slightly
-                        faster if we already know at the time of the call that
-                        all input values are valid.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                log inside the returned object. Defaults to True.
+            check (bool, optional): True to mask out the locations of any
+                values <= 0 before taking the log. If False, a ValueError will
+                be raised any value <= 0 is encountered. Check=True is slightly
+                faster if we already know at the time of the call that all
+                input values are valid. Defaults to True.
+
+        Returns:
+            Scalar: The natural logarithm values.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If check is False and any value is non-positive.
         """
 
         if self._drank_:
@@ -634,14 +755,21 @@ class Scalar(Qube):
 
         If this object is read-only, the returned object will also be read-only.
 
-        Inputs:
-            recursive   True to include the derivatives of the function inside
-                        the returned object.
-            check       True to mask out the locations of any values that will
-                        overflow to infinity. If False, a ValueError will be
-                        raised any value overflows. Check=True is slightly
-                        faster if we already know at the time of the call that
-                        all input values are valid.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives of the
+                function inside the returned object. Defaults to True.
+            check (bool, optional): True to mask out the locations of any
+                values that will overflow to infinity. If False, a ValueError
+                will be raised any value overflows. Check=True is slightly
+                faster if we already know at the time of the call that all
+                input values are valid. Defaults to False.
+
+        Returns:
+            Scalar: The exponential values.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If check is False and any value overflows.
         """
 
         global EXP_CUTOFF
@@ -674,18 +802,21 @@ class Scalar(Qube):
 
     #===========================================================================
     def sign(self, zeros=True, builtins=None, masked=None):
-        """The sign of each value as +1, -1 or 0.
+        """Return the sign of each value as +1, -1 or 0.
 
-        Inputs:
-            zeros       If zeros is False, then only values of +1 and -1 are
-                        returned; sign(0) = +1 instead of 0.
-            builtins    If True and the result is a single unmasked scalar,
-                        the result is returned as a Python int instead of an
-                        instance of Scalar. Default is the value specified
-                        by Qube.PREFER_BUILTIN_TYPES.
-            masked      value to return if builtins is True but the returned
-                        value is masked. Default is to return a masked value
-                        instead of a builtin type.
+        Parameters:
+            zeros (bool, optional): If zeros is False, then only values of +1
+                and -1 are returned; sign(0) = +1 instead of 0. Defaults to True.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, the result is returned as a Python int instead
+                of an instance of Scalar. Default is the value specified by
+                Qube.PREFER_BUILTIN_TYPES.
+            masked: Value to return if builtins is True but the returned value
+                is masked. Default is to return a masked value instead of a
+                builtin type.
+
+        Returns:
+            Scalar or int: The sign values.
         """
 
         result = Scalar(np.sign(self._values_), mask=self._mask_)
@@ -705,16 +836,26 @@ class Scalar(Qube):
     #===========================================================================
     @staticmethod
     def solve_quadratic(a, b, c, recursive=True, include_antimask=False):
-        """Return a tuple containing the two results of a quadratic equation as
-        Scalars. Duplicates and complex values are masked.
+        """Return a tuple containing the two results of a quadratic equation as Scalars.
 
-        The formula solved is:
+        Duplicates and complex values are masked. The formula solved is:
             a * x**2 + b * x + c = 0
 
         The solution is implemented to provide maximal precision.
 
-        If include_antimask is True, a Boolean is also returned containing True
-        where the solution exists (because the discriminant is nonnegative).
+        Parameters:
+            a: The coefficient of x**2.
+            b: The coefficient of x.
+            c: The constant term.
+            recursive (bool, optional): True to include derivatives in the
+                solution. Defaults to True.
+            include_antimask (bool, optional): If True, a Boolean is also
+                returned containing True where the solution exists (because the
+                discriminant is nonnegative). Defaults to False.
+
+        Returns:
+            tuple: A tuple containing (x0, x1) or (x0, x1, antimask) if
+                include_antimask is True.
         """
 
         a = Scalar.as_scalar(a, recursive=recursive)
@@ -745,6 +886,16 @@ class Scalar(Qube):
 
         The value returned is:
             a * self**2 + b * self + c
+
+        Parameters:
+            a: The coefficient of x**2.
+            b: The coefficient of x.
+            c: The constant term.
+            recursive (bool, optional): True to include derivatives in the
+                evaluation. Defaults to True.
+
+        Returns:
+            Scalar: The result of the quadratic evaluation.
         """
 
         if not recursive:
@@ -757,21 +908,27 @@ class Scalar(Qube):
 
     #===========================================================================
     def max(self, axis=None, builtins=None, masked=None, out=None):
-        """The maximum of the unmasked values.
+        """Return the maximum of the unmasked values.
 
-        Input:
-            axis        an integer axis or a tuple of axes. The maximum is
-                        determined across these axes, leaving any remaining axes
-                        in the returned value. If None (the default), then the
-                        maximum is performed across all axes if the object.
-            builtins    If True and the result is a single unmasked scalar,
-                        the result is returned as a Python int or float instead
-                        of an instance of Scalar. Default is the value specified
-                        by Qube.PREFER_BUILTIN_TYPES.
-            masked      value to return if builtins is True but the returned
-                        value is masked. Default is to return a masked value
-                        instead of a builtin type.
-            out         Ignored. Enables "np.max(Scalar)" to work.
+        Parameters:
+            axis (int or tuple, optional): An integer axis or a tuple of axes.
+                The maximum is determined across these axes, leaving any
+                remaining axes in the returned value. If None (the default),
+                then the maximum is performed across all axes if the object.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, the result is returned as a Python int or
+                float instead of an instance of Scalar. Default is the value
+                specified by Qube.PREFER_BUILTIN_TYPES.
+            masked: Value to return if builtins is True but the returned value
+                is masked. Default is to return a masked value instead of a
+                builtin type.
+            out: Ignored. Enables "np.max(Scalar)" to work.
+
+        Returns:
+            Scalar or float or int: The maximum values.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -827,21 +984,27 @@ class Scalar(Qube):
 
     #===========================================================================
     def min(self, axis=None, builtins=None, masked=None, out=None):
-        """The minimum of the unmasked values.
+        """Return the minimum of the unmasked values.
 
-        Input:
-            axis        an integer axis or a tuple of axes. The minimum is
-                        determined across these axes, leaving any remaining axes
-                        in the returned value. If None (the default), then the
-                        minimum is performed across all axes if the object.
-            builtins    If True and the result is a single unmasked scalar,
-                        the result is returned as a Python int or float instead
-                        of an instance of Scalar. Default is the value specified
-                        by Qube.PREFER_BUILTIN_TYPES.
-            masked      value to return if builtins is True but the returned
-                        value is masked. Default is to return a masked value
-                        instead of a builtin type.
-            out         Ignored. Enables "np.min(Scalar)" to work.
+        Parameters:
+            axis (int or tuple, optional): An integer axis or a tuple of axes.
+                The minimum is determined across these axes, leaving any
+                remaining axes in the returned value. If None (the default),
+                then the minimum is performed across all axes if the object.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, the result is returned as a Python int or
+                float instead of an instance of Scalar. Default is the value
+                specified by Qube.PREFER_BUILTIN_TYPES.
+            masked: Value to return if builtins is True but the returned value
+                is masked. Default is to return a masked value instead of a
+                builtin type.
+            out: Ignored. Enables "np.min(Scalar)" to work.
+
+        Returns:
+            Scalar or float or int: The minimum values.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -898,8 +1061,8 @@ class Scalar(Qube):
 
     #===========================================================================
     def argmax(self, axis=None, builtins=None, masked=None):
-        """The index of the maximum of the unmasked values along the specified
-        axis.
+        """Return the index of the maximum of the unmasked values along the
+        specified axis.
 
         This returns an integer Scalar array of the same shape as self, except
         that the specified axis has been removed. Each value indicates the
@@ -909,16 +1072,24 @@ class Scalar(Qube):
         If axis is None, then it returns the index of the maximum argument after
         flattening the array.
 
-        Input:
-            axis        an optional integer axis. If None, it returns the index
-                        of the maximum argument in the flattened the array.
-            builtins    If True and the result is a single unmasked scalar,
-                        the result is returned as a Python int instead of an
-                        instance of Scalar. Default is the value specified
-                        by Qube.PREFER_BUILTIN_TYPES.
-            masked      value to return if builtins is True but the returned
-                        value is masked. Default is to return a masked value
-                        instead of a builtin type.
+        Parameters:
+            axis (int, optional): An optional integer axis. If None, it returns
+                the index of the maximum argument in the flattened array.
+                Defaults to None.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, the result is returned as a Python int instead
+                of an instance of Scalar. Default is the value specified by
+                Qube.PREFER_BUILTIN_TYPES.
+            masked: Value to return if builtins is True but the returned value
+                is masked. Default is to return a masked value instead of a
+                builtin type.
+
+        Returns:
+            Scalar or int: The index of the maximum value.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If this object has shape ().
         """
 
         if self._drank_:
@@ -974,24 +1145,32 @@ class Scalar(Qube):
 
     #===========================================================================
     def argmin(self, axis=None, builtins=None, masked=None):
-        """The index of the minimum of the unmasked values along the specified
-        axis.
+        """Return the index of the minimum of the unmasked values along the
+        specified axis.
 
         This returns an integer Scalar array of the same shape as self, except
         that the specified axis has been removed. Each value indicates the
         index of the minimum along that axis. The index is masked where the
         values along the axis are all masked.
 
-        Input:
-            axis        an optional integer axis. If None, it returns the index
-                        of the maximum argument in the flattened the array.
-            builtins    If True and the result is a single unmasked scalar,
-                        the result is returned as a Python int instead of an
-                        instance of Scalar. Default is the value specified
-                        by Qube.PREFER_BUILTIN_TYPES.
-            masked      value to return if builtins is True but the returned
-                        value is masked. Default is to return a masked value
-                        instead of a builtin type.
+        Parameters:
+            axis (int, optional): An optional integer axis. If None, it returns
+                the index of the minimum argument in the flattened array.
+                Defaults to None.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, the result is returned as a Python int instead
+                of an instance of Scalar. Default is the value specified by
+                Qube.PREFER_BUILTIN_TYPES.
+            masked: Value to return if builtins is True but the returned value
+                is masked. Default is to return a masked value instead of a
+                builtin type.
+
+        Returns:
+            Scalar or int: The index of the minimum value.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If this object has shape ().
         """
 
         if self._drank_:
@@ -1146,21 +1325,28 @@ class Scalar(Qube):
 
     #===========================================================================
     def median(self, axis=None, builtins=None, masked=None, out=None):
-        """The median of the unmasked values.
+        """Return the median of the unmasked values.
 
-        Input:
-            axis        an integer axis or a tuple of axes. The median is
-                        determined across these axes, leaving any remaining axes
-                        in the returned value. If None (the default), then the
-                        median is performed across all axes if the object.
-            builtins    if True and the result is a single unmasked scalar, the
-                        result is returned as a Python int or float instead of
-                        as an instance of Scalar. Default is that specified by
-                        Qube.PREFER_BUILTIN_TYPES.
-            masked      value to return if builtins is True but the returned
-                        value is masked. Default is to return a masked value
-                        instead of a builtin type.
-            out         Ignored. Enables "np.median(Scalar)" to work.
+        Parameters:
+            axis (int or tuple, optional): An integer axis or a tuple of axes.
+                The median is determined across these axes, leaving any
+                remaining axes in the returned value. If None (the default),
+                then the median is performed across all axes of the object.
+                Defaults to None.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, the result is returned as a Python int or
+                float instead of an instance of Scalar. Default is the value
+                specified by Qube.PREFER_BUILTIN_TYPES.
+            masked: Value to return if builtins is True but the returned value
+                is masked. Default is to return a masked value instead of a
+                builtin type.
+            out: Ignored. Enables "np.median(Scalar)" to work.
+
+        Returns:
+            Scalar or float or int: The median values.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -1254,11 +1440,18 @@ class Scalar(Qube):
 
     #===========================================================================
     def sort(self, axis=0):
-        """The array sorted along the speficied axis from minimum to maximum.
+        """Return the array sorted along the specified axis from minimum to maximum.
+
         Masked values appear at the end.
 
-        Input:
-            axis        an integer axis.
+        Parameters:
+            axis (int): An integer axis to sort along.
+
+        Returns:
+            Scalar: The sorted array.
+
+        Raises:
+            ValueError: If this object has denominators.
         """
 
         if self._drank_:
@@ -1299,15 +1492,22 @@ class Scalar(Qube):
     ############################################################################
 
     def reciprocal(self, recursive=True, nozeros=False):
-        """An object equivalent to the reciprocal of this object.
+        """Return an object equivalent to the reciprocal of this object.
 
-        Input:
-            recursive   True to return the derivatives of the reciprocal too;
-                        otherwise, derivatives are removed.
-            nozeros     False (the default) to mask out any zero-valued items in
-                        this object prior to the divide. Set to True only if you
-                        know in advance that this object has no zero-valued
-                        items.
+        Parameters:
+            recursive (bool, optional): True to return the derivatives of the
+                reciprocal too; otherwise, derivatives are removed. Defaults to True.
+            nozeros (bool, optional): False (the default) to mask out any
+                zero-valued items in this object prior to the divide. Set to
+                True only if you know in advance that this object has no
+                zero-valued items. Defaults to False.
+
+        Returns:
+            Scalar: The reciprocal of this object.
+
+        Raises:
+            ValueError: If this object has denominators.
+            ValueError: If nozeros is True and a zero value is encountered.
         """
 
         if self._rank_:
@@ -1344,7 +1544,11 @@ class Scalar(Qube):
 
     #===========================================================================
     def identity(self):
-        """An object of this subclass equivalent to the identity."""
+        """Return an object of this subclass equivalent to the identity.
+
+        Returns:
+            Scalar: A read-only identity scalar with value 1.
+        """
 
         # Scalar case
         if self.is_float():
@@ -1361,6 +1565,20 @@ class Scalar(Qube):
     ############################################################################
 
     def __lt__(self, arg, builtins=True):
+        """Return True where this scalar is less than the argument.
+
+        Parameters:
+            arg: The scalar to compare with.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, return a Python bool instead of a Boolean
+                object. Defaults to True.
+
+        Returns:
+            Boolean or bool: True where this scalar is less than the argument.
+
+        Raises:
+            ValueError: If either object has denominators.
+        """
 
         arg = Scalar.as_scalar(arg)
         Units.require_compatible(self._units_, arg._units_)
@@ -1383,6 +1601,20 @@ class Scalar(Qube):
         return result
 
     def __gt__(self, arg, builtins=True):
+        """Return True where this scalar is greater than the argument.
+
+        Parameters:
+            arg: The scalar to compare with.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, return a Python bool instead of a Boolean
+                object. Defaults to True.
+
+        Returns:
+            Boolean or bool: True where this scalar is greater than the argument.
+
+        Raises:
+            ValueError: If either object has denominators.
+        """
 
         arg = Scalar.as_scalar(arg)
         Units.require_compatible(self._units_, arg._units_)
@@ -1405,6 +1637,21 @@ class Scalar(Qube):
         return result
 
     def __le__(self, arg, builtins=True):
+        """Return True where this scalar is less than or equal to the argument.
+
+        Parameters:
+            arg: The scalar to compare with.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, return a Python bool instead of a Boolean
+                object. Defaults to True.
+
+        Returns:
+            Boolean or bool: True where this scalar is less than or equal to
+            the argument.
+
+        Raises:
+            ValueError: If either object has denominators.
+        """
 
         arg = Scalar.as_scalar(arg)
         Units.require_compatible(self._units_, arg._units_)
@@ -1427,6 +1674,21 @@ class Scalar(Qube):
         return result
 
     def __ge__(self, arg, builtins=True):
+        """Return True where this scalar is greater than or equal to the argument.
+
+        Parameters:
+            arg: The scalar to compare with.
+            builtins (bool, optional): If True and the result is a single
+                unmasked scalar, return a Python bool instead of a Boolean
+                object. Defaults to True.
+
+        Returns:
+            Boolean or bool: True where this scalar is greater than or equal to
+            the argument.
+
+        Raises:
+            ValueError: If either object has denominators.
+        """
 
         arg = Scalar.as_scalar(arg)
         Units.require_compatible(self._units_, arg._units_)
@@ -1449,6 +1711,14 @@ class Scalar(Qube):
         return result
 
     def __round__(self, digits):
+        """Return this scalar rounded to the specified number of digits.
+
+        Parameters:
+            digits (int): The number of decimal digits to round to.
+
+        Returns:
+            Scalar: The rounded scalar.
+        """
 
         return Scalar(np.round(self._values_, digits), example=self)
 
@@ -1457,6 +1727,15 @@ class Scalar(Qube):
     ############################################################################
 
     def _power_0(self, recursive=True):
+        """Return this scalar raised to the power of 0.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: A scalar with value 1 and the same shape as this object.
+        """
+
         x = self.ones(self._shape_, dtype=Qube._dtype(self), mask=self._mask_)
         if recursive:
             for key, deriv in self._derivs_.items():
@@ -1467,9 +1746,27 @@ class Scalar(Qube):
         return x
 
     def _power_1(self, recursive=True):
+        """Return this scalar raised to the power of 1.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: This scalar unchanged.
+        """
+
         return self if recursive else self.wod
 
     def _power_2(self, recursive=True):
+        """Return this scalar raised to the power of 2.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: This scalar squared.
+        """
+
         result = Scalar(self._values_ * self._values_, self._mask_,
                         units = Units.units_power(self._units_, 2))
 
@@ -1481,6 +1778,15 @@ class Scalar(Qube):
         return result
 
     def _power_3(self, recursive=True):
+        """Return this scalar raised to the power of 3.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: This scalar cubed.
+        """
+
         x_sq = self._values_ * self._values_
         result = Scalar(self._values_ * x_sq, self._mask_,
                         units = Units.units_power(self._units_, 3))
@@ -1494,6 +1800,15 @@ class Scalar(Qube):
         return result
 
     def _power_4(self, recursive=True):
+        """Return this scalar raised to the power of 4.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: This scalar raised to the fourth power.
+        """
+
         x_sq = self._values_ * self._values_
         result = Scalar(x_sq * x_sq, self._mask_,
                         units = Units.units_power(self._units_, 4))
@@ -1507,12 +1822,39 @@ class Scalar(Qube):
         return result
 
     def _power_neg_1(self, recursive=True):
+        """Return this scalar raised to the power of -1.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: The reciprocal of this scalar.
+        """
+
         return self.reciprocal(recursive=recursive)
 
     def _power_half(self, recursive=True):
+        """Return this scalar raised to the power of 1/2.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: The square root of this scalar.
+        """
+
         return self.sqrt(recursive=recursive)
 
     def _power_neg_half(self, recursive=True):
+        """Return this scalar raised to the power of -1/2.
+
+        Parameters:
+            recursive (bool, optional): True to include derivatives. Defaults to True.
+
+        Returns:
+            Scalar: The reciprocal of the square root of this scalar.
+        """
+
         return self.sqrt(recursive=recursive).reciprocal(recursive=recursive)
 
     _EASY_INT_POWERS = {

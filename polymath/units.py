@@ -25,29 +25,42 @@ def gcd(a, b):
 
 #===============================================================================
 class Units(object):
-    """Units is a class defining units names and the methods for converting
-    between values that include units.
+    """Represent units and provide conversion methods.
+
+    This class defines unit names and methods for converting between values
+    that include units. Units are represented by exponents on distance, time,
+    and angle dimensions.
+
+    Attributes:
+        exponents (tuple): A tuple of integers defining the exponents on
+            distance, time and angle.
+        triple (tuple): A tuple containing (numerator, denominator, pi_exponent)
+            for the conversion factor.
+        factor (float): Factor to convert from these units to standard units.
+        factor_inv (float): Factor to convert from standard units to these units.
+        name (str or dict): The name of the units.
     """
 
     def __init__(self, exponents, triple, name=None):
-        """Constructor for a Units object.
+        """Initialize a Units object.
 
-        Input:
-            exponents   a tuple of integers defining the exponents on distance
-                        time and angle that are used for this set of units.
-            triple      a tuple containing:
-                [0]     the numerator of a factor that converts from a value in
-                        these units to a value in standard units of km, seconds
-                        and/or radians.
-                [1]     the denominator of this same factor.
-                [2]     the exponent on pi that should multiply the numerator of
-                        this factor.
-            name        the name of the units (optional). It is represented by a
-                        string or by a dictionary of unit exponents keyed by the
-                        unit names.
+        Parameters:
+            exponents (tuple): A tuple of integers defining the exponents on
+                distance, time and angle that are used for this set of units.
+            triple (tuple): A tuple containing:
+                [0] The numerator of a factor that converts from a value in
+                    these units to a value in standard units of km, seconds
+                    and/or radians.
+                [1] The denominator of this same factor.
+                [2] The exponent on pi that should multiply the numerator of
+                    this factor.
+            name (str or dict, optional): The name of the units. It is
+                represented by a string or by a dictionary of unit exponents
+                keyed by the unit names. Defaults to None.
 
-        For example, units of degrees would have a triple (1,180,1). This
-        defines a factor pi/180, which converts from degrees to radians.
+        Note:
+            For example, units of degrees would have a triple (1,180,1). This
+            defines a factor pi/180, which converts from degrees to radians.
         """
 
         self.exponents = tuple(exponents)
@@ -94,8 +107,15 @@ class Units(object):
     def as_units(arg):
         """Convert the given argument to a Unit object.
 
-        The argument can be an object of class Unit or one of the standard unit
-        names. An argument of None returns None.
+        Parameters:
+            arg: The argument to convert. Can be an object of class Unit, one
+                of the standard unit names, or None.
+
+        Returns:
+            Units or None: The converted Units object, or None if arg is None.
+
+        Raises:
+            ValueError: If the argument is not a recognized unit.
         """
 
         if arg is None:
@@ -109,8 +129,15 @@ class Units(object):
 
     @staticmethod
     def can_match(first, second):
-        """True if the units can match, meaning that either they have the same
-        exponents or one or both are None.
+        """Check if the units can match.
+
+        Parameters:
+            first (Units or None): The first units object.
+            second (Units or None): The second units object.
+
+        Returns:
+            bool: True if the units can match, meaning that either they have
+                the same exponents or one or both are None.
         """
 
         if first is None or second is None:
@@ -120,16 +147,30 @@ class Units(object):
 
     @staticmethod
     def require_compatible(first, second):
-        """Raise a ValueError if the arguments are not compatible units."""
+        """Raise a ValueError if the arguments are not compatible units.
+
+        Parameters:
+            first (Units or None): The first units object.
+            second (Units or None): The second units object.
+
+        Raises:
+            ValueError: If the units are not compatible.
+        """
 
         if not Units.can_match(first, second):
             raise ValueError('units are not compatible')
 
     @staticmethod
     def do_match(first, second):
-        """True if the units match, meaning that they have the same exponents.
+        """Check if the units match.
 
-        Values of None are treated as equivalent to unitless.
+        Parameters:
+            first (Units or None): The first units object.
+            second (Units or None): The second units object.
+
+        Returns:
+            bool: True if the units match, meaning that they have the same
+                exponents. Values of None are treated as equivalent to unitless.
         """
 
         if first is None:
@@ -141,14 +182,29 @@ class Units(object):
 
     @staticmethod
     def require_match(first, second):
-        """Raise a ValueError if the units are not the same."""
+        """Raise a ValueError if the units are not the same.
+
+        Parameters:
+            first (Units or None): The first units object.
+            second (Units or None): The second units object.
+
+        Raises:
+            ValueError: If the units are not compatible.
+        """
 
         if not Units.do_match(first, second):
             raise ValueError('units are not compatible')
 
     @staticmethod
     def is_angle(arg):
-        """True if the argument could be used as an angle."""
+        """Check if the argument could be used as an angle.
+
+        Parameters:
+            arg (Units or None): The units object to check.
+
+        Returns:
+            bool: True if the argument could be used as an angle.
+        """
 
         if arg is None:
             return True
@@ -156,14 +212,28 @@ class Units(object):
 
     @staticmethod
     def require_angle(arg):
-        """Raise a ValueError if the argument could be used as an angle."""
+        """Raise a ValueError if the argument could not be used as an angle.
+
+        Parameters:
+            arg (Units or None): The units object to check.
+
+        Raises:
+            ValueError: If the units are incompatible with an angle.
+        """
 
         if not Units.is_angle(arg):
             raise ValueError('units are incompatible with an angle')
 
     @staticmethod
     def is_unitless(arg):
-        """True if the argument is unitless."""
+        """Check if the argument is unitless.
+
+        Parameters:
+            arg (Units or None): The units object to check.
+
+        Returns:
+            bool: True if the argument is unitless.
+        """
 
         if arg is None:
             return True
@@ -171,29 +241,55 @@ class Units(object):
 
     @staticmethod
     def require_unitless(arg):
-        """Raise a ValueError if the argument is not unitless."""
+        """Raise a ValueError if the argument is not unitless.
+
+        Parameters:
+            arg (Units or None): The units object to check.
+
+        Raises:
+            ValueError: If units are not permitted.
+        """
 
         if not Units.is_unitless(arg):
             raise ValueError('units are not permitted')
 
     def from_this(self, value):
-        """Convert a scalar or numpy array in these units to one in standard
-        units of km, seconds and radians.
+        """Convert a scalar or numpy array in these units to standard units.
+
+        Parameters:
+            value (scalar or ndarray): The value to convert from these units
+                to standard units of km, seconds and radians.
+
+        Returns:
+            scalar or ndarray: The converted value in standard units.
         """
 
         return self.factor * value
 
     def into_this(self, value):
-        """Convert a scalar or numpy array given in standard units to one in
-        these units.
+        """Convert a scalar or numpy array from standard units to these units.
+
+        Parameters:
+            value (scalar or ndarray): The value to convert from standard units
+                to these units.
+
+        Returns:
+            scalar or ndarray: The converted value in these units.
         """
 
         return self.factor_inv * value
 
     @staticmethod
     def from_units(units, value):
-        """Convert a scalar or numpy array in the given units to one in
-        standard units of km, seconds and radians.
+        """Convert a scalar or numpy array in the given units to standard units.
+
+        Parameters:
+            units (Units or None): The units to convert from.
+            value (scalar or ndarray): The value to convert.
+
+        Returns:
+            scalar or ndarray: The converted value in standard units of km,
+                seconds and radians.
         """
 
         if units is None:
@@ -203,8 +299,14 @@ class Units(object):
 
     @staticmethod
     def into_units(units, value):
-        """Convert a scalar or numpy array in standard units to one in the
-        given units.
+        """Convert a scalar or numpy array from standard units to given units.
+
+        Parameters:
+            units (Units or None): The units to convert to.
+            value (scalar or ndarray): The value to convert.
+
+        Returns:
+            scalar or ndarray: The converted value in the given units.
         """
 
         if units is None:
@@ -217,6 +319,17 @@ class Units(object):
 
         The value is assumed to be in these units, and it is returned in the
         new units specified. Conversions are exact whenever possible.
+
+        Parameters:
+            value (scalar or ndarray): The value to convert.
+            units (Units or None): The target units. If None, converts to
+                unitless.
+
+        Returns:
+            scalar or ndarray: The converted value in the target units.
+
+        Raises:
+            ValueError: If the units are incompatible for conversion.
         """
 
         if units is None:
@@ -240,6 +353,18 @@ class Units(object):
     ############################################################################
 
     def __mul__(self, arg):
+        """Multiply this Units object by another Units object or scalar.
+
+        Parameters:
+            arg (Units, None, or numbers.Real): The object to multiply by.
+
+        Returns:
+            Units: The product of the units multiplication.
+
+        Raises:
+            NotImplementedError: If the argument type is not supported.
+        """
+
         if isinstance(arg, Units):
             return Units((self.exponents[0] + arg.exponents[0],
                           self.exponents[1] + arg.exponents[1],
@@ -267,6 +392,18 @@ class Units(object):
         return self.__rtruediv__(arg)
 
     def __truediv__(self, arg):
+        """Divide this Units object by another Units object or scalar.
+
+        Parameters:
+            arg (Units, None, or numbers.Real): The object to divide by.
+
+        Returns:
+            Units: The quotient of the units division.
+
+        Raises:
+            NotImplementedError: If the argument type is not supported.
+        """
+
         if isinstance(arg, Units):
             return Units((self.exponents[0] - arg.exponents[0],
                           self.exponents[1] - arg.exponents[1],
@@ -285,6 +422,18 @@ class Units(object):
         return NotImplemented
 
     def __rtruediv__(self, arg):
+        """Divide a scalar by this Units object.
+
+        Parameters:
+            arg (None or numbers.Real): The scalar to divide.
+
+        Returns:
+            Units: The reciprocal of this Units object multiplied by arg.
+
+        Raises:
+            NotImplementedError: If the argument type is not supported.
+        """
+
         if arg is None:
             arg = 1.
 
@@ -294,6 +443,19 @@ class Units(object):
         return NotImplemented
 
     def __pow__(self, power):
+        """Raise this Units object to the specified power.
+
+        Parameters:
+            power (int or float): The exponent. Must be an integer or
+                half-integer.
+
+        Returns:
+            Units: This Units object raised to the specified power.
+
+        Raises:
+            ValueError: If the power is not an integer or half-integer.
+        """
+
         ipower = int(power)
         if power != ipower:
             if 2*power == int(2*power):
@@ -322,7 +484,18 @@ class Units(object):
                          Units.name_power(self.name, power))
 
     def sqrt(self, name=None):
-        """The square root of a unit if this is possible."""
+        """Return the square root of this Units object.
+
+        Parameters:
+            name (str or dict, optional): The name for the resulting units.
+                Defaults to None.
+
+        Returns:
+            Units: The square root of this Units object.
+
+        Raises:
+            ValueError: If the exponents are not even numbers.
+        """
 
         if (self.exponents[0] % 2 != 0 or
             self.exponents[1] % 2 != 0 or
@@ -355,7 +528,18 @@ class Units(object):
 
     @staticmethod
     def mul_units(arg1, arg2, name=None):
-        """Static version of multiply operator."""
+        """Multiply two Units objects.
+
+        Parameters:
+            arg1 (Units or None): The first Units object.
+            arg2 (Units or None): The second Units object.
+            name (str or dict, optional): The name for the resulting units.
+                Defaults to None.
+
+        Returns:
+            Units or None: The product of the two Units objects, or None if
+                both arguments are None.
+        """
 
         if arg2 is None:
             result = arg1
@@ -371,7 +555,18 @@ class Units(object):
 
     @staticmethod
     def div_units(arg1, arg2, name=None):
-        """Static version of divide operator."""
+        """Divide two Units objects.
+
+        Parameters:
+            arg1 (Units or None): The numerator Units object.
+            arg2 (Units or None): The denominator Units object.
+            name (str or dict, optional): The name for the resulting units.
+                Defaults to None.
+
+        Returns:
+            Units or None: The quotient of the two Units objects, or None if
+                both arguments are None.
+        """
 
         if arg2 is None:
             result = arg1
@@ -387,9 +582,19 @@ class Units(object):
 
     @staticmethod
     def sqrt_units(units, name=None):
-        """A Units object constructed as the square root of the given units.
+        """Return the square root of a Units object.
 
-        The given units can be None.
+        Parameters:
+            units (Units or None): The Units object to take the square root of.
+            name (str or dict, optional): The name for the resulting units.
+                Defaults to None.
+
+        Returns:
+            Units or None: The square root of the Units object, or None if
+                units is None.
+
+        Raises:
+            ValueError: If the exponents are not even numbers.
         """
 
         if units is None:
@@ -399,9 +604,21 @@ class Units(object):
 
     @staticmethod
     def units_power(units, power, name=None):
-        """A Units object constructed as the given units raised to a power.
+        """Raise a Units object to the specified power.
 
-        The given units can be None.
+        Parameters:
+            units (Units or None): The Units object to raise to a power.
+            power (int or float): The exponent. Must be an integer or
+                half-integer.
+            name (str or dict, optional): The name for the resulting units.
+                Defaults to None.
+
+        Returns:
+            Units or None: The Units object raised to the specified power, or
+                None if units is None.
+
+        Raises:
+            ValueError: If the power is not an integer or half-integer.
         """
 
         if units is None:
@@ -416,6 +633,14 @@ class Units(object):
     ############################################################################
 
     def __eq__(self, arg):
+        """Check if this Units object equals another.
+
+        Parameters:
+            arg (Units or None): The Units object to compare with.
+
+        Returns:
+            bool: True if the Units objects are equal, False otherwise.
+        """
 
         if not isinstance(arg, Units):
             return False
@@ -423,6 +648,14 @@ class Units(object):
         return (self.exponents == arg.exponents and self.factor == arg.factor)
 
     def __ne__(self, arg):
+        """Check if this Units object does not equal another.
+
+        Parameters:
+            arg (Units or None): The Units object to compare with.
+
+        Returns:
+            bool: True if the Units objects are not equal, False otherwise.
+        """
 
         if not isinstance(arg, Units):
             return True
@@ -437,6 +670,12 @@ class Units(object):
         return Units(self.exponents, self.triple, self.name)
 
     def copy(self):
+        """Return a copy of this Units object.
+
+        Returns:
+            Units: A copy of this Units object.
+        """
+
         return self.__copy__()
 
     ############################################################################
@@ -444,13 +683,35 @@ class Units(object):
     ############################################################################
 
     def __str__(self):
+        """Return a string representation of this Units object.
+
+        Returns:
+            str: A string representation of the units.
+        """
+
         return "Units(" + self.get_name() + ")"
 
     def __repr__(self):
+        """Return a detailed string representation of this Units object.
+
+        Returns:
+            str: A detailed string representation of the units.
+        """
+
         return str(self)
 
     @staticmethod
     def mul_names(name1, name2):
+        """Multiply two unit names.
+
+        Parameters:
+            name1 (str, dict, or None): The first unit name.
+            name2 (str, dict, or None): The second unit name.
+
+        Returns:
+            str or dict or None: The product of the two unit names, or None if
+                both arguments are None.
+        """
 
         if name1 is None or name2 is None:
             return None
@@ -472,6 +733,16 @@ class Units(object):
 
     @staticmethod
     def div_names(name1, name2):
+        """Divide two unit names.
+
+        Parameters:
+            name1 (str, dict, or None): The numerator unit name.
+            name2 (str, dict, or None): The denominator unit name.
+
+        Returns:
+            str or dict or None: The quotient of the two unit names, or None if
+                both arguments are None.
+        """
 
         if name1 is None or name2 is None:
             return None
@@ -493,6 +764,16 @@ class Units(object):
 
     @staticmethod
     def name_power(name, power):
+        """Raise a unit name to the specified power.
+
+        Parameters:
+            name (str, dict, or None): The unit name to raise to a power.
+            power (int or float): The exponent.
+
+        Returns:
+            str or dict or None: The unit name raised to the specified power,
+                or None if name is None.
+        """
 
         if name is None:
             return None
@@ -521,7 +802,16 @@ class Units(object):
 
     @staticmethod
     def name_to_dict(name):
-        """Interpret a string as powers of named units, returning a dictionary.
+        """Convert a unit name string to a dictionary.
+
+        Parameters:
+            name (str or dict): The unit name to convert.
+
+        Returns:
+            dict: A dictionary representation of the unit name.
+
+        Raises:
+            ValueError: If the name format is invalid.
         """
 
         BIGNUM = 99999
@@ -604,7 +894,19 @@ class Units(object):
 
     @staticmethod
     def name_to_str(namedict):
-        """A string representing the contents of a name dictionary."""
+        """Convert a unit name dictionary to a string.
+
+        Parameters:
+            namedict (dict or None): The unit name dictionary to convert.
+
+        Returns:
+            str: A string representation of the unit name, or empty string if
+                namedict is None.
+
+        Note:
+            This method contains nested helper functions for ordering keys and
+            concatenating units.
+        """
 
         def order_keys(namelist):
             """Internal method to order the units sensibly."""
@@ -708,7 +1010,11 @@ class Units(object):
                 return ''
 
     def create_name(self):
-        """Attempt to create a name dictionary if one is missing."""
+        """Create a name for this Units object based on its exponents.
+
+        Returns:
+            str: A name for this Units object.
+        """
 
         # Return the internal name, if defined
         if self.name is not None:
@@ -797,13 +1103,21 @@ class Units(object):
         return new_dict
 
     def get_name(self):
-        """The name of a Unit object."""
+        """Get the name of this Units object.
+
+        Returns:
+            str or dict or None: The name of this Units object.
+        """
 
         name = self.name or self.create_name()
         return Units.name_to_str(name)
 
     def set_name(self, name):
-        """Set the name of a Unit object."""
+        """Set the name of this Units object.
+
+        Parameters:
+            name (str or dict): The new name for this Units object.
+        """
 
         self.name = name
 

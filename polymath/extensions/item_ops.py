@@ -6,17 +6,24 @@ import numpy as np
 from polymath.qube import Qube
 
 def extract_numer(self, axis, index, classes=(), recursive=True):
-    """An object extracted from one numerator axis.
+    """Extract an object from one numerator axis.
 
-    Input:
-        axis        the item axis from which to extract a slice.
-        index       the index value at which to extract the slice.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to include matching slices of the derivatives in the
-                    returned object; otherwise, the returned object will not
-                    contain derivatives.
+    Parameters:
+        axis (int): The item axis from which to extract a slice.
+        index (int): The index value at which to extract the slice.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to include matching slices of the
+            derivatives in the returned object; otherwise, the returned object
+            will not contain derivatives. Defaults to True.
+
+    Returns:
+        Qube: An object extracted from the specified numerator axis.
+
+    Raises:
+        ValueError: If the axis is out of range.
     """
 
     # Position axis from left
@@ -49,16 +56,22 @@ def extract_numer(self, axis, index, classes=(), recursive=True):
 
 #===============================================================================
 def extract_denom(self, axis, index, classes=()):
-    """An object extracted from one denominator axis.
+    """Extract an object from one denominator axis.
 
-    Input:
-        axis        the item axis from which to extract a slice.
-        index       the index value at which to extract the slice.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. If not provided and denominator rank is one, the
-                    object returned will have the same class as self. Otherwise,
-                    a generic Qube object will be returned.
+    Parameters:
+        axis (int): The item axis from which to extract a slice.
+        index (int): The index value at which to extract the slice.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. If not provided and denominator rank is one, the
+            object returned will have the same class as self. Otherwise,
+            a generic Qube object will be returned. Defaults to empty tuple.
+
+    Returns:
+        Qube: An object extracted from the specified denominator axis.
+
+    Raises:
+        ValueError: If the axis is out of range.
     """
 
     # Position axis from left
@@ -85,9 +98,15 @@ def extract_denom(self, axis, index, classes=()):
 
 #===============================================================================
 def extract_denoms(self):
-    """Tuple of objects extracted from one object with a 1-D denominator.
+    """Return a tuple of objects extracted from one object with a 1-D denominator.
 
     Returns a list of objects with the same class as self, but drank = 0.
+
+    Returns:
+        list: A list of objects with drank = 0.
+
+    Raises:
+        ValueError: If the object does not have a 1-D denominator.
     """
 
     if self._drank_ == 0:
@@ -107,18 +126,25 @@ def extract_denoms(self):
 
 #===============================================================================
 def slice_numer(self, axis, index1, index2, classes=(), recursive=True):
-    """An object sliced from one numerator axis.
+    """Extract an object sliced from one numerator axis.
 
-    Input:
-        axis        the item axis from which to extract a slice.
-        index1      the starting index value at which to extract the slice.
-        index2      the ending index value at which to extract the slice.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to include matching slices of the derivatives in the
-                    returned object; otherwise, the returned object will not
-                    contain derivatives.
+    Parameters:
+        axis (int): The item axis from which to extract a slice.
+        index1 (int): The starting index value at which to extract the slice.
+        index2 (int): The ending index value at which to extract the slice.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to include matching slices of the
+            derivatives in the returned object; otherwise, the returned object
+            will not contain derivatives. Defaults to True.
+
+    Returns:
+        Qube: An object sliced from the specified numerator axis.
+
+    Raises:
+        ValueError: If the axis is out of range.
     """
 
     # Position axis from left
@@ -154,14 +180,22 @@ def slice_numer(self, axis, index1, index2, classes=(), recursive=True):
 ################################################################################
 
 def transpose_numer(self, axis1=0, axis2=1, recursive=True):
-    """A copy of this object with two numerator axes transposed.
+    """Return a copy of this object with two numerator axes transposed.
 
-    Inputs:
-        axis1       the first axis to transpose from among the numerator axes.
-                    Negative values count backward from the last numerator axis.
-        axis2       the second axis to transpose.
-        recursive   True to transpose the same axes of the derivatives;
-                    False to return an object without derivatives.
+    Parameters:
+        axis1 (int, optional): The first axis to transpose from among the
+            numerator axes. Negative values count backward from the last
+            numerator axis. Defaults to 0.
+        axis2 (int, optional): The second axis to transpose. Defaults to 1.
+        recursive (bool, optional): True to transpose the same axes of the
+            derivatives; False to return an object without derivatives.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy with the specified numerator axes transposed.
+
+    Raises:
+        ValueError: If either axis is out of range.
     """
 
     len_shape = len(self._shape_)
@@ -198,19 +232,25 @@ def transpose_numer(self, axis1=0, axis2=1, recursive=True):
         for (key, deriv) in self._derivs_.items():
             obj.insert_deriv(key, deriv.transpose_numer(a1, a2, False))
 
-    return obj
-
 #===============================================================================
 def reshape_numer(self, shape, classes=(), recursive=True):
-    """This object with a new shape for numerator items.
+    """Return this object with a new shape for numerator items.
 
-    Input:
-        shape       the new shape.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to reshape the derivatives in the same way;
-                    otherwise, the returned object will not contain derivatives.
+    Parameters:
+        shape (tuple): The new shape for numerator items.
+        classes (class or tuple, optional): A single class or list or tuple of
+            classes. The class of the object returned will be the first suitable
+            class in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to reshape the derivatives in the same
+            way; otherwise, the returned object will not contain derivatives.
+            Defaults to True.
+
+    Returns:
+        Qube: The reshaped object.
+
+    Raises:
+        ValueError: If the item size would be changed by the reshape operation.
     """
 
     # Validate the shape
@@ -237,15 +277,19 @@ def reshape_numer(self, shape, classes=(), recursive=True):
 
 #===============================================================================
 def flatten_numer(self, classes=(), recursive=True):
-    """This object with a new numerator shape such that nrank == 1.
+    """Return this object with a new numerator shape such that nrank == 1.
 
-    Input:
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to include matching slices of the derivatives in the
-                    returned object; otherwise, the returned object will not
-                    contain derivatives.
+    Parameters:
+        classes (class or tuple, optional): A single class or list or tuple of
+            classes. The class of the object returned will be the first suitable
+            class in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to include matching slices of the
+            derivatives in the returned object; otherwise, the returned object
+            will not contain derivatives. Defaults to True.
+
+    Returns:
+        Qube: The flattened object.
     """
 
     return self.reshape_numer((self.nsize,), classes, recursive)
@@ -255,12 +299,19 @@ def flatten_numer(self, classes=(), recursive=True):
 ################################################################################
 
 def transpose_denom(self, axis1=0, axis2=1):
-    """A copy of this object with two denominator axes transposed.
+    """Return a copy of this object with two denominator axes transposed.
 
-    Inputs:
-        axis1       the first axis to transpose from among the denominator axes.
-                    Negative values count backward from the last axis.
-        axis2       the second axis to transpose.
+    Parameters:
+        axis1 (int, optional): The first axis to transpose from among the
+            denominator axes. Negative values count backward from the last axis.
+            Defaults to 0.
+        axis2 (int, optional): The second axis to transpose. Defaults to 1.
+
+    Returns:
+        Qube: The transposed object.
+
+    Raises:
+        ValueError: If either axis is out of range.
     """
 
     len_shape = len(self._shape_)
@@ -297,10 +348,17 @@ def transpose_denom(self, axis1=0, axis2=1):
 
 #===============================================================================
 def reshape_denom(self, shape):
-    """This object with a new shape for denominator items.
+    """Return this object with a new shape for denominator items.
 
-    Input:
-        shape       the new denominator shape.
+    Parameters:
+        shape (tuple): The new denominator shape.
+
+    Returns:
+        Qube: The reshaped object.
+
+    Raises:
+        ValueError: If the denominator size would be changed by the reshape
+            operation.
     """
 
     # Validate the shape
@@ -332,14 +390,17 @@ def flatten_denom(self):
 ################################################################################
 
 def join_items(self, classes):
-    """The object with denominator axes joined to the numerator.
+    """Return the object with denominator axes joined to the numerator.
 
     Derivatives are removed.
 
-    Input:
-        classes     either a single subclass of Qube or a list or tuple of
-                    subclasses. The returned object will be an instance of the
-                    first suitable subclass in the list.
+    Parameters:
+        classes (class or tuple): Either a single subclass of Qube or a list or
+            tuple of subclasses. The returned object will be an instance of the
+            first suitable subclass in the list.
+
+    Returns:
+        Qube: The object with joined items.
     """
 
     if not self._drank_:
@@ -355,15 +416,18 @@ def join_items(self, classes):
 
 #===============================================================================
 def split_items(self, nrank, classes):
-    """The object with numerator axes converted to denominator axes.
+    """Return the object with numerator axes converted to denominator axes.
 
     Derivatives are removed.
 
-    Input:
-        nrank       number of numerator axes to retain.
-        classes     either a single subclass of Qube or a list or tuple of
-                    subclasses. The returned object will be an instance of the
-                    first suitable subclass in the list.
+    Parameters:
+        nrank (int): Number of numerator axes to retain.
+        classes (class or tuple): Either a single subclass of Qube or a list or
+            tuple of subclasses. The returned object will be an instance of the
+            first suitable subclass in the list.
+
+    Returns:
+        Qube: The object with split items.
     """
 
     obj = Qube(self._values_, self._mask_,
@@ -376,14 +440,17 @@ def split_items(self, nrank, classes):
 
 #===============================================================================
 def swap_items(self, classes):
-    """A new object with the numerator and denominator axes exchanged.
+    """Return a new object with the numerator and denominator axes exchanged.
 
     Derivatives are removed.
 
-    Input:
-        classes     either a single subclass of Qube or a list or tuple of
-                    subclasses. The returned object will be an instance of the
-                    first suitable subclass in the list.
+    Parameters:
+        classes (class or tuple): Either a single subclass of Qube or a list or
+            tuple of subclasses. The returned object will be an instance of the
+            first suitable subclass in the list.
+
+    Returns:
+        Qube: The object with swapped items.
     """
 
     new_values = self._values_
@@ -401,14 +468,17 @@ def swap_items(self, classes):
 
 #===============================================================================
 def chain(self, arg):
-    """Chain multiplication of this derivative by another.
+    """Return the chain multiplication of this derivative by another.
 
     Returns the denominator of the first object times the numerator of the
     second argument. The result will be an instance of the same class. This
     operation is never recursive.
 
-    Inputs:
-        arg         the right-hand term in the chain multiplication.
+    Parameters:
+        arg (Qube): The right-hand term in the chain multiplication.
+
+    Returns:
+        Qube: The result of the chain multiplication.
     """
 
     left = self.flatten_denom().join_items(Qube)

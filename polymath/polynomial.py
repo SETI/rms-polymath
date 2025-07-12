@@ -11,11 +11,17 @@ from polymath.vector import Vector
 from polymath.units  import Units
 
 class Polynomial(Vector):
-    """This is a Vector subclass in which the elements are interpreted as the
+    """Represent polynomials in the PolyMath framework.
+
+    This is a Vector subclass in which the elements are interpreted as the
     coefficients of a polynomial in a single variable x. Coefficients appear
     in order of decreasing exponent. Mathematical operations, polynomial
     root-solving are supported. Coefficients can have derivatives and these can
     be used to determine derivatives of the values or roots.
+
+    Attributes:
+        INTS_OK (bool): False as only floating-point coefficients are allowed.
+        UNIT_OK (bool): False as units are disallowed.
     """
 
     INTS_OK = False     # Only floating-point coefficients are allowed
@@ -23,18 +29,18 @@ class Polynomial(Vector):
 
     #===========================================================================
     def __init__(self, *args, **keywords):
-        """Constructor for a Polynomial.
+        """Initialize a Polynomial object.
 
         Parameters:
-            *args: Arguments to pass to the Vector constructor. If a single argument
-                is a subclass of Vector, it is quickly converted to class
-                Polynomial.
+            *args: Arguments to pass to the Vector constructor. If a single
+                argument is a subclass of Vector, it is quickly converted to
+                class Polynomial.
             **keywords: Keyword arguments to pass to the Vector constructor.
 
-        Notes:
-            If a single argument is a subclass of Vector, it is quickly converted to
-            class Polynomial. Otherwise, the constructor takes the same inputs as
-            the constructor for class Vector.
+        Note:
+            If a single argument is a subclass of Vector, it is quickly converted
+            to class Polynomial. Otherwise, the constructor takes the same inputs
+            as the constructor for class Vector.
         """
 
         # For a subclass of Vector, transfer all attributes
@@ -59,10 +65,10 @@ class Polynomial(Vector):
     #===========================================================================
     @property
     def order(self):
-        """The order of the polynomial, i.e., the largest exponent.
+        """Return the order of the polynomial, i.e., the largest exponent.
 
         Returns:
-            The order of the polynomial.
+            int: The order of the polynomial.
         """
 
         return self.item[-self._drank_-1] - 1
@@ -70,15 +76,15 @@ class Polynomial(Vector):
     #===========================================================================
     @staticmethod
     def as_polynomial(arg, recursive=True):
-        """The object converted to class Polynomial.
+        """Convert the object to class Polynomial.
 
         Parameters:
             arg: Object to convert to Polynomial.
             recursive (bool, optional): True to include derivatives in the
-                conversion.
+                conversion. Defaults to True.
 
         Returns:
-            The converted object as a Polynomial.
+            Polynomial: The converted object as a Polynomial.
         """
 
         if isinstance(arg, Vector):
@@ -95,14 +101,14 @@ class Polynomial(Vector):
 
     #===========================================================================
     def as_vector(self, recursive=True):
-        """This object converted to class Vector.
+        """Convert this object to class Vector.
 
         Parameters:
             recursive (bool, optional): True to include derivatives in the
-                conversion.
+                conversion. Defaults to True.
 
         Returns:
-            This polynomial converted to a Vector.
+            Vector: This polynomial converted to a Vector.
         """
 
         obj = Qube.__new__(Vector)
@@ -120,17 +126,17 @@ class Polynomial(Vector):
 
     #===========================================================================
     def at_least_order(self, order, recursive=True):
-        """A shallow copy of this object with at least this minimum order.
+        """Return a shallow copy with at least this minimum order.
 
         Extra leading polynomial coefficients are filled with zeros.
 
         Parameters:
-            order: Minimum order of the Polynomial.
+            order (int): Minimum order of the Polynomial.
             recursive (bool, optional): True to include derivatives in the
-                conversion.
+                conversion. Defaults to True.
 
         Returns:
-            A copy with at least the specified minimum order.
+            Polynomial: A copy with at least the specified minimum order.
         """
 
         if self.order >= order:
@@ -153,18 +159,18 @@ class Polynomial(Vector):
 
     #===========================================================================
     def set_order(self, order, recursive=True):
-        """This Polynomial expressed with exactly this order.
+        """Return this Polynomial expressed with exactly this order.
 
         Extra polynomial coefficients are filled with zeros. If this Polynomial
         exceeds this order requested, raise an exception.
 
         Parameters:
-            order: Minimum number of the Polynomial.
+            order (int): Exact order of the Polynomial.
             recursive (bool, optional): True to include derivatives in the
-                conversion.
+                conversion. Defaults to True.
 
         Returns:
-            A copy with exactly the specified order.
+            Polynomial: A copy with exactly the specified order.
 
         Raises:
             ValueError: If this Polynomial exceeds the order requested.
@@ -178,14 +184,14 @@ class Polynomial(Vector):
 
     #===========================================================================
     def invert_line(self, recursive=True):
-        """The inversion of this linear polynomial.
+        """Return the inversion of this linear polynomial.
 
         Parameters:
             recursive (bool, optional): True to include derivatives in the
-                conversion.
+                conversion. Defaults to True.
 
         Returns:
-            The inverted linear polynomial.
+            Polynomial: The inverted linear polynomial.
 
         Raises:
             ValueError: If the polynomial is not first-order.
@@ -209,37 +215,101 @@ class Polynomial(Vector):
     ############################################################################
 
     def __neg__(self):
+        """Return the negation of this polynomial.
+
+        Returns:
+            Polynomial: The negated polynomial.
+        """
         return Polynomial(-self.as_vector())
 
     def __add__(self, arg):
+        """Add this polynomial to another polynomial or scalar.
+
+        Parameters:
+            arg: The polynomial or scalar to add to this polynomial.
+
+        Returns:
+            Polynomial: The sum of the polynomials.
+        """
         arg  = Polynomial.as_polynomial(arg ).at_least_order(self.order)
         self = Polynomial.as_polynomial(self).at_least_order(arg.order)
         return Polynomial(self.as_vector() + arg.as_vector())
 
     def __radd__(self, arg):
+        """Add this polynomial to another polynomial or scalar (right addition).
+
+        Parameters:
+            arg: The polynomial or scalar to add to this polynomial.
+
+        Returns:
+            Polynomial: The sum of the polynomials.
+        """
         return self.__add__(arg)
 
     def __iadd__(self, arg):
+        """Add another polynomial to this polynomial in-place.
+
+        Parameters:
+            arg: The polynomial to add to this polynomial.
+
+        Returns:
+            Polynomial: This polynomial modified in-place.
+        """
         arg = Polynomial.as_polynomial(arg).set_order(self.order)
         super(Polynomial,self).__iadd__(arg.as_vector())
         return Polynomial(self)
 
     def __sub__(self, arg):
+        """Subtract another polynomial or scalar from this polynomial.
+
+        Parameters:
+            arg: The polynomial or scalar to subtract from this polynomial.
+
+        Returns:
+            Polynomial: The difference of the polynomials.
+        """
         arg  = Polynomial.as_polynomial(arg ).at_least_order(self.order)
         self = Polynomial.as_polynomial(self).at_least_order(arg.order)
         return Polynomial(self.as_vector() - arg.as_vector())
 
     def __rsub__(self, arg):
+        """Subtract this polynomial from another polynomial or scalar.
+
+        Parameters:
+            arg: The polynomial or scalar from which to subtract this polynomial.
+
+        Returns:
+            Polynomial: The difference of the polynomials.
+        """
         arg  = Polynomial.as_polynomial(arg ).at_least_order(self.order)
         self = Polynomial.as_polynomial(self).at_least_order(arg.order)
         return Polynomial(arg.as_vector() - self.as_vector())
 
     def __isub__(self, arg):
+        """Subtract another polynomial from this polynomial in-place.
+
+        Parameters:
+            arg: The polynomial to subtract from this polynomial.
+
+        Returns:
+            Polynomial: This polynomial modified in-place.
+        """
         arg = Polynomial.as_polynomial(arg).set_order(self.order)
         super(Polynomial,self).__isub__(arg.as_vector())
         return Polynomial(self)
 
     def __mul__(self, arg):
+        """Multiply this polynomial by another polynomial or scalar.
+
+        Parameters:
+            arg: The polynomial or scalar to multiply with this polynomial.
+
+        Returns:
+            Polynomial: The product of the polynomials.
+
+        Raises:
+            ValueError: If the polynomials have incompatible denominators.
+        """
 
         # Support for Polynomial multiplication
         if isinstance(arg, Polynomial):
@@ -286,9 +356,25 @@ class Polynomial(Vector):
         return Polynomial(self.as_vector() * arg)
 
     def __rmul__(self, arg):
+        """Multiply another polynomial or scalar by this polynomial.
+
+        Parameters:
+            arg: The polynomial or scalar to multiply with this polynomial.
+
+        Returns:
+            Polynomial: The product of the polynomials.
+        """
         return self.__mul__(arg)
 
     def __imul__(self, arg):
+        """Multiply this polynomial by another polynomial or scalar in-place.
+
+        Parameters:
+            arg: The polynomial or scalar to multiply with this polynomial.
+
+        Returns:
+            Polynomial: This polynomial modified in-place.
+        """
 
         # Multiplying by a zero-order Polynomial is valid
         if isinstance(arg, Vector) and arg.item == (1,):
@@ -298,6 +384,14 @@ class Polynomial(Vector):
         return Polynomial(self)
 
     def __truediv__(self, arg):
+        """Divide this polynomial by another polynomial or scalar.
+
+        Parameters:
+            arg: The polynomial or scalar by which to divide this polynomial.
+
+        Returns:
+            Polynomial: The quotient of the polynomials.
+        """
 
         # Dividing by a zero-order Polynomial is valid
         if isinstance(arg, Vector) and arg.item == (1,):
@@ -306,6 +400,14 @@ class Polynomial(Vector):
         return Polynomial(self.as_vector() / arg)
 
     def __itruediv__(self, arg):
+        """Divide this polynomial by another polynomial or scalar in-place.
+
+        Parameters:
+            arg: The polynomial or scalar by which to divide this polynomial.
+
+        Returns:
+            Polynomial: This polynomial modified in-place.
+        """
 
         # Dividing by a zero-order Polynomial is valid
         if isinstance(arg, Vector) and arg.item == (1,):
@@ -315,6 +417,17 @@ class Polynomial(Vector):
         return Polynomial(self)
 
     def __pow__(self, arg):
+        """Raise this polynomial to the specified power.
+
+        Parameters:
+            arg: The exponent (must be a non-negative integer).
+
+        Returns:
+            Polynomial: This polynomial raised to the specified power.
+
+        Raises:
+            ValueError: If the exponent is negative or not an integer.
+        """
         if arg < 0 or arg != int(arg):
             raise ValueError('Polynomial exponents must be non-negative '
                              'integers')
@@ -332,11 +445,27 @@ class Polynomial(Vector):
         return result
 
     def __eq__(self, arg):
+        """Check if this polynomial equals another polynomial.
+
+        Parameters:
+            arg: The polynomial to compare with this polynomial.
+
+        Returns:
+            bool: True if the polynomials are equal, False otherwise.
+        """
         arg  = Polynomial.as_polynomial(arg ).at_least_order(self.order)
         self = Polynomial.as_polynomial(self).at_least_order(arg.order)
         return arg.as_vector() == self.as_vector()
 
     def __ne__(self, arg):
+        """Check if this polynomial does not equal another polynomial.
+
+        Parameters:
+            arg: The polynomial to compare with this polynomial.
+
+        Returns:
+            bool: True if the polynomials are not equal, False otherwise.
+        """
         arg  = Polynomial.as_polynomial(arg ).at_least_order(self.order)
         self = Polynomial.as_polynomial(self).at_least_order(arg.order)
         return arg.as_vector() != self.as_vector()
@@ -346,13 +475,14 @@ class Polynomial(Vector):
     ############################################################################
 
     def deriv(self, recursive=True):
-        """The first derivative of this Polynomial.
+        """Return the first derivative of this Polynomial.
 
         Parameters:
             recursive (bool, optional): True to evaluate derivatives as well.
+                Defaults to True.
 
         Returns:
-            The derivative polynomial.
+            Polynomial: The derivative polynomial.
         """
 
         if self.order <= 0:
@@ -377,10 +507,11 @@ class Polynomial(Vector):
         Parameters:
             x: Scalar at which to evaluate the Polynomial.
             recursive (bool, optional): True to evaluate derivatives as well.
+                Defaults to True.
 
         Returns:
-            A Scalar of values. Note that the shapes of self and x are broadcasted
-            together.
+            Scalar: A Scalar of values. Note that the shapes of self and x are
+                broadcasted together.
         """
 
         if self.order == 0:
@@ -405,15 +536,16 @@ class Polynomial(Vector):
         """Find the roots of the polynomial.
 
         Parameters:
-            recursive (bool, optional): True to evaluate derivatives at the roots as
-                well.
+            recursive (bool, optional): True to evaluate derivatives at the roots
+                as well. Defaults to True.
 
         Returns:
-            A Scalar of roots. This has the same shape as self but an extra leading
-            axis matching the order of the polynomial. The leading index selects
-            among the roots of the polynomial. Roots appear in increasing order and
-            without any duplicates. If fewer real roots exist, the set of roots is
-            padded at the end with masked values.
+            Scalar: A Scalar of roots. This has the same shape as self but an
+                extra leading axis matching the order of the polynomial. The
+                leading index selects among the roots of the polynomial. Roots
+                appear in increasing order and without any duplicates. If fewer
+                real roots exist, the set of roots is padded at the end with
+                masked values.
 
         Raises:
             ValueError: If the polynomial is of order zero.
