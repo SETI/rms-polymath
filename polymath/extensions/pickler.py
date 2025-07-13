@@ -137,51 +137,41 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
 
     This attribute is ignored for integer and boolean values.
 
-    Input:
-        digits      a single value or a tuple of two values indicating the
-                    number of digits to preserve when pickling this object. If
-                    two values are given, the second applies to any
-                    derivatives.
+    Parameters:
+        digits (str or tuple, optional): A single value or a tuple of two values
+            indicating the number of digits to preserve when pickling this
+            object. If two values are given, the second applies to any
+            derivatives. If a number is specified, this is the number of decimal
+            digits to preserve when this object is pickled. It need not be an
+            integer. It is truncated to the range supported by single and double
+            precision. Alternatively, use "double" to preserve full double
+            precision; use "single" for single precision. Defaults to "double".
+        reference (str or tuple, optional): A single value or tuple of two
+            values defining the number to use when assessing how many digits
+            are preserved. If two values are given, the second applies to any
+            derivatives. If a number is specified, the number of digits
+            precision will be relative to this value. For example, if the value
+            is 1 and digits is 8, the precision will be 1.e-8.Alternatively,
+            use one of these strings to let the precision be referenced to the
+            values in the array: "smallest", "largest", "mean", "median",
+            "logmean", or "fpzip". Defaults to "fpzip".
 
-                    If a number is specified, this is the number of decimal
-                    digits to preserve when this object is pickled. It need not
-                    be an integer. It is truncated to the range supported by
-                    single and double precision.
+    Note:
+        The reference options are:
+        - "smallest": Reference precision to the value closest to zero. This
+            option guarantees that the requested number of digits are preserved
+            for every value.
+        - "largest": Reference precision to the value furthest from zero; this
+            is a good choice for values that are known to have a limited range
+            that includes zero, e.g., the components of a unit vector, or an
+            angle between zero and two pi.
+        - "mean": Reference the mean absolute value.
 
-                    Alternatively, use "double" to preserve full double
-                    precision; use "single" for single precision.
-
-                    Default is "double".
-
-        reference   a single value or tuple of two values defining the number to
-                    use when assessing how many digits are preserved. If two
-                    values are given, the second applies to any derivatives.
-
-                    If a number is specified, the number of digits precision
-                    will be relative to this value. For example, if the value is
-                    1 and digits is 8, the precision will be 1.e-8.
-
-                    Alternatively, use one of these strings to let the precision
-                    be referenced to the values in the array:
-
-                    "smallest" will reference the precision to the value closest
-                        to zero. This option guarantees that the requested
-                        number of digits are preserved for every value.
-                    "largest" will reference the precision to the value furthest
-                        from zero; this is a good choice for values that are
-                        known to have a limited range that includes zero, e.g.,
-                        the components of a unit vector, or an angle between
-                        zero and two pi.
-                    "mean" will reference the mean absolute value.
-                    "median" will reference the median absolute value. This is a
-                        good choice if a minority of values are very different
-                        from the others, but those values should not dominate
-                        the precision determination.
-                    "logmean" will reference the mean of the log of absolute
-                        values.
-                    "fpzip" will employ fpzip compression.
-
-                    The default is "fpzip".
+        - "median": Reference the median absolute value. This is a good choice
+            if a minority of values are very different from the others, but
+            those values should not dominate the precision determination.
+        - "logmean": Reference the mean of the log of absolute values.
+        - "fpzip": Employ fpzip compression. This is the default.
     """
 
     reference = _validate_pickle_reference(reference)
@@ -203,53 +193,43 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
 @staticmethod
 def set_default_pickle_digits(digits='double', reference='fpzip'):
     """Set the default number of decimal digits of precision in the storage of
-    this floating-point values and their derivatives.
+    floating-point values and their derivatives.
 
-    Input:
-        digits      a single value or a tuple of two values indicating the
-                    default number of digits to preserve when pickling an
-                    object. If two values are given, the second applies to any
-                    derivatives.
+    Parameters:
+        digits (str or tuple, optional): A single value or a tuple of two values
+            indicating the number of digits to preserve when pickling this
+            object. If two values are given, the second applies to any
+            derivatives. If a number is specified, this is the number of decimal
+            digits to preserve when this object is pickled. It need not be an
+            integer. It is truncated to the range supported by single and double
+            precision. Alternatively, use "double" to preserve full double
+            precision; use "single" for single precision. Defaults to "double".
+        reference (str or tuple, optional): A single value or tuple of two
+            values defining the number to use when assessing how many digits
+            are preserved. If two values are given, the second applies to any
+            derivatives. If a number is specified, the number of digits
+            precision will be relative to this value. For example, if the value
+            is 1 and digits is 8, the precision will be 1.e-8.Alternatively,
+            use one of these strings to let the precision be referenced to the
+            values in the array: "smallest", "largest", "mean", "median",
+            "logmean", or "fpzip". Defaults to "fpzip".
 
-                    If a number is specified, this is the number of decimal
-                    digits to preserve. It need not be an integer. It is
-                    truncated to the range supported by single and double
-                    precision.
+    Note:
+        The reference options are:
+        - "smallest": Reference precision to the value closest to zero. This
+            option guarantees that the requested number of digits are preserved
+            for every value.
+        - "largest": Reference precision to the value furthest from zero; this
+            is a good choice for values that are known to have a limited range
+            that includes zero, e.g., the components of a unit vector, or an
+            angle between zero and two pi.
+        - "mean": Reference the mean absolute value.
 
-                    Alternatively, use "double" to preserve full double
-                    precision; use "single" for single precision.
-
-                    Default is "double".
-
-        reference   a single value or tuple of two values defining the number to
-                    use when assessing how many digits are preserved. If two
-                    values are given, the second applies to any derivatives.
-
-                    If a number is specified, the number of digits precision
-                    will be relative to this value. For example, if the value is
-                    1 and digits is 8, the precision will be 1.e-8.
-
-                    Alternatively, use one of these strings to let the precision
-                    be referenced to the values in the array:
-
-                    "smallest" will reference the precision to the value closest
-                        to zero. This option guarantees that the requested
-                        number of digits are preserved for every value.
-                    "largest" will reference the precision to the value furthest
-                        from zero; this is a good choice for values that are
-                        known to have a limited range that includes zero, e.g.,
-                        the components of a unit vector, or an angle between
-                        zero and two pi.
-                    "mean" will reference the mean absolute value.
-                    "median" will reference the median absolute value. This is a
-                        good choice if a minority of values are very different
-                        from the others, but those values should not dominate
-                        the precision determination.
-                    "logmean" will reference the mean of the log of absolute
-                        values.
-                    "fpzip" will employ fpzip compression.
-
-                    The default is 'fpzip'.
+        - "median": Reference the median absolute value. This is a good choice
+            if a minority of values are very different from the others, but
+            those values should not dominate the precision determination.
+        - "logmean": Reference the mean of the log of absolute values.
+        - "fpzip": Employ fpzip compression. This is the default.
     """
 
     global DEFAULT_PICKLE_DIGITS, DEFAULT_PICKLE_REFERENCE
@@ -539,11 +519,15 @@ def fpzip_decompress(fpzip_bytes, shape, bits):
 def _encode_one_float_array(values, digits, reference):
     """Encode one array into a tuple for the specified digits precision.
 
-    Input:
-        values      array of floats.
-        digits      number of digits to preserve.
-        reference   one of 'smallest', 'largest', 'mean', 'median',
-                    'logmean', 'fpzip', or a number.
+    Parameters:
+        values (ndarray): Array of floats to encode.
+        digits (float): Number of digits to preserve.
+        reference (str or float): One of 'smallest', 'largest', 'mean',
+            'median', 'logmean', 'fpzip', or a number.
+
+    Returns:
+        tuple: Encoded array in one of several formats depending on the
+            compression method used.
     """
 
     # Handle fpzip method first
@@ -649,12 +633,17 @@ def _encode_floats(values, rank, digits, reference):
                 values = scale_factor * uints + offset
         ('items', shape, item_rank, list of individual encoded items)
 
-    Input:
-        values      array of values to encode.
-        rank        rank of the individual items in this array.
-        digits      'float64', 'float32', or number of digits to preserve.
-        reference   one of 'smallest', 'largest', 'mean', 'median', or
-                    'logmean', or 'fpzip'.
+    Parameters:
+        values (ndarray): Array of values to encode.
+        rank (int): Rank of the individual items in this array.
+        digits (str or float): 'float64', 'float32', or number of digits to
+            preserve.
+        reference (str): One of 'smallest', 'largest', 'mean', 'median',
+            'logmean', or 'fpzip'.
+
+    Returns:
+        tuple: Encoded array in one of several formats depending on the
+            compression method used.
     """
 
     shape = values.shape

@@ -17,16 +17,6 @@ class Matrix3(Matrix):
     This class provides functionality for working with 3x3 rotation matrices, including
     creating matrices from rotations about axes and converting between different
     rotation representations.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 2 for matrices.
-        NUMER (tuple): Shape of the numerator (3,3).
-        FLOATS_OK (bool): True as floating-point numbers are allowed.
-        INTS_OK (bool): False as integers are not allowed.
-        BOOLS_OK (bool): False as booleans are not allowed.
-        UNITS_OK (bool): False as units are disallowed.
-        DERIVS_OK (bool): True as derivatives are allowed.
-        DEFAULT_VALUE (ndarray): Default value identity matrix for unspecified elements.
     """
 
     NRANK = 2           # the number of numerator axes.
@@ -457,7 +447,7 @@ class Matrix3(Matrix):
             try:
                 arg = Scalar.as_scalar(arg)
             except (ValueError, TypeError):
-                Qube.raise_unsupported_op('*', self, original_arg)
+                Qube._raise_unsupported_op('*', self, original_arg)
 
         # Rotate a scalar, returning the scalar unchanged except for new derivs
         if arg._nrank_ == 0:
@@ -489,7 +479,7 @@ class Matrix3(Matrix):
         try:
             arg = Matrix3.as_matrix3(arg)
         except (ValueError, TypeError):
-            Qube.raise_unsupported_op('*=', self, original_arg)
+            Qube._raise_unsupported_op('*=', self, original_arg)
 
         return Qube.__imul__(self, arg)
 

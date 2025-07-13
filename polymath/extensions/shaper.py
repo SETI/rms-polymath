@@ -7,14 +7,18 @@ import numpy as np
 from polymath.qube import Qube
 
 def reshape(self, shape, recursive=True):
-    """A shallow copy of the object with a new leading shape.
+    """Return a shallow copy of the object with a new leading shape.
 
-    Input:
-        shape       a tuple defining the new leading shape. A value of -1 can
-                    appear at one location in the new shape, and the size of
-                    that shape will be determined based on this object's size.
-        recursive   True to apply the same shape to the derivatives.
-                    Otherwise, derivatives are deleted from the returned object.
+    Parameters:
+        shape (tuple or int): A tuple defining the new leading shape. A value
+            of -1 can appear at one location in the new shape, and the size of
+            that shape will be determined based on this object's size.
+        recursive (bool, optional): True to apply the same shape to the
+            derivatives. Otherwise, derivatives are deleted from the returned
+            object. Defaults to True.
+
+    Returns:
+        Qube: A shallow copy with the new shape.
     """
 
     if np.isscalar(shape):
@@ -47,7 +51,16 @@ def reshape(self, shape, recursive=True):
 
 #===============================================================================
 def flatten(self, recursive=True):
-    """A shallow copy of the object flattened to one dimension."""
+    """Return a shallow copy of the object flattened to one dimension.
+
+    Parameters:
+        recursive (bool, optional): True to apply the same flattening to the
+            derivatives. Otherwise, derivatives are deleted from the returned
+            object. Defaults to True.
+
+    Returns:
+        Qube: A shallow copy flattened to one dimension.
+    """
 
     if len(self._shape_) < 2:
         return self
@@ -57,14 +70,21 @@ def flatten(self, recursive=True):
 
 #===============================================================================
 def swap_axes(self, axis1, axis2, recursive=True):
-    """A shallow copy of the object with two leading axes swapped.
+    """Return a shallow copy of the object with two leading axes swapped.
 
-    Input:
-        axis1       the first index of the swap. Negative indices are relative
-                    to the last index before the numerator items begin.
-        axis2       the second index of the swap.
-        recursive   True to perform the same swap on the derivatives.
-                    Otherwise, derivatives are deleted from the returned object.
+    Parameters:
+        axis1 (int): The first index of the swap. Negative indices are relative
+            to the last index before the numerator items begin.
+        axis2 (int): The second index of the swap.
+        recursive (bool, optional): True to perform the same swap on the
+            derivatives. Otherwise, derivatives are deleted from the returned
+            object. Defaults to True.
+
+    Returns:
+        Qube: A shallow copy with the specified axes swapped.
+
+    Raises:
+        ValueError: If either axis is out of range.
     """
 
     # Validate first axis
@@ -102,17 +122,24 @@ def swap_axes(self, axis1, axis2, recursive=True):
 
 #===============================================================================
 def roll_axis(self, axis, start=0, recursive=True, rank=None):
-    """A shallow copy of the object with the specified axis rolled to a new
-    position.
+    """Return a shallow copy of the object with the specified axis rolled to a new position.
 
-    Input:
-        axis        the axis to roll.
-        start       the axis will be rolled to fall in front of this axis;
-                    default is zero.
-        recursive   True to perform the same axis roll on the derivatives.
-                    Otherwise, derivatives are deleted from the returned object.
-        rank        rank to assume for the object, which could be larger than
-                    len(self.shape) because of broadcasting.
+    Parameters:
+        axis (int): The axis to roll.
+        start (int, optional): The axis will be rolled to fall in front of this
+            axis; default is zero.
+        recursive (bool, optional): True to perform the same axis roll on the
+            derivatives. Otherwise, derivatives are deleted from the returned
+            object. Defaults to True.
+        rank (int, optional): Rank to assume for the object, which could be
+            larger than len(self.shape) because of broadcasting.
+
+    Returns:
+        Qube: A shallow copy with the axis rolled to the new position.
+
+    Raises:
+        ValueError: If the rank is too small for the object shape.
+        ValueError: If the axis or start is out of range.
     """
 
     # Validate the rank
@@ -171,17 +198,23 @@ def roll_axis(self, axis, start=0, recursive=True, rank=None):
 
 #===============================================================================
 def move_axis(self, source, destination, recursive=True, rank=None):
-    """A shallow copy of the object with the specified axis rolled to a new
-    position.
+    """Return a shallow copy of the object with the specified axis moved to a new position.
 
-    Input:
-        axis        the axis to roll.
-        source      axis to move or tuple of axes to move.
-        destination destination of moved axis or axes.
-        recursive   True to perform the same axis roll on the derivatives.
-                    Otherwise, derivatives are deleted from the returned object.
-        rank        rank to assume for the object, which could be larger than
-                    len(self.shape) because of broadcasting.
+    Parameters:
+        source (int or tuple): Axis to move or tuple of axes to move.
+        destination (int or tuple): Destination of moved axis or axes.
+        recursive (bool, optional): True to perform the same axis move on the
+            derivatives. Otherwise, derivatives are deleted from the returned
+            object. Defaults to True.
+        rank (int, optional): Rank to assume for the object, which could be
+            larger than len(self.shape) because of broadcasting.
+
+    Returns:
+        Qube: A shallow copy with the specified axis moved to the new position.
+
+    Raises:
+        ValueError: If the rank is too small for the object shape.
+        ValueError: If any axis is out of range.
     """
 
     # Validate the rank
@@ -236,19 +269,26 @@ def move_axis(self, source, destination, recursive=True, rank=None):
 def stack(*args, **keywords):
     """Stack objects of the same class into one with a new leading axis.
 
-    Inputs:
-        args        any number of Scalars or arguments that can be casted to
-                    Scalars. They need not have the same shape, but it must be
-                    possible to cast them to the same shape. A value of None is
-                    converted to a zero-valued Scalar that matches the
-                    denominator shape of the other arguments.
+    Parameters:
+        *args: Any number of Scalars or arguments that can be casted to
+            Scalars. They need not have the same shape, but it must be
+            possible to cast them to the same shape. A value of None is
+            converted to a zero-valued Scalar that matches the
+            denominator shape of the other arguments.
+        recursive (bool, optional): True to include all the derivatives. The
+            returned object will have derivatives representing the union of
+            all the derivatives found amongst the scalars. Default is True.
 
-        recursive   True to include all the derivatives. The returned object
-                    will have derivatives representing the union of all the
-                    derivatives found amongst the scalars. Default is True.
+    Returns:
+        Qube: A stacked object with a new leading axis.
 
-    Note that the 'recursive' input is handled as a keyword argument in order to
-    distinguish it from the Qube inputs.
+    Raises:
+        TypeError: If an unexpected keyword argument is provided.
+        ValueError: If the arguments have incompatible denominators.
+
+    Note:
+        The 'recursive' input is handled as a keyword argument in order to
+        distinguish it from the Qube inputs.
     """
 
     # Search the keywords for "recursive"

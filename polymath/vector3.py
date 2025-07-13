@@ -11,7 +11,11 @@ from polymath.scalar import Scalar
 from polymath.vector import Vector
 
 class Vector3(Vector):
-    """A vector with a fixed length of three."""
+    """Represent 3-dimensional vectors in the PolyMath framework.
+
+    This class provides specialized functionality for working with 3-element
+    vectors, including coordinate transformations and 3D operations.
+    """
 
     NRANK = 1           # the number of numerator axes.
     NUMER = (3,)        # shape of the numerator.
@@ -29,6 +33,16 @@ class Vector3(Vector):
     #===========================================================================
     @staticmethod
     def as_vector3(arg, recursive=True):
+        """Convert the argument to Vector3 if possible.
+
+        Parameters:
+            arg (object): The object to convert to Vector3.
+            recursive (bool, optional): If True, derivatives will also be
+                converted. Default is True.
+
+        Returns:
+            Vector3: The converted Vector3 object.
+        """
 
         if isinstance(arg, Vector3):
             if recursive:
@@ -56,21 +70,26 @@ class Vector3(Vector):
     #===========================================================================
     @staticmethod
     def from_scalars(x, y, z, recursive=True, readonly=False):
-        """A Vector3 constructed by combining three scalars.
+        """Construct a Vector3 by combining three scalars.
 
-        Inputs:
-            x, y, z     Three Scalars defining the vector's x, y and z
-                        components. They need not have the same shape, but it
-                        must be possible to cast them to the same shape. A value
-                        of None is converted to a zero-valued Scalar that
-                        matches the denominator shape of the other arguments.
+        Parameters:
+            x (Scalar or convertible): First component of the vector.
+            y (Scalar or convertible): Second component of the vector.
+            z (Scalar or convertible): Third component of the vector.
+            recursive (bool, optional): True to include all the derivatives. The
+                returned object will have derivatives representing the union of
+                all the derivatives found among x, y and z. Default is True.
+            readonly (bool, optional): True to return a read-only object; False
+                to return something potentially writable. Default is False.
 
-            recursive   True to include all the derivatives. The returned object
-                        will have derivatives representing the union of all the
-                        derivatives found among x, y and z. Default is True.
+        Returns:
+            Vector3: A new Vector3 object constructed from the three scalars.
 
-            readonly    True to return a read-only object; False (the default)
-                        to return something potentially writable.
+        Note:
+            Input arguments need not have the same shape, but it must be possible
+            to cast them to the same shape. A value of None is converted to a
+            zero-valued Scalar that matches the denominator shape of the other
+            arguments.
         """
 
         return Qube.from_scalars(x, y, z, recursive=recursive,
@@ -80,18 +99,22 @@ class Vector3(Vector):
     #===========================================================================
     @staticmethod
     def from_ra_dec_length(ra, dec, length=1., recursive=True):
-        """Vector3 from right ascension, declination and optional length.
+        """Construct a Vector3 from right ascension, declination and optional length.
 
-        Inputs:
-            ra, dec     Scalars of right ascension and declination, in radians.
-                        They need not have the same shape, but it must be
-                        possible to cast them to the same shape.
+        Parameters:
+            ra (Scalar): Right ascension in radians.
+            dec (Scalar): Declination in radians.
+            length (Scalar, optional): Length of the vector. Default is 1.
+            recursive (bool, optional): True to include all the derivatives. The
+                returned object will have derivatives representing the union of
+                all the derivatives in ra, dec and length. Default is True.
 
-            length      A Scalar of lengths; default 1.
+        Returns:
+            Vector3: A new Vector3 object constructed from the spherical coordinates.
 
-            recursive   True to include all the derivatives. The returned object
-                        will have derivatives representing the union of all the
-                        derivatives in ra, dec and length. Default is True.
+        Note:
+            Input arguments need not have the same shape, but it must be possible
+            to cast them to the same shape.
         """
 
         ra  = Scalar.as_scalar(ra, recursive=recursive)
@@ -111,10 +134,15 @@ class Vector3(Vector):
 
     #===========================================================================
     def to_ra_dec_length(self, recursive=True):
-        """A tuple (ra, dec, length) from this Vector3.
+        """Return a tuple (ra, dec, length) from this Vector3.
 
-        Inputs:
-            recursive   True to include the derivatives. Default is True.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            tuple: A tuple containing (ra, dec, length) where ra and dec are
+            Scalars in radians and length is a Scalar.
         """
 
         (x,y,z) = self.to_scalars(recursive=recursive)
@@ -128,16 +156,23 @@ class Vector3(Vector):
     #===========================================================================
     @staticmethod
     def from_cylindrical(radius, longitude, z=0., recursive=True):
-        """Vector3 from cylindrical coordinates.
+        """Construct a Vector3 from cylindrical coordinates.
 
-        Inputs:
-            radius      Scalar radius, distance from the cylindrical axis.
-            longitude   Scalar longitude in radians. Zero is along the x-axis.
-            z           Distance above/below the equatorial plane, default 0.
+        Parameters:
+            radius (Scalar): Distance from the cylindrical axis.
+            longitude (Scalar): Longitude in radians. Zero is along the x-axis.
+            z (Scalar, optional): Distance above/below the equatorial plane.
+                Default is 0.
+            recursive (bool, optional): True to include all the derivatives. The
+                returned object will have derivatives representing the union of
+                all the derivatives in radius, longitude and z. Default is True.
 
-            recursive   True to include all the derivatives. The returned object
-                        will have derivatives representing the union of all the
-                        derivatives in radius, longitude and z. Default is True.
+        Returns:
+            Vector3: A new Vector3 object constructed from the cylindrical coordinates.
+
+        Note:
+            Input arguments need not have the same shape, but it must be possible
+            to cast them to the same shape.
         """
 
         radius  = Scalar.as_scalar(radius, recursive=recursive)
@@ -151,10 +186,15 @@ class Vector3(Vector):
 
     #===========================================================================
     def to_cylindrical(self, recursive=True):
-        """A tuple (radius, longitude, z) from this Vector3.
+        """Return a tuple (radius, longitude, z) from this Vector3.
 
-        Inputs:
-            recursive   True to include the derivatives. Default is True.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            tuple: A tuple containing (radius, longitude, z) where radius and
+            longitude are Scalars in radians and z is a Scalar.
         """
 
         (x,y,z) = self.to_scalars(recursive=recursive)
@@ -166,13 +206,15 @@ class Vector3(Vector):
 
     #===========================================================================
     def longitude(self, recursive=True):
-        """Longitude (or right ascension) of this Vector3 as projected onto the
-        X/Y plane.
+        """Return the longitude (azimuthal angle) of this Vector3.
 
-        The returned value will always fall between zero and 2*pi.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
 
-        Inputs:
-            recursive   True to include the derivatives. Default is True.
+        Returns:
+            Scalar: The longitude in radians, measured from the X-axis toward
+            the Y-axis.
         """
 
         x = self.to_scalar(0, recursive=recursive)
@@ -181,10 +223,15 @@ class Vector3(Vector):
 
     #===========================================================================
     def latitude(self, recursive=True):
-        """Latitude (or declination) of this Vector3 relative to the Z-axis.
+        """Return the latitude (elevation angle) of this Vector3.
 
-        Inputs:
-            recursive   True to include the derivatives. Default is True.
+        Parameters:
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            Scalar: The latitude in radians, measured from the equatorial plane
+            toward the Z-axis.
         """
 
         z = self.to_scalar(2, recursive=recursive)
@@ -213,10 +260,21 @@ class Vector3(Vector):
 
     #===========================================================================
     def spin(self, pole, angle=None, recursive=True):
-        """The result of rotating this Vector3 around the given pole vector by
-        the given angle.
+        """Return this Vector3 rotated about a pole vector.
 
-        If angle is None, then the rotation angle is pole.norm().arcsin().
+        Parameters:
+            pole (Vector3): The pole vector about which to rotate.
+            angle (Scalar, optional): The rotation angle in radians. If None,
+                the angle is determined from the pole vector's magnitude.
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            Vector3: The rotated vector.
+
+        Note:
+            If angle is None, the pole vector's magnitude is used as the
+            rotation angle.
         """
 
         pole = Vector3.as_vector3(pole, recursive=recursive)
@@ -241,12 +299,19 @@ class Vector3(Vector):
         yaxis = zaxis.cross(xaxis)
         return r * (angle.cos() * xaxis + angle.sin() * yaxis) + z * zaxis
 
+
     #===========================================================================
     def offset_angles(self, vector, recursive=True):
-        """The two successive rotation angles about the Y and X axes to convert
-        this vector to the given vector (ignoring length).
+        """Return the angular offset between this Vector3 and another.
 
-        The vector is assumed to be oriented close to the Z-axis.
+        Parameters:
+            vector (Vector3): The vector to measure the offset from.
+            recursive (bool, optional): True to include the derivatives.
+                Default is True.
+
+        Returns:
+            tuple: A tuple containing (longitude_offset, latitude_offset) in
+            radians.
         """
 
         vector = Vector3.as_vector3(vector, recursive=recursive)

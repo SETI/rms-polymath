@@ -105,21 +105,21 @@ def shrink(self, antimask):
 
 #===========================================================================
 def unshrink(self, antimask, shape=()):
-    """Convert an object to its un-shrunken shape, based on a given
-    antimask.
+    """Convert an object to its un-shrunken shape, based on a given antimask.
 
     If this object was previously shrunken, the antimask must match the one
     used to shrink it. Otherwise, the size of this object's last axis must
     match the number of True values in the antimask.
 
-    Input:
-        antimask    the antimask to apply.
-        shape       in cases where the antimask is a literal False, this
-                    defines the shape of the returned object. Normally, the
-                    rightmost axes of the returned object match those of
-                    the antimask.
+    Parameters:
+        antimask (array-like): The antimask to apply.
+        shape (tuple, optional): In cases where the antimask is a literal False,
+            this defines the shape of the returned object. Normally, the
+            rightmost axes of the returned object match those of the antimask.
+            Defaults to empty tuple.
 
-    The returned object will be read-only.
+    Returns:
+        Qube: The un-shrunken object, which will be read-only.
     """
 
     #### For testing only...

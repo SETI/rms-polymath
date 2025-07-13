@@ -6,21 +6,26 @@ import numpy as np
 from polymath.qube import Qube
 
 def mask_where(self, mask, replace=None, remask=True, recursive=True):
-    """A copy of this object after a mask has been applied.
+    """Return a copy of this object after a mask has been applied.
 
     If the mask is empty, this object is returned unchanged.
 
-    Inputs:
-        mask            the mask to apply as a boolean array.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to leave the new values masked; False to replace
-                        the values but leave them unmasked.
-        recursive       True to mask the derivatives as well; False to leave
-                        them unmasked.
+    Parameters:
+        mask (array-like): The mask to apply as a boolean array.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to leave the new values masked; False to
+            replace the values but leave them unmasked. Defaults to True.
+        recursive (bool, optional): True to mask the derivatives as well;
+            False to leave them unmasked. Defaults to True.
+
+    Returns:
+        Qube: A copy of this object with the mask applied.
+
+    Raises:
+        ValueError: If the replacement shape is incompatible with the object shape.
     """
 
     if replace is None and not remask:      # nothing to do
@@ -76,21 +81,24 @@ def mask_where(self, mask, replace=None, remask=True, recursive=True):
 
 #===============================================================================
 def mask_where_eq(self, match, replace=None, remask=True):
-    """A copy of this object with items equal to a value masked.
+    """Return a copy of this object with items equal to a value masked.
 
-        Instead of or in addition to masking the items, the values can be
-        replaced. If no items need to be masked, this object is returned
-        unchanged.
+    Instead of or in addition to masking the items, the values can be
+    replaced. If no items need to be masked, this object is returned
+    unchanged.
 
-    Inputs:
-        match           the item value to match.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        match (object): The item value to match.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy of this object with matching items masked.
     """
 
     match = self.as_this_type(match, recursive=False)
@@ -102,20 +110,23 @@ def mask_where_eq(self, match, replace=None, remask=True):
 
 #===============================================================================
 def mask_where_ne(self, match, replace=None, remask=True):
-    """A copy of this object with items not equal to a value masked.
+    """Return a copy of this object with items not equal to a value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
 
-    Inputs:
-        match           the item value to match.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        match (object): The item value to match.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy of this object with non-matching items masked.
     """
 
     match = self.as_this_type(match, recursive=False)
@@ -127,20 +138,26 @@ def mask_where_ne(self, match, replace=None, remask=True):
 
 #===============================================================================
 def mask_where_le(self, limit, replace=None, remask=True):
-    """A copy of this object with items <= a limit value masked.
+    """Return a copy of this object with items <= a limit value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
 
-    Inputs:
-        limit           the limiting value.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        limit (object): The limiting value.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy of this object with items <= limit masked.
+
+    Raises:
+        ValueError: If this object has denominators or item rank > 0.
     """
 
     if self._denom_:
@@ -157,20 +174,26 @@ def mask_where_le(self, limit, replace=None, remask=True):
 
 #===============================================================================
 def mask_where_ge(self, limit, replace=None, remask=True):
-    """A copy of this object with items >= a limit value masked.
+    """Return a copy of this object with items >= a limit value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
 
-    Inputs:
-        limit           the limiting value.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        limit (object): The limiting value.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy of this object with items >= limit masked.
+
+    Raises:
+        ValueError: If this object has denominators or item rank > 0.
     """
 
     if self._denom_:
@@ -187,21 +210,27 @@ def mask_where_ge(self, limit, replace=None, remask=True):
 
 #===============================================================================
 def mask_where_lt(self, limit, replace=None, remask=True):
-    """A copy with items less than a limit value masked.
+    """Return a copy with items less than a limit value masked.
 
     Instead of or in addition to masking the items, the values can be
     replaced. If no items need to be masked, this object is returned
     unchanged.
 
-    Inputs:
-        limit           the limiting value.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        limit (object): The limiting value.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy of this object with items < limit masked.
+
+    Raises:
+        ValueError: If this object has denominators or item rank > 0.
     """
 
     if self._denom_:
@@ -218,20 +247,26 @@ def mask_where_lt(self, limit, replace=None, remask=True):
 
 #===============================================================================
 def mask_where_gt(self, limit, replace=None, remask=True):
-    """A copy with items greater than a limit value masked.
+    """Return a copy with items greater than a limit value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
 
-    Inputs:
-        limit           the limiting value.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        limit (object): The limiting value.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy of this object with items > limit masked.
+
+    Raises:
+        ValueError: If this object has denominators or item rank > 0.
     """
 
     if self._denom_:
@@ -249,25 +284,31 @@ def mask_where_gt(self, limit, replace=None, remask=True):
 #===============================================================================
 def mask_where_between(self, lower, upper, mask_endpoints=False,
                              replace=None, remask=True):
-    """A copy with values between two limits masked.
+    """Return a copy with values between two limits masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
 
-    Inputs:
-        lower           the lower limit.
-        upper           the upper limit.
-        mask_endpoints  True to mask the endpoints, where values are equal to
-                        the lower or upper limits; False to exclude the
-                        endpoints. Use a tuple of two values to handle the
-                        endpoints differently.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        lower (object): The lower limit.
+        upper (object): The upper limit.
+        mask_endpoints (bool or tuple, optional): True to mask the endpoints,
+            where values are equal to the lower or upper limits; False to
+            exclude the endpoints. Use a tuple of two values to handle the
+            endpoints differently. Defaults to False.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy with values between the specified limits masked.
+
+    Raises:
+        ValueError: If this object has denominators or item rank > 0.
     """
 
     if self._denom_:
@@ -303,25 +344,31 @@ def mask_where_between(self, lower, upper, mask_endpoints=False,
 #===============================================================================
 def mask_where_outside(self, lower, upper, mask_endpoints=False, replace=None,
                              remask=True):
-    """A copy with values outside two limits masked.
+    """Return a copy with values outside two limits masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
 
-    Inputs:
-        lower           the lower limit.
-        upper           the upper limit.
-        mask_endpoints  True to mask the endpoints, where values are equal to
-                        the lower or upper limits; False to exclude the
-                        endpoints. Use a tuple of two values to handle the
-                        endpoints differently.
-        replace         a single replacement value or, an object of the same
-                        shape and class as this object, containing replacement
-                        values. These are inserted into returned object at every
-                        masked location. Use None (the default) to leave values
-                        unchanged.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
+    Parameters:
+        lower (object): The lower limit.
+        upper (object): The upper limit.
+        mask_endpoints (bool or tuple, optional): True to mask the endpoints,
+            where values are equal to the lower or upper limits; False to
+            exclude the endpoints. Use a tuple of two values to handle the
+            endpoints differently. Defaults to False.
+        replace (object, optional): A single replacement value or an object of
+            the same shape and class as this object, containing replacement
+            values. These are inserted into returned object at every masked
+            location. Use None (the default) to leave values unchanged.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+
+    Returns:
+        Qube: A copy with values outside the specified limits masked.
+
+    Raises:
+        ValueError: If this object has denominators or item rank > 0.
     """
 
     if self._denom_:
@@ -356,25 +403,29 @@ def mask_where_outside(self, lower, upper, mask_endpoints=False, replace=None,
 
 #===============================================================================
 def clip(self, lower, upper, remask=True, inclusive=True):
-    """A copy with values clipped to fall within a pair of limits.
+    """Return a copy with values clipped to fall within a pair of limits.
 
     Values below the lower limit become equal to the lower limit; values above
     the upper limit become equal to the upper limit.
 
-    Instead of or in addition to masking the items, the values can be replaced.
-    If no items need to be masked, this object is returned unchanged.
+    Parameters:
+        lower (object, optional): The lower limit or an object of the same
+            shape and type as this, containing lower limits. None or masked
+            values to ignore.
+        upper (object, optional): The upper limit or an object of the same
+            shape and type as this, containing upper limits. None or masked
+            values to ignore.
+        remask (bool, optional): True to include the new mask into the object's
+            mask; False to replace the values but leave them unmasked.
+            Defaults to True.
+        inclusive (bool, optional): True to leave values that exactly match
+            the upper limit unmasked; False to mask them. Defaults to True.
 
-    Inputs:
-        lower           the lower limit or an object of the same shape and type
-                        as this, containing lower limits. None or masked values
-                        to ignore.
-        upper           the upper limit or an object of the same shape and type
-                        as this, containing upper limits. None or masked values
-                        to ignore.
-        remask          True to include the new mask into the object's mask;
-                        False to replace the values but leave them unmasked.
-        inclusive       True to leave values that exactly match the upper
-                        limit unmasked; False to mask them.
+    Returns:
+        Qube: A copy with values clipped to the specified limits.
+
+    Raises:
+        ValueError: If this object has denominators or item rank > 0.
     """
 
     if self._denom_:
@@ -429,8 +480,16 @@ def clip(self, lower, upper, remask=True, inclusive=True):
 
 @staticmethod
 def is_below(arg, high, inclusive=True):
-    """True if arg is inside a range with upper end at high, optionally
-    inclusive of high.
+    """Check if arg is inside a range with upper end at high.
+
+    Parameters:
+        arg (object): The value to check.
+        high (object): The upper limit of the range.
+        inclusive (bool, optional): True to include the upper limit in the
+            range; False to exclude it. Defaults to True.
+
+    Returns:
+        bool: True if arg is inside the range with upper end at high.
     """
 
     if inclusive:
@@ -440,8 +499,16 @@ def is_below(arg, high, inclusive=True):
 
 @staticmethod
 def is_above(arg, high, inclusive=True):
-    """True if arg is outside a range with upper end at high, optionally
-    inclusive of high.
+    """Check if arg is outside a range with upper end at high.
+
+    Parameters:
+        arg (object): The value to check.
+        high (object): The upper limit of the range.
+        inclusive (bool, optional): True to include the upper limit in the
+            range; False to exclude it. Defaults to True.
+
+    Returns:
+        bool: True if arg is outside the range with upper end at high.
     """
 
     if inclusive:
@@ -451,7 +518,17 @@ def is_above(arg, high, inclusive=True):
 
 @staticmethod
 def is_outside(arg, low, high, inclusive=True):
-    """True if arg outside the range low to high, optionally inclusive of high
+    """Check if arg is outside the range low to high.
+
+    Parameters:
+        arg (object): The value to check.
+        low (object): The lower limit of the range.
+        high (object): The upper limit of the range.
+        inclusive (bool, optional): True to include the upper limit in the
+            range; False to exclude it. Defaults to True.
+
+    Returns:
+        bool: True if arg is outside the range low to high.
     """
 
     if inclusive:
@@ -461,7 +538,17 @@ def is_outside(arg, low, high, inclusive=True):
 
 @staticmethod
 def is_inside(arg, low, high, inclusive=True):
-    """True if arg inside the range low to high, optionally inclusive of high.
+    """Check if arg is inside the range low to high.
+
+    Parameters:
+        arg (object): The value to check.
+        low (object): The lower limit of the range.
+        high (object): The upper limit of the range.
+        inclusive (bool, optional): True to include the upper limit in the
+            range; False to exclude it. Defaults to True.
+
+    Returns:
+        bool: True if arg is inside the range low to high.
     """
 
     if inclusive:

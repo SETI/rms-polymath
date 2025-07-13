@@ -13,16 +13,6 @@ class Boolean(Scalar):
 
     This class handles boolean values with masking support. Masked values are
     considered unknown, neither True nor False.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 0 for booleans.
-        NUMER (tuple): Shape of the numerator, which is empty for booleans.
-        FLOATS_OK (bool): False as floating-point numbers are not allowed.
-        INTS_OK (bool): False as integers are not allowed.
-        BOOLS_OK (bool): True as booleans are allowed.
-        UNITS_OK (bool): False as units are disallowed.
-        DERIVS_OK (bool): False as derivatives are disallowed.
-        DEFAULT_VALUE: False, the default value for unspecified elements.
     """
 
     NRANK = 0           # the number of numerator axes.

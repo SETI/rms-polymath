@@ -12,17 +12,23 @@ PYTHON2 = (sys.version_info[0] < 3)
 
 #===============================================================================
 def _mean_or_sum(arg, axis=None, recursive=True, _combine_as_mean=False):
-    """The mean or sum of the unmasked values. Internal method.
+    """Calculate the mean or sum of the unmasked values.
 
-    Input:
-        arg         the object for which to calculate the mean or sum.
-        axis        an integer axis or a tuple of axes. The mean is determined
-                    across these axes, leaving any remaining axes in the
-                    returned value. If None (the default), then the mean is
-                    performed across all axes of the object.
-        recursive   True to construct the mean of the derivatives.
-        _combine_as_mean
-                    True to combine as a mean; False to combine as a sum.
+    Internal method for computing mean or sum operations.
+
+    Parameters:
+        arg: The object for which to calculate the mean or sum.
+        axis (int or tuple, optional): An integer axis or a tuple of axes. The
+            mean is determined across these axes, leaving any remaining axes in
+            the returned value. If None (the default), then the mean is
+            performed across all axes of the object.
+        recursive (bool, optional): True to construct the mean of the
+            derivatives. Defaults to True.
+        _combine_as_mean (bool, optional): True to combine as a mean; False to
+            combine as a sum. Defaults to False.
+
+    Returns:
+        Qube: The mean or sum of the unmasked values.
     """
 
     arg._check_axis(axis, 'mean()' if _combine_as_mean else 'sum()')
@@ -111,7 +117,16 @@ def _mean_or_sum(arg, axis=None, recursive=True, _combine_as_mean=False):
 
 #===============================================================================
 def _check_axis(arg, axis, op):
-    """Validate the axis as None, an int, or a tuple of ints."""
+    """Validate the axis as None, an int, or a tuple of ints.
+
+    Parameters:
+        arg: The object to check the axis for.
+        axis: The axis to validate.
+        op (str): The operation name for error messages.
+
+    Raises:
+        IndexError: If the axis is out of range or duplicated.
+    """
 
     if axis is None:    # can't be a problem
         return
@@ -144,8 +159,13 @@ def _check_axis(arg, axis, op):
 
 #===============================================================================
 def _zero_sized_result(self, axis):
-    """A zero-sized result obtained by collapsing one or more axes of an object
-    that already has size zero.
+    """Return a zero-sized result obtained by collapsing one or more axes.
+
+    Parameters:
+        axis (int or tuple, optional): The axis or axes to collapse.
+
+    Returns:
+        Qube: A zero-sized result with the specified axes collapsed.
     """
 
     if axis is None:
@@ -164,21 +184,32 @@ def _zero_sized_result(self, axis):
 #===============================================================================
 @staticmethod
 def dot(arg1, arg2, axis1=-1, axis2=0, classes=(), recursive=True):
-    """The dot product of two objects.
+    """Calculate the dot product of two objects.
 
     The axes must be in the numerator, and only one of the objects can have a
     denominator (which makes this suitable for first derivatives but not second
     derivatives).
 
-    Input:
-        arg1        the first operand as a subclass of Qube.
-        arg2        the second operand as a subclass of Qube.
-        axis1       the item axis of this object for the dot product.
-        axis2       the item axis of the arg2 object for the dot product.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to construct the derivatives of the dot product.
+    Parameters:
+        arg1: The first operand as a subclass of Qube.
+        arg2: The second operand as a subclass of Qube.
+        axis1 (int, optional): The item axis of this object for the dot product.
+            Defaults to -1.
+        axis2 (int, optional): The item axis of the arg2 object for the dot
+            product. Defaults to 0.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to construct the derivatives of the
+            dot product. Defaults to True.
+
+    Returns:
+        Qube: The dot product of the two objects.
+
+    Raises:
+        ValueError: If both objects have denominators or if axes are out of
+            range.
     """
 
     # At most one object can have a denominator.
@@ -271,17 +302,26 @@ def dot(arg1, arg2, axis1=-1, axis2=0, classes=(), recursive=True):
 #===============================================================================
 @staticmethod
 def norm(arg, axis=-1, classes=(), recursive=True):
-    """The norm of an object along one axis.
+    """Calculate the norm of an object along one axis.
 
     The axes must be in the numerator. The denominator must have zero rank.
 
-    Input:
-        arg         the object for which to calculate the norm.
-        axis        the numerator axis for the norm.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to construct the derivatives of the norm.
+    Parameters:
+        arg: The object for which to calculate the norm.
+        axis (int, optional): The numerator axis for the norm. Defaults to -1.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to construct the derivatives of the
+            norm. Defaults to True.
+
+    Returns:
+        Qube: The norm of the object along the specified axis.
+
+    Raises:
+        ValueError: If the object has denominators or if the axis is out of
+            range.
     """
 
     if arg._drank_ != 0:
@@ -320,17 +360,26 @@ def norm(arg, axis=-1, classes=(), recursive=True):
 #===============================================================================
 @staticmethod
 def norm_sq(arg, axis=-1, classes=(), recursive=True):
-    """Square of the norm of an object along one axis.
+    """Calculate the square of the norm of an object along one axis.
 
     The axes must be in the numerator. The denominator must have zero rank.
 
-    Input:
-        arg         the object for which to calculate the norm-squared.
-        axis        the item axis for the norm.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to construct the derivatives of the norm-squared.
+    Parameters:
+        arg: The object for which to calculate the norm-squared.
+        axis (int, optional): The item axis for the norm. Defaults to -1.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to construct the derivatives of the
+            norm-squared. Defaults to True.
+
+    Returns:
+        Qube: The square of the norm of the object along the specified axis.
+
+    Raises:
+        ValueError: If the object has denominators or if the axis is out of
+            range.
     """
 
     if arg._drank_ != 0:
@@ -370,20 +419,29 @@ def norm_sq(arg, axis=-1, classes=(), recursive=True):
 #===============================================================================
 @staticmethod
 def cross(arg1, arg2, axis1=-1, axis2=0, classes=(), recursive=True):
-    """The cross product of two objects.
+    """Calculate the cross product of two objects.
 
     Axis lengths must be either two or three, and must be equal. At least one of
     the objects must be lacking a denominator.
 
-    Input:
-        arg1        the first operand.
-        arg2        the second operand.
-        axis1       the item axis of the first object.
-        axis2       the item axis of the second object.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to construct the derivatives of the cross product.
+    Parameters:
+        arg1: The first operand.
+        arg2: The second operand.
+        axis1 (int, optional): The item axis of the first object. Defaults to -1.
+        axis2 (int, optional): The item axis of the second object. Defaults to 0.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to construct the derivatives of the
+            cross product. Defaults to True.
+
+    Returns:
+        Qube: The cross product of the two objects.
+
+    Raises:
+        ValueError: If both objects have denominators, if axes are out of range,
+            or if axis lengths are incompatible.
     """
 
     # At most one object can have a denominator.
@@ -480,8 +538,20 @@ def cross(arg1, arg2, axis1=-1, axis2=0, classes=(), recursive=True):
     return obj
 
 def cross_3x3(a,b):
-    """Stand-alone method to return the cross product of two 3-vectors,
+    """Calculate the cross product of two 3-vectors.
+
+    Stand-alone method to return the cross product of two 3-vectors,
     represented as NumPy arrays.
+
+    Parameters:
+        a (ndarray): First 3-vector array.
+        b (ndarray): Second 3-vector array.
+
+    Returns:
+        ndarray: The cross product of the two 3-vectors.
+
+    Raises:
+        ValueError: If the arrays are not 3-vectors.
     """
 
     (a,b) = np.broadcast_arrays(a,b)
@@ -496,8 +566,20 @@ def cross_3x3(a,b):
     return new_values
 
 def cross_2x2(a, b):
-    """Stand-alone method to return the cross product of two 2-vectors,
+    """Calculate the cross product of two 2-vectors.
+
+    Stand-alone method to return the cross product of two 2-vectors,
     represented as NumPy arrays.
+
+    Parameters:
+        a (ndarray): First 2-vector array.
+        b (ndarray): Second 2-vector array.
+
+    Returns:
+        ndarray: The cross product of the two 2-vectors.
+
+    Raises:
+        ValueError: If the arrays are not 2-vectors.
     """
 
     (a,b) = np.broadcast_arrays(a,b)
@@ -509,19 +591,27 @@ def cross_2x2(a, b):
 #===============================================================================
 @staticmethod
 def outer(arg1, arg2, classes=(), recursive=True):
-    """The outer product of two objects.
+    """Calculate the outer product of two objects.
 
     The item shape of the returned object is obtained by concatenating the two
     numerators and then the two denominators, and each element is the product of
     the corresponding elements of the two objects.
 
-    Input:
-        arg1        the first operand.
-        arg2        the second operand.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to construct the derivatives of the outer product.
+    Parameters:
+        arg1: The first operand.
+        arg2: The second operand.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to construct the derivatives of the
+            outer product. Defaults to True.
+
+    Returns:
+        Qube: The outer product of the two objects.
+
+    Raises:
+        ValueError: If both objects have denominators.
     """
 
     # At most one object can have a denominator. This is sufficient
@@ -577,16 +667,24 @@ def outer(arg1, arg2, classes=(), recursive=True):
 #===============================================================================
 @staticmethod
 def as_diagonal(arg, axis, classes=(), recursive=True):
-    """A copy with one axis converted to a diagonal across two.
+    """Return a copy with one axis converted to a diagonal across two.
 
-    Input:
-        axis        the item axis to convert to two.
-        classes     a single class or list or tuple of classes. The class of the
-                    object returned will be the first suitable class in the
-                    list. Otherwise, a generic Qube object will be returned.
-        recursive   True to include matching slices of the derivatives in the
-                    returned object; otherwise, the returned object will not
-                    contain derivatives.
+    Parameters:
+        arg: The object to convert.
+        axis (int): The item axis to convert to two.
+        classes (tuple, optional): A single class or list or tuple of classes.
+            The class of the object returned will be the first suitable class
+            in the list. Otherwise, a generic Qube object will be returned.
+            Defaults to empty tuple.
+        recursive (bool, optional): True to include matching slices of the
+            derivatives in the returned object; otherwise, the returned object
+            will not contain derivatives. Defaults to True.
+
+    Returns:
+        Qube: A copy with the specified axis converted to a diagonal.
+
+    Raises:
+        ValueError: If the axis is out of range.
     """
 
     # Position axis from left
@@ -629,13 +727,13 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
 
 #===============================================================================
 def rms(self):
-    """The root-mean-square values of all items as a Scalar.
+    """Calculate the root-mean-square values of all items as a Scalar.
 
     Useful for looking at the overall magnitude of the differences between two
     objects.
 
-    Input:
-        arg         the object for which to calculate the RMS.
+    Returns:
+        Scalar: The root-mean-square values of all items.
     """
 
     # Evaluate the norm

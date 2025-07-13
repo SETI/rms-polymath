@@ -246,279 +246,282 @@ def __setitem__(self, indx, arg):
 
 #===============================================================================
 def _prep_index(self, indx):
-  """Prepare the index for this object.
+    """Prepare the index for this object.
 
-  Input:
-      indx              index to prepare.
+    Parameters:
+        indx (object or tuple): Index to prepare.
 
-  Return: A tuple (mask_index, new_mask_index, has_ellipsis)
-      pre_index         index to apply to array and mask first.
-      post_mask         mask to apply after indexing.
-      has_ellipsis      True if the index contains an ellipsis.
-      moved_to_front    True for non-consecutive array indices after first,
-                        which result in axis-reordering according to NumPy's
-                        rules.
-      array_shape       array shape resulting from all the array indices.
-      first_array_loc   place to relocate the axes associated with an array, if
-                        necessary.
+    Returns:
+        tuple: A tuple containing (pre_index, post_mask, has_ellipsis,
+            moved_to_front, array_shape, first_array_loc) where:
+            - pre_index: Index to apply to array and mask first.
+            - post_mask: Mask to apply after indexing.
+            - has_ellipsis: True if the index contains an ellipsis.
+            - moved_to_front: True for non-consecutive array indices after
+                first, which result in axis-reordering according to NumPy's
+                rules.
+            - array_shape: Array shape resulting from all the array indices.
+            - first_array_loc: Place to relocate the axes associated with an
+                array, if necessary.
 
-  The index is represented by a single object or a tuple of objects.
-  Out-of-bounds integer index values are replaced by masked values.
-  """
+    Note:
+        The index is represented by a single object or a tuple of objects.
+        Out-of-bounds integer index values are replaced by masked values.
+    """
 
-  try:      # catch any error and convert it to an IndexError
+    try:      # catch any error and convert it to an IndexError
 
-    # Convert a non-tuple index to a tuple
-    if not isinstance(indx, (tuple,list)):
-        indx = (indx,)
+        # Convert a non-tuple index to a tuple
+        if not isinstance(indx, (tuple,list)):
+            indx = (indx,)
 
-    # Convert tuples to Qubes of NumPy arrays;
-    # Convert Vectors to individual arrays;
-    # Convert all other numeric and boolean items to Qube
-    expanded = []
-    for item in indx:
-        if isinstance(item, (list,tuple)):
-            ranks = np.array([len(np.shape(k)) for k in item])
-            if np.any(ranks == 0):
-                expanded += [Qube(np.array(item))]
+        # Convert tuples to Qubes of NumPy arrays;
+        # Convert Vectors to individual arrays;
+        # Convert all other numeric and boolean items to Qube
+        expanded = []
+        for item in indx:
+            if isinstance(item, (list,tuple)):
+                ranks = np.array([len(np.shape(k)) for k in item])
+                if np.any(ranks == 0):
+                    expanded += [Qube(np.array(item))]
+                else:
+                    expanded += [Qube(np.array(x)) for x in item]
+
+            elif isinstance(item, Qube) and item.is_int() and item._rank_ > 0:
+                (index_list, mask_vals) = item.as_index_and_mask(purge=False,
+                                                                 masked=None)
+                expanded += [Qube(index_list[0], mask_vals)]
+                expanded += [Qube(k) for k in index_list[1:]]
+
+            elif isinstance(item, (bool, np.bool_, numbers.Integral,
+                                   np.ndarray)):
+                expanded += [Qube(item)]
             else:
-                expanded += [Qube(np.array(x)) for x in item]
+                expanded += [item]
 
-        elif isinstance(item, Qube) and item.is_int() and item._rank_ > 0:
-            (index_list, mask_vals) = item.as_index_and_mask(purge=False,
-                                                             masked=None)
-            expanded += [Qube(index_list[0], mask_vals)]
-            expanded += [Qube(k) for k in index_list[1:]]
+        # At this point, every item in the index list is a slice, Ellipsis, None, or
+        # a Qube subclass. Each item will consume exactly one axis of the object,
+        # except for multidimensional boolean arrays, ellipses, and None.
 
-        elif isinstance(item, (bool, np.bool_, numbers.Integral,
-                               np.ndarray)):
-            expanded += [Qube(item)]
+        # Identify the axis of this object consumed by each index item.
+        # Initially, treat an ellipsis as consuming zero axes.
+        # One item in inlocs for every item in expanded.
+        inlocs = []
+        ellipsis_k = -1
+        inloc = 0
+        for k,item in enumerate(expanded):
+            inlocs += [inloc]
+
+            if type(item) == type(Ellipsis):
+                if ellipsis_k >= 0:
+                    raise IndexError('an index can only have a single '
+                                     'ellipsis ("...")')
+                ellipsis_k = k
+
+            elif isinstance(item, Qube) and item._shape_ and item.is_bool():
+                inloc += len(item._shape_)
+
+            elif item is not None:
+                inloc += 1
+
+        # Each value in inlocs is the
+        has_ellipsis = ellipsis_k >= 0
+        if has_ellipsis:            # if ellipsis found
+            correction = len(self._shape_) - inloc
+            if correction < 0:
+                raise IndexError('too many indices for array')
+            for k in range(ellipsis_k + 1, len(inlocs)):
+                inlocs[k] += correction
+
+        # Process the components of the index tuple...
+        pre_index = []              # Numpy index to apply to the object
+        post_mask = False           # Mask to apply after indexing, to account for
+                                    # masked index values.
+
+        # Keep track of additional info about array indices
+        array_inlocs = []           # inloc of each array index
+        array_lengths = []          # length of axis consumed
+        array_shapes = []           # shape of object returned by each array index.
+
+        for k,item in enumerate(expanded):
+            inloc = inlocs[k]
+
+            # None consumes to input axis
+            if item is None:
+                pre_index += [item]
+                continue
+
+            axis_length = self._shape_[inloc]
+
+            # Handle Qube subclasses
+            if isinstance(item, Qube):
+
+              if item.is_float():
+                    raise IndexError('floating-point indexing is not permitted')
+
+              # A Boolean index collapses one or more axes down to one, where the
+              # new number of elements is equal to the number of elements True or
+              # masked. After the index is applied, the entries corresponding to
+              # masked index values will be masked. If no values are True or masked,
+              # the axis collapses down to size zero.
+              if item.is_bool():
+
+                # Boolean array
+                # Consumes one index for each array dimension; returns one axis with
+                # length equal to the number of occurrences of True or masked;
+                # masked items leave masked elements.
+                if item._shape_:
+
+                    # Validate shape
+                    item_shape = item._shape_
+                    for k,item_length in enumerate(item_shape):
+                      if self._shape_[inloc + k] != item_length:
+                        raise IndexError(
+                            'boolean index did not match indexed array along '
+                            'dimension %d; dimension is %d but corresponding '
+                            'boolean dimension is %d'
+                            % (inloc + k, self._shape_[inloc + k], item_length))
+
+                    # Update index and mask
+                    index = Qube.or_(item._values_, item._mask_)  # True or masked
+                    pre_index += [index]
+
+                    if np.shape(item._mask_):               # mask is an array
+                        post_mask = post_mask | item._mask_[index]
+
+                    elif item._mask_:                       # mask is True
+                        post_mask = True
+
+                    array_inlocs += [inloc]
+                    array_lengths += list(item_shape)
+                    array_shapes += [(np.sum(index),)]
+
+                # One boolean item
+                else:
+
+                    # One masked item
+                    if item._mask_:
+                        pre_index += [slice(0,1)]           # unit-sized axis
+                        post_mask = True
+
+                    # One True item
+                    elif item._values_:
+                        pre_index += [slice(None)]
+
+                    # One False item
+                    else:
+                        pre_index += [slice(0,0)]           # zero-sized axis
+
+              # Scalar index behaves like a NumPy ndarray index, except masked index
+              # values yield masked array values
+              elif item._rank_ == 0:
+
+                # Scalar array
+                # Consumes one axis; returns the number of axes in this array;
+                # masked items leave masked elements.
+                if item._shape_:
+                    index_vals = item._values_
+                    mask_vals = item._mask_
+
+                    # Find indices out of bounds
+                    out_of_bounds_mask = ((index_vals >= axis_length) |
+                                          (index_vals < -axis_length))
+                    any_out_of_bounds = np.any(out_of_bounds_mask)
+                    if any_out_of_bounds:
+                        mask_vals = Qube.or_(mask_vals, out_of_bounds_mask)
+                        any_masked = True
+                    else:
+                        any_masked = np.any(mask_vals)
+
+                    # Find an unused index value, if any
+                    index_vals = index_vals % axis_length
+                    if np.shape(mask_vals):
+                        antimask = np.logical_not(mask_vals)
+                        unused_set = (set(range(axis_length)) -
+                                      set(index_vals[antimask]))
+                    elif mask_vals:
+                        unused_set = ()
+                    else:
+                        unused_set = (set(range(axis_length))
+                                      - set(index_vals.ravel()))
+
+                    if unused_set:
+                        unused_index_value = unused_set.pop()
+                    else:
+                        unused_index_value = -1             # -1 = no unused element
+
+                    # Apply mask to index; update masked values
+                    if any_masked:
+                        index_vals = index_vals.copy()
+                        index_vals[mask_vals] = unused_index_value
+
+                    pre_index += [index_vals.astype(np.intp)]
+
+                    if np.shape(mask_vals):                 # mask is also an array
+                        post_mask = post_mask | mask_vals
+                    elif mask_vals:                         # index is fully masked
+                        post_mask = True
+
+                    array_inlocs += [inloc]
+                    array_lengths += [axis_length]
+                    array_shapes += [item._shape_]
+
+                # One scalar item
+                else:
+
+                    # Compare to allowed range
+                    index_val = item._values_
+                    mask_val = item._mask_
+
+                    if not mask_val:
+                        if index_val < 0:
+                            index_val += axis_length
+
+                        if index_val < 0 or index_val >= axis_length:
+                            mask_val = True
+
+                    # One masked item
+                    # Remove this axis and mark everything masked
+                    if mask_val:
+                        pre_index += [0]                    # use 0 on a masked axis
+                        post_mask = True
+
+                    # One unmasked item
+                    else:
+                        pre_index += [index_val % axis_length]
+
+            # Handle any other index element the NumPy way, with no masking
+            elif isinstance(item, (slice, type(Ellipsis))):
+                pre_index += [item]
+
+            else:
+                raise IndexError('invalid index type: ' + type(item).__name__)
+
+        # Get the shape of the array indices
+        array_shape = Qube.broadcasted_shape(*array_shapes)
+
+        # According to NumPy indexing rules, if there are non-consecutive array
+        # array indices, the array indices are moved to the front of the axis
+        # order in the result!
+        if array_inlocs:
+            first_array_loc = array_inlocs[0]
+            diffs = np.diff(array_inlocs)
+            moved_to_front = np.any(diffs > 1) and first_array_loc > 0
         else:
-            expanded += [item]
+            first_array_loc = 0
+            moved_to_front = False
 
-    # At this point, every item in the index list is a slice, Ellipsis, None, or
-    # a Qube subclass. Each item will consume exactly one axis of the object,
-    # except for multidimensional boolean arrays, ellipses, and None.
+        # Simplify the post_mask if possible
+        if not all(array_shape):        # mask doesn't matter if size is zero
+            post_mask = False
+        elif np.all(post_mask):
+            post_mask = True
 
-    # Identify the axis of this object consumed by each index item.
-    # Initially, treat an ellipsis as consuming zero axes.
-    # One item in inlocs for every item in expanded.
-    inlocs = []
-    ellipsis_k = -1
-    inloc = 0
-    for k,item in enumerate(expanded):
-        inlocs += [inloc]
+        return (tuple(pre_index), post_mask, has_ellipsis,
+                moved_to_front, array_shape, first_array_loc)
 
-        if type(item) == type(Ellipsis):
-            if ellipsis_k >= 0:
-                raise IndexError('an index can only have a single '
-                                 'ellipsis ("...")')
-            ellipsis_k = k
-
-        elif isinstance(item, Qube) and item._shape_ and item.is_bool():
-            inloc += len(item._shape_)
-
-        elif item is not None:
-            inloc += 1
-
-    # Each value in inlocs is the
-    has_ellipsis = ellipsis_k >= 0
-    if has_ellipsis:            # if ellipsis found
-        correction = len(self._shape_) - inloc
-        if correction < 0:
-            raise IndexError('too many indices for array')
-        for k in range(ellipsis_k + 1, len(inlocs)):
-            inlocs[k] += correction
-
-    # Process the components of the index tuple...
-    pre_index = []              # Numpy index to apply to the object
-    post_mask = False           # Mask to apply after indexing, to account for
-                                # masked index values.
-
-    # Keep track of additional info about array indices
-    array_inlocs = []           # inloc of each array index
-    array_lengths = []          # length of axis consumed
-    array_shapes = []           # shape of object returned by each array index.
-
-    for k,item in enumerate(expanded):
-        inloc = inlocs[k]
-
-        # None consumes to input axis
-        if item is None:
-            pre_index += [item]
-            continue
-
-        axis_length = self._shape_[inloc]
-
-        # Handle Qube subclasses
-        if isinstance(item, Qube):
-
-          if item.is_float():
-                raise IndexError('floating-point indexing is not permitted')
-
-          # A Boolean index collapses one or more axes down to one, where the
-          # new number of elements is equal to the number of elements True or
-          # masked. After the index is applied, the entries corresponding to
-          # masked index values will be masked. If no values are True or masked,
-          # the axis collapses down to size zero.
-          if item.is_bool():
-
-            # Boolean array
-            # Consumes one index for each array dimension; returns one axis with
-            # length equal to the number of occurrences of True or masked;
-            # masked items leave masked elements.
-            if item._shape_:
-
-                # Validate shape
-                item_shape = item._shape_
-                for k,item_length in enumerate(item_shape):
-                  if self._shape_[inloc + k] != item_length:
-                    raise IndexError(
-                        'boolean index did not match indexed array along '
-                        'dimension %d; dimension is %d but corresponding '
-                        'boolean dimension is %d'
-                        % (inloc + k, self._shape_[inloc + k], item_length))
-
-                # Update index and mask
-                index = Qube.or_(item._values_, item._mask_)  # True or masked
-                pre_index += [index]
-
-                if np.shape(item._mask_):               # mask is an array
-                    post_mask = post_mask | item._mask_[index]
-
-                elif item._mask_:                       # mask is True
-                    post_mask = True
-
-                array_inlocs += [inloc]
-                array_lengths += list(item_shape)
-                array_shapes += [(np.sum(index),)]
-
-            # One boolean item
-            else:
-
-                # One masked item
-                if item._mask_:
-                    pre_index += [slice(0,1)]           # unit-sized axis
-                    post_mask = True
-
-                # One True item
-                elif item._values_:
-                    pre_index += [slice(None)]
-
-                # One False item
-                else:
-                    pre_index += [slice(0,0)]           # zero-sized axis
-
-          # Scalar index behaves like a NumPy ndarray index, except masked index
-          # values yield masked array values
-          elif item._rank_ == 0:
-
-            # Scalar array
-            # Consumes one axis; returns the number of axes in this array;
-            # masked items leave masked elements.
-            if item._shape_:
-                index_vals = item._values_
-                mask_vals = item._mask_
-
-                # Find indices out of bounds
-                out_of_bounds_mask = ((index_vals >= axis_length) |
-                                      (index_vals < -axis_length))
-                any_out_of_bounds = np.any(out_of_bounds_mask)
-                if any_out_of_bounds:
-                    mask_vals = Qube.or_(mask_vals, out_of_bounds_mask)
-                    any_masked = True
-                else:
-                    any_masked = np.any(mask_vals)
-
-                # Find an unused index value, if any
-                index_vals = index_vals % axis_length
-                if np.shape(mask_vals):
-                    antimask = np.logical_not(mask_vals)
-                    unused_set = (set(range(axis_length)) -
-                                  set(index_vals[antimask]))
-                elif mask_vals:
-                    unused_set = ()
-                else:
-                    unused_set = (set(range(axis_length))
-                                  - set(index_vals.ravel()))
-
-                if unused_set:
-                    unused_index_value = unused_set.pop()
-                else:
-                    unused_index_value = -1             # -1 = no unused element
-
-                # Apply mask to index; update masked values
-                if any_masked:
-                    index_vals = index_vals.copy()
-                    index_vals[mask_vals] = unused_index_value
-
-                pre_index += [index_vals.astype(np.intp)]
-
-                if np.shape(mask_vals):                 # mask is also an array
-                    post_mask = post_mask | mask_vals
-                elif mask_vals:                         # index is fully masked
-                    post_mask = True
-
-                array_inlocs += [inloc]
-                array_lengths += [axis_length]
-                array_shapes += [item._shape_]
-
-            # One scalar item
-            else:
-
-                # Compare to allowed range
-                index_val = item._values_
-                mask_val = item._mask_
-
-                if not mask_val:
-                    if index_val < 0:
-                        index_val += axis_length
-
-                    if index_val < 0 or index_val >= axis_length:
-                        mask_val = True
-
-                # One masked item
-                # Remove this axis and mark everything masked
-                if mask_val:
-                    pre_index += [0]                    # use 0 on a masked axis
-                    post_mask = True
-
-                # One unmasked item
-                else:
-                    pre_index += [index_val % axis_length]
-
-        # Handle any other index element the NumPy way, with no masking
-        elif isinstance(item, (slice, type(Ellipsis))):
-            pre_index += [item]
-
-        else:
-            raise IndexError('invalid index type: ' + type(item).__name__)
-
-    # Get the shape of the array indices
-    array_shape = Qube.broadcasted_shape(*array_shapes)
-
-    # According to NumPy indexing rules, if there are non-consecutive array
-    # array indices, the array indices are moved to the front of the axis
-    # order in the result!
-    if array_inlocs:
-        first_array_loc = array_inlocs[0]
-        diffs = np.diff(array_inlocs)
-        moved_to_front = np.any(diffs > 1) and first_array_loc > 0
-    else:
-        first_array_loc = 0
-        moved_to_front = False
-
-    # Simplify the post_mask if possible
-    if not all(array_shape):        # mask doesn't matter if size is zero
-        post_mask = False
-    elif np.all(post_mask):
-        post_mask = True
-
-    return (tuple(pre_index), post_mask, has_ellipsis,
-            moved_to_front, array_shape, first_array_loc)
-
-  except Exception as e:
-    raise IndexError(e)
+    except Exception as e:
+        raise IndexError(e)
 
 #===============================================================================
 def _prep_scalar_index(self, indx):
@@ -527,19 +530,22 @@ def _prep_scalar_index(self, indx):
     A single value can only be indexed with True, False, Ellipsis, an empty
     slice, and None.
 
-    Input:
-        indx            index to prepare.
+    Parameters:
+        indx (object or tuple): Index to prepare.
 
-    Return:
-        masked          True if this object should be masked.
-        size_zero       True if this object should have size zero.
-        shape_before    new shape due to occurrences of None or False before any
-                        Ellipsis.
-        shape_before    new shape due to occurrences of None or False after any
-                        Ellipsis.
+    Returns:
+        tuple: A tuple containing (masked, size_zero, shape_before, shape_after)
+            where:
+            - masked: True if this object should be masked.
+            - size_zero: True if this object should have size zero.
+            - shape_before: New shape due to occurrences of None or False
+                before any Ellipsis.
+            - shape_after: New shape due to occurrences of None or False after
+                any Ellipsis.
 
-    An index of False returns an object of size zero. An index if Boolean.MASKED
-    returns a fully masked object.
+    Note:
+        An index of False returns an object of size zero. An index of
+        Boolean.MASKED returns a fully masked object.
     """
 
     if not isinstance(indx, (tuple,list)):

@@ -18,17 +18,6 @@ class Matrix(Qube):
 
     This class represents arbitrary 2D matrices in the PolyMath framework and provides
     operations for matrix arithmetic, transposition, and inversion.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 2 for matrices.
-        NUMER (None): Shape of the numerator, defined by subclasses.
-        FLOATS_OK (bool): True as floating-point numbers are allowed.
-        INTS_OK (bool): False as integers are not allowed.
-        BOOLS_OK (bool): False as booleans are not allowed.
-        UNITS_OK (bool): True as units are allowed.
-        DERIVS_OK (bool): True as derivatives are allowed.
-        DEBUG (bool): Set to True for some debugging tasks.
-        DELTA (float): Cutoff used in unary operations.
     """
 
     NRANK = 2           # the number of numerator axes.

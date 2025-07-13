@@ -1,6 +1,7 @@
 [![GitHub release; latest by date](https://img.shields.io/github/v/release/SETI/rms-polymath)](https://github.com/SETI/rms-polymath/releases)
 [![GitHub Release Date](https://img.shields.io/github/release-date/SETI/rms-polymath)](https://github.com/SETI/rms-polymath/releases)
 [![Test Status](https://img.shields.io/github/actions/workflow/status/SETI/rms-polymath/run-tests.yml?branch=main)](https://github.com/SETI/rms-polymath/actions)
+[![Documentation Status](https://readthedocs.org/projects/rms-polymath/badge/?version=latest)](https://rms-polymath.readthedocs.io/en/latest/?badge=latest)
 [![Code coverage](https://img.shields.io/codecov/c/github/SETI/rms-polymath/main?logo=codecov)](https://codecov.io/gh/SETI/rms-polymath)
 <br />
 [![PyPI - Version](https://img.shields.io/pypi/v/rms-polymath)](https://pypi.org/project/rms-polymath)
