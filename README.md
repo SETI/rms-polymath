@@ -33,7 +33,7 @@
 The `polymath` module is available via the `polymath` package on PyPI and can be installed with:
 
 ```sh
-pip install polymath
+pip install rms-polymath
 ```
 
 # Getting Started
