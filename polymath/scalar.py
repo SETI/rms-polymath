@@ -22,16 +22,6 @@ class Scalar(Qube):
     mathematical operations, trigonometric functions, and statistical methods.
     Scalars can have units, derivatives, and support masking for undefined
     values.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 0 for scalars.
-        NUMER (tuple): Shape of the numerator, which is empty for scalars.
-        FLOATS_OK (bool): True as floating-point numbers are allowed.
-        INTS_OK (bool): True as integers are allowed.
-        BOOLS_OK (bool): False as booleans are not allowed.
-        UNITS_OK (bool): True as units are allowed.
-        DERIVS_OK (bool): True as derivatives are allowed.
-        DEFAULT_VALUE (int): Default value 1 for unspecified elements.
     """
 
     NRANK = 0           # the number of numerator axes.

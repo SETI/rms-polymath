@@ -18,16 +18,6 @@ class Quaternion(Vector):
 
     This class handles quaternions and supports conversions between quaternions,
     rotation matrices, and sets of Euler angles.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 1 for quaternions.
-        NUMER (tuple): Shape of the numerator (4,).
-        FLOATS_OK (bool): True as floating-point numbers are allowed.
-        INTS_OK (bool): False as integers are not allowed.
-        BOOLS_OK (bool): False as booleans are not allowed.
-        UNITS_OK (bool): False as units are disallowed.
-        DERIVS_OK (bool): True as derivatives are allowed.
-        DEFAULT_VALUE (ndarray): Default value [1,0,0,0] for unspecified elements.
     """
 
     NRANK = 1           # the number of numerator axes.
@@ -881,15 +871,20 @@ class Quaternion(Vector):
             be specified using a 4-character string or encoded 4-tuple:
 
             *Axes 4-string*: e.g. 'sxyz' or 'ryxy'
-            - First character: rotations are applied to 's'tatic or 'r'otating frame
-            - Remaining characters: successive rotation axis 'x', 'y', or 'z'
+                - First character: rotations are applied to 's'tatic or 'r'otating frame
+
+                - Remaining characters: successive rotation axis 'x', 'y', or 'z'
 
             *Axes 4-tuple*: e.g. (0, 0, 0, 0) or (1, 1, 1, 1)
-            - inner axis: code of axis ('x':0, 'y':1, 'z':2) of rightmost matrix.
-            - parity: even (0) if inner axis 'x' is followed by 'y', 'y' is
-              followed by 'z', or 'z' is followed by 'x'. Otherwise odd (1).
-            - repetition: first and last axis are same (1) or different (0).
-            - frame: rotations are applied to static (0) or rotating (1) frame.
+
+                - inner axis: code of axis ('x':0, 'y':1, 'z':2) of rightmost matrix.
+
+                - parity: even (0) if inner axis 'x' is followed by 'y', 'y' is
+                  followed by 'z', or 'z' is followed by 'x'. Otherwise odd (1).
+
+                - repetition: first and last axis are same (1) or different (0).
+
+                - frame: rotations are applied to static (0) or rotating (1) frame.
 
         >>> q = quaternion_from_euler(1, 2, 3, 'ryxz')
         >>> numpy.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])

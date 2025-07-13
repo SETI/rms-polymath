@@ -15,16 +15,6 @@ class Pair(Vector):
 
     This class provides specialized functionality for working with 2-element vectors,
     including coordinate pair operations and 2D transformations.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 1 for pairs.
-        NUMER (tuple): Shape of the numerator (2,).
-        FLOATS_OK (bool): True as floating-point numbers are allowed.
-        INTS_OK (bool): True as integers are allowed.
-        BOOLS_OK (bool): False as booleans are not allowed.
-        UNITS_OK (bool): True as units are allowed.
-        DERIVS_OK (bool): True as derivatives are allowed.
-        DEFAULT_VALUE (ndarray): Default value [1,1] for unspecified elements.
     """
 
     NRANK = 1           # the number of numerator axes.

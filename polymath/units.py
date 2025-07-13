@@ -12,7 +12,7 @@ import numbers
 # under the math module in Python 3. Rather than deal with the inconsistency,
 # we simply define it again here.
 
-def gcd(a, b):
+def _gcd(a, b):
     """Calculate the Greatest Common Divisor of a and b.
 
     Unless b==0, the result will have the same sign as b (so that when
@@ -30,15 +30,6 @@ class Units(object):
     This class defines unit names and methods for converting between values
     that include units. Units are represented by exponents on distance, time,
     and angle dimensions.
-
-    Attributes:
-        exponents (tuple): A tuple of integers defining the exponents on
-            distance, time and angle.
-        triple (tuple): A tuple containing (numerator, denominator, pi_exponent)
-            for the conversion factor.
-        factor (float): Factor to convert from these units to standard units.
-        factor_inv (float): Factor to convert from standard units to these units.
-        name (str or dict): The name of the units.
     """
 
     def __init__(self, exponents, triple, name=None):
@@ -49,11 +40,11 @@ class Units(object):
                 distance, time and angle that are used for this set of units.
             triple (tuple): A tuple containing:
                 [0] The numerator of a factor that converts from a value in
-                    these units to a value in standard units of km, seconds
-                    and/or radians.
+                these units to a value in standard units of km, seconds
+                and/or radians.
                 [1] The denominator of this same factor.
                 [2] The exponent on pi that should multiply the numerator of
-                    this factor.
+                this factor.
             name (str or dict, optional): The name of the units. It is
                 represented by a string or by a dictionary of unit exponents
                 keyed by the unit names. Defaults to None.
@@ -74,7 +65,7 @@ class Units(object):
         numer = int(triple[0] * 256)
         denom = int(triple[1] * 256)
 
-        gcd_value = gcd(numer, denom)
+        gcd_value = _gcd(numer, denom)
         numer //= gcd_value
         denom //= gcd_value
 
@@ -1071,7 +1062,7 @@ class Units(object):
                     denom = d_denom * t_denom * a_denom
                     expo  = d_expo  + t_expo  + a_expo
 
-                    gcd_value = gcd(numer, denom)
+                    gcd_value = _gcd(numer, denom)
                     numer //= gcd_value
                     denom //= gcd_value
 

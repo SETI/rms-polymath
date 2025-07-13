@@ -15,16 +15,6 @@ class Vector3(Vector):
 
     This class provides specialized functionality for working with 3-element
     vectors, including coordinate transformations and 3D operations.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 1 for vectors.
-        NUMER (tuple): Shape of the numerator (3,).
-        FLOATS_OK (bool): True as floating-point numbers are allowed.
-        INTS_OK (bool): False as integers are not allowed.
-        BOOLS_OK (bool): False as booleans are not allowed.
-        UNITS_OK (bool): True as units are allowed.
-        DERIVS_OK (bool): True as derivatives are allowed.
-        DEFAULT_VALUE (ndarray): Default value [1,1,1] for unspecified elements.
     """
 
     NRANK = 1           # the number of numerator axes.

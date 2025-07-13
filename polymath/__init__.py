@@ -21,4 +21,18 @@ try:
 except ImportError as err:
     __version__ = 'Version unspecified'
 
+__all__ = [
+    'Boolean',
+    'Matrix',
+    'Matrix3',
+    'Pair',
+    'Polynomial',
+    'Quaternion',
+    'Qube',
+    'Scalar',
+    'Units',
+    'Vector',
+    'Vector3',
+]
+
 ################################################################################

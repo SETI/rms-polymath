@@ -15,15 +15,6 @@ class Vector(Qube):
     This class handles arbitrary length one-dimensional vectors and provides
     operations for vector arithmetic, dot products, and other mathematical
     operations.
-
-    Attributes:
-        NRANK (int): The number of numerator axes, which is 1 for vectors.
-        NUMER (None): Shape of the numerator, defined by subclasses.
-        FLOATS_OK (bool): True as floating-point numbers are allowed.
-        INTS_OK (bool): True as integers are allowed.
-        BOOLS_OK (bool): False as booleans are not allowed.
-        UNITS_OK (bool): True as units are allowed.
-        DERIVS_OK (bool): True as derivatives are allowed.
     """
 
     NRANK = 1           # the number of numerator axes.
@@ -202,11 +193,13 @@ class Vector(Qube):
                 same shape. A value of None is converted to a zero-valued Scalar
                 that matches the denominator shape of the other arguments.
             **keywords: Additional keyword arguments:
-                recursive (bool, optional): True to include all the derivatives.
+
+                - recursive (bool, optional): True to include all the derivatives.
                     The returned object will have derivatives representing the
                     union of all the derivatives found among the arguments.
                     Default is True.
-                readonly (bool, optional): True to return a read-only object;
+
+                - readonly (bool, optional): True to return a read-only object;
                     False to return something potentially writable. Default is
                     False.
 

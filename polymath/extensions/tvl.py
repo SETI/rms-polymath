@@ -10,8 +10,11 @@ def tvl_and(self, arg, builtins=None):
 
     Masked values are treated as indeterminate rather than being ignored.
     These are the rules:
+
         - False and anything = False
+
         - True and True = True
+
         - True and Masked = Masked
 
     Parameters:
@@ -70,8 +73,11 @@ def tvl_or(self, arg, builtins=None):
 
     Masked values are treated as indeterminate rather than being ignored.
     These are the rules:
+
         - True or anything = True
+
         - False or False = False
+
         - False or Masked = Masked
 
     Parameters:
@@ -130,8 +136,11 @@ def tvl_any(self, axis=None, builtins=None):
 
     Masked values are treated as indeterminate rather than being ignored.
     These are the rules:
+
         - True if any unmasked value is True;
+
         - False if and only if all the items are False and unmasked;
+
         - otherwise, Masked.
 
     Parameters:
@@ -183,8 +192,11 @@ def tvl_all(self, axis=None, builtins=None):
 
     Masked values are treated as indeterminate rather than being ignored.
     These are the rules:
+
         - True if and only if all the items are True and unmasked.
+
         - False if any unmasked value is False.
+
         - otherwise, Masked.
 
     Parameters:

@@ -18,10 +18,6 @@ class Polynomial(Vector):
     in order of decreasing exponent. Mathematical operations, polynomial
     root-solving are supported. Coefficients can have derivatives and these can
     be used to determine derivatives of the values or roots.
-
-    Attributes:
-        INTS_OK (bool): False as only floating-point coefficients are allowed.
-        UNIT_OK (bool): False as units are disallowed.
     """
 
     INTS_OK = False     # Only floating-point coefficients are allowed
