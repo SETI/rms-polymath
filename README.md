@@ -22,9 +22,36 @@
 [![Number of GitHub stars](https://img.shields.io/github/stars/SETI/rms-polymath)](https://github.com/SETI/rms-polymath/stargazers)
 ![GitHub forks](https://img.shields.io/github/forks/SETI/rms-polymath)
 
-# rms-polymath
+# Introduction
 
-Supported versions: Python >= 3.8
+`polymath` is a set of classes for performing NumPy-style array operations on matrices.
 
-# PDS Ring-Moon Systems Node, SETI Institute
-# polymath Library
+`polymath` is a product of the [PDS Ring-Moon Systems Node](https://pds-rings.seti.org).
+
+# Installation
+
+The `polymath` module is available via the `polymath` package on PyPI and can be installed with:
+
+```sh
+pip install polymath
+```
+
+# Getting Started
+
+TBD.
+
+# Contributing
+
+Information on contributing to this package can be found in the
+[Contributing Guide](https://github.com/SETI/rms-polymath/blob/main/CONTRIBUTING.md).
+
+# Links
+
+- [Documentation](https://rms-polymath.readthedocs.io)
+- [Repository](https://github.com/SETI/rms-polymath)
+- [Issue tracker](https://github.com/SETI/rms-polymath/issues)
+- [PyPi](https://pypi.org/project/rms-polymath)
+
+# Licensing
+
+This code is licensed under the [Apache License v2.0](https://github.com/SETI/rms-polymath/blob/main/LICENSE).
