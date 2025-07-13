@@ -24,16 +24,16 @@
 
 # Introduction
 
-`polymath` is a set of classes for performing NumPy-style array operations on matrices.
+`polymath` is a wrapper for NumPy that adds easy masks and vector computation.
 
 `polymath` is a product of the [PDS Ring-Moon Systems Node](https://pds-rings.seti.org).
 
 # Installation
 
-The `polymath` module is available via the `polymath` package on PyPI and can be installed with:
+The `polymath` module is available via the `rms-polymath` package on PyPI and can be installed with:
 
 ```sh
-pip install polymath
+pip install rms-polymath
 ```
 
 # Getting Started

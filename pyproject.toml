@@ -38,6 +38,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/SETI/rms-polymath"
+Documentation = "https://rms-polymath.readthedocs.io/en/latest"
 Repository = "https://github.com/SETI/rms-polymath"
 Source = "https://github.com/SETI/rms-polymath"
 Issues = "https://github.com/SETI/rms-polymath/issues"
