@@ -1,744 +1,1956 @@
-################################################################################
-# polymath/extensions/math_ops.py: general math operations
-################################################################################
+##########################################################################################
+# polymath/extensions/math_ops.py: Math operations
+##########################################################################################
 
 import numpy as np
 import numbers
-import sys
 from polymath.qube import Qube
-from polymath.units import Units
+from polymath.unit import Unit
 
-PYTHON2 = (sys.version_info[0] < 3)
+##########################################################################################
+# Unary operators
+##########################################################################################
 
-#===============================================================================
-def _mean_or_sum(arg, axis=None, recursive=True, _combine_as_mean=False):
-    """Calculate the mean or sum of the unmasked values.
-
-    Internal method for computing mean or sum operations.
+def __pos__(self, *, recursive=True):
+    """+self, element by element.
 
     Parameters:
-        arg: The object for which to calculate the mean or sum.
-        axis (int or tuple, optional): An integer axis or a tuple of axes. The
-            mean is determined across these axes, leaving any remaining axes in
-            the returned value. If None (the default), then the mean is
-            performed across all axes of the object.
-        recursive (bool, optional): True to construct the mean of the
-            derivatives. Defaults to True.
-        _combine_as_mean (bool, optional): True to combine as a mean; False to
-            combine as a sum. Defaults to False.
+        recursive (bool, optional): True to include derivatives in return.
 
     Returns:
-        Qube: The mean or sum of the unmasked values.
+        Qube: The result.
     """
 
-    arg._check_axis(axis, 'mean()' if _combine_as_mean else 'sum()')
+    return self.clone(recursive=recursive)
 
-    if arg._size_ == 0:
-        return arg._zero_sized_result(axis=axis)
 
-    # Select the NumPy function
-    if _combine_as_mean:
-        func = np.mean
-    else:
-        func = np.sum
+def __neg__(self, *, recursive=True):
+    """-self, element-by-element negation.
 
-    # Create the new axis, which is valid regardless of items
-    rank = len(arg._shape_)
-    if isinstance(axis, numbers.Integral):
-        new_axis = axis % rank
-    elif axis is None:
-        new_axis = tuple(range(rank))
-    else:
-        new_axis = tuple(a % rank for a in axis)
+    Parameters:
+        recursive (bool, optional): True to include derivatives in return.
 
-    # If there's no mask, this is easy
-    if not np.any(arg._mask_):
-        obj = Qube(func(arg._values_, axis=new_axis), False, example=arg)
+    Returns:
+        Qube: The result.
+    """
 
-    # Handle a fully masked object
-    elif np.all(arg._mask_):
-        obj = Qube(func(arg._values_, axis=new_axis), True, example=arg)
+    # Construct a copy with negative values
+    obj = self.clone(recursive=False)
+    obj._set_values(-self._values)
 
-    # If we are averaging over all axes, this is fairly easy
-    elif axis is None:
-        if arg._shape_ == ():
-            obj = arg
-        else:
-            obj = Qube(func(arg._values_[arg.antimask], axis=0), False,
-                       example=arg)
-
-    # At this point, we have handled the cases mask==True and mask==False,
-    # so the mask must be an array. Also, there must be at least one
-    # unmasked value.
-
-    else:
-        # Set masked items to zero, then sum across axes
-        new_values = arg._values_.copy()
-        new_values[arg._mask_] = 0
-        new_values = np.sum(new_values, axis=new_axis)
-
-        # Count the numbers of unmasked items, summed across axes
-        count = np.sum(arg.antimask, axis=new_axis)
-
-        # Convert to a mask and a mean
-        new_mask = (count == 0)
-        if _combine_as_mean:
-            count_reshaped = count.reshape(count.shape + arg._rank_ * (1,))
-            denom = np.maximum(count_reshaped, 1)
-            if PYTHON2:
-                if np.shape(denom):
-                    denom = denom.astype('float')
-                else:
-                    denom = float(denom)
-            new_values = new_values / denom
-
-        # Fill in masked values with the default
-        if np.any(new_mask):
-            new_values[(new_mask,) +
-                       arg._rank_ * (slice(None),)] = arg._default_
-        else:
-            new_mask = False
-
-        obj = Qube(new_values, new_mask, example=arg)
-
-    # Cast to the proper class
-    obj = obj.cast(type(arg))
-
-    # Handle derivatives
-    if recursive and arg._derivs_:
-        new_derivs = {}
-        for (key, deriv) in arg._derivs_.items():
-            new_derivs[key] = _mean_or_sum(deriv, axis, recursive=False,
-                                           _combine_as_mean=_combine_as_mean)
-
-        obj.insert_derivs(new_derivs)
+    # Fill in the negative derivatives
+    if recursive and self._derivs:
+        for key, deriv in self._derivs.items():
+            obj.insert_deriv(key, -deriv)
 
     return obj
 
-#===============================================================================
-def _check_axis(arg, axis, op):
-    """Validate the axis as None, an int, or a tuple of ints.
+
+def __abs__(self, *, recursive=True):
+    """abs(self), element-by-element absolute value.
 
     Parameters:
-        arg: The object to check the axis for.
-        axis: The axis to validate.
-        op (str): The operation name for error messages.
+        recursive (bool, optional): True to include derivatives in return.
 
-    Raises:
-        IndexError: If the axis is out of range or duplicated.
+    Returns:
+        Qube: The result.
     """
 
-    if axis is None:    # can't be a problem
-        return
+    _raise_unsupported_op('abs()', self)
 
-    # Fix up the axis argument
-    if isinstance(axis, tuple):
-        axis_for_show = axis
-    elif isinstance(axis, list):
-        axis_for_show = tuple(axis)
+
+def abs(self):
+    """abs(self), element-by-element absolute value."""
+
+    return self.__abs__()
+
+def __len__(self):
+    """Number of elements along first axis."""
+
+    if self._ndims:
+        return self._shape[0]
     else:
-        axis_for_show = axis
-        axis = (axis,)
+        raise TypeError(f'len of unsized {type(self).__name__} object')
 
-    # Check for duplicates
-    # Check for in-range values
-    selections = len(arg._shape_) * [False]
-    for i in axis:
+def len(self):
+    """Number of elements along first axis."""
+
+    return self.__len__()
+
+##########################################################################################
+# Addition
+##########################################################################################
+
+def __add__(self, /, arg, *, recursive=True):
+    """self + arg, element-by-element addition.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The sum.
+    """
+
+    # Handle a simple right-hand value...
+    if self._rank == 0 and isinstance(arg, numbers.Real):
+        obj = self.clone(recursive=recursive, retain_cache=True)
+        obj._set_values(self._values + arg, retain_cache=True)
+        return obj
+
+    # Convert arg to another Qube if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
         try:
-            _ = selections[i]
-        except IndexError:
-            raise IndexError('axis is out of range (%d,%d) in %s.%s: %d'
-                             % (-len(arg._shape_), -len(arg._shape_),
-                                type(arg).__name__, op, i))
+            arg = self.as_this_type(arg, coerce=False, op='+')
+        except (ValueError, TypeError):
+            _raise_unsupported_op('+', self, original_arg)
 
-        if selections[i]:
-            raise IndexError('duplicated axis in %s.%s: %s'
-                             % (type(arg).__name__, op, axis_for_show))
+    # Verify compatibility
+    self._require_compatible_units(arg, '+')
 
-        selections[i] = True
+    if self._numer != arg._numer:
+        if type(self) is not type(arg):
+            _raise_unsupported_op('+', self, original_arg)
 
-#===============================================================================
-def _zero_sized_result(self, axis):
-    """Return a zero-sized result obtained by collapsing one or more axes.
+        _raise_incompatible_numers('+', self, arg)
 
-    Parameters:
-        axis (int or tuple, optional): The axis or axes to collapse.
+    if self._denom != arg._denom:
+        _raise_incompatible_denoms('+', self, arg)
 
-    Returns:
-        Qube: A zero-sized result with the specified axes collapsed.
-    """
+    # Construct the result
+    obj = Qube.__new__(type(self))
+    obj.__init__(self._values + arg._values,
+                 Qube.or_(self._mask, arg._mask),
+                 unit=self._unit or arg._unit,
+                 example=self)
 
-    if axis is None:
-        return self.flatten().as_size_zero()
-
-    # Construct an index to obtain the correct shape
-    indx = len(self.shape) * [slice(None)]
-    if isinstance(axis, (list, tuple)):
-        for i in axis:
-            indx[i] = 0
-        else:
-            indx[i] = 0
-
-    return self[tuple(indx)]
-
-#===============================================================================
-@staticmethod
-def dot(arg1, arg2, axis1=-1, axis2=0, classes=(), recursive=True):
-    """Calculate the dot product of two objects.
-
-    The axes must be in the numerator, and only one of the objects can have a
-    denominator (which makes this suitable for first derivatives but not second
-    derivatives).
-
-    Parameters:
-        arg1: The first operand as a subclass of Qube.
-        arg2: The second operand as a subclass of Qube.
-        axis1 (int, optional): The item axis of this object for the dot product.
-            Defaults to -1.
-        axis2 (int, optional): The item axis of the arg2 object for the dot
-            product. Defaults to 0.
-        classes (tuple, optional): A single class or list or tuple of classes.
-            The class of the object returned will be the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
-            Defaults to empty tuple.
-        recursive (bool, optional): True to construct the derivatives of the
-            dot product. Defaults to True.
-
-    Returns:
-        Qube: The dot product of the two objects.
-
-    Raises:
-        ValueError: If both objects have denominators or if axes are out of
-            range.
-    """
-
-    # At most one object can have a denominator.
-    if arg1._drank_ and arg2._drank_:
-        Qube._raise_dual_denoms('dot()', arg1, arg2)
-
-    # Position axis1 from left
-    if axis1 >= 0:
-        a1 = axis1
-    else:
-        a1 = axis1 + arg1._nrank_
-    if a1 < 0 or a1 >= arg1._nrank_:
-        raise ValueError('first axis is out of range (%d,%d) in %s.dot(): %d'
-                         % (-arg1._nrank_, arg1._nrank_, type(arg1).__name__,
-                            axis1))
-    k1 = a1 + len(arg1._shape_)
-
-    # Position axis2 from item left
-    if axis2 >= 0:
-        a2 = axis2
-    else:
-        a2 = axis2 + arg2._nrank_
-    if a2 < 0 or a2 >= arg2._nrank_:
-        raise ValueError('second axis is out of range (%d,%d) in %s.dot(): %d'
-                         % (-arg2._nrank_, arg2._nrank_, type(arg2).__name__,
-                            axis2))
-    k2 = a2 + len(arg2._shape_)
-
-    # Confirm that the axis lengths are compatible
-    if arg1._numer_[a1] != arg2._numer_[a2]:
-        raise ValueError('%s.dot() axes have different lengths: %d, %d' %
-                         (type(arg1).__name__, arg1._numer_[a1],
-                          arg2._numer_[a2]))
-
-    # Re-shape the value arrays (shape, numer1, numer2, denom1, denom2)
-    shape1 = (arg1._shape_ + arg1._numer_ + (arg2._nrank_ - 1) * (1,) +
-              arg1._denom_ + arg2._drank_ * (1,))
-    array1 = arg1._values_.reshape(shape1)
-
-    shape2 = (arg2._shape_ + (arg1._nrank_ - 1) * (1,) + arg2._numer_ +
-              arg1._drank_ * (1,) + arg2._denom_)
-    array2 = arg2._values_.reshape(shape2)
-    k2 += arg1._nrank_ - 1
-
-    # Roll both array axes to the right
-    array1 = np.rollaxis(array1, k1, array1.ndim)
-    array2 = np.rollaxis(array2, k2, array2.ndim)
-
-    # Make arrays contiguous so sum will run faster
-    array1 = np.ascontiguousarray(array1)
-    array2 = np.ascontiguousarray(array2)
-
-    # Construct the dot product
-    new_values = np.sum(array1 * array2, axis=-1)
-
-    # Construct the object and cast
-    new_nrank = arg1._nrank_ + arg2._nrank_ - 2
-    new_drank = arg1._drank_ + arg2._drank_
-
-    obj = Qube(new_values,
-               Qube.or_(arg1._mask_, arg2._mask_),
-               units=Units.mul_units(arg1._units_, arg2._units_),
-               nrank=new_nrank, drank=new_drank, example=arg1)
-    obj = obj.cast(classes)
-
-    # Insert derivatives if necessary
-    if recursive and (arg1._derivs_ or arg2._derivs_):
-        new_derivs = {}
-
-        if arg1._derivs_:
-            arg2_wod = arg2.wod
-            for (key, arg1_deriv) in arg1._derivs_.items():
-                new_derivs[key] = Qube.dot(arg1_deriv, arg2_wod, a1, a2,
-                                           classes, recursive=False)
-
-        if arg2._derivs_:
-            arg1_wod = arg1.wod
-            for (key, arg2_deriv) in arg2._derivs_.items():
-                term = Qube.dot(arg1_wod, arg2_deriv, a1, a2,
-                                classes, recursive=False)
-                if key in new_derivs:
-                    new_derivs[key] += term
-                else:
-                    new_derivs[key] = term
-
-        obj.insert_derivs(new_derivs)
-
-    return obj
-
-#===============================================================================
-@staticmethod
-def norm(arg, axis=-1, classes=(), recursive=True):
-    """Calculate the norm of an object along one axis.
-
-    The axes must be in the numerator. The denominator must have zero rank.
-
-    Parameters:
-        arg: The object for which to calculate the norm.
-        axis (int, optional): The numerator axis for the norm. Defaults to -1.
-        classes (tuple, optional): A single class or list or tuple of classes.
-            The class of the object returned will be the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
-            Defaults to empty tuple.
-        recursive (bool, optional): True to construct the derivatives of the
-            norm. Defaults to True.
-
-    Returns:
-        Qube: The norm of the object along the specified axis.
-
-    Raises:
-        ValueError: If the object has denominators or if the axis is out of
-            range.
-    """
-
-    if arg._drank_ != 0:
-        raise ValueError('%s.norm() does not support denominators'
-                         % type(arg).__name__)
-
-    # Position axis from left
-    if axis >= 0:
-        a1 = axis
-    else:
-        a1 = axis + arg._nrank_
-    if a1 < 0 or a1 >= arg._nrank_:
-        raise ValueError('axis is out of range (%d,%d) in %s.norm(): %d'
-                         % (-arg._nrank_, arg._nrank_, type(arg).__name__,
-                            axis))
-    k1 = a1 + len(arg._shape_)
-
-    # Evaluate the norm
-    new_values = np.sqrt(np.sum(arg._values_**2, axis=k1))
-
-    # Construct the object and cast
-    obj = Qube(new_values,
-               arg._mask_,
-               nrank=arg._nrank_-1, example=arg)
-    obj = obj.cast(classes)
-
-    # Insert derivatives if necessary
-    if recursive and arg._derivs_:
-        factor = arg.wod / obj
-        for (key, arg_deriv) in arg._derivs_.items():
-            obj.insert_deriv(key, Qube.dot(factor, arg_deriv, a1, a1,
-                                           classes, recursive=False))
-
-    return obj
-
-#===============================================================================
-@staticmethod
-def norm_sq(arg, axis=-1, classes=(), recursive=True):
-    """Calculate the square of the norm of an object along one axis.
-
-    The axes must be in the numerator. The denominator must have zero rank.
-
-    Parameters:
-        arg: The object for which to calculate the norm-squared.
-        axis (int, optional): The item axis for the norm. Defaults to -1.
-        classes (tuple, optional): A single class or list or tuple of classes.
-            The class of the object returned will be the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
-            Defaults to empty tuple.
-        recursive (bool, optional): True to construct the derivatives of the
-            norm-squared. Defaults to True.
-
-    Returns:
-        Qube: The square of the norm of the object along the specified axis.
-
-    Raises:
-        ValueError: If the object has denominators or if the axis is out of
-            range.
-    """
-
-    if arg._drank_ != 0:
-        raise ValueError('%s.norm_sq() does not support denominators'
-                         % type(arg).__name__)
-
-    # Position axis from left
-    if axis >= 0:
-        a1 = axis
-    else:
-        a1 = axis + arg._nrank_
-    if a1 < 0 or a1 >= arg._nrank_:
-        raise ValueError('axis is out of range (%d,%d) in %s.norm_sq(): %d'
-                         % (-arg._nrank_, arg._nrank_, type(arg).__name__,
-                            axis))
-    k1 = a1 + len(arg._shape_)
-
-    # Evaluate the norm
-    new_values = np.sum(arg._values_**2, axis=k1)
-
-    # Construct the object and cast
-    obj = Qube(new_values,
-               arg._mask_,
-               units=Units.mul_units(arg._units_, arg._units_),
-               nrank=arg._nrank_-1, example=arg)
-    obj = obj.cast(classes)
-
-    # Insert derivatives if necessary
-    if recursive and arg._derivs_:
-        factor = 2.* arg.wod
-        for (key, arg_deriv) in arg._derivs_.items():
-            obj.insert_deriv(key, Qube.dot(factor, arg_deriv, a1, a1,
-                                           classes, recursive=False))
-
-    return obj
-
-#===============================================================================
-@staticmethod
-def cross(arg1, arg2, axis1=-1, axis2=0, classes=(), recursive=True):
-    """Calculate the cross product of two objects.
-
-    Axis lengths must be either two or three, and must be equal. At least one of
-    the objects must be lacking a denominator.
-
-    Parameters:
-        arg1: The first operand.
-        arg2: The second operand.
-        axis1 (int, optional): The item axis of the first object. Defaults to -1.
-        axis2 (int, optional): The item axis of the second object. Defaults to 0.
-        classes (tuple, optional): A single class or list or tuple of classes.
-            The class of the object returned will be the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
-            Defaults to empty tuple.
-        recursive (bool, optional): True to construct the derivatives of the
-            cross product. Defaults to True.
-
-    Returns:
-        Qube: The cross product of the two objects.
-
-    Raises:
-        ValueError: If both objects have denominators, if axes are out of range,
-            or if axis lengths are incompatible.
-    """
-
-    # At most one object can have a denominator.
-    if arg1._drank_ and arg2._drank_:
-        Qube._raise_dual_denoms('cross()', arg1, arg2)
-
-    # Position axis1 from left
-    if axis1 >= 0:
-        a1 = axis1
-    else:
-        a1 = axis1 + arg1._nrank_
-    if a1 < 0 or a1 >= arg1._nrank_:
-        raise ValueError('first axis is out of range (%d,%d) in %s.cross(): %d'
-                         % (-arg1._nrank_, arg1._nrank_, type(arg1).__name__,
-                            axis1))
-    k1 = a1 + len(arg1._shape_)
-
-    # Position axis2 from item left
-    if axis2 >= 0:
-        a2 = axis2
-    else:
-        a2 = axis2 + arg2._nrank_
-    if a2 < 0 or a2 >= arg2._nrank_:
-        raise ValueError('second axis is out of range (%d,%d) in %s.cross(): %d'
-                         % (-arg2._nrank_, arg2._nrank_, type(arg2).__name__,
-                            axis2))
-    k2 = a2 + len(arg2._shape_)
-
-    # Confirm that the axis lengths are compatible
-    if ((arg1._numer_[a1] != arg2._numer_[a2]) or
-        (arg1._numer_[a1] not in (2,3))):
-        raise ValueError('invalid axis length for %s.cross(): %d, %d; '
-                         'must be 2 or 3'
-                         % (type(arg1).__name__, arg1._numer_[a1],
-                            arg2._numer_[a2]))
-
-    # Re-shape the value arrays (shape, numer1, numer2, denom1, denom2)
-    shape1 = (arg1._shape_ + arg1._numer_ + (arg2._nrank_ - 1) * (1,) +
-              arg1._denom_ + arg2._drank_ * (1,))
-    array1 = arg1._values_.reshape(shape1)
-
-    shape2 = (arg2._shape_ + (arg1._nrank_ - 1) * (1,) + arg2._numer_ +
-              arg1._drank_ * (1,) + arg2._denom_)
-    array2 = arg2._values_.reshape(shape2)
-    k2 += arg1._nrank_ - 1
-
-    # Roll both array axes to the right
-    array1 = np.rollaxis(array1, k1, array1.ndim)
-    array2 = np.rollaxis(array2, k2, array2.ndim)
-
-    new_drank = arg1._drank_ + arg2._drank_
-
-    # Construct the cross product values
-    if arg1._numer_[a1] == 3:
-        new_values = cross_3x3(array1, array2)
-
-        # Roll the new axis back to its position in arg1
-        new_nrank = arg1._nrank_ + arg2._nrank_ - 1
-        new_k1 = new_values.ndim - new_drank - new_nrank + a1
-        new_values = np.rollaxis(new_values, -1, new_k1)
-
-    else:
-        new_values = cross_2x2(array1, array2)
-        new_nrank = arg1._nrank_ + arg2._nrank_ - 2
-
-    # Construct the object and cast
-    obj = Qube(new_values,
-               Qube.or_(arg1._mask_, arg2._mask_),
-               units=Units.mul_units(arg1._units_, arg2._units_),
-               nrank=new_nrank, drank=new_drank, example=arg1)
-    obj = obj.cast(classes)
-
-    # Insert derivatives if necessary
-    if recursive and (arg1._derivs_ or arg2._derivs_):
-        new_derivs = {}
-
-        if arg1._derivs_:
-          arg2_wod = arg2.wod
-          for (key, arg1_deriv) in arg1._derivs_.items():
-            new_derivs[key] = Qube.cross(arg1_deriv, arg2_wod, a1, a2,
-                                         classes, recursive=False)
-
-        if arg2._derivs_:
-          arg1_wod = arg1.wod
-          for (key, arg2_deriv) in arg2._derivs_.items():
-            term = Qube.cross(arg1_wod, arg2_deriv, a1, a2, classes, False)
-            if key in new_derivs:
-                new_derivs[key] += term
-            else:
-                new_derivs[key] = term
-
-        obj.insert_derivs(new_derivs)
-
-    return obj
-
-def cross_3x3(a,b):
-    """Calculate the cross product of two 3-vectors.
-
-    Stand-alone method to return the cross product of two 3-vectors,
-    represented as NumPy arrays.
-
-    Parameters:
-        a (ndarray): First 3-vector array.
-        b (ndarray): Second 3-vector array.
-
-    Returns:
-        ndarray: The cross product of the two 3-vectors.
-
-    Raises:
-        ValueError: If the arrays are not 3-vectors.
-    """
-
-    (a,b) = np.broadcast_arrays(a,b)
-    if not (a.shape[-1] == b.shape[-1] == 3):
-        raise ValueError('cross_3x3 requires 3x3 arrays')
-
-    new_values = np.empty(a.shape)
-    new_values[...,0] = a[...,1] * b[...,2] - a[...,2] * b[...,1]
-    new_values[...,1] = a[...,2] * b[...,0] - a[...,0] * b[...,2]
-    new_values[...,2] = a[...,0] * b[...,1] - a[...,1] * b[...,0]
-
-    return new_values
-
-def cross_2x2(a, b):
-    """Calculate the cross product of two 2-vectors.
-
-    Stand-alone method to return the cross product of two 2-vectors,
-    represented as NumPy arrays.
-
-    Parameters:
-        a (ndarray): First 2-vector array.
-        b (ndarray): Second 2-vector array.
-
-    Returns:
-        ndarray: The cross product of the two 2-vectors.
-
-    Raises:
-        ValueError: If the arrays are not 2-vectors.
-    """
-
-    (a,b) = np.broadcast_arrays(a,b)
-    if not (a.shape[-1] == b.shape[-1] == 2):
-        raise ValueError('cross_2x2 requires 2x2 arrays')
-
-    return a[...,0] * b[...,1] - a[...,1] * b[...,0]
-
-#===============================================================================
-@staticmethod
-def outer(arg1, arg2, classes=(), recursive=True):
-    """Calculate the outer product of two objects.
-
-    The item shape of the returned object is obtained by concatenating the two
-    numerators and then the two denominators, and each element is the product of
-    the corresponding elements of the two objects.
-
-    Parameters:
-        arg1: The first operand.
-        arg2: The second operand.
-        classes (tuple, optional): A single class or list or tuple of classes.
-            The class of the object returned will be the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
-            Defaults to empty tuple.
-        recursive (bool, optional): True to construct the derivatives of the
-            outer product. Defaults to True.
-
-    Returns:
-        Qube: The outer product of the two objects.
-
-    Raises:
-        ValueError: If both objects have denominators.
-    """
-
-    # At most one object can have a denominator. This is sufficient
-    # to track first derivatives
-    if arg1._drank_ and arg2._drank_:
-        Qube._raise_dual_denoms('outer()', arg1, arg2)
-
-    # Re-shape the value arrays (shape, numer1, numer2, denom1, denom2)
-    shape1 = (arg1._shape_ + arg1._numer_ + arg2._nrank_ * (1,) +
-              arg1._denom_ + arg2._drank_ * (1,))
-    array1 = arg1._values_.reshape(shape1)
-
-    shape2 = (arg2._shape_ + arg1._nrank_ * (1,) + arg2._numer_ +
-              arg1._drank_ * (1,) + arg2._denom_)
-    array2 = arg2._values_.reshape(shape2)
-
-    # Construct the outer product
-    new_values = array1 * array2
-
-    # Construct the object and cast
-    new_nrank = arg1._nrank_ + arg2._nrank_
-    new_drank = arg1._drank_ + arg2._drank_
-
-    obj = Qube(new_values,
-               Qube.or_(arg1._mask_, arg2._mask_),
-               units=Units.mul_units(arg1._units_, arg2._units_),
-               nrank=new_nrank, drank=new_drank, example=arg1)
-    obj = obj.cast(classes)
-
-    # Insert derivatives if necessary
-    if recursive and (arg1._derivs_ or arg2._derivs_):
-        new_derivs = {}
-
-        if arg1._derivs_:
-          arg_wod = arg2.wod
-          for (key, self_deriv) in arg1._derivs_.items():
-            new_derivs[key] = Qube.outer(self_deriv, arg_wod, classes,
-                                         recursive=False)
-
-        if arg2._derivs_:
-          self_wod = arg1.wod
-          for (key, arg_deriv) in arg2._derivs_.items():
-            term = Qube.outer(self_wod, arg_deriv, classes, recursive=False)
-            if key in new_derivs:
-                new_derivs[key] += term
-            else:
-                new_derivs[key] = term
-
-        obj.insert_derivs(new_derivs)
-
-    return obj
-
-#===============================================================================
-@staticmethod
-def as_diagonal(arg, axis, classes=(), recursive=True):
-    """Return a copy with one axis converted to a diagonal across two.
-
-    Parameters:
-        arg: The object to convert.
-        axis (int): The item axis to convert to two.
-        classes (tuple, optional): A single class or list or tuple of classes.
-            The class of the object returned will be the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
-            Defaults to empty tuple.
-        recursive (bool, optional): True to include matching slices of the
-            derivatives in the returned object; otherwise, the returned object
-            will not contain derivatives. Defaults to True.
-
-    Returns:
-        Qube: A copy with the specified axis converted to a diagonal.
-
-    Raises:
-        ValueError: If the axis is out of range.
-    """
-
-    # Position axis from left
-    if axis >= 0:
-        a1 = axis
-    else:
-        a1 = axis + arg._nrank_
-    if a1 < 0 or a1 >= arg._nrank_:
-        raise ValueError('axis is out of range (%d,%d) in %s.as_diagonal(): %d'
-                         % (-arg._nrank_, arg._nrank_, type(arg).__name__,
-                            axis))
-
-    k1 = a1 + len(arg._shape_)
-
-    # Roll this axis to the end
-    rolled = np.rollaxis(arg._values_, k1, arg._values_.ndim)
-
-    # Create the diagonal array
-    new_values = np.zeros(rolled.shape + rolled.shape[-1:],
-                          dtype=rolled.dtype)
-
-    for i in range(rolled.shape[-1]):
-        new_values[...,i,i] = rolled[...,i]
-
-    # Roll the new axes back
-    new_values = np.rollaxis(new_values, -1, k1)
-    new_values = np.rollaxis(new_values, -1, k1)
-
-    # Construct and cast
-    obj = Qube(new_values, arg._mask_,
-               nrank=arg._nrank_ + 1, example=arg)
-    obj = obj.cast(classes)
-
-    # Diagonalize the derivatives if necessary
     if recursive:
-      for (key, deriv) in arg._derivs_.items():
-        obj.insert_deriv(key, Qube.as_diagonal(deriv, axis, classes, False))
+        obj.insert_derivs(obj._add_derivs(self, arg))
 
     return obj
 
-#===============================================================================
-def rms(self):
-    """Calculate the root-mean-square values of all items as a Scalar.
 
-    Useful for looking at the overall magnitude of the differences between two
-    objects.
+def __radd__(self, /, arg, *, recursive=True):
+    """arg + self, element-by-element addition.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
 
     Returns:
-        Scalar: The root-mean-square values of all items.
+        Qube: The sum.
     """
 
-    # Evaluate the norm
-    sum_sq = np.sum(self._values_**2, axis=tuple(range(-self._rank_,0)))
+    return self.__add__(arg, recursive=recursive)
 
-    return Qube.SCALAR_CLASS(np.sqrt(sum_sq/self.isize), self._mask_)
+def __iadd__(self, /, arg):
+    """self += arg, element-by-element in-place addition.
 
-################################################################################
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: self after the addition.
+    """
+
+    self.require_writeable()
+
+    # Handle a simple right-hand value...
+    if self._rank == 0 and isinstance(arg, (numbers.Real, np.ndarray)):
+        self._values += arg
+        self._new_values()
+        return self
+
+    # Convert arg to another Qube if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = self.as_this_type(arg, coerce=False, op='+=')
+        except (ValueError, TypeError):
+            _raise_unsupported_op('+=', self, original_arg)
+
+    # Verify compatibility
+    self._require_compatible_units(arg, '+=')
+
+    if self._numer != arg._numer:
+        if type(self) is not type(arg):
+            _raise_unsupported_op('+=', self, original_arg)
+
+        _raise_incompatible_numers('+=', self, arg)
+
+    if self._denom != arg._denom:
+        _raise_incompatible_denoms('+=', self, arg)
+
+    # Perform the operation
+    if self.is_int() and not arg.is_int():
+        raise TypeError(f'integer {type(self)} "+=" operation returns non-integer result')
+
+    new_derivs = self._add_derivs(self, arg)    # if this raises exception, stop
+    self._values += arg._values               # on exception, no harm done
+    self._mask = Qube.or_(self._mask, arg._mask)
+    self._unit = self._unit or arg._unit
+    self.insert_derivs(new_derivs)
+
+    self._cache.clear()
+    return self
+
+
+def _add_derivs(self, /, arg1, arg2):
+    """Dictionary of added derivatives."""
+
+    set1 = set(arg1._derivs.keys())
+    set2 = set(arg2._derivs.keys())
+    set12 = set1 & set2
+    set1 -= set12
+    set2 -= set12
+
+    new_derivs = {}
+    for key in set12:
+        new_derivs[key] = arg1._derivs[key] + arg2._derivs[key]
+    for key in set1:
+        new_derivs[key] = arg1._derivs[key]
+    for key in set2:
+        new_derivs[key] = arg2._derivs[key]
+
+    return new_derivs
+
+##########################################################################################
+# Subtraction
+##########################################################################################
+
+def __sub__(self, /, arg, *, recursive=True):
+    """self - arg, element-by-element subtraction.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The difference.
+    """
+
+    # Handle a simple right-hand value...
+    if self._rank == 0 and isinstance(arg, numbers.Real):
+        obj = self.clone(recursive=recursive, retain_cache=True)
+        obj._set_values(self._values - arg, retain_cache=True)
+        return obj
+
+    # Convert arg to the same subclass and try again
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = self.as_this_type(arg, coerce=False, op='-')
+        except (ValueError, TypeError):
+            _raise_unsupported_op('-', self, original_arg)
+
+    # Verify compatibility
+    self._require_compatible_units(arg, '-')
+
+    if self._numer != arg._numer:
+        if type(self) is not type(arg):
+            _raise_unsupported_op('-', self, original_arg)
+
+        _raise_incompatible_numers('-', self, arg)
+
+    if self._denom != arg._denom:
+        _raise_incompatible_denoms('-', self, arg)
+
+    # Construct the result
+    obj = Qube.__new__(type(self))
+    obj.__init__(self._values - arg._values,
+                 Qube.or_(self._mask, arg._mask),
+                 unit=self._unit or arg._unit,
+                 example=self)
+
+    if recursive:
+        obj.insert_derivs(obj._sub_derivs(self, arg))
+
+    return obj
+
+
+def __rsub__(self, /, arg, *, recursive=True):
+    """arg - self, element-by-element subtraction.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The difference.
+    """
+
+    # Convert arg to the same subclass and try again
+    if not isinstance(arg, Qube):
+        arg = self.as_this_type(arg, coerce=False, op='-')
+        return arg.__sub__(self, recursive=recursive)
+
+
+def __isub__(self, /, arg):
+    """self -= arg, element-by-element in-place subtraction.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: self after the subtraction.
+    """
+
+    self.require_writeable()
+
+    # Handle a simple right-hand value...
+    if self._rank == 0 and isinstance(arg, (numbers.Real, np.ndarray)):
+        self._values -= arg
+        self._new_values()
+        return self
+
+    # Convert arg to another Qube if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = self.as_this_type(arg, coerce=False, op='-=')
+        except (ValueError, TypeError):
+            _raise_unsupported_op('-=', self, original_arg)
+
+    # Verify compatibility
+    self._require_compatible_units(arg, '-=')
+
+    if self._numer != arg._numer:
+        if type(self) is not type(arg):
+            _raise_unsupported_op('-=', self, original_arg)
+
+        _raise_incompatible_numers('-=', self, arg)
+
+    if self._denom != arg._denom:
+        _raise_incompatible_denoms('-=', self, arg)
+
+    # Perform the operation
+    if self.is_int() and not arg.is_int():
+        raise TypeError(f'integer {type(self)} "-=" operation returns non-integer result')
+
+    new_derivs = self._sub_derivs(self, arg)    # if this raises exception, stop
+    self._values -= arg._values                 # on exception, no harm done
+    self._mask = Qube.or_(self._mask, arg._mask)
+    self._unit = self._unit or arg._unit
+    self.insert_derivs(new_derivs)
+
+    self._cache.clear()
+    return self
+
+
+def _sub_derivs(self, /, arg1, arg2):
+    """Dictionary of subtracted derivatives."""
+
+    set1 = set(arg1._derivs.keys())
+    set2 = set(arg2._derivs.keys())
+    set12 = set1 & set2
+    set1 -= set12
+    set2 -= set12
+
+    new_derivs = {}
+    for key in set12:
+        new_derivs[key] = arg1._derivs[key] - arg2._derivs[key]
+    for key in set1:
+        new_derivs[key] = arg1._derivs[key]
+    for key in set2:
+        new_derivs[key] = -arg2._derivs[key]
+
+    return new_derivs
+
+##########################################################################################
+# Multiplication
+##########################################################################################
+
+def __mul__(self, /, arg, *, recursive=True):
+    """self * arg, element-by-element multiplication.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The product.
+    """
+
+    # Handle multiplication by a number
+    if Qube._is_one_value(arg):
+        return self._mul_by_number(arg, recursive=recursive)
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('*', self, original_arg)
+
+    # Check denominators
+    if self._drank and arg._drank:
+        _raise_dual_denoms('*', self, original_arg)
+
+    # Multiply by scalar...
+    if arg._nrank == 0:
+        try:
+            return self._mul_by_scalar(arg, recursive=recursive)
+
+        # Revise the exception if the arg was modified
+        except (ValueError, TypeError):
+            if arg is not original_arg:
+                _raise_unsupported_op('*', self, original_arg)
+            raise
+
+    # Swap and try again
+    if self._nrank == 0:
+        return arg._mul_by_scalar(self, recursive=recursive)
+
+    # Multiply by matrix...
+    if self._nrank == 2 and arg._nrank in (1, 2):
+        return Qube.dot(self, arg, -1, 0, classes=(type(arg), type(self)),
+                        recursive=recursive)
+
+    # Give up
+    _raise_unsupported_op('*', self, original_arg)
+
+
+def __rmul__(self, /, arg, *, recursive=True):
+    """arg * self, element-by-element multiplication.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The product.
+    """
+
+    # Handle multiplication by a number
+    if Qube._is_one_value(arg):
+        return self._mul_by_number(arg, recursive=recursive)
+
+    # Convert arg to a Scalar and try again
+    original_arg = arg
+    try:
+        arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        return self._mul_by_scalar(arg, recursive=recursive)
+
+    # Revise the exception if the arg was modified
+    except (ValueError, TypeError):
+        if arg is not original_arg:
+            _raise_unsupported_op('*', original_arg, self)
+        raise
+
+
+def __imul__(self, /, arg):
+    """Element-by-element in-place multiplication.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: self after the multiplication.
+    """
+
+    self.require_writeable()
+
+    # If a number...
+    if isinstance(arg, numbers.Real):
+        self._values *= arg
+        self._new_values()
+        for key, deriv in self._derivs.items():
+            deriv._values *= arg
+            deriv._new_values()
+        return self
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('*=', self, original_arg)
+
+    # Scalar case
+    if arg._rank == 0:
+
+        # Align axes
+        arg_values = arg._values
+        if self._rank and np.shape(arg_values):
+            arg_values = arg_values.reshape(np.shape(arg_values) +
+                                            self._rank * (1,))
+
+        # Multiply...
+        if self.is_int() and not arg.is_int():
+            raise TypeError(f'integer {type(self)} "*=" operation returns non-integer '
+                            'result')
+
+        new_derivs = self._mul_derivs(arg)  # if this raises exception, stop
+        self._values *= arg_values         # on exception, object unchanged
+        self._mask = Qube.or_(self._mask, arg._mask)
+        self._unit = Unit.mul_units(self._unit, arg._unit)
+        self.insert_derivs(new_derivs)
+
+        self._cache.clear()
+        return self
+
+    # Matrix multiply case
+    if self._nrank == 2 and arg._nrank == 2 and arg._drank == 0:
+        result = Qube.dot(self, arg, -1, 0, classes=[type(self)], recursive=True)
+        self._set_values(result._values, result._mask)
+        self.insert_derivs(result._derivs)
+        return self
+
+    # Nothing else is implemented
+    _raise_unsupported_op('*=', self, original_arg)
+
+
+def _mul_by_number(self, /, arg, *, recursive=True):
+    """Internal multiply op when the arg is a Python scalar."""
+
+    obj = self.clone(recursive=False, retain_cache=True)
+    obj._set_values(self._values * arg, retain_cache=True)
+
+    if recursive and self._derivs:
+        for key, deriv in self._derivs.items():
+            obj.insert_deriv(key, deriv._mul_by_number(arg, recursive=False))
+
+    return obj
+
+
+def _mul_by_scalar(self, /, arg, *, recursive=True):
+    """Internal multiply op when the arg is a Qube with nrank == 0 and no
+    more than one object has a denominator."""
+
+    # Align axes
+    self_values = self._values
+    self_shape = np.shape(self_values)
+    if arg._drank > 0 and self_shape != ():
+        self_values = self_values.reshape(self_shape + arg._drank * (1,))
+
+    arg_values = arg._values
+    arg_shape = (arg._shape + self._rank * (1,) + arg._denom)
+    if np.shape(arg_values) not in ((), arg_shape):
+        arg_values = arg_values.reshape(arg_shape)
+
+    # Construct object
+    obj = Qube.__new__(type(self))
+    obj.__init__(self_values * arg_values,
+                 Qube.or_(self._mask, arg._mask),
+                 unit=Unit.mul_units(self._unit, arg._unit),
+                 drank=max(self._drank, arg._drank),
+                 example=self)
+
+    obj.insert_derivs(self._mul_derivs(arg))
+    return obj
+
+
+def _mul_derivs(self, /, arg):
+    """Dictionary of multiplied derivatives."""
+
+    new_derivs = {}
+
+    if self._derivs:
+        arg_wod = arg.wod
+        for key, self_deriv in self._derivs.items():
+            new_derivs[key] = self_deriv * arg_wod
+
+    if arg._derivs:
+        self_wod = self.wod
+        for key, arg_deriv in arg._derivs.items():
+            if key in new_derivs:
+                new_derivs[key] = new_derivs[key] + self_wod * arg_deriv
+            else:
+                new_derivs[key] = self_wod * arg_deriv
+
+    return new_derivs
+
+##########################################################################################
+# Division
+##########################################################################################
+
+def __truediv__(self, /, arg, *, recursive=True):
+    """self / arg, element-by-element division.
+
+    Cases of divide-by-zero are masked.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The quotient.
+    """
+
+    # Handle division by a number
+    if Qube._is_one_value(arg):
+        return self._div_by_number(arg, recursive=recursive)
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('/', self, original_arg)
+
+    # Check right denominator
+    if arg._drank > 0:
+        raise ValueError(f'right operand has denominator for {type(self)} "/": '
+                         f'{arg._denom}')
+
+    # Divide by scalar...
+    if arg._nrank == 0:
+        try:
+            return self._div_by_scalar(arg, recursive=recursive)
+
+        # Revise the exception if the arg was modified
+        except (ValueError, TypeError):
+            if arg is not original_arg:
+                _raise_unsupported_op('/', self, original_arg)
+            raise
+
+    # Swap and multiply by reciprocal...
+    if self._nrank == 0:
+        return self.reciprocal(recursive=recursive)._mul_by_scalar(arg,
+                                                                   recursive=recursive)
+
+    # Matrix / matrix is multiply by inverse matrix
+    if self._rank == 2 and arg._rank == 2:
+        return self.__mul__(arg.reciprocal(recursive=recursive))
+
+    # Give up
+    _raise_unsupported_op('/', self, original_arg)
+
+
+def __rtruediv__(self, /, arg, *, recursive=True):
+    """arg / self, element-by-element division.
+
+    Cases of divide-by-zero are masked.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): Argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The quotient.
+    """
+
+    # Handle right division by a number
+    if Qube._is_one_value(arg):
+        return self.reciprocal(recursive=recursive).__mul__(arg, recursive=recursive)
+
+    # Convert arg to a Scalar and try again
+    original_arg = arg
+    try:
+        arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        return arg.__truediv__(self, recursive=recursive)
+
+    # Revise the exception if the arg was modified
+    except (ValueError, TypeError):
+        if arg is not original_arg:
+            _raise_unsupported_op('/', original_arg, self)
+        raise
+
+# Generic in-place division
+def __itruediv__(self, /, arg):
+    """self /= arg, element-by-element in-place division.
+
+    Cases of divide-by-zero are masked.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: self after the division.
+    """
+
+    if not self.is_float():
+        raise TypeError(f'integer {type(self)} "/=" operation returns non-integer result')
+
+    self.require_writeable()
+
+    # If a number...
+    if isinstance(arg, numbers.Real) and arg != 0:
+        self._values /= arg
+        self._new_values()
+        for key, deriv in self._derivs.items():
+            deriv._values /= arg
+            deriv._new_values()
+        return self
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('/=', self, original_arg)
+
+    # In-place multiply by the reciprocal
+    try:
+        self.__imul__(arg.reciprocal())
+
+    # Revise the exception if the arg was modified
+    except (ValueError, TypeError):
+        if arg is not original_arg:
+            _raise_unsupported_op('/=', self, original_arg)
+        raise
+
+    return self
+
+
+def _div_by_number(self, /, arg, *, recursive=True):
+    """Internal division op when the arg is a Python scalar."""
+
+    obj = self.clone(recursive=False, retain_cache=True)
+
+    # Mask out zeros
+    if arg == 0:
+        obj._set_mask(True)
+    else:
+        obj._set_values(self._values / arg, retain_cache=True)
+
+    if recursive and self._derivs:
+        for key, deriv in self._derivs.items():
+            obj.insert_deriv(key, deriv._div_by_number(arg, recursive=False))
+
+    return obj
+
+
+def _div_by_scalar(self, /, arg, *, recursive):
+    """Internal division op when the arg is a Qube with rank == 0."""
+
+    # Mask out zeros
+    arg = arg.mask_where_eq(0., 1.)
+
+    # Align axes
+    arg_values = arg._values
+    if np.shape(arg_values) and self._rank:
+        arg_values = arg_values.reshape(arg.shape + self._rank * (1,))
+
+    # Construct object
+    obj = Qube.__new__(type(self))
+    obj.__init__(self._values / arg_values,
+                 Qube.or_(self._mask, arg._mask),
+                 unit=Unit.div_units(self._unit, arg._unit),
+                 example=self)
+
+    if recursive:
+        obj.insert_derivs(self._div_derivs(arg, nozeros=True))
+
+    return obj
+
+
+def _div_derivs(self, /, arg, *, nozeros=False):
+    """Dictionary of divided derivatives.
+
+    If nozeros is True, the arg is assumed not to contain any zeros, so divide-by-zero
+    errors are not checked.
+    """
+
+    new_derivs = {}
+
+    if not self._derivs and not arg._derivs:
+        return new_derivs
+
+    if not nozeros:
+        arg = arg.mask_where_eq(0., 1.)
+
+    arg_wod_inv = arg.wod.reciprocal(nozeros=True)
+
+    for key, self_deriv in self._derivs.items():
+        new_derivs[key] = self_deriv * arg_wod_inv
+
+    if arg._derivs:
+        self_wod = self.wod
+        for key, arg_deriv in arg._derivs.items():
+            term = self_wod * (arg_deriv * arg_wod_inv*arg_wod_inv)
+            if key in new_derivs:
+                new_derivs[key] -= term
+            else:
+                new_derivs[key] = -term
+
+    return new_derivs
+
+##########################################################################################
+# Floor Division (with no support for derivatives)
+##########################################################################################
+
+def __floordiv__(self, /, arg):
+    """self // arg, element-by-element floor division.
+
+    Cases of divide-by-zero are masked. Derivatives are ignored.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: The result of the floor dividion.
+    """
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('//', self, original_arg)
+
+    # Check right denominator
+    if arg._drank > 0:
+        raise ValueError(f'right operand has denominator for {type(self)} "//": '
+                         f'{arg._denom}')
+
+    # Floor divide by scalar...
+    if arg._nrank == 0:
+        try:
+            return self._floordiv_by_scalar(arg)
+
+        # Revise the exception if the arg was modified
+        except (ValueError, TypeError):
+            if arg is not original_arg:
+                _raise_unsupported_op('//', original_arg, self)
+            raise
+
+    # Give up
+    _raise_unsupported_op('//', self, original_arg)
+
+
+# Generic right floor division
+def __rfloordiv__(self, /, arg):
+    """arg // self, element-by-element floor division.
+
+    Cases of divide-by-zero are masked. Derivatives are ignored.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: The result of the floor dividion.
+    """
+
+    # Convert arg to a Scalar and try again
+    original_arg = arg
+    try:
+        arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        return arg.__floordiv__(self)
+
+    # Revise the exception if the arg was modified
+    except (ValueError, TypeError):
+        if arg is not original_arg:
+            _raise_unsupported_op('//', original_arg, self)
+        raise
+
+
+def __ifloordiv__(self, /, arg):
+    """self //= arg, element-by-element in-place floor division.
+
+    Cases of divide-by-zero are masked. Derivatives are ignored.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: self after the floor division.
+    """
+
+    self.require_writeable()
+
+    # If a number...
+    if isinstance(arg, numbers.Real) and arg != 0:
+        self._values //= arg
+        self._new_values()
+        self.delete_derivs()
+        return self
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('//=', self, original_arg)
+
+    # Handle floor division by a scalar
+    if arg._rank == 0:
+        divisor = arg.mask_where_eq(0, 1)
+        div_values = divisor._values
+
+        # Align axes
+        if self._rank:
+            div_values = np.reshape(div_values, np.shape(div_values) + self._rank * (1,))
+        self._values //= div_values
+        self._mask = self._mask | divisor._mask
+        self._unit = Unit.div_units(self._unit, arg._unit)
+        self.delete_derivs()
+
+        self._cache.clear()
+        return self
+
+    # Nothing else is implemented
+    _raise_unsupported_op('//=', self, original_arg)
+
+
+def _floordiv_by_number(self, /, arg):
+    """Internal floor division op when the arg is a Python scalar."""
+
+    obj = self.clone(recursive=False, retain_cache=True)
+
+    if arg == 0:
+        obj._set_mask(True)
+    else:
+        obj._set_values(self._values // arg, retain_cache=True)
+
+    return obj
+
+
+def _floordiv_by_scalar(self, /, arg):
+    """Internal floor division op when the arg is a Qube with nrank == 0.
+
+    The arg cannot have a denominator.
+    """
+
+    # Mask out zeros
+    arg = arg.mask_where_eq(0, 1)
+
+    # Align axes
+    arg_values = arg._values
+    if np.shape(arg_values) and self._rank:
+        arg_values = arg_values.reshape(arg.shape + self._rank * (1,))
+
+    # Construct object
+    obj = Qube.__new__(type(self))
+    obj.__init__(self._values // arg_values,
+                 self._mask | arg._mask,
+                 unit=Unit.div_units(self._unit, arg._unit),
+                 example=self)
+    return obj
+
+##########################################################################################
+# Modulus operators (with no support for derivatives)
+##########################################################################################
+
+def __mod__(self, /, arg, *, recursive=True):
+    """self % arg, element-by-element modulus.
+
+    Cases of divide-by-zero are masked. Derivatives in the numerator are supported, but
+    not in the denominator.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The remainder.
+    """
+
+    # Handle modulus by a number
+    if Qube._is_one_value(arg):
+        return self._mod_by_number(arg, recursive=recursive)
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('%', self, original_arg)
+
+    # Check right denominator
+    if arg._drank > 0:
+        raise ValueError(f'right operand has denominator for {type(self)} "%": '
+                         f'{arg._denom}')
+
+    # Modulus by scalar...
+    if arg._nrank == 0:
+        try:
+            return self._mod_by_scalar(arg, recursive=recursive)
+
+        # Revise the exception if the arg was modified
+        except (ValueError, TypeError):
+            if arg is not original_arg:
+                _raise_unsupported_op('%', self, original_arg)
+            raise
+
+    # Give up
+    _raise_unsupported_op('%', self, original_arg)
+
+
+def __rmod__(self, /, arg, *, recursive=True):
+    """arg % self, element-by-element modulus.
+
+    Cases of divide-by-zero are masked. Derivatives in the numerator are supported, but
+    not in the denominator.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+        recursive (bool, optional): True to include derivatives in return.
+
+    Returns:
+        Qube: The remainder.
+    """
+
+    # Convert arg to a Scalar and try again
+    original_arg = arg
+    try:
+        arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        return arg.__mod__(self, recursive=recursive)
+
+    # Revise the exception if the arg was modified
+    except (ValueError, TypeError):
+        if arg is not original_arg:
+            _raise_unsupported_op('%', original_arg, self)
+        raise
+
+
+def __imod__(self, /, arg):
+    """self %= arg, element-by-element in-place modulus.
+
+    Cases of divide-by-zero are masked. Derivatives in the numerator are supported, but
+    not in the denominator.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Qube: self after the modulus operation.
+    """
+
+    self.require_writeable()
+
+    # If a number...
+    if isinstance(arg, numbers.Real) and arg != 0:
+        self._values %= arg
+        self._new_values()
+        return self
+
+    # Convert arg to a Scalar if necessary
+    original_arg = arg
+    if not isinstance(arg, Qube):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('%=', self, original_arg)
+
+    # Handle modulus by a scalar
+    if arg._rank == 0:
+        divisor = arg.mask_where_eq(0, 1)
+        div_values = divisor._values
+
+        # Align axes
+        if self._rank:
+            div_values = np.reshape(div_values, np.shape(div_values) + self._rank * (1,))
+        self._values %= div_values
+        self._mask = self._mask | divisor._mask
+        self._unit = Unit.div_units(self._unit, arg._unit)
+
+        self._cache.clear()
+        return self
+
+    # Nothing else is implemented
+    _raise_unsupported_op('%=', self, original_arg)
+
+
+def _mod_by_number(self, /, arg, *, recursive=True):
+    """Internal modulus op when the arg is a Python scalar."""
+
+    obj = self.clone(recursive=False, retain_cache=True)
+
+    # Mask out zeros
+    if arg == 0:
+        obj._set_mask(True)
+    else:
+        obj._set_values(self._values % arg, retain_cache=True)
+
+    if recursive and self._derivs:
+        for key, deriv in self._derivs.items():
+            obj.insert_deriv(key, deriv)
+
+    return obj
+
+
+def _mod_by_scalar(self, /, arg, *, recursive=True):
+    """Internal modulus op when the arg is a Qube with rank == 0."""
+
+    # Mask out zeros
+    arg = arg.wod.mask_where_eq(0, 1)
+
+    # Align axes
+    arg_values = arg._values
+    if np.shape(arg_values) and self._rank:
+        arg_values = arg_values.reshape(arg.shape + self._rank * (1,))
+
+    # Construct the object
+    obj = Qube.__new__(type(self))
+    obj.__init__(self._values % arg_values,
+                 self._mask | arg._mask,
+                 unit=Unit.div_units(self._unit, arg._unit),
+                 example=self)
+
+    if recursive and self._derivs:
+        for key, deriv in self._derivs.items():
+            obj.insert_deriv(key, deriv.broadcast_to(obj._shape))
+
+    return obj
+
+##########################################################################################
+# Exponentiation operator
+##########################################################################################
+
+def __pow__(self, /, arg):
+    """arg ** self, element-by-element exponentiation.
+
+    Derivatives are not supported.
+
+    This general method supports single integer exponents between -15 and 15 are handled
+    using repeated multiplications. It will handle any class that supports __mul__() (and
+    reciprocal() if the exponent is negative), such as Matrix objects and Quaternions.
+
+    It is overridden by Scalar to obtain the normal behavior of the "**" operator.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The exponent.
+
+    Returns:
+        Qube: The result of the exponentiation.
+    """
+
+    if not isinstance(arg, numbers.Real):
+        try:
+            arg = Qube._SCALAR_CLASS.as_scalar(arg)
+        except (ValueError, TypeError):
+            _raise_unsupported_op('**', self, arg)
+
+        if arg._shape:
+            _raise_unsupported_op('**', self, arg)
+
+        if arg._mask:
+            return self.as_fully_masked(recursive=True)
+
+        arg = arg._values
+
+    expo = int(arg)
+    if expo != arg:
+        _raise_unsupported_op('**', self, arg)
+
+    # At this point, expo is an int
+
+    # Check range
+    if expo < -15 or expo > 15:
+        raise ValueError('exponent is limited to range (-15,15)')
+
+    # Handle zero
+    if expo == 0:
+        item = self.identity()
+        result = self.filled(self._shape, item, numer=self._numer, mask=self._mask)
+        for key, deriv in self._derivs.items():
+            new_deriv = deriv.zeros(deriv._shape, numer=deriv._numer,
+                                    denom=deriv._denom, mask=deriv._mask)
+            result.insert_deriv(key, new_deriv)
+
+        return result
+
+    # Handle negative exponent
+    if expo < 0:
+        x = self.reciprocal(recursive=True)
+        expo = -expo
+    else:
+        x = self
+
+    # Handle one
+    if expo == 1:
+        return x
+
+    # Handle 2 through 15
+    # Note powers[0] is not a copy!
+    # Note derivatives and units are included in multiplies
+    powers = [x, x * x]
+    if expo >= 4:
+        powers.append(powers[-1] * powers[-1])
+    if expo >= 8:
+        powers.append(powers[-1] * powers[-1])
+
+    # Select the powers needed for this exponent
+    x_powers = []
+    for k, e in enumerate((1, 2, 4, 8)):
+        if (expo & e):
+            x_powers.append(powers[k])
+
+    # Multiply the items together
+    # x_powers[0] might not be a copy, but x_powers[-1] must be, because we have
+    # already already handled expo == 1.
+    result = x_powers[-1]
+    for x_power in x_powers[:-1]:
+        result *= x_power
+
+    return result
+
+
+def __ipow__(self, /, arg):
+    """self **= arg, element-by-element in-place power.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The exponent.
+
+    Returns:
+        Qube: self after the modulus operation.
+    """
+
+    self.require_writeable()
+
+    result = self ** arg
+    self._set_values(result._values, result._mask)
+    self.set_unit(self, result._unit)
+    return self
+
+##########################################################################################
+# Comparison operators, returning boolean scalars or Booleans
+#   Masked values are treated as equal to one another. Masked and unmasked values are
+#   always unequal.
+##########################################################################################
+
+def _compatible_arg(self, /, arg):
+    """None if it is impossible for self and arg to be equal; otherwise, the argument made
+    compatible with self.
+    """
+
+    # If the subclasses cannot be unified, raise a ValueError
+    if not isinstance(arg, type(self)):
+        try:
+            obj = Qube.__new__(type(self))
+            obj.__init__(arg, example=self)
+            arg = obj
+        except (ValueError, TypeError):
+            return None
+
+    else:
+        # Compare unit for compatibility
+        if not Unit.can_match(self._unit, arg._unit):
+            return None
+
+        # Compare item shapes
+        if self._item != arg._item:
+            return None
+
+    # Check for compatible shapes
+    try:
+        (self, arg) = Qube.broadcast(self, arg)
+    except ValueError:
+        return None
+
+    return arg
+
+
+def __eq__(self, /, arg):
+    """self == arg, element by element.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The exponent.
+
+    Returns:
+        Boolean: True where the elements are equal.
+    """
+
+    # Try to make argument compatible
+    arg = self._compatible_arg(arg)
+    if arg is None:
+        return False        # an incompatible argument is not equal
+
+    # Compare...
+    compare = (self._values == arg._values)
+    if self._rank:
+        compare = np.all(compare, axis=tuple(range(-self._rank, 0)))
+
+    both_masked = (self._mask & arg._mask)
+    one_masked  = (self._mask != arg._mask)
+
+    # Return a Python bool if the shape is ()
+    if not isinstance(compare, np.ndarray):
+        if one_masked:
+            return False
+        if both_masked:
+            return True
+        return bool(compare)
+
+    # Apply the mask
+    if not isinstance(one_masked, np.ndarray):
+        if one_masked:
+            compare.fill(False)
+        if both_masked:
+            compare.fill(True)
+    else:
+        compare[one_masked] = False
+        compare[both_masked] = True
+
+    result = Qube._BOOLEAN_CLASS(compare)
+    result._truth_if_all = True
+    return result
+
+
+def __ne__(self, /, arg):
+    """self != arg, element by element.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The exponent.
+
+    Returns:
+        Boolean: True where the elements are not equal.
+    """
+
+    # Try to make argument compatible
+    arg = self._compatible_arg(arg)
+    if arg is None:
+        return True         # an incompatible argument is not equal
+
+    # Compare...
+    compare = (self._values != arg._values)
+    if self._rank:
+        compare = np.any(compare, axis=tuple(range(-self._rank, 0)))
+
+    both_masked = (self._mask & arg._mask)
+    one_masked  = (self._mask != arg._mask)
+
+    # Compare units for compatibility
+    if not Unit.can_match(self._unit, arg._unit):
+        compare = True
+        one_masked = True
+
+    # Return a Python bool if the shape is ()
+    if not isinstance(compare, np.ndarray):
+        if one_masked:
+            return True
+        if both_masked:
+            return False
+        return bool(compare)
+
+    # Apply the mask
+    if np.shape(one_masked):
+        compare[one_masked] = True
+        compare[both_masked] = False
+    else:
+        if one_masked:
+            compare.fill(True)
+        if both_masked:
+            compare.fill(False)
+
+    result = Qube._BOOLEAN_CLASS(compare)
+    result._truth_if_any = True
+    return result
+
+
+def __le__(self, /, arg):
+    """self <= arg, element by element.
+
+    This general method always raises ValueError. It is overriden by :meth:`Scalar.__le__`
+    and :meth:`Boolean.__le__`.
+
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Boolean: True where the elements of self are less or equal.
+
+    Raises:
+        ValueError: If the comparison is undefined.
+    """
+
+    _raise_unsupported_op("<=", self)
+
+
+def __lt__(self, /, arg):
+    """self < arg, element by element.
+
+    This general method always raises ValueError. It is overriden by :meth:`Scalar.__lt__`
+    and :meth:`Boolean.__lt__`.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Boolean: True where the elements of self are less.
+
+    Raises:
+        ValueError: If the comparison is undefined.
+    """
+
+    _raise_unsupported_op("<", self)
+
+
+def __ge__(self, /, arg):
+    """self >= arg, element by element.
+
+    This general method always raises ValueError. It is overriden by :meth:`Scalar.__ge__`
+    and :meth:`Boolean.__ge__`.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Boolean: True where the elements of self are greater or equal.
+
+    Raises:
+        ValueError: If the comparison is undefined.
+    """
+
+    _raise_unsupported_op(">=", self)
+
+
+def __gt__(self, /, arg):
+    """self > arg, element by element.
+
+    This general method always raises ValueError. It is overriden by :meth:`Scalar.__gt__`
+    and :meth:`Boolean.__gt__`.
+
+    Parameters:
+        arg (Qube, array-like, float, int, or bool): The argument.
+
+    Returns:
+        Boolean: True where the elements of self are greater.
+
+    Raises:
+        ValueError: If the comparison is undefined.
+    """
+
+    _raise_unsupported_op(">", self)
+
+
+def __bool__(self):
+    """True if nonzero, otherwise False, element by element.
+
+    This method also supports "if a == b: ..." and "if a != b: ..." statements using the
+    internal attributes _truth_if_all and _truth_if_any. In this case, equality requires
+    that every unmasked element of a and b be equal and both objects be masked at the same
+    locations.
+
+    Comparison of objects of shape () is also supported.
+
+    Any other if-test involving PolyMath objects requires an explict call to all() or
+    any().
+
+    Returns:
+        Boolean: True where the elements of self are nonzero or True.
+    """
+
+    if self._truth_if_all:          # this is the result of __eq__()
+        return bool(np.all(self.as_mask_where_nonzero()))
+
+    if self._truth_if_any:          # this is the result of __ne__()
+        return bool(np.any(self.as_mask_where_nonzero()))
+
+    if self._is_array:
+        raise ValueError(f'{type(self).__name__} truth value requires any() or all()')
+
+    if self._mask:
+        raise ValueError(f'the truth value of an entirely masked {type(self).__name__} '
+                         'object is undefined')
+
+    return bool(self._values)
+
+
+def __float__(self):
+    """This object as a single float."""
+
+    if not self._is_scalar:
+        raise ValueError(f'{type(self).__name__} array value cannot be converted to '
+                         'float')
+    if self._mask:
+        raise ValueError(f'{type(self).__name__} masked value cannot be converted to '
+                         'float')
+
+    return float(self._values)
+
+
+def __int__(self):
+    """This object as a single int; floats always round down."""
+
+    if not self._is_scalar:
+        raise ValueError(f'{type(self).__name__} array value cannot be converted to int')
+    if self._mask:
+        raise ValueError(f'{type(self).__name__} masked value cannot be converted to int')
+
+    return int(self._values // 1)
+
+##########################################################################################
+# Boolean operators
+##########################################################################################
+
+def __invert__(self):
+    """~self, unary inversion, element by element.
+
+    This is boolean "not", not bit inversion.
+    """
+
+    return Qube._BOOLEAN_CLASS(self._values == 0, self._mask)
+
+
+def __and__(self, /, arg):
+    """self & arg, element-by-element logical "and"."""
+
+    if isinstance(arg, np.ma.MaskedArray):
+        arg = Qube._BOOLEAN_CLASS(arg != 0)
+
+    if isinstance(arg, Qube):
+        return Qube._BOOLEAN_CLASS((self._values != 0) & (arg._values != 0),
+                                   Qube.or_(self._mask, arg._mask))
+
+    return Qube._BOOLEAN_CLASS((self._values != 0) & (arg != 0), self._mask)
+
+
+def __rand__(self, /, arg):
+    """arg & self, element-by-element logical "and"."""
+
+    return self.__and__(arg)
+
+
+def __or__(self, /, arg):
+    """self | arg, element-by-element logical "or"."""
+
+    if isinstance(arg, np.ma.MaskedArray):
+        arg = Qube._BOOLEAN_CLASS(arg != 0)
+
+    if isinstance(arg, Qube):
+        return Qube._BOOLEAN_CLASS((self._values != 0) | (arg._values != 0),
+                                   Qube.or_(self._mask, arg._mask))
+
+    return Qube._BOOLEAN_CLASS((self._values != 0) | (arg != 0), self._mask)
+
+def __ror__(self, /, arg):
+    """arg | self, element-by-element logical "or"."""
+
+    return self.__or__(arg)
+
+
+def __xor__(self, /, arg):
+    """self | arg, element-by-element logical exclusive "or"."""
+
+    if isinstance(arg, np.ma.MaskedArray):
+        arg = Qube._BOOLEAN_CLASS(arg != 0)
+
+    if isinstance(arg, Qube):
+        return Qube._BOOLEAN_CLASS((self._values != 0) != (arg._values != 0),
+                                   Qube.or_(self._mask, arg._mask))
+
+    return Qube._BOOLEAN_CLASS((self._values != 0) != (arg != 0), self._mask)
+
+def __rxor__(self, /, arg):
+    """arg | self, element-by-element logical exclusive "or"."""
+
+    return self.__xor__(arg)
+
+
+def __iand__(self, /, arg):
+    """self &= arg, element-by-element in-place logical "and"."""
+
+    self.require_writeable()
+
+    if isinstance(arg, np.ma.MaskedArray):
+        arg = Qube._BOOLEAN_CLASS(arg != 0)
+
+    if isinstance(arg, Qube):
+        self._values &= (arg._values != 0)
+        self._mask = Qube.or_(self._mask, arg._mask)
+    else:
+        self._values &= (arg != 0)
+
+    return self
+
+
+def __ior__(self, /, arg):
+    """self &= arg, element-by-element in-place logical "or"."""
+
+    self.require_writeable()
+
+    if isinstance(arg, np.ma.MaskedArray):
+        arg = Qube._BOOLEAN_CLASS(arg != 0)
+
+    if isinstance(arg, Qube):
+        self._values |= (arg._values != 0)
+        self._mask = Qube.or_(self._mask, arg._mask)
+    else:
+        self._values |= (arg != 0)
+
+    return self
+
+
+def __ixor__(self, /, arg):
+    """self ^= arg, element-by-element in-place logical exclusive "or"."""
+
+    self.require_writeable()
+
+    if isinstance(arg, np.ma.MaskedArray):
+        arg = Qube._BOOLEAN_CLASS(arg != 0)
+
+    if isinstance(arg, Qube):
+        self._values ^= (arg._values != 0)
+        self._mask = Qube.or_(self._mask, arg._mask)
+    else:
+        self._values ^= (arg != 0)
+
+    return self
+
+
+def logical_not(self):
+    """The negation of this object, True where it is zero or False."""
+
+    if self._rank:
+        values = np.any(self._values, axis=tuple(range(-self._rank, 0)))
+    else:
+        values = self._values
+
+    return Qube._BOOLEAN_CLASS(np.logical_not(values), self._mask)
+
+##########################################################################################
+# Any and all
+##########################################################################################
+
+def any(self, axis=None, *, builtins=None, masked=None, out=None):
+    """True if any of the unmasked items are nonzero.
+
+    Parameters:
+        axis (int or tuple, optional): Axis or a tuple of axes. The `any` operation is
+            performed across these axes, leaving any remaining axes in the returned value.
+            If None (the default), then the any operation is performed across all axes of
+            the object.
+        builtins (bool, optional): If True and the result is a single unmasked scalar, the
+            result is returned as a Python boolean instead of as an instance of Boolean.
+            Default is to use the global setting defined by Qube.prefer_builtins().
+        masked (bool, optional): The value to return if builtins is True but the returned
+            value is masked. Default is to return a masked Boolean instead of a builtin
+            type in this case.
+        out (any, optional): Ignored. This enables "np.any(Qube)" to work.
+
+    Returns:
+        (Boolean or bool): Result of operation.
+    """
+
+    self = Qube._BOOLEAN_CLASS.as_boolean(self)
+
+    if not self._shape:
+        args = (self,)                  # make a copy
+
+    elif not isinstance(self._mask, np.ndarray):
+        args = (np.any(self._values, axis=axis), self._mask)
+
+    else:
+        # True where a value is True AND its antimask is True
+        bools = self._values & self.antimask
+        args = (np.any(bools, axis=axis), np.all(self._mask, axis=axis))
+
+    result = Qube._BOOLEAN_CLASS(*args)
+
+    # Convert result to a Python bool if necessary
+    if builtins is None:
+        builtins = Qube.prefer_builtins()
+
+    if builtins:
+        return result.as_builtin(masked=masked)
+
+    return result
+
+
+def all(self, axis=None, *, builtins=None, masked=None, out=None):
+    """True if all the unmasked items are nonzero.
+
+    Parameters:
+        axis (int or tuple, optional): Axis or a tuple of axes. The any operation is
+            performed across these axes, leaving any remaining axes in the returned value.
+            If None (the default), then the any operation is performed across all axes of
+            the object.
+        builtins (bool, optional): If True and the result is a single unmasked scalar, the
+            result is returned as a Python boolean instead of as an instance of Boolean.
+            Default is to use the global setting defined by Qube.prefer_builtins().
+        masked (bool, optional): The value to return if builtins is True but the returned
+            value is masked. Default is to return a masked Boolean instead of a builtin
+            type in this case.
+        out (any, optional): Ignored. This enables "np.any(Qube)" to work.
+    """
+
+    self = Qube._BOOLEAN_CLASS.as_boolean(self)
+
+    if not self._shape:
+        args = (self,)                  # make a copy
+
+    elif not isinstance(self._mask, np.ndarray):
+        args = (np.all(self._values, axis=axis), self._mask)
+
+    else:
+        # True where a value is True OR its mask is True
+        bools = Qube.or_(self._values, self._mask)
+        args = (np.all(bools, axis=axis), np.all(self._mask, axis=axis))
+
+    result = Qube._BOOLEAN_CLASS(*args)
+
+    # Convert result to a Python bool if necessary
+    if builtins is None:
+        builtins = Qube.prefer_builtins()
+
+    if builtins:
+        return result.as_builtin(masked=masked)
+
+    return result
+
+
+def any_true_or_masked(self, axis=None, *, builtins=None):
+    """True if any of the items are nonzero or masked.
+
+    This differs from the any() method in how it handles the case of every value being
+    masked. This method returns True, whereas any() returns a masked Boolean value.
+
+    Parameters:
+        axis (int or tuple, optional): Axis or a tuple of axes. The any operation is
+            performed across these axes, leaving any remaining axes in the returned value.
+            If None (the default), then the any operation is performed across all axes of
+            the object.
+        builtins (bool, optional): If True and the result is a single unmasked scalar, the
+            result is returned as a Python boolean instead of as an instance of Boolean.
+            Default is to use the global setting defined by Qube.prefer_builtins().
+    """
+
+    self = Qube._BOOLEAN_CLASS.as_boolean(self)
+
+    if not self._shape:
+        args = (self,)                  # make a copy
+
+    else:
+        # True where a value is True OR its mask is True
+        bools = Qube.or_(self._values, self._mask)
+        args = (np.any(bools, axis=axis), False)
+
+    result = Qube._BOOLEAN_CLASS(*args)
+
+    # Convert result to a Python bool if necessary
+    if builtins is None:
+        builtins = Qube.prefer_builtins()
+
+    if builtins:
+        return result.as_builtin()
+
+    return result
+
+
+def all_true_or_masked(self, axis=None, *, builtins=None):
+    """True if all of the items are nonzero or masked.
+
+    This differs from the all() method in how it handles the case of every value being
+    masked. This method returns True, whereas all() returns a masked Boolean value.
+
+    Parameters:
+        axis (int or tuple, optional): Axis or a tuple of axes. The any operation is
+            performed across these axes, leaving any remaining axes in the returned value.
+            If None (the default), then the any operation is performed across all axes of
+            the object.
+
+        builtins (bool, optional): If True and the result is a single unmasked scalar, the
+            result is returned as a Python boolean instead of as an instance of Boolean.
+            Default is to use the global setting defined by Qube.prefer_builtins().
+    """
+
+    self = Qube._BOOLEAN_CLASS.as_boolean(self)
+
+    if not self._shape:
+        args = (self,)                  # make a copy
+
+    else:
+        # True where a value is True OR its mask is True
+        bools = Qube.or_(self._values, self._mask)
+        args = (np.all(bools, axis=axis), False)
+
+    result = Qube._BOOLEAN_CLASS(*args)
+
+    # Convert result to a Python bool if necessary
+    if builtins is None:
+        builtins = Qube.prefer_builtins()
+
+    if builtins:
+        return result.as_builtin()
+
+    return result
+
+##########################################################################################
+# Special operators
+##########################################################################################
+
+def reciprocal(self, *, recursive=True, nozeros=False):
+    """An object equivalent to the reciprocal of this object.
+
+    This method is not implemented for the base class. It is overridden by
+    :meth:`Scalar.reciprocal`, :meth:`Vector.reciprocal`, :meth:`Matrix.reciprocal`, and
+    :meth:`Quaternion.reciprocal`.
+
+    Input:
+        recursive (bool, optional): True to return the derivatives of the reciprocal too;
+            otherwise, derivatives are removed.
+        nozeros (bool, optional): False (the default) to mask out any zero-valued items in
+            this object prior to the divide. Set to True only if you know in advance that
+            this object has no zero-valued items.
+    """
+
+    _raise_unsupported_op('reciprocal()', self)
+
+
+def zero(self):
+    """An object of this subclass containing all zeros.
+
+    The returned object has the same denominator shape as this object.
+
+    This is default behavior and may need to be overridden by some subclasses.
+    """
+
+    # Scalar case
+    if not self._rank:
+        if self.is_float():
+            new_value = 0.
+        else:
+            new_value = 0
+
+    # Array case
+    else:
+        if self.is_float():
+            new_value = np.zeros(self._item, dtype=np.float64)
+        else:
+            new_value = np.zeros(self._item, dtype=np.int_)
+
+    # Construct the object
+    obj = Qube.__new__(type(self))
+    obj.__init__(new_value, False, derivs={}, example=self)
+
+    # Return it as readonly
+    return obj.as_readonly()
+
+
+def identity(self):
+    """An object of this subclass equivalent to the identity.
+
+    This method is overridden by :meth:`Scalar.identity`, :meth:`Matrix.identity` and
+    :meth:`Boolean.identity`
+    """
+
+    _raise_unsupported_op('identity()', self)
+
+
+def sum(self, axis=None, *, recursive=True, builtins=None, masked=None, out=None):
+    """The sum of the unmasked values along the specified axis or axes.
+
+    This method is overridden by :meth:`Boolean.sum`.
+
+    Parameters:
+        axis (int or tuple, optional): An integer axis or a tuple of axes. The sum is
+            determined across these axes, leaving any remaining axes in the returned
+            value. If None (the default), then the sum is performed across all axes if the
+            object.
+        recursive (bool, optional): True to include the sums of the derivatives inside the
+            returned Scalar.
+        builtins (bool, optional): If True and the result is a single unmasked scalar, the
+            result is returned as a Python boolean instead of as an instance of Boolean.
+            Default is to use the global setting defined by Qube.prefer_builtins().
+        masked (bool, optional): The value to return if builtins is True but the returned
+            value is masked. Default is to return a masked value instead of a builtin
+            type.
+        out (optional): Ignored. This enables "np.sum(Qube)" to work.
+    """
+
+    result = self._mean_or_sum(axis, recursive=recursive, _combine_as_mean=False)
+
+    # Convert result to a Python type if necessary
+    if builtins is None:
+        builtins = Qube.prefer_builtins()
+
+    if builtins:
+        return result.as_builtin(masked=masked)
+
+    return result
+
+
+def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=None,
+         out=None):
+    """The mean of the unmasked values along the specified axis or axes.
+
+    Parameters:
+        axis (int or tuple, optional): An integer axis or a tuple of axes. The sum is
+            determined across these axes, leaving any remaining axes in the returned
+            value. If None (the default), then the sum is performed across all axes if the
+            object.
+        recursive (bool, optional): True to include the sums of the derivatives inside the
+            returned Scalar.
+        builtins (bool, optional): If True and the result is a single unmasked scalar, the
+            result is returned as a Python boolean instead of as an instance of Boolean.
+            Default is to use the global setting defined by Qube.prefer_builtins().
+        masked (bool, optional): The value to return if builtins is True but the returned
+            value is masked. Default is to return a masked value instead of a builtin
+            type.
+        dtype (optional): Ignored. This enables "np.sum(Qube)" to work.
+        out (optional): Ignored. This enables "np.sum(Qube)" to work.
+    """
+
+    result = self._mean_or_sum(axis, recursive=recursive, _combine_as_mean=True)
+
+    # Convert result to a Python type if necessary
+    if builtins is None:
+        builtins = Qube.prefer_builtins()
+
+    if builtins:
+        return result.as_builtin(masked=masked)
+
+    return result
+
+##########################################################################################
+# Error messages
+##########################################################################################
+
+def _raise_unsupported_op(op, /, obj1, obj2=None):
+    """Raise a TypeError or ValueError for unsupported operations."""
+
+    opstr = obj1._opstr(op)
+
+    if obj2 is None:
+        raise TypeError(f'{opstr} operation is not supported')
+
+    if (isinstance(obj1, (list, tuple, np.ndarray)) or
+        isinstance(obj2, (list, tuple, np.ndarray))):                           # noqa
+
+        if isinstance(obj1, Qube):
+            shape1 = obj1._numer
+        else:
+            shape1 = np.shape(obj1)
+
+        if isinstance(obj2, Qube):
+            shape2 = obj2._numer
+        else:
+            shape2 = np.shape(obj2)
+
+        raise ValueError(f'unsupported operand item for {opstr}: {shape1}, {shape2}')
+
+    raise TypeError(f'unsupported operand type for {opstr}: {type(obj2)}')
+
+
+def _raise_incompatible_shape(op, /, obj1, obj2):
+    """Raise a ValueError for incompatible object shapes."""
+
+    opstr = obj1._opstr(op)
+    raise ValueError(f'incompatible object shapes for {opstr}: '
+                     f'{obj1._shape}, {obj2._shape}')
+
+
+def _raise_incompatible_numers(op, /, obj1, obj2):
+    """Raise a ValueError for incompatible numerators in operation."""
+
+    opstr = obj1._opstr(op)
+    raise ValueError(f'incompatible numerator shapes for {opstr}: '
+                     f'{obj1._numer}, {obj2._numer}')
+
+
+def _raise_incompatible_denoms(op, /, obj1, obj2):
+    """Raise a ValueError for incompatible denominators in operation."""
+
+    opstr = obj1._opstr(op)
+    raise ValueError(f'incompatible denominator shapes for {opstr}: '
+                     f'{obj1._denom}, {obj2._denom}')
+
+
+def _raise_dual_denoms(op, /, obj1, obj2):
+    """Raise a ValueError for denominators on both operands."""
+
+    opstr = obj1._opstr(op)
+    raise ValueError(f'only one operand of {opstr} can have a denominator')
+
+##########################################################################################
