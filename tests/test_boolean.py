@@ -655,6 +655,28 @@ class Test_Boolean(unittest.TestCase):
         self.assertTrue(isinstance(a**2, Scalar))
         self.assertTrue(isinstance((a**2).values[0], numbers.Integral))
 
+        a = Boolean([True, True, False, False], [False, True, False, True])
+        self.assertEqual(a**200, a)
+        self.assertIsInstance(a**200, Scalar)
+        self.assertTrue((a**200).is_int())
+
+        self.assertEqual(a**200000, a)
+        self.assertTrue((a**200000).is_int())
+        self.assertEqual(a**0, Boolean(np.ones(4), a.mask))
+        self.assertEqual(a**(-1), Boolean([1,1,0,0], [False, True, True, True]))
+        self.assertEqual(a**(-200000), a**(-1))
+        self.assertTrue((a**(-200000)).is_int())
+
+        self.assertEqual(a**1., a)
+        self.assertEqual(type(a**1.), Scalar)
+        self.assertTrue((a**1.).is_float())
+        self.assertTrue((a**0.).is_float())
+
+        self.assertEqual(a**200000, a**200000.)
+        self.assertEqual(a**0, a**0.)
+        self.assertEqual(a**(-1), a**(-1.))
+        self.assertEqual(a**(-200000), a**(-200000.))
+
         # Confirm True == 1 in arithmetic
         a = Boolean(True) + 1
         self.assertEqual(a, 2)

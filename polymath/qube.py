@@ -575,7 +575,7 @@ class Qube(object):
     def _dtype_and_value(arg, masked_value=0, opstr=''):
         """Tuple (dtype, value), where dtype is one of "float", "int", or "bool".
 
-        The value is converted to a builtin type if it is scalar; otherwise it is return
+        The value is converted to a builtin type if it is scalar; otherwise it is returned
         as an array with its original dtype.
 
         Parameters:
@@ -670,13 +670,13 @@ class Qube(object):
         Note that converting floats to ints is always a "floor" operation, so -1.5 -> -2.
 
         Parameters:
-            arg (Qube): Object to cast
+            arg (Qube, array-like, float, int, or bool): Object to cast
             dtype (str): dtype to cast to, one of float", "int", or "bool".
             masked_value (float, int, or bool): Value to assign to a masked item in the
                 case where the input argument is a Qube or MaskedArray.
 
         Returns:
-            (NumPy.ndarray, float, int, or bool): The result of the cast.
+            (numpy.ndarray, float, int, or bool): The result of the cast.
         """
 
         if isinstance(arg, (list, tuple)):

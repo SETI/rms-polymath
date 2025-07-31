@@ -442,7 +442,18 @@ class Boolean(Scalar):
             Scalar: The result of the exponentiation.
         """
 
-        return self.as_int() ** arg
+        arg = Scalar.as_scalar(arg)
+        if arg.is_float():
+            return self.as_float() ** arg
+
+        self = self.as_int()
+
+        # Result is 1 where self is True or arg == 0
+        vals = (self._values | (arg._values == 0)).view(np.int8)
+
+        # Result is masked where self == 0 and arg < 0 or either item is masked
+        invalid = (self._values == 0) & (arg._values < 0)
+        return Scalar(vals, Qube.or_(self._mask, arg._mask, invalid))
 
     ######################################################################################
     # Logical operators
