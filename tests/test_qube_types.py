@@ -144,19 +144,19 @@ class Test_Qube_types(unittest.TestCase):
                          np.dtype('float'))
 
         self.assertEqual(type(Scalar(1.).as_int().values), int)
-        self.assertEqual(Scalar((1.,2.)).as_int().values.dtype, np.dtype('int'))
+        self.assertEqual(Scalar((1.,2.)).as_int().values.dtype, np.dtype('int64'))
         self.assertEqual(Scalar((1.5,-1.5)).as_int(), (1,-2))
 
         self.assertEqual(type(Scalar(1).as_float().values), float)
         self.assertEqual(Scalar((1,2)).as_float().values.dtype, np.dtype('float'))
 
-        self.assertEqual(Vector((1.,2.)).as_int().values.dtype, np.dtype('int'))
-        self.assertEqual(Vector((1.5,-1.5)).as_int().values.dtype, np.dtype('int'))
+        self.assertEqual(Vector((1.,2.)).as_int().values.dtype, np.dtype('int64'))
+        self.assertEqual(Vector((1.5,-1.5)).as_int().values.dtype, np.dtype('int64'))
 
         self.assertEqual(Vector((1,2)).as_float().values.dtype, np.dtype('float'))
 
-        self.assertEqual(Pair((1.,2.)).as_int().values.dtype, np.dtype('int'))
-        self.assertEqual(Pair((1.5,-1.5)).as_int().values.dtype, np.dtype('int'))
+        self.assertEqual(Pair((1.,2.)).as_int().values.dtype, np.dtype('int64'))
+        self.assertEqual(Pair((1.5,-1.5)).as_int().values.dtype, np.dtype('int64'))
 
         self.assertEqual(Pair((1,2)).as_float().values.dtype, np.dtype('float'))
 
@@ -213,4 +213,5 @@ class Test_Qube_types(unittest.TestCase):
         self.assertEqual(a.masked_single(), Matrix3.MASKED)
         self.assertEqual(type(a.masked_single()), Matrix3)
         self.assertEqual(a.masked_single().shape, ())
+
 ##########################################################################################
