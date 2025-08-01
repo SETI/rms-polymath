@@ -51,23 +51,23 @@ or
 
 The PolyMath classes are:
 
-* `Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.scalar.Scalar):
+* `Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar):
   A single zero-dimensional number.
-* `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector.Vector):
+* `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector):
   An arbitrary 1-D object.
-* `Pair`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.pair.Pair):
+* `Pair`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Pair):
   A subclass of `Vector` representing a vector with two coordinates.
-* `Vector3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3):
+* `Vector3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3):
   A subclass of `Vector` representing a vector with three coordinates.
-* `Matrix`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix.Matrix):
+* `Matrix`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix):
   An arbitrary 2-D matrix.
-* `Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix3.Matrix3):
+* `Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3):
   A subclass of `Matrix` representing a unitary 3x3 rotation matrix.
-* `Quaternion`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.quaternion.Quaternion):
+* `Quaternion`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Quaternion):
   A subclass of `Vector` representing a 4-component quaternion.
-* `Boolean`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.boolean.Boolean):
+* `Boolean`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Boolean):
   A True or False value.
-* `Qube`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.qube.Qube):
+* `Qube`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube):
 The superclass of all of the above, supporting objects of arbitrary dimension.
 
 Importantly, each of these classes can represent not just a single object, but also an
@@ -76,10 +76,10 @@ of "broadcasting"; see
 [https://numpy.org/doc/stable/user/basics.broadcasting.html](https://numpy.org/doc/stable/user/basics.broadcasting.html)
 for
 these details. The key advantage of PolyMath's approach is that it separates each object's
-shape from any internal dimensions (e.g., (3,3) for a `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix3.Matrix3)
+shape from any internal dimensions (e.g., (3,3) for a `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3)
 object), largely eliminating
 any need to ever do "index bookkeeping". For example, suppose **S** is a Scalar and **V** is a
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector.Vector).
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector).
 Then, in PolyMath, you can write:
 
     S * V
@@ -120,14 +120,14 @@ of its power, here are some examples of how OOPS uses PolyMath objects to descri
 product:
 
 * **los** is a single
-  `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+  `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
   that represents the lines of sight represented by
   each sample in the data product. If the product is a 1000x1000 image, then **los** will
   have an internal shape of (1000,1000). If the product is a single detector, then **los**
   will have no internal shape.
 
 * **time** is a
-  `Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.scalar.Scalar)
+  `Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar)
   that represents the time that the photons arrived at the detector.
   If the instrument is a simple, shuttered camera, then all photons arrive at the same
   time and **time** can have a single value. However, if a raster-scanning device obtains
@@ -137,7 +137,7 @@ product:
   (1000,1) or (1,1000), depending on the orientation of the detector.
 
 * **cmatrix** is a
-  `Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix3.Matrix3)
+  `Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3)
   that represents the rotation matrix from the instrument's
   internal coordinates to the J2000 frame, which is fixed relative to the sky. If the
   instrument is not rotating during an observation, then a single matrix is required.
@@ -155,17 +155,17 @@ then re-use it for all of these situations.
 As a specific example, OOPS can determine where each line of sight sampled by a data
 product intercepted the surface of a particular planetary body. The intercept points are
 represented by a single
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
 given in the body's coordinate frame. From this
 object, it is straightforward to derive latitude, longitude, emission angle, etc. If the
 product is a 1000x1000 image, then the
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
 will have an internal shape of
 (1000,1000). Furthermore, if the body does not entirely fill the field of view, the lines
 of sight that did not intercept the body are masked. It is not uncommon for a body to only
 partially fill a field of view. In this case, OOPS can speed up calculations, sometimes
 substantially, by omitting the masked elements of the
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
 object.
 
 ## Math Operations
@@ -175,19 +175,19 @@ objects, where appropriate: `+`, `-`, `*`, `/`, `%`, `//`,`**`, along with their
 variants. Equality tests `==`, `!=` are available for all objects; comparison operators
 `<`, `<=`, `>`, `>=` are supported for Scalars and Booleans. Where appropriate, methods
 such as
-`abs()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.qube.Qube.abs),
+`abs()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.abs),
 `len()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.len),
 `mean()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.mean),
 `sum()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.sum),
 `identity()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.identity),
 `reciprocal()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.reciprocal),
 `int()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar.int),
-`Matrix.inverse()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.Matrix.inverse),
+`Matrix.inverse()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.inverse),
 and
-`Matrix.transpose()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.Matrix.transpose)
+`Matrix.transpose()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.transpose)
 (or property `Matrix.T`).
 
-`Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.scalar.Scalar):
+`Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar):
 support most common math functions such as
 `sin()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar.sin),
 `cos()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar.cos),
@@ -216,7 +216,7 @@ It also supports quadratic equations via
 and
 `eval_quadratic()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar.eval_quadratic).
 
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector.Vector):
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector):
 support functions such as
 `norm()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector.norm),
 `norm_sq()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector.norm_sq),
@@ -237,7 +237,7 @@ Element-by-element operations are also supported using
 and
 `element_div()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector.element_div).
 
-`Vector3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3):
+`Vector3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3):
 supports additional functions such as
 `from_ra_dec_length()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3.from_ra_dec_length),
 `to_ra_dec_length()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3.to_ra_dec_length),
@@ -250,7 +250,7 @@ supports additional functions such as
 `offset_angles()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3.offset_angles)
 (the angles from the three primary axes).
 
-`Pair`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.pair.Pair):
+`Pair`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Pair):
 supports additional functions such as
 `swapxy()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Pair.swapxy),
 `rot90()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Pair.rot90)
@@ -260,7 +260,7 @@ rotation by a multiple of 90 degrees), and
 (for the vector's angular
 direction).
 
-`Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix3.Matrix3):
+`Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3):
 functions
 `rotate()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.rotate)
 and
@@ -281,7 +281,7 @@ and
 `to_quaternion()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.to_quaternion)
 to reverse these definitions.
 
-`Quaternion`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.quaternion.Quaternion):
+`Quaternion`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Quaternion):
 supports functions such as
 `conj()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Quaternion.conj)
 (conjugate),
@@ -309,17 +309,17 @@ MaskedArrays, or anything array-like.
 ## Shapes and Broadcasting
 
 The PolyMath subclasses, e.g.,
-`Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.scalar.Scalar),
-`Vector3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3),
+`Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar),
+`Vector3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3),
 and
-`Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix3.Matrix3),
+`Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3),
 define one or more possibly multidimensional items. Unlike NumPy ndarrays, this class
 makes a clear distinction between the dimensions associated with the items and any
 additional, leading dimensions that define an array of such items.
 
 Each object's `shape` property contains the shape of its leading axes, whereas
 its `item` property defines the shape of individual elements. For example, a
-2x2 array of `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix3.Matrix3)
+2x2 array of `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3)
 objects would have `shape=(2,2)` and `items=(3,3)`. Its
 `values` property would be a NumPy array with shape `(2,2,3,3)`. In addition,
 `ndims` (or `ndim`) contains the number of dimensions in the
@@ -338,9 +338,9 @@ with the original object.
 
 Standard NumPy rules of broadcasting apply, but only on the `shape`
 dimensions, not on the `item` dimensions. For example, if you multiply a
-`Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.matrix3.Matrix3)
+`Matrix3`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3)
 with shape (2,2) by a
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
 object with shape (5,1,2), you
 would get a new (rotated)
 `Vector`
@@ -363,7 +363,7 @@ an operation involving multiple PolyMath objects and NumPy arrays.
 PolyMath objects can track associated derivatives and partial derivatives, which are
 represented by a dictionary of other PolyMath objects. A common use case is to let **X**
 be a
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector.Vector):
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector):
 object describing the position of one or more bodies or points on a
 surface and to use the time-derivative of **X** to describe the velocity. The
 `derivs` property of an object is a dictionary of each derivative, keyed by
@@ -375,7 +375,7 @@ time-derivatives carried along in the calculation with no additional programming
 
 The denominators of partial derivatives are represented by splitting the item shape into a
 numerator shape plus a denominator shape. As a result, for example, the partial
-derivatives of a `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+derivatives of a `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
 object (item shape (3,)) with respect to a :class:`Pair`
 (item shape (2,)) will have overall item shape (3,2). Properties `numer` gives
 the numerator shape, `nrank` is the number of dimensions, and
@@ -386,7 +386,7 @@ denominator shape, `drank` is the number of dimensions, and
 The PolyMath subclasses generally do not constrain the shape of the denominator, just
 the numerator. As a result, the aforementioned partial derivatives can still be
 represented by a
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
 object.
 
 Methods
@@ -444,7 +444,7 @@ Each object has a property `mask`, which contains the mask. A single value of
 False means that the object is entirely unmasked; a single value of True means it is
 entirely masked. Otherwise, `mask` is a NumPy array with boolean values, with
 a shape that matches that of the object itself (excluding its `items`). For example, a
-`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector3.Vector3)
+`Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector3)
 object with shape `(5,2)` could have a `mask` value represented
 by a NumPy array of shape `(5,2)`, even though its `values` property has shape
 `(5,2,3)`.
@@ -522,17 +522,17 @@ and
 ## Units
 
 PolyMath objects also support embedded unit using the
-`Unit`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.unit.Unit)
+`Unit`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Unit)
 class. However, the
 internal values in a PolyMath object are always held in standard units of kilometers,
 seconds and radians, or arbitrary combinations thereof. The unit is primarily used to
 affect the appearance of numbers during input and output. The `unit_` or
 `units` property of any object will reveal the
-`Unit`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.unit.Unit)
+`Unit`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Unit)
 object, or
 possibly None if the object is unitless.
 
-A `Unit`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.unit.Unit)
+A `Unit`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Unit)
 allows for exact conversions between units. It is described by three
 integer exponents applying to dimensions of length, time, and angle. Conversion factors
 are describe by three (usually) integer values representing a numerator, denominator, and
@@ -590,12 +590,12 @@ classes, such as
 `Matrix3.twovec()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.twovec),
 (a rotation matrix defined by two
 vectors),
-`Matrix.row_vector()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.Matrix.row_vector),
-`Matrix.row_vectors()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.Matrix.row_vectors),
-`Matrix.column_vector()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.Matrix.column_vector),
-`Matrix.column_vectors()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.Matrix.column_vectors),
+`Matrix.row_vector()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.row_vector),
+`Matrix.row_vectors()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.row_vectors),
+`Matrix.column_vector()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.column_vector),
+`Matrix.column_vectors()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.column_vectors),
 and
-`Matrix.to_vector()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.Matrix.to_vector),
+`Matrix.to_vector()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix.to_vector),
 
 ## Indexing
 
@@ -611,7 +611,7 @@ an object:
   and masks the object entirely.
 
 * A
-  `Boolean`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.boolean.Boolean):
+  `Boolean`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Boolean):
   object can be used as an index. If this index is unmasked, it is the same
   as indexing with a boolean NumPy ndarray. If it is masked, the values of the
   returned object are masked wherever the `Boolean`'s value is masked. When using a
@@ -619,7 +619,7 @@ an object:
   masked are not changed.
 
 * A
-  `Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.scalar.Scalar):
+  `Scalar`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Scalar):
   object composed of integers can be used as an index. If this index is
   unmasked, it is equivalent to indexing with an integer or integer NumPy ndarray. If
   it is masked, the values of the returned object are masked wherever the `Scalar`
@@ -627,11 +627,11 @@ an object:
   `Scalar` index are masked are not changed.
 
 * A
-  `Pair`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.pair.Pair):
+  `Pair`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Pair):
   object composed of integers can be used as an index. Each `(i,j)` value is
   treated is the index of two consecutive axes, and the associated value is returned.
   Where the `Pair` is masked, a masked value is returned. Similarly, a
-  `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector.Vector):
+  `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector):
   with three
   or more integer elements is treated as the index of three or more consecutive axes.
 
