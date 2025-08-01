@@ -8,7 +8,7 @@ PolyMath Library
 
 PDS Ring-Moon Systems Node, SETI Institute
 
-PolyMath expands on the NumPy module that introduces a variety of additional data types
+PolyMath expands on the NumPy module and introduces a variety of additional data types
 and features to simplify 3-D geometry calculations. It is a product of the the [PDS
 Ring-Moon Systems Node](https://pds-rings.seti.org). The PolyMath classes are:
 

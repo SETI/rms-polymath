@@ -24,7 +24,7 @@
 
 # Introduction
 
-`PolyMath` expands on the NumPy module that introduces a variety of additional data types
+`PolyMath` expands on the NumPy module and introduces a variety of additional data types
 and features to simplify 3-D geometry calculations. It is a product of the the [PDS
 Ring-Moon Systems Node](https://pds-rings.seti.org).
 
@@ -82,11 +82,11 @@ any need to ever do "index bookkeeping". For example, suppose **S** is a Scalar 
 `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.vector.Vector).
 Then, in PolyMath, you can write:
 
-        S * V
+    S * V
 
 whereas, in NumPy, you would have to write:
 
-        S[..., np.newaxis] * V
+    S[..., np.newaxis] * V
 
 to get the same result. This capability makes it possible to write out algorithms as if
 each operation is on a single vector, scalar, or matrix, ignoring the internal
