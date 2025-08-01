@@ -1,103 +1,69 @@
-"""\
-##############################################################################
-polymath/extensions/pickle.py: Support for pickling/serialization
-##############################################################################
+########################################################################################
+# polymath/extensions/pickle.py
+########################################################################################
+"""This module supports the "pickling" of polymath objects.
 
-This module supports the "pickling" of polymath objects.
+Because objects such as backplanes can be numerous and also quite large, we provide a
+variety of methods, both lossless and lossy, for compressing them during storage. As one
+example of optimization, only the un-masked elements of an object are stored; upon
+retrieval, all masked elements will have the value of the object's :attr:`~Qube._default
+attribute.
 
-Because objects such as backplanes can be numerous and also quite large, we
-provide a variety of methods, both lossless and lossy, for compressing them
-during storage.
+Arrays with integer elements are losslessly compressed using BZ2 compression. The numeric
+range is checked and values are stored using the fewest number of bytes sufficient to
+cover the range. Arrays with boolean elements are converted to bit arrays and then
+compressed using BZ2. These steps allow for extremely efficient data storage.
 
-As one example of optimization, only the un-masked elements of an object are
-stored; upon retrieval, all masked elements will have the value of the object's
-_default_ attribute.
+This module employs a variety of options for compressing floating point values.
 
-Arrays with integer elements are losslessly compressed using BZ2 compression.
+1. Very small arrays are stored using BZ2 compression.
+2. Constant arrays are stored as a single value plus a shape.
+3. Array values are divided by a specified constant and then stored as integers, using BZ2
+   compression, as described above.
+4. Arrays are compressed, with or without loss, using **fpzip**. This is a highly
+   effective algorithm, especially for arrays such as backplanes that often exhibit smooth
+   variations from pixel to pixel. See https://pypi.org/project/rms-fpzip/.
 
-Arrays with boolean elements are converted to bit arrays and then compressed
-using BZ2.
+For each object, the user can define the floating-point compression method using
+:meth:`~Qube.set_pickle_digits`. One can also define the global default compression method
+using :meth:`~Qube.set_default_pickle_digits`. The inputs to these functions are as
+follows:
 
-The module employs a variety of options for compressing floating point values.
-The following methods of lossless compression are used:
-- Very small arrays are stored using BZ2 compression.
-- Constant arrays are stored as a single value plus a shape.
-- Larger arrays are compressed losslessly using fpzip. See
-        https://www.osti.gov/biblio/1579935
-        https://pypi.org/project/fpzip/
-  fpzip appears to be a highly effective algorithm, especially for arrays such
-  as backplanes, which often exhibit smooth variations from pixel to pixel.
+**digits** (`str or int`): The number of digits to preserve.
 
-The user can choose alternative, lossy compression on an object-by-object basis
-using method set_pickle_digits. Three approaches to lossy compression are
-available:
+* "double": preserve full precision using lossless **fpzip** compression.
+* "single": convert the array to single precision and then store it using lossless
+  **fpzip** compression.
+* an integer 7-16, defining the number of significant digits to preserve.
 
-1. Convert the numbers to single precision ("float32") and then compress them
-   losslessly using fpzip.
+**reference** (`str or float`): How to interpret a numeric value of **digits**.
 
-2. Use lossy fpzip compression, where a specified number of the least
-   significant bits of the mantissa are zeroed out prior to the compression.
-   This method has the property that all restored values will have the same
-   number of significant digits, regardless of their individual magnitudes.
+* "fpzip": Use lossy **fpzip** compression, preserving the given number of digits.
+* a number: Preserve every number to the exact same absolute precision, scaling the number
+  of **digits** by this value. For example, if **digits** = 8 and **reference** = 100,
+  all values will be rounded to the nearest 1.e-6 before storage. This method uses option
+  3 above, where values are converted to integers for storage.
 
-3. Determine a suitable scale factor and offset, and then store the numbers as
-   BZ2-compressed integers. This method ensures that every value has the same
-   absolute precision, unlike the other two methods, which preserve relative
-   accuracy.
+The remaining options for **reference** provide a variety of ways to allow a reference
+number to be generated automatically.
 
-The inputs to set_pickle_digits are as follows:
-
-- digits = the number of decimal digits to preserve when pickling this object.
-    Alternatively, use "double" to preserve full precision (lossless
-    compression) or "single" to use method 1 above. This preserved just less
-    than 7 digits of precision in each values.
-
-- reference = a parameter that defines how to interpret the number of digits
-    specified. Options are:
-
-    - "fpzip"
-        Use method 2 above, which interprets the number of digits relative to
-        each individual value. In the restored array, each value will be
-        accurate to the specified number of digits.
-
-    - a number
-        Use method 3 above; absolute precision will be 10**(-digits) times this
-        value.
-
-    - "smallest"
-        Use method 3 above; absolute accuracy will be 10**(-digits) times the
-        non-zero array value closest to zero. This option guarantees that every
-        value will preserve at least the requested number of digits.
-
-    - "largest"
-        Use method 3 above; absolute accuracy will be 10**(-digits) times the
-        value in the array furthest from zero. This option is useful for arrays
-        that contain a limited range of values, such as the components of a unit
-        vector or angles that are known to be <= 2 * pi. These are cases where
-        it is not necessary to preserve extra precision in values that just
-        happen to be very close zero.
-
-    - "mean"
-        Use method 3 above; absolute accuracy will be 10**(-digits) times the
-        mean of the absolute values in the array.
-
-    - "median"
-        Use method 3 above; absolute accuracy will be 10**(-digits) times the
-        median of the absolute values in the array. This is a good choice if a
-        minority of values in the array are very different from the others, such
-        as noise spikes or undefined geometry. In such a case, we want the
-        precision to be based on the more "typical" values.
-
-    - "logmean"
-        Use method 3 above; absolute accuracy will be 10**(-digits) times the
-        log-mean of the absolute values in the array.
-
-The value of the digits and reference can each be specified as a tuple of two
-values rather than a single value. In this case, the first value in each tuple
-is used for the object itself, whereas the second will apply to any derivatives.
-
-You can also define default parameters for floating-point compression using
-method set_default_pickle_digits.
+* "smallest": Absolute accuracy will be 10**(-digits) times the non-zero array value
+  closest to zero. This option guarantees that every value will preserve at least the
+  requested number of digits. This is reasonable if you expect all values to fall within a
+  similar dynamic range.
+* "largest": Absolute accuracy will be 10**(-digits) times the value in the array furthest
+  from zero. This option is useful for arrays that contain a limited range of values, such
+  as the components of a unit vector or angles that are known to fall between zero and
+  2*pi. In this case, it is probably not necessary to preserve the extra precision in
+  values that just happen to fall very close zero.
+* "mean": Absolute accuracy will be 10**(-digits) times the mean of the absolute values
+  in the array.
+* "median": UAbsolute accuracy will be 10**(-digits) times the median of the absolute
+  values in the array. This is a good choice if a minority of values in the array are very
+  different from the others, such as noise spikes or undefined geometry. In such a case,
+  we want the precision to be based on the more "typical" values.
+* "logmean": Absolute accuracy will be 10**(-digits) times the log-mean of the absolute
+  values in the array.
 """
 
 import bz2
@@ -109,69 +75,67 @@ import warnings
 
 from polymath.qube import Qube
 
+PICKLE_VERSION = (1, 0)
+
 # How many elements in an array before lossy compression might be used.
-FPZIP_ENCODING_CUTOFF = 200
-PICKLE_VERSION = (1,0)
-PICKLE_WARNINGS = False
-
-PICKLE_DEBUG = False    # If True, __setstate__ includes encoding info
-
-DEFAULT_PICKLE_DIGITS = ('double', 'double')
-DEFAULT_PICKLE_REFERENCE = ('fpzip', 'fpzip')
-
-@staticmethod
-def _pickle_debug(debug):
-    global PICKLE_DEBUG
-    PICKLE_DEBUG = debug
+_FPZIP_ENCODING_CUTOFF = 200
+_PICKLE_WARNINGS = False
+_PICKLE_DEBUG = False   # If True, __setstate__ includes encoding info
+_DEFAULT_PICKLE_DIGITS = ('double', 'double')
+_DEFAULT_PICKLE_REFERENCE = ('fpzip', 'fpzip')
 
 # Useful constants relevant to IEEE floats
 assert sys.float_info.mant_dig == 53, 'Serious trouble: floats are not IEEE'
-SINGLE_DIGITS = np.log10(2**23)    # 6.92
-DOUBLE_DIGITS = np.log10(2**52)    # 15.65
-LOG10_BIT     = np.log10(2.)
+_SINGLE_DIGITS = np.log10(2**23)    # 6.92
+_DOUBLE_DIGITS = np.log10(2**52)    # 15.65
+_LOG10_BIT = np.log10(2.)
 
-#===============================================================================
+@staticmethod
+def _pickle_debug(debug):
+    global _PICKLE_DEBUG
+    _PICKLE_DEBUG = debug
+
+
 def set_pickle_digits(self, digits='double', reference='fpzip'):
-    """Set the desired number of decimal digits of precision in the storage of
-    this object's floating-point values and their derivatives.
+    """Set the desired number of decimal digits of precision in the storage of this
+    object's floating-point values and their derivatives.
 
     This attribute is ignored for integer and boolean values.
 
     Parameters:
-        digits (str or tuple, optional): A single value or a tuple of two values
-            indicating the number of digits to preserve when pickling this
-            object. If two values are given, the second applies to any
-            derivatives. If a number is specified, this is the number of decimal
-            digits to preserve when this object is pickled. It need not be an
-            integer. It is truncated to the range supported by single and double
-            precision. Alternatively, use "double" to preserve full double
-            precision; use "single" for single precision. Defaults to "double".
-        reference (str or tuple, optional): A single value or tuple of two
-            values defining the number to use when assessing how many digits
-            are preserved. If two values are given, the second applies to any
-            derivatives. If a number is specified, the number of digits
-            precision will be relative to this value. For example, if the value
-            is 1 and digits is 8, the precision will be 1.e-8.Alternatively,
-            use one of these strings to let the precision be referenced to the
-            values in the array: "smallest", "largest", "mean", "median",
-            "logmean", or "fpzip". Defaults to "fpzip".
+        digits (int, float, str or tuple, optional):
+            The number of digits to preserve when pickling this object. If two values are
+            given, the second applies to any derivatives. If a number is specified, this
+            is the number of decimal digits to preserve when this object is pickled. It
+            need not be an integer. It is truncated to the range supported by single and
+            double precision. Alternatively, use "double" to preserve full double
+            precision; use "single" for single precision.
 
-    Note:
+        reference (int, float, str or tuple, optional):
+            A value defining the number to use when assessing how many digits are
+            preserved. If two values are given, the second applies to any derivatives. If
+            a number is specified, the number of `digits` will be relative to this value.
+            For example, if the `reference=100` and `digits=8`, the absolute precision
+            will be 1.e-6. Alternatively, use one of these strings to let the precision be
+            referenced to the values in the array: "smallest", "largest", "mean",
+            "median", "logmean", or "fpzip".
+
+    Notes:
         The reference options are:
-        - "smallest": Reference precision to the value closest to zero. This
-            option guarantees that the requested number of digits are preserved
-            for every value.
-        - "largest": Reference precision to the value furthest from zero; this
-            is a good choice for values that are known to have a limited range
-            that includes zero, e.g., the components of a unit vector, or an
-            angle between zero and two pi.
-        - "mean": Reference the mean absolute value.
 
-        - "median": Reference the median absolute value. This is a good choice
-            if a minority of values are very different from the others, but
-            those values should not dominate the precision determination.
-        - "logmean": Reference the mean of the log of absolute values.
-        - "fpzip": Employ fpzip compression. This is the default.
+            * "smallest": Reference precision to the value closest to zero. This option
+              guarantees that the requested number of digits are preserved for every
+              value.
+            * "largest": Reference precision to the value furthest from zero; this is a
+              good choice for values that are known to have a limited range that includes
+              zero, e.g., the components of a unit vector, or an angle between zero and
+              two pi.
+            * "mean": Reference the mean absolute value.
+            * "median": Reference the median absolute value. This is a good choice if a
+              minority of values are very different from the others, but those values
+              should not dominate the precision determination.
+            * "logmean": Reference the mean of the log of absolute values.
+            * "fpzip": Employ fpzip compression.
     """
 
     reference = _validate_pickle_reference(reference)
@@ -181,96 +145,93 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
     self._pickle_reference = reference
 
     # Handle derivatives
-    if self._derivs_:
+    if self._derivs:
         deriv_digits = (digits[1], digits[1])
         deriv_reference = (reference[1], reference[1])
 
-        for deriv in self._derivs_.values():
-            deriv._pickle_digits    = deriv_digits
+        for deriv in self._derivs.values():
+            deriv._pickle_digits = deriv_digits
             deriv._pickle_reference = deriv_reference
 
-#===============================================================================
+
 @staticmethod
 def set_default_pickle_digits(digits='double', reference='fpzip'):
     """Set the default number of decimal digits of precision in the storage of
     floating-point values and their derivatives.
 
     Parameters:
-        digits (str or tuple, optional): A single value or a tuple of two values
-            indicating the number of digits to preserve when pickling this
-            object. If two values are given, the second applies to any
-            derivatives. If a number is specified, this is the number of decimal
-            digits to preserve when this object is pickled. It need not be an
-            integer. It is truncated to the range supported by single and double
-            precision. Alternatively, use "double" to preserve full double
-            precision; use "single" for single precision. Defaults to "double".
-        reference (str or tuple, optional): A single value or tuple of two
-            values defining the number to use when assessing how many digits
-            are preserved. If two values are given, the second applies to any
-            derivatives. If a number is specified, the number of digits
-            precision will be relative to this value. For example, if the value
-            is 1 and digits is 8, the precision will be 1.e-8.Alternatively,
-            use one of these strings to let the precision be referenced to the
-            values in the array: "smallest", "largest", "mean", "median",
-            "logmean", or "fpzip". Defaults to "fpzip".
+        digits (int, float, str or tuple, optional):
+            The number of digits to preserve when pickling this object. If two values are
+            given, the second applies to any derivatives. If a number is specified, this
+            is the number of decimal digits to preserve when this object is pickled. It
+            need not be an integer. It is truncated to the range supported by single and
+            double precision. Alternatively, use "double" to preserve full double
+            precision; use "single" for single precision.
+        reference (int, float, str or tuple, optional):
+            A value defining the number to use when assessing how many digits are
+            preserved. If two values are given, the second applies to any derivatives. If
+            a number is specified, the number of `digits` will be relative to this value.
+            For example, if the `reference=100` and `digits=8`, the precision will be
+            1.e-6. Alternatively, use one of these strings to let the precision be
+            referenced to the values in the array: "smallest", "largest", "mean",
+            "median", "logmean", or "fpzip".
 
-    Note:
+    Notes:
         The reference options are:
-        - "smallest": Reference precision to the value closest to zero. This
-            option guarantees that the requested number of digits are preserved
-            for every value.
-        - "largest": Reference precision to the value furthest from zero; this
-            is a good choice for values that are known to have a limited range
-            that includes zero, e.g., the components of a unit vector, or an
-            angle between zero and two pi.
-        - "mean": Reference the mean absolute value.
 
-        - "median": Reference the median absolute value. This is a good choice
-            if a minority of values are very different from the others, but
-            those values should not dominate the precision determination.
-        - "logmean": Reference the mean of the log of absolute values.
-        - "fpzip": Employ fpzip compression. This is the default.
+            * "smallest": Reference precision to the value closest to zero. This option
+              guarantees that the requested number of digits are preserved for every
+              value.
+            * "largest": Reference precision to the value furthest from zero; this is a
+              good choice for values that are known to have a limited range that includes
+              zero, e.g., the components of a unit vector, or an angle between zero and
+              two pi.
+            * "mean": Reference the mean absolute value.
+            * "median": Reference the median absolute value. This is a good choice if a
+              minority of values are very different from the others, but those values
+              should not dominate the precision determination.
+            * "logmean": Reference the mean of the log of absolute values.
+            * "fpzip": Employ fpzip compression.
     """
 
-    global DEFAULT_PICKLE_DIGITS, DEFAULT_PICKLE_REFERENCE
+    global _DEFAULT_PICKLE_DIGITS, _DEFAULT_PICKLE_REFERENCE
 
     reference = _validate_pickle_reference(reference)
-    DEFAULT_PICKLE_REFERENCE = reference
-    DEFAULT_PICKLE_DIGITS = _validate_pickle_digits(digits, reference)
+    _DEFAULT_PICKLE_REFERENCE = reference
+    _DEFAULT_PICKLE_DIGITS = _validate_pickle_digits(digits, reference)
 
-#===============================================================================
+
 def pickle_digits(self):
-    """The digits of floating-point precision to include when pickling this
-    object and its derivatives.
+    """The digits of floating-point precision to include when pickling this object and its
+    derivatives.
 
-    Returns "double", "single", or a number of digits roughly in the range 7-16.
+    Returns:
+        (str, float, or int): One of "double", "single", or a number of digits roughly in
+        the range 7-16.
     """
 
-    global DEFAULT_PICKLE_DIGITS
-
     if not hasattr(self, '_pickle_digits') or self._pickle_digits is None:
-        self._pickle_digits = DEFAULT_PICKLE_DIGITS
+        self._pickle_digits = _DEFAULT_PICKLE_DIGITS
 
     return self._pickle_digits
 
-#===============================================================================
-def pickle_reference(self):
-    """The reference value to use when determining the number of digits of
-    floating-point precision in this object and its derivatives.
 
-    One of "fpzip", "smallest", "largest", "mean", "median", "logmean", or a
-    number.
+def pickle_reference(self):
+    """The reference value to use when determining the number of digits of floating-point
+    precision in this object and its derivatives.
+
+    Returns:
+        (str, float, or int): One of "fpzip", "smallest", "largest", "mean", "median",
+        "logmean", or a number.
     """
 
-    global DEFAULT_PICKLE_REFERENCE
-
     if (not hasattr(self, '_pickle_reference')
-        or self._pickle_reference is None):
-            self._pickle_reference = DEFAULT_PICKLE_REFERENCE
+            or self._pickle_reference is None):
+        self._pickle_reference = _DEFAULT_PICKLE_REFERENCE
 
     return self._pickle_reference
 
-#===============================================================================
+
 def _check_pickle_digits(self):
     """Validate the pickle attributes."""
 
@@ -289,13 +250,13 @@ def _check_pickle_digits(self):
 
     self._pickle_digits = _validate_pickle_digits(digits, reference)
 
-    for key, deriv in self._derivs_.items():
+    for key, deriv in self._derivs.items():
         if not hasattr(deriv, '_pickle_digits'):
             deriv._pickle_digits = 2 * self._pickle_digits[1:]
         if not hasattr(deriv, '_pickle_reference'):
             deriv._pickle_reference = 2 * self._pickle_reference[1:]
 
-#===============================================================================
+
 def _validate_pickle_digits(digits, reference):
     """Validate and return the pickle digit values."""
 
@@ -315,8 +276,8 @@ def _validate_pickle_digits(digits, reference):
         for k, digit in enumerate(digits[:2]):
             if isinstance(digit, numbers.Real):
                 if not isinstance(reference[k], numbers.Real):
-                    digit = min(max(SINGLE_DIGITS, float(digit)), DOUBLE_DIGITS)
-            elif digit not in ('single', 'double'):
+                    digit = min(max(_SINGLE_DIGITS, float(digit)), _DOUBLE_DIGITS)
+            elif digit not in {'single', 'double'}:
                 raise ValueError('invalid pickle digits: ' + repr(digit))
 
             new_digits.append(digit)
@@ -326,11 +287,11 @@ def _validate_pickle_digits(digits, reference):
 
     return tuple(new_digits)
 
-#===============================================================================
+
 def _validate_pickle_reference(references):
     """Validate and return the pickle reference values."""
 
-    original_references = references
+    original_references = references    # Flake8 thinks this variable is unused # noqa
 
     if references is None:
         references = 'fpzip'
@@ -346,14 +307,12 @@ def _validate_pickle_reference(references):
         for reference in references[:2]:
             if isinstance(reference, numbers.Real):
                 pass
-            elif reference not in {'smallest', 'largest', 'mean', 'median',
-                                   'logmean', 'fpzip'}:
-                raise ValueError('invalid pickle reference %s'
-                                 % repr(reference))
+            elif reference not in {'smallest', 'largest', 'mean', 'median', 'logmean',
+                                   'fpzip'}:
+                raise ValueError('invalid pickle reference {reference!r}')
 
     except (ValueError, IndexError, TypeError):
-        raise ValueError('invalid pickle reference %s'
-                         % repr(original_references))
+        raise ValueError('invalid pickle reference {original_references!r}')
 
     return references
 
@@ -362,36 +321,32 @@ def _validate_pickle_reference(references):
 ################################################################################
 
 def fpzip_compress(array, digits=16, dtype=np.float64):
-    """Return an fpzip-compressed array plus the number of bits that have been
-    zeroed.
-    """
+    """Return an fpzip-compressed array plus the number of bits that have been zeroed."""
 
     array = np.require(array, dtype=dtype, requirements=['C', 'A', 'W'])
     shape = array.shape
 
     # Determine the precision
-    # The "precision" input to fpzip.compress is not well documented. I found
-    # this: https://github.com/LLNL/fpzip/blob/develop/include/fpzip.h
+    # The "precision" input to fpzip.compress is not well documented. I found this:
+    # https://github.com/LLNL/fpzip/blob/develop/include/fpzip.h
     #
-    # * The library ...
-    # * allows specifying how many bits of precision to retain by truncating
-    # * each floating-point value and discarding the least significant bits; the
-    # * remaining bits are compressed losslessly.  The precision is limited to
-    # * integers 2-32 for floats.  For doubles, precisions 4-64 are supported in
-    # * increments of two bits.  The decompressed data is returned in full
-    # * precision with any truncated bits zeroed.
+    # The library ... allows specifying how many bits of precision to retain by truncating
+    # each floating-point value and discarding the least significant bits; the remaining
+    # bits are compressed losslessly.  The precision is limited to integers 2-32 for
+    # floats. For doubles, precisions 4-64 are supported in increments of two bits.  The
+    # decompressed data is returned in full precision with any truncated bits zeroed.
     #
-    # Experimentation shows that the number of truncated bits is 64-precision
-    # for double precision and 32-precision for single.
+    # Experimentation shows that the number of truncated bits is 64-precision for double
+    # precision and 32-precision for single.
 
     dtype = np.dtype(dtype)
     if dtype.itemsize == 8:
-        zeroed_bits = int((DOUBLE_DIGITS - digits) / LOG10_BIT)
+        zeroed_bits = int((_DOUBLE_DIGITS - digits) / _LOG10_BIT)
         zeroed_bits = min(max(0, zeroed_bits), 64)
         zeroed_bits = 2 * (zeroed_bits // 2)
         precision = 64 - zeroed_bits
     else:
-        zeroed_bits = int((SINGLE_DIGITS - digits) / LOG10_BIT)
+        zeroed_bits = int((_SINGLE_DIGITS - digits) / _LOG10_BIT)
         zeroed_bits = min(max(0, zeroed_bits), 32)
         precision = 32 - zeroed_bits
 
@@ -405,16 +360,15 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
     # Two fpzip exceptions appear often enough to need to be addressed.
     #
     # fpzip.FpzipWriteError: Compression failed. memory buffer overflow
-    #   This appears to be related to arrays with relatively few elements and
-    #   with those elements spread across too many axes. The functioning
-    #   workaround is to reduce the number of axes and try again. Also, the
-    #   value of FPZIP_ENCODING_CUTOFF above appears to be large enough to
-    #   minimize these occurrences.
+    #   This appears to be related to arrays with relatively few elements and with those
+    #   elements spread across too many axes. The functioning workaround is to reduce the
+    #   number of axes and try again. Also, the value of _FPZIP_ENCODING_CUTOFF above
+    #   appears to be large enough to minimize these occurrences.
     #
     # fpzip.FpzipWriteError: Compression failed. precision not supported
-    #   This occurs if the requested precision is too small, or if it is odd
-    #   for double-precision arrays. The workaround is to increase the precision
-    #   and try again.
+    #   This occurs if the requested precision is too small, or if it is odd for
+    #   double-precision arrays. The workaround is to increase the precision and try
+    #   again.
 
     first_exception = None
     initial_precision = precision
@@ -435,13 +389,13 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
             if 'precision not supported' in str(e):
                 if precision == 0:
                     raise first_exception
-                precision += (dtype.itemsize//4)  # add 2 if double, 1 if single
+                precision += (dtype.itemsize//4)    # add 2 if double, 1 if single
 
             # "Compression failed. memory buffer overflow"
             elif 'memory buffer overflow' in str(e):
                 if len(shape) == 1:
                     raise first_exception
-                shape = (-1,) + shape[2:]         # reduce the number of axes
+                shape = (-1,) + shape[2:]           # reduce the number of axes
                 array = array.reshape(shape)
 
             # Unknown exception
@@ -450,16 +404,16 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
 
         else:
             # Raise any warnings
-            if PICKLE_WARNINGS and first_exception is not None:
+            if _PICKLE_WARNINGS and first_exception is not None:
                 if precision != initial_precision:
                     warnings.warn('fpzip.compress increased precision from '
-                                  '%d to %d'
-                                  % (initial_precision, precision))
+                                  f'{initial_precision} to {precision}')
                 if shape != initial_shape:
-                    warnings.warn('fpzip.compress reduced shape from %s to %s'
-                                  % (initial_shape, shape))
+                    warnings.warn('fpzip.compress reduced shape from '
+                                  f'{initial_shape} to {shape}')
 
             return (fpzip_bytes, zeroed_bits)
+
 
 def fpzip_decompress(fpzip_bytes, shape, bits):
     """Return an fpzip-decompressed array with compensation for any compression
@@ -471,26 +425,25 @@ def fpzip_decompress(fpzip_bytes, shape, bits):
     if bits == 0:
         return floats
 
-    # fpzip does lossy compression by zeroing out a specified number of least
-    # significant bits in the mantissa. In practice, this means that, after
-    # decompression, all numbers are systematically closer to zero.
+    # fpzip does lossy compression by zeroing out a specified number of least significant
+    # bits in the mantissa. In practice, this means that, after decompression, all numbers
+    # are systematically closer to zero.
     #
-    # If the number of truncated bits is N, then on average, the integer
-    # mantissas will be closer to zero by (2**N - 1)/2. For example, if two bits
-    # have been zeroed out, then the mean value lost is the average of (0, 1, 2,
-    # 3), which is 1.5. Our solution is to add back a pattern of values that
-    # roughly alternates between 2**(N-1) - 1 and 2**(N-1). For example, if
-    # N == 2, that would be an alternation between 1 and 2; if N == 8, the
-    # alternation would be between 127 and 128.
+    # If the number of truncated bits is N, then on average, the integer mantissas will be
+    # closer to zero by (2**N - 1)/2. For example, if two bits have been zeroed out, then
+    # the mean value lost is the average of (0, 1, 2, 3), which is 1.5. Our solution is to
+    # add back a pattern of values that roughly alternates between 2**(N-1) - 1 and
+    # 2**(N-1). For example, if N == 2, that would be an alternation between 1 and 2; if N
+    # == 8, the alternation would be between 127 and 128.
     #
-    # However, a strict alternation would have very small but systematic affects
-    # on an object with an even number of items, such as a Pair, Quaternion, or
-    # even-sided matrix. So instead, we follow a repeating pattern of 14
-    # offsets. This will only have a systematic affect on an object if the
-    # number of items is a multiple of 14, which is an unlikely case.
+    # However, a strict alternation would have very small but systematic affects on an
+    # object with an even number of items, such as a Pair, Quaternion, or even-sided
+    # matrix. So instead, we follow a repeating pattern of 14 offsets. This will only have
+    # a systematic affect on an object if the number of items is a multiple of 14, which
+    # is an unlikely case.
 
-    # This is a randomly generated sequence of 7 items, either (0,1) or (1,0).
-    BIT_SEQUENCE = np.array([0,1,1,0,0,1,0,1,1,0,1,0,0,1])
+    # This is a randomly generated sequence of 7 items, either (0, 1) or (1, 0).
+    BIT_SEQUENCE = np.array([0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1])
 
     # bits is the number of trailing bits that have been zeroed
     # Create an alternating pattern of integer offsets as discussed above.
@@ -522,12 +475,12 @@ def _encode_one_float_array(values, digits, reference):
     Parameters:
         values (ndarray): Array of floats to encode.
         digits (float): Number of digits to preserve.
-        reference (str or float): One of 'smallest', 'largest', 'mean',
-            'median', 'logmean', 'fpzip', or a number.
+        reference (str or float): One of 'smallest', 'largest', 'mean', 'median',
+            'logmean', 'fpzip', or a number.
 
     Returns:
-        tuple: Encoded array in one of several formats depending on the
-            compression method used.
+        tuple: Encoded array in one of several formats depending on the compression method
+        used.
     """
 
     # Handle fpzip method first
@@ -555,7 +508,7 @@ def _encode_one_float_array(values, digits, reference):
         ref_value = max_value
 
     else:
-        abs_values = np.abs(raveled[raveled != 0.]) # exclude zeros here
+        abs_values = np.abs(raveled[raveled != 0.])     # exclude zeros here
         if reference == 'smallest':
             ref_value = np.min(abs_values)
         elif reference == 'largest':
@@ -580,42 +533,42 @@ def _encode_one_float_array(values, digits, reference):
         return ('float64', shape, bits, fpzip_bytes)
 
     # Sometimes the test reveals that single precision fpzip is best
-    if nbytes == 4 and digits <= SINGLE_DIGITS:
+    if nbytes == 4 and digits <= _SINGLE_DIGITS:
         (fpzip_bytes, bits) = fpzip_compress(values, dtype=np.float32)
         return ('float32', shape, bits, fpzip_bytes)
 
     # Set the offset as the minimum; scale for an unsigned int
     scale_factor = (256. ** nbytes) / span
     scale_factor *= (1. - sys.float_info.epsilon)
-        # We require span * scale_factor to be less than  2**n by just a little
-        # bit, so it truncates to 2**n - 1.
+    # We require span * scale_factor to be less than  2**n by just a little bit, so it
+    # truncates to 2**n - 1.
     new_values = scale_factor * (raveled - minval)
 
     # Select the dtype to encode
-    dtype = 'uint8' if nbytes%2 else 'uint32' if nbytes==4 else 'uint16'
+    dtype = 'uint8' if nbytes % 2 else 'uint32' if nbytes == 4 else 'uint16'
 
     # Convert to contiguous, significant bytes as quickly as possible
     if nbytes in (1, 2, 4):
         bz2_ints = new_values.astype(dtype)
     elif nbytes == 3:
         new_values = new_values.astype('uint32')
-        bz2_ints = new_values.view('uint8').reshape(-1,4)[:,:3].copy()
+        bz2_ints = new_values.view('uint8').reshape(-1, 4)[:, :3].copy()
     elif nbytes == 5:
         new_values = new_values.astype('uint64')
-        bz2_ints = new_values.view('uint8').reshape(-1,8)[:,:nbytes].copy()
+        bz2_ints = new_values.view('uint8').reshape(-1, 8)[:, :nbytes].copy()
     else:   # nbytes == 6
         new_values = new_values.astype('uint64')
-        bz2_ints = new_values.view('uint16').reshape(-1,4)[:,:3].copy()
+        bz2_ints = new_values.view('uint16').reshape(-1, 4)[:, :3].copy()
 
     # To reverse:
     #   values = new_values/scale_factor + minval + 0.5/scale_factor
-    # The last term is to make sure the restored values are not
-    # systematically smaller than they were originally
+    # The last term is to make sure the restored values are not systematically smaller
+    # than they were originally
 
     return ('scaled', shape, dtype, nbytes,
             1./scale_factor, minval + 0.5/scale_factor, bz2.compress(bz2_ints))
 
-#===============================================================================
+
 def _encode_floats(values, rank, digits, reference):
     """Complete encoding of a floating-point array.
 
@@ -651,7 +604,7 @@ def _encode_floats(values, rank, digits, reference):
     item_size = int(np.prod(item))
 
     # Deal with a small object quickly
-    if values.size <= FPZIP_ENCODING_CUTOFF:
+    if values.size <= _FPZIP_ENCODING_CUTOFF:
         array = np.require(values, dtype=np.float64, requirements=['C', 'A'])
         return ('literal', array)
 
@@ -673,7 +626,7 @@ def _encode_floats(values, rank, digits, reference):
 
     # Isolate the leading and trailing items into a 2-D array
     array = values.reshape((-1,) + (item_size,))
-    array = array.swapaxes(0,1)          # item axis first
+    array = array.swapaxes(0, 1)            # item axis first
     array = np.require(array, requirements=['C', 'A'])
 
     encoded = []
@@ -682,7 +635,7 @@ def _encode_floats(values, rank, digits, reference):
 
     return ('items', shape, rank, encoded)
 
-#===============================================================================
+
 def _decode_scaled_uints(encoded):
     """Decode a scaled, compressed array of unsigned integers."""
 
@@ -707,7 +660,7 @@ def _decode_scaled_uints(encoded):
 
     return scale_factor * new_ints.reshape(shape) + offset
 
-#===============================================================================
+
 def _decode_floats(encoded):
     """Complete decoding of a floating-point array."""
 
@@ -746,7 +699,7 @@ def _decode_floats(encoded):
     # Fix the item axes and make contiguous
     return np.moveaxis(values, 0, -1).copy().reshape(shape)
 
-#===============================================================================
+
 def _encode_ints(values):
     """Encode an integer array using BZ2 compression."""
 
@@ -755,14 +708,14 @@ def _encode_ints(values):
 
     return bz2.compress(values)
 
-#===============================================================================
+
 def _decode_ints(values, shape):
     """Decode an integer array using BZ2 decompression."""
 
     bz2_bytes = bz2.decompress(values)
     return np.frombuffer(bz2_bytes, dtype='int').reshape(shape)
 
-#===============================================================================
+
 def _encode_bools(values):
     """Encode a boolean array using packbits + BZ2 compression."""
 
@@ -771,7 +724,7 @@ def _encode_bools(values):
 
     return bz2.compress(np.packbits(values))
 
-#===============================================================================
+
 def _decode_bools(values, shape, size):
     """Decode a boolean array using BZ2 decompression."""
 
@@ -786,34 +739,30 @@ def _decode_bools(values, shape, size):
 ################################################################################
 
 def __getstate__(self):
-    """The state is defined by a dictionary containing most of the Qube
-    attributes.
+    """The state is defined by a dictionary containing most of the Qube attributes.
 
-    "_cache_" is removed.
+    "_cache" is removed.
 
-    "_mask_", and "_values_" are replaced by encodings, as discussed below.
+    "_mask", and "_values" are replaced by encodings, as discussed below.
 
     "PICKLE_VERSION" is added, with a value defined by the current version.
 
-    New attribute "MASK_ENCODING" is a list of the steps that have been
-    applied to the mask. Each item in the list is a tuple, one of:
-      ('CORNERS', corners)
-          where corners is the tuple returned by Qube._find_corners()
-      ('BOOL', shape, size)
-          where the mask has been converted to packed bits and BZ2-compressed;
-          shape is its final shape; size is its final size.
+    New attribute "MASK_ENCODING" is a list of the steps that have been applied to the
+    mask. Each item in the list is a tuple, one of:
+
+    * ('CORNERS', corners), where corners is the tuple returned by Qube._find_corners()
+    * ('BOOL', shape, size), where the mask has been converted to packed bits and
+      BZ2-compressed; shape is its final shape; size is its final size.
+
     The list will be empty if no compression has been applied.
 
-    New attribute "VALS_ENCODING" is a list of the steps that have been
-    applied to the values. Each item in the list is a tuple, one of:
-      ('ALL_MASKED',)     if the object is fully masked, so no values are
-                          saved.
-      ('ANTIMASKED',)     if the antimask has been applied.
-      ('FLOAT', digits, reference)
-                          for any floating-point compression performed.
-      ('BOOL', shape, size)
-                          if packbits plus BZ2 compression was performed.
-      ('INT', shape)      if BZ2 compression of integers was performed.
+    New attribute "VALS_ENCODING" is a list of the steps that have been applied to the
+    values. Each item in the list is a tuple, one of:
+    * ('ALL_MASKED',) if the object is fully masked, so no values are saved.
+    * ('ANTIMASKED',) if the antimask has been applied.
+    * ('FLOAT', digits, reference) for any floating-point compression performed.
+    * ('BOOL', shape, size) if packbits plus BZ2 compression was performed.
+    * ('INT', shape) if BZ2 compression of integers was performed.
     """
 
     # Start with a shallow clone; save derivatives for later
@@ -827,39 +776,38 @@ def __getstate__(self):
     _check_pickle_digits(clone)
 
     # For a single value, nothing changes
-    if isinstance(self._values_, (numbers.Real, np.bool_)):
+    if isinstance(self._values, (numbers.Real, np.bool_)):
         antimask = None             # used below
 
     # For a fully masked object, remove the values
-    elif np.all(self._mask_):
-        clone._mask_ = True         # convert to bool if it's an array
-        clone._values_ = None
+    elif np.all(self._mask):
+        clone._mask = True         # convert to bool if it's an array
+        clone._values = None
         clone.VALS_ENCODING.append(('ALL_MASKED',))
         antimask = None
 
-    # Otherwise, _values_ is an array and not fully masked
+    # Otherwise, _values is an array and not fully masked
     else:
 
         ############################
         # Encode the mask array
         ############################
 
-        if not np.any(self._mask_):
-            clone._mask_ = False    # convert to bool if it's an array
+        if not np.any(self._mask):
+            clone._mask = False    # convert to bool if it's an array
 
-        mask_shape = np.shape(clone._mask_)
+        mask_shape = np.shape(clone._mask)
 
         if mask_shape:
             # If any "edges" of the mask array are all True, save the corners
             # and reduce the mask size
             corners = self.corners
-            if Qube._shape_from_corners(corners) != self._shape_:
+            if Qube._shape_from_corners(corners) != self._shape:
                 clone.MASK_ENCODING.append(('CORNERS', corners))
-                clone._mask_ = self._mask_[self._slicer].copy()
+                clone._mask = self._mask[self._slicer].copy()
 
-            clone.MASK_ENCODING.append(('BOOL', clone._mask_.shape,
-                                                clone._mask_.size))
-            clone._mask_ = _encode_bools(clone._mask_)
+            clone.MASK_ENCODING.append(('BOOL', clone._mask.shape, clone._mask.size))
+            clone._mask = _encode_bools(clone._mask)
 
         ############################
         # Encode the values array
@@ -869,7 +817,7 @@ def __getstate__(self):
         # At this point, the values array is always 2-D.
         if mask_shape:
             antimask = self.antimask
-            clone._values_ = clone._values_[antimask]
+            clone._values = clone._values[antimask]
             clone.VALS_ENCODING.append(('ANTIMASKED',))
         else:
             antimask = None
@@ -882,23 +830,21 @@ def __getstate__(self):
             digits = clone._pickle_digits[0]
             reference = clone._pickle_reference[0]
             clone.VALS_ENCODING.append(('FLOAT', digits, reference))
-            clone._values_ = _encode_floats(clone._values_,
-                                                 rank=len(self._item_),
-                                                 digits=digits,
-                                                 reference=reference)
+            clone._values = _encode_floats(clone._values, rank=len(self._item),
+                                           digits=digits, reference=reference)
 
         # Integers use straight BZ2-encoding
         elif dtype == 'int':
-            shape = clone._values_.shape
+            shape = clone._values.shape
             clone.VALS_ENCODING.append(('INT', shape))
-            clone._values_ = _encode_ints(clone._values_)
+            clone._values = _encode_ints(clone._values)
 
         # Booleans use BZ2-encoding of the packed bits
         else:
-            shape = clone._values_.shape
-            size = clone._values_.size
+            shape = clone._values.shape
+            size = clone._values.size
             clone.VALS_ENCODING.append(('BOOL', shape, size))
-            clone._values_ = _encode_bools(clone._values_)
+            clone._values = _encode_bools(clone._values)
 
     ############################
     # Process the derivatives
@@ -906,14 +852,14 @@ def __getstate__(self):
 
     # We replace the each derivative by a tuple:
     #   (class, __getstate__ value).
-    # However, we first modify each derivative, applying the antimask, if any,
-    # and removing its own mask. This avoids the duplication of masks.
+    # However, we first modify each derivative, applying the antimask, if any, and
+    # removing its own mask. This avoids the duplication of masks.
 
-    if self._derivs_:
+    if self._derivs:
         deriv_digits = 2 * clone._pickle_digits[1:]
         deriv_reference = 2 * clone._pickle_reference[1:]
 
-        for key, deriv in self._derivs_.items():
+        for key, deriv in self._derivs.items():
             new_deriv = deriv.clone(recursive=False)
             if not hasattr(new_deriv, '_pickle_digits'):
                 new_deriv._pickle_digits = deriv_digits
@@ -923,23 +869,33 @@ def __getstate__(self):
             if antimask is None:
                 new_deriv = deriv
             else:
-                new_deriv._values_ = deriv._values_[antimask]
-                new_deriv._mask_ = False
+                new_deriv._values = deriv._values[antimask]
+                new_deriv._mask = False
 
-            clone._derivs_[key] = (type(deriv), new_deriv.__getstate__())
+            clone._derivs[key] = (type(deriv), new_deriv.__getstate__())
 
     return clone.__dict__
 
-#===============================================================================
+
 def __setstate__(self, state):
+
+    # Handle renamed keys
+    if '_units_' in state:
+        state['_unit'] = state['_units_']
+        del state['_units_']
+        keys = list(state.keys())
+        for key in keys:
+            if key.endswith('_'):
+                state[key[:-1]] = state[key]
+                del state[key]
 
     self.__dict__ = state
 
-    if PICKLE_DEBUG:
+    if _PICKLE_DEBUG:
         mask_encoding = list(self.MASK_ENCODING)
         vals_encoding = list(self.VALS_ENCODING)
-        self.ENCODED_MASK = self._mask_
-        self.ENCODED_VALS = self._values_
+        self.ENCODED_MASK = self._mask
+        self.ENCODED_VALS = self._values
     else:
         mask_encoding = self.MASK_ENCODING
         vals_encoding = self.VALS_ENCODING
@@ -958,23 +914,23 @@ def __setstate__(self, state):
 
         if method == 'BOOL':
             (_, shape, size) = encoding
-            self._mask_ = _decode_bools(self._mask_, shape, size)
+            self._mask = _decode_bools(self._mask, shape, size)
             mask_is_writable = True
 
         elif method == 'CORNERS':
             (_, corners) = encoding
-            new_mask = np.ones(self._shape_, dtype='bool')
+            new_mask = np.ones(self._shape, dtype='bool')
             slicer = Qube._slicer_from_corners(corners)
-            new_mask[slicer] = self._mask_
-            self._mask_ = new_mask
+            new_mask[slicer] = self._mask
+            self._mask = new_mask
             mask_is_writable = True
 
         else:
             raise ValueError('unrecognized mask encoding: ' + str(encoding[0]))
 
     # Define the antimask
-    if np.shape(self._mask_):
-        antimask = np.logical_not(self._mask_)
+    if np.shape(self._mask):
+        antimask = np.logical_not(self._mask)
     else:
         antimask = None
 
@@ -986,32 +942,32 @@ def __setstate__(self, state):
 
         if method == 'INT':
             (_, shape) = encoding
-            self._values_ = _decode_ints(self._values_, shape)
+            self._values = _decode_ints(self._values, shape)
 
         elif method == 'BOOL':
             (_, shape, size) = encoding
-            self._values_ = _decode_bools(self._values_, shape, size)
+            self._values = _decode_bools(self._values, shape, size)
             values_is_writable = True
 
         elif method == 'FLOAT':
-            self._values_ = _decode_floats(self._values_)
+            self._values = _decode_floats(self._values)
             values_is_writable = True
 
         elif method == 'ANTIMASKED':
             if antimask is None:
                 raise ValueError('missing antimask for decoding')
-            new_values = np.empty(self._shape_ + self._item_,
-                                  dtype=Qube._dtype(self._default_))
-            new_values[...] = self._default_
-            new_values[antimask] = self._values_
-            self._values_ = new_values
+            new_values = np.empty(self._shape + self._item,
+                                  dtype=Qube._dtype(self._default))
+            new_values[...] = self._default
+            new_values[antimask] = self._values
+            self._values = new_values
             values_is_writable = True
 
         elif method == 'ALL_MASKED':
-            new_values = np.empty(self._shape_ + self._item_,
-                                  dtype=Qube._dtype(self._default_))
-            new_values[...] = self._default_
-            self._values_ = new_values
+            new_values = np.empty(self._shape + self._item,
+                                  dtype=Qube._dtype(self._default))
+            new_values[...] = self._default
+            self._values = new_values
             values_is_writable = True
 
         else:
@@ -1021,33 +977,33 @@ def __setstate__(self, state):
     # Set readonly status
     ############################
 
-    if self._readonly_:
+    if self._readonly:
         self.as_readonly()
     else:
         if not mask_is_writable:
-            self._mask_ = self._mask_.copy()
+            self._mask = self._mask.copy()
         if not values_is_writable:
-            self._values_ = self._values_.copy()
+            self._values = self._values.copy()
 
     ############################
     # Expand the derivatives
     ############################
 
-    for key, deriv_tuple in self._derivs_.items():
+    for key, deriv_tuple in self._derivs.items():
         (class_, deriv) = deriv_tuple
         new_deriv = Qube.__new__(class_)
         new_deriv.__setstate__(deriv)
 
         if antimask is not None:
-            new_values = np.empty(self._shape_ + new_deriv._item_)
-            new_values[...] = new_deriv._default_
-            new_values[antimask] = new_deriv._values_
-            new_deriv._values_ = new_values
-            new_deriv._mask_ = self._mask_
+            new_values = np.empty(self._shape + new_deriv._item)
+            new_values[...] = new_deriv._default
+            new_values[antimask] = new_deriv._values
+            new_deriv._values = new_values
+            new_deriv._mask = self._mask
 
-        if deriv['_readonly_']:
+        if deriv['_readonly']:
             new_deriv.as_readonly()
 
         self.insert_deriv(key, new_deriv)
 
-################################################################################
+##########################################################################################

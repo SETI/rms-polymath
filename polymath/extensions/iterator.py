@@ -4,13 +4,13 @@
 
 import itertools
 import numpy as np
-import sys
+
 
 class QubeIterator(object):
     """Provide iteration across the first axis of a Qube object.
 
-    This iterator allows iteration over elements along the first axis of a Qube
-    object, similar to how NumPy arrays can be iterated.
+    This iterator allows iteration over elements along the first axis of a Qube object,
+    similar to how NumPy arrays can be iterated.
 
     Attributes:
         obj (list or Qube): The object to iterate over.
@@ -24,12 +24,13 @@ class QubeIterator(object):
         Parameters:
             obj (Qube): The Qube object to iterate over.
         """
-        if not obj._shape_:
+
+        if not obj._shape:
             self.obj = [obj]
             self.stop = 1
         else:
             self.obj = obj
-            self.stop = obj._shape_[0]
+            self.stop = obj._shape[0]
 
         self.index = -1
 
@@ -39,6 +40,7 @@ class QubeIterator(object):
         Returns:
             QubeIterator: This iterator instance.
         """
+
         self.index = -1
         return self
 
@@ -51,28 +53,19 @@ class QubeIterator(object):
         Raises:
             StopIteration: When iteration is complete.
         """
+
         self.index += 1
         if self.index >= self.stop:
             raise StopIteration
 
         return self.obj[self.index]
 
-    # Python 2 support
-    if sys.version_info.major < 3:
-        def next(self):
-            """Return the next item in the iteration (Python 2 compatibility).
-
-            Returns:
-                Qube: The next element in the iteration.
-            """
-            return QubeIterator.__next__(self)
-
 
 class QubeNDIterator(object):
     """Provide iteration across all axes of a Qube object.
 
-    This iterator allows iteration over all elements in a multi-dimensional Qube
-    object, returning both the index tuple and the value at that index.
+    This iterator allows iteration over all elements in a multi-dimensional Qube object,
+    returning both the index tuple and the value at that index.
 
     Attributes:
         obj (ndarray): The object to iterate over.
@@ -86,12 +79,13 @@ class QubeNDIterator(object):
         Parameters:
             obj (Qube): The Qube object to iterate over.
         """
-        if not obj._shape_:
+
+        if not obj._shape:
             self.obj = np.array([obj], dtype='object')
             self.shape = (1,)
         else:
             self.obj = obj
-            self.shape = obj._shape_
+            self.shape = obj._shape
 
         self.iterator = None
 
@@ -101,6 +95,7 @@ class QubeNDIterator(object):
         Returns:
             QubeNDIterator: This iterator instance.
         """
+
         self.iterator = itertools.product(*[range(s) for s in self.shape])
         return self
 
@@ -113,19 +108,9 @@ class QubeNDIterator(object):
         Raises:
             StopIteration: When iteration is complete.
         """
+
         indx = self.iterator.__next__()
         return (indx, self.obj[indx])
-
-    # Python 2 support
-    if sys.version_info.major < 3:
-        def next(self):
-            """Return the next item in the iteration (Python 2 compatibility).
-
-            Returns:
-                tuple: A tuple containing (index_tuple, item_at_index).
-            """
-            indx = self.iterator.next()
-            return (indx, self.obj[indx])
 
 
 def __iter__(self):
@@ -134,7 +119,9 @@ def __iter__(self):
     Returns:
         QubeIterator: An iterator that iterates over the first axis of the object.
     """
+
     return QubeIterator(obj=self)
+
 
 def ndenumerate(self):
     """Iterate across all axes of this object.
@@ -145,6 +132,7 @@ def ndenumerate(self):
     Returns:
         QubeNDIterator: An iterator yielding (index_tuple, item_at_index) pairs.
     """
+
     return QubeNDIterator(obj=self)
 
 ################################################################################
