@@ -37,6 +37,14 @@ class Vector3(Vector):
 
         Returns:
             Vector3: The converted Vector3 object.
+
+        Notes:
+            Conversion is possible from: Vector objects with 3 components, 1x3 or 3x1
+            Matrix objects (which are flattened to Vector3), arrays/list/tuples with 3
+            elements, or other Qube objects with compatible shapes. For Qube objects with
+            rank > 1 where the first numerator dimension is 3, the numerator items are
+            split to create a Vector3. Raises ValueError if the input cannot be converted
+            to a 3-component vector.
         """
 
         if isinstance(arg, Vector3):
@@ -80,6 +88,38 @@ class Vector3(Vector):
             that matches the denominator shape of the other arguments.
         """
 
+        # Handle None values by converting them to zero Scalars
+        args = [x, y, z]
+        non_none_args = [arg for arg in args if arg is not None]
+
+        if len(non_none_args) == 0:
+            # All are None, create zero Scalars
+            x = Scalar(0.)
+            y = Scalar(0.)
+            z = Scalar(0.)
+        else:
+            # Convert non-None args to Scalars to determine denominator shape
+            scalars = []
+            for arg in non_none_args:
+                scalars.append(Scalar.as_scalar(arg, recursive=recursive))
+
+            # Find the denominator shape from non-None arguments
+            # Broadcast to find common denominator
+            if len(scalars) > 1:
+                scalars = Qube.broadcast(*scalars, recursive=recursive)
+            example_scalar = scalars[0]
+
+            # Create a zero Scalar matching the denominator shape of the example
+            zero_scalar = example_scalar.zero()
+
+            # Replace None values with zero Scalars matching the denominator
+            if x is None:
+                x = zero_scalar
+            if y is None:
+                y = zero_scalar
+            if z is None:
+                z = zero_scalar
+
         return Qube.from_scalars(x, y, z, recursive=recursive, readonly=readonly,
                                  classes=[Vector3])
 
@@ -90,7 +130,8 @@ class Vector3(Vector):
         Parameters:
             ra (Scalar): Right ascension in radians.
             dec (Scalar): Declination in radians.
-            length (Scalar, optional): Length of the vector.
+            length (Scalar, optional): Length of the vector. Defaults to 1.0, producing a
+                unit vector.
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
                 in ra, dec and length.
@@ -100,7 +141,9 @@ class Vector3(Vector):
 
         Notes:
             Input arguments need not have the same shape, but it must be possible to cast
-            them to the same shape.
+            them to the same shape. If `length` is provided and not equal to 1.0, the
+            resulting vector is scaled by that length. The default length of 1.0 produces
+            a unit vector.
         """
 
         ra  = Scalar.as_scalar(ra, recursive=recursive)
@@ -125,8 +168,10 @@ class Vector3(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            tuple: (**ra**, **dec**, **length**) where all three are Scalars; **ra** and
-            **dec** are in radians.
+            tuple: A tuple `(ra, dec, length)` where all three are Scalars. **ra** and
+            **dec** are in radians. **ra** is the right ascension (azimuthal angle in the
+            XY plane), **dec** is the declination (elevation angle from the XY plane), and
+            **length** is the magnitude of the vector.
         """
 
         (x, y, z) = self.to_scalars(recursive=recursive)
@@ -143,8 +188,10 @@ class Vector3(Vector):
 
         Parameters:
             radius (Scalar): Distance from the cylindrical axis.
-            longitude (Scalar): Longitude in radians. Zero is along the x-axis.
-            z (Scalar, optional): Distance above/below the equatorial plane.
+            longitude (Scalar): Longitude in radians. Zero is along the x-axis, with
+                positive values measured counterclockwise toward the y-axis.
+            z (Scalar, optional): Distance above/below the equatorial plane (positive z
+                is above the XY plane).
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
                 in radius, longitude and z.
@@ -154,7 +201,8 @@ class Vector3(Vector):
 
         Notes:
             Input arguments need not have the same shape, but it must be possible to cast
-            them to the same shape.
+            them to the same shape. The coordinate system uses: x-axis as reference
+            (longitude=0), y-axis at longitude=π/2, z-axis perpendicular to the xy-plane.
         """
 
         radius  = Scalar.as_scalar(radius, recursive=recursive)
@@ -173,8 +221,10 @@ class Vector3(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            tuple: (**radius**, **longitude**, **z**), where all three are Scalars and
-            **longitude** is in radians.
+            tuple: A tuple `(radius, longitude, z)` where all three are Scalars.
+            **radius** is the distance from the cylindrical axis (sqrt(x² + y²)),
+            **longitude** is in radians (measured from the x-axis toward the y-axis,
+            range [0, 2π)), and **z** is the distance above/below the equatorial plane.
         """
 
         (x, y, z) = self.to_scalars(recursive=recursive)
@@ -192,6 +242,8 @@ class Vector3(Vector):
 
         Returns:
             Scalar: The longitude in radians, measured from the X-axis toward the Y-axis.
+            The longitude is returned in the range [0, 2π) radians, measured
+            counterclockwise from the positive X-axis in the XY plane.
         """
 
         x = self.to_scalar(0, recursive=recursive)
@@ -206,7 +258,9 @@ class Vector3(Vector):
 
         Returns:
             Scalar: The latitude in radians, measured from the equatorial plane toward the
-            Z-axis.
+            Z-axis. The latitude is returned in the range [-π/2, π/2] radians, where
+            positive values are above the equatorial plane (positive Z) and negative values
+            are below.
         """
 
         z = self.to_scalar(2, recursive=recursive)
@@ -246,7 +300,10 @@ class Vector3(Vector):
             Vector3: The rotated vector.
 
         Notes:
-            If angle is None, the pole vector's magnitude is used as the rotation angle.
+            If `angle` is None, the rotation angle is determined from the pole vector's
+            magnitude using `arcsin(magnitude)`. This allows the pole vector to encode
+            both direction and angle. The rotation follows the right-hand rule: a positive
+            angle rotates counterclockwise when viewed from the direction of the pole vector.
         """
 
         pole = Vector3.as_vector3(pole, recursive=recursive)
@@ -278,7 +335,11 @@ class Vector3(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            tuple: (**longitude_offset**, **latitude_offset**) angles in radians.
+            tuple: A tuple `(longitude_offset, latitude_offset)` where both are Scalars
+            in radians. These are the angular offsets needed to rotate from this vector
+            to the target vector. The first rotation is about the Y-axis (longitude_offset),
+            followed by a rotation about the X-axis (latitude_offset). Positive angles
+            follow the right-hand rule.
         """
 
         vector = Vector3.as_vector3(vector, recursive=recursive)
