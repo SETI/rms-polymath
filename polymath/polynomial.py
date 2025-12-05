@@ -393,7 +393,10 @@ class Polynomial(Vector):
             # Explicitly identify the coefficient axis position
             coef_axis = -self._drank - 1
             # Convert to positive index for shape access
-            coef_axis_pos = coef_axis if coef_axis >= 0 else len(self._values.shape) + coef_axis
+            if coef_axis >= 0:
+                coef_axis_pos = coef_axis
+            else:
+                coef_axis_pos = len(self._values.shape) + coef_axis
             nself = self._values.shape[coef_axis_pos]
             narg = arg._values.shape[coef_axis_pos]
 
@@ -417,7 +420,8 @@ class Polynomial(Vector):
                     self_indx = (Ellipsis, i) + suffix
                     arg_indx = (Ellipsis, j) + suffix
                     result_indx = (Ellipsis, k) + suffix
-                    new_values[result_indx] += self._values[self_indx] * arg._values[arg_indx]
+                    new_values[result_indx] += (self._values[self_indx] *
+                                                arg._values[arg_indx])
 
             result = Polynomial(new_values, new_mask, derivs={},
                                 unit=Unit.mul_units(self._unit, arg._unit))
@@ -637,15 +641,18 @@ class Polynomial(Vector):
                             if dvalue.order == 0:
                                 dvalue_tail = dvalue._drank * (slice(None),)
                                 if dvalue_tail:
-                                    dvalue_const = dvalue._values[(Ellipsis, 0) + dvalue_tail]
+                                    dvalue_const = (dvalue._values[(Ellipsis, 0) +
+                                                                   dvalue_tail])
                                 else:
                                     dvalue_const = dvalue._values[..., 0]
                                 deriv_derivs[dkey] = Scalar(dvalue_const, dvalue._mask,
-                                                            derivs={}, unit=dvalue._unit)
+                                                            derivs={},
+                                                            unit=dvalue._unit)
                             else:
-                                deriv_derivs[dkey] = Scalar.as_scalar(dvalue.eval(0., recursive=False))
-                    derivs[key] = Scalar(deriv_const, deriv._mask, derivs=deriv_derivs,
-                                        unit=deriv._unit)
+                                deriv_derivs[dkey] = Scalar.as_scalar(
+                                    dvalue.eval(0., recursive=False))
+                    derivs[key] = Scalar(deriv_const, deriv._mask,
+                                         derivs=deriv_derivs, unit=deriv._unit)
 
                 # Use example= to copy properties, but still need arg for the values
                 return Scalar(const_values, mask=None, derivs=derivs, example=self)
@@ -805,7 +812,7 @@ class Polynomial(Vector):
             # Scalar case - check if roots are equal
             for k in range(1, self.order):
                 if (root_values[k] == root_values[k - 1] and
-                    not root_mask):
+                        not root_mask):
                     root_mask = True
                     break
 

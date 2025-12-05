@@ -211,8 +211,8 @@ class Pair(Vector):
                 ignore.
             upper (Pair or None): Coordinates of the upper limit (inclusive). None or a
                 masked value to ignore.
-            remask (bool, optional): True to keep the mask; False to replace the values but
-                make them unmasked.
+            remask (bool, optional): True to keep the mask; False to replace the
+                values but make them unmasked.
 
         Returns:
             Pair: A new Pair with values clipped to the specified limits.

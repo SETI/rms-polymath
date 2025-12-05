@@ -6,7 +6,7 @@
 import numpy as np
 import unittest
 
-from polymath import Scalar, Vector, Polynomial
+from polymath import Vector, Polynomial
 
 
 class Test_Polynomial_Arithmetic(unittest.TestCase):

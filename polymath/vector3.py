@@ -257,10 +257,10 @@ class Vector3(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            Scalar: The latitude in radians, measured from the equatorial plane toward the
-            Z-axis. The latitude is returned in the range [-π/2, π/2] radians, where
-            positive values are above the equatorial plane (positive Z) and negative values
-            are below.
+            Scalar: The latitude in radians, measured from the equatorial plane toward
+            the Z-axis. The latitude is returned in the range [-π/2, π/2] radians, where
+            positive values are above the equatorial plane (positive Z) and negative
+            values are below.
         """
 
         z = self.to_scalar(2, recursive=recursive)
@@ -302,8 +302,9 @@ class Vector3(Vector):
         Notes:
             If `angle` is None, the rotation angle is determined from the pole vector's
             magnitude using `arcsin(magnitude)`. This allows the pole vector to encode
-            both direction and angle. The rotation follows the right-hand rule: a positive
-            angle rotates counterclockwise when viewed from the direction of the pole vector.
+            both direction and angle. The rotation follows the right-hand rule: a
+            positive angle rotates counterclockwise when viewed from the direction of
+            the pole vector.
         """
 
         pole = Vector3.as_vector3(pole, recursive=recursive)
@@ -337,9 +338,9 @@ class Vector3(Vector):
         Returns:
             tuple: A tuple `(longitude_offset, latitude_offset)` where both are Scalars
             in radians. These are the angular offsets needed to rotate from this vector
-            to the target vector. The first rotation is about the Y-axis (longitude_offset),
-            followed by a rotation about the X-axis (latitude_offset). Positive angles
-            follow the right-hand rule.
+            to the target vector. The first rotation is about the Y-axis
+            (longitude_offset), followed by a rotation about the X-axis
+            (latitude_offset). Positive angles follow the right-hand rule.
         """
 
         vector = Vector3.as_vector3(vector, recursive=recursive)

@@ -202,7 +202,6 @@ class Test_Pair(unittest.TestCase):
 
         # Test from_scalars with None and n-D scalars
         x_nd = Scalar([[1., 2.], [3., 4.]], drank=1)
-        y_nd = Scalar([[5., 6.], [7., 8.]], drank=1)
         p22_none_nd = Pair.from_scalars(x_nd, None)
         self.assertEqual(p22_none_nd.shape, (2,))
         self.assertEqual(p22_none_nd.denom, (2,))  # Should match the denominator of x_nd

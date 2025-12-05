@@ -6,7 +6,7 @@
 import numpy as np
 import unittest
 
-from polymath import Scalar, Vector, Polynomial
+from polymath import Vector, Polynomial
 
 
 class Test_Polynomial_Basic(unittest.TestCase):
@@ -133,6 +133,7 @@ class Test_Polynomial_Basic(unittest.TestCase):
         v_deriv = Vector([0., 1.])
         v_with_deriv.insert_deriv('t', v_deriv)
         # Create a subclass to test the type check
+
         class PolySubclass(Polynomial):
             pass
         p_sub = PolySubclass(v_with_deriv)
@@ -179,4 +180,3 @@ class Test_Polynomial_Basic(unittest.TestCase):
         self.assertEqual(type(v_with_deriv.d_dt), Vector)
 
 ##########################################################################################
-
