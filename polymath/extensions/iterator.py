@@ -6,7 +6,7 @@ import itertools
 import numpy as np
 
 
-class QubeIterator(object):
+class _QubeIterator:
     """Provide iteration across the first axis of a Qube object.
 
     This iterator allows iteration over elements along the first axis of a Qube object,
@@ -61,7 +61,7 @@ class QubeIterator(object):
         return self.obj[self.index]
 
 
-class QubeNDIterator(object):
+class _QubeNDIterator:
     """Provide iteration across all axes of a Qube object.
 
     This iterator allows iteration over all elements in a multi-dimensional Qube object,
@@ -113,26 +113,26 @@ class QubeNDIterator(object):
         return (indx, self.obj[indx])
 
 
-def __iter__(self):
-    """Return an iterator over the first axis of this object.
+class QubeIterator:
+    def __iter__(self):
+        """Return an iterator over the first axis of this object.
 
-    Returns:
-        QubeIterator: An iterator that iterates over the first axis of the object.
-    """
+        Returns:
+            QubeIterator: An iterator that iterates over the first axis of the object.
+        """
 
-    return QubeIterator(obj=self)
+        return _QubeIterator(obj=self)
 
+    def ndenumerate(self):
+        """Iterate across all axes of this object.
 
-def ndenumerate(self):
-    """Iterate across all axes of this object.
+        This method provides an iterator that returns tuples containing the index
+        and the corresponding item at that index.
 
-    This method provides an iterator that returns tuples containing the index
-    and the corresponding item at that index.
+        Returns:
+            QubeNDIterator: An iterator yielding (index_tuple, item_at_index) pairs.
+        """
 
-    Returns:
-        QubeNDIterator: An iterator yielding (index_tuple, item_at_index) pairs.
-    """
-
-    return QubeNDIterator(obj=self)
+        return _QubeNDIterator(obj=self)
 
 ################################################################################

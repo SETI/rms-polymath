@@ -504,8 +504,6 @@ from polymath.unit       import Unit
 from polymath.vector     import Vector
 from polymath.vector3    import Vector3
 
-import polymath.extensions
-
 try:
     from ._version import __version__
 except ImportError:                         # pragma nocover

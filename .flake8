@@ -36,6 +36,9 @@ per-file-ignores =
     # E302 Expected 2 blank lines, found 0
     pickler.py: E302
 
+    # E501 line too long (94 > 90 characters)
+    polymath/extensions/*.py: E501
+
     # E111 Indentation is not a multiple of four
     # E231 Missing whitespace after ',', ';', or ':'
     tests/test_qube_getstate.py: E111, E231

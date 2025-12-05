@@ -7,8 +7,22 @@ import numbers
 
 from polymath.unit import Unit
 
+from polymath.extensions.broadcaster import QubeBroadcaster
+from polymath.extensions.indexer import QubeIndexer
+from polymath.extensions.item_ops import QubeItemOps
+from polymath.extensions.iterator import QubeIterator
+from polymath.extensions.mask_ops import QubeMaskOps
+from polymath.extensions.math_ops import QubeMathOps
+from polymath.extensions.pickler import QubePickler
+from polymath.extensions.shaper import QubeShaper
+from polymath.extensions.shrinker import QubeShrinker
+from polymath.extensions.tvl import QubeTVL
+from polymath.extensions.vector_ops import QubeVectorOps
 
-class Qube(object):
+
+class Qube(QubeBroadcaster, QubeIndexer, QubeItemOps, QubeIterator,
+           QubeMaskOps, QubeMathOps, QubePickler, QubeShaper,
+           QubeShrinker, QubeTVL, QubeVectorOps):
     """The base class for all PolyMath subclasses.
 
     The PolyMath subclasses, e.g., Scalar, Vector3, Matrix3, etc., define one or more
