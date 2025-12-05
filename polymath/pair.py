@@ -2,7 +2,6 @@
 # polymath/pair.py: Pair subclass of PolyMath Vector
 ##########################################################################################
 
-from __future__ import division
 import numpy as np
 import numbers
 

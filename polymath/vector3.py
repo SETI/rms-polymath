@@ -2,7 +2,6 @@
 # polymath/vector3.py: Vector3 subclass of PolyMath Vector
 ##########################################################################################
 
-from __future__ import division
 import numpy as np
 import numbers
 

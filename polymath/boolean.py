@@ -2,7 +2,6 @@
 # polymath/boolean.py: Boolean subclass of PolyMath base class
 ##########################################################################################
 
-from __future__ import division
 import numpy as np
 
 from polymath.qube import Qube

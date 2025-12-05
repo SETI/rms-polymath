@@ -2,7 +2,6 @@
 # polymath/matrix.py: Matrix subclass ofse PolyMath base class
 ##########################################################################################
 
-from __future__ import division, print_function
 import numpy as np
 import warnings
 
