@@ -471,7 +471,7 @@ def _limit_from_qube(self, limit, masked, op):
     if not np.any(limit._mask):
         return vals
 
-    mask = np.reshape(limit.mask, limit._mask.shape + self._rank * (1,))
+    mask = np.reshape(limit._mask, limit._mask.shape + self._rank * (1,))
     mask = np.broadcast_to(mask, vals.shape)
     vals = vals.copy()
     vals[mask] = masked

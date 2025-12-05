@@ -283,7 +283,7 @@ def _validate_pickle_digits(digits, reference):
             new_digits.append(digit)
 
     except (ValueError, IndexError, TypeError):
-        raise ValueError('invalid pickle digits: ' + repr(original_digits))
+        raise ValueError('invalid pickle digits: ' + repr(original_digits)) from None
 
     return tuple(new_digits)
 
@@ -291,7 +291,7 @@ def _validate_pickle_digits(digits, reference):
 def _validate_pickle_reference(references):
     """Validate and return the pickle reference values."""
 
-    original_references = references    # Flake8 thinks this variable is unused # noqa
+    original_references = references
 
     if references is None:
         references = 'fpzip'
@@ -309,10 +309,10 @@ def _validate_pickle_reference(references):
                 pass
             elif reference not in {'smallest', 'largest', 'mean', 'median', 'logmean',
                                    'fpzip'}:
-                raise ValueError('invalid pickle reference {reference!r}')
+                raise ValueError(f'invalid pickle reference {reference!r}')
 
     except (ValueError, IndexError, TypeError):
-        raise ValueError('invalid pickle reference {original_references!r}')
+        raise ValueError(f'invalid pickle reference {original_references!r}')
 
     return references
 

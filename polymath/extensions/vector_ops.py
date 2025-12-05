@@ -134,7 +134,7 @@ def _check_axis(arg, axis, op):
         try:
             _ = selections[i]
         except IndexError:
-            raise IndexError(f'axis is out of range ({-arg._rank},{arg._rank}) in '
+            raise IndexError(f'axis is out of range ({-arg._ndims},{arg._ndims}) in '
                              f'{type(arg)}.{op}: {i}')
 
         if selections[i]:
@@ -163,6 +163,8 @@ def _zero_sized_result(self, axis):
             indx[i] = 0
         else:
             indx[i] = 0
+    else:
+        indx[axis] = 0
 
     return self[tuple(indx)]
 
