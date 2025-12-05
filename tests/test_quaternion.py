@@ -486,12 +486,6 @@ class Test_Quaternion(unittest.TestCase):
         q3 = q1 * q2
         self.assertTrue('t' in q3.derivs)
 
-        # Test error case: both have denominators
-        q1 = Quaternion(np.random.randn(4, 3), drank=1)
-        q2 = Quaternion(np.random.randn(4, 3), drank=1)
-        # This should raise ValueError, but let's check the behavior
-        # Actually, the docstring says it raises ValueError, but let's test it
-
         ##################################################################################
         # __rmul__(arg, recursive=True) - right multiplication
         ##################################################################################

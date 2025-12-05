@@ -661,7 +661,7 @@ class Test_Matrix3(unittest.TestCase):
                     normal_state = m_test.__getstate__experimental()
                     m_new.__setstate__experimental(normal_state)
                     self.assertEqual(type(m_new), Matrix3)
-                except (AttributeError, KeyError, TypeError) as e:
+                except (AttributeError, KeyError, TypeError):
                     # Some states might not work, that's okay
                     pass
 

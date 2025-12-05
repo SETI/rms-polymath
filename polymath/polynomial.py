@@ -258,21 +258,21 @@ class Polynomial(Vector):
             # Pad self in-place by resizing _values
             new_values = np.zeros(self._shape + (max_order+1,))
             new_values[..., -self.order-1:] = self._values
-            self._values = new_values
-            # Update internal attributes to reflect new item shape
-            full_shape = np.shape(self._values)
-            dd = len(full_shape) - self._drank
-            nn = dd - self._nrank
-            self._denom = full_shape[dd:]
-            self._numer = full_shape[nn:dd]
-            self._item = full_shape[nn:]
-            self._shape = full_shape[:nn]
-            self._ndims = len(self._shape)
-            self._isize = int(np.prod(self._item))
-            self._nsize = int(np.prod(self._numer))
-            self._dsize = int(np.prod(self._denom))
-            self._is_array = isinstance(self._values, np.ndarray)
-            self._is_scalar = not self._is_array
+            # Use a temporary Polynomial to compute invariants from new_values
+            # This ensures we use the same logic as the constructor
+            temp = Polynomial(new_values, self._mask, example=self)
+            # Copy the shape metadata back into self
+            self._values = temp._values
+            self._shape = temp._shape
+            self._ndims = temp._ndims
+            self._item = temp._item
+            self._numer = temp._numer
+            self._denom = temp._denom
+            self._isize = temp._isize
+            self._nsize = temp._nsize
+            self._dsize = temp._dsize
+            self._is_array = temp._is_array
+            self._is_scalar = temp._is_scalar
         if arg.order < max_order:
             arg = arg.at_least_order(max_order)
         # Perform addition in-place
@@ -332,21 +332,21 @@ class Polynomial(Vector):
             # Pad self in-place by resizing _values
             new_values = np.zeros(self._shape + (max_order+1,))
             new_values[..., -self.order-1:] = self._values
-            self._values = new_values
-            # Update internal attributes to reflect new item shape
-            full_shape = np.shape(self._values)
-            dd = len(full_shape) - self._drank
-            nn = dd - self._nrank
-            self._denom = full_shape[dd:]
-            self._numer = full_shape[nn:dd]
-            self._item = full_shape[nn:]
-            self._shape = full_shape[:nn]
-            self._ndims = len(self._shape)
-            self._isize = int(np.prod(self._item))
-            self._nsize = int(np.prod(self._numer))
-            self._dsize = int(np.prod(self._denom))
-            self._is_array = isinstance(self._values, np.ndarray)
-            self._is_scalar = not self._is_array
+            # Use a temporary Polynomial to compute invariants from new_values
+            # This ensures we use the same logic as the constructor
+            temp = Polynomial(new_values, self._mask, example=self)
+            # Copy the shape metadata back into self
+            self._values = temp._values
+            self._shape = temp._shape
+            self._ndims = temp._ndims
+            self._item = temp._item
+            self._numer = temp._numer
+            self._denom = temp._denom
+            self._isize = temp._isize
+            self._nsize = temp._nsize
+            self._dsize = temp._dsize
+            self._is_array = temp._is_array
+            self._is_scalar = temp._is_scalar
         if arg.order < max_order:
             arg = arg.at_least_order(max_order)
         # Perform subtraction in-place
@@ -390,9 +390,18 @@ class Polynomial(Vector):
             # For coefficients in decreasing order [a_n, ..., a_0] representing
             # a_n*x^n + ... + a_0, the product coefficient at position i+j (from left)
             # gets contribution from self[i] * arg[j]
-            tail_indx = self._drank * (slice(None),)
-            nself = self._values.shape[-self._drank - 1]
-            narg = arg._values.shape[-self._drank - 1]
+            # Explicitly identify the coefficient axis position
+            coef_axis = -self._drank - 1
+            # Convert to positive index for shape access
+            coef_axis_pos = coef_axis if coef_axis >= 0 else len(self._values.shape) + coef_axis
+            nself = self._values.shape[coef_axis_pos]
+            narg = arg._values.shape[coef_axis_pos]
+
+            # Build suffix for denominator dimensions (if any)
+            if self._drank > 0:
+                suffix = self._drank * (slice(None),)
+            else:
+                suffix = ()
 
             # Standard convolution: result[k] = sum of self[i] * arg[j] where i+j = k
             # But in decreasing order, position 0 is highest power
@@ -401,9 +410,13 @@ class Polynomial(Vector):
             for i in range(nself):
                 for j in range(narg):
                     k = i + j
-                    self_indx = (Ellipsis, i) + tail_indx
-                    arg_indx = (Ellipsis, j) + tail_indx
-                    result_indx = (Ellipsis, k) + tail_indx
+                    # Build index tuples explicitly: (prefix, coefficient_index, suffix)
+                    # prefix = Ellipsis (all shape dimensions)
+                    # coefficient_index = i, j, or k
+                    # suffix = denominator dimensions (if any)
+                    self_indx = (Ellipsis, i) + suffix
+                    arg_indx = (Ellipsis, j) + suffix
+                    result_indx = (Ellipsis, k) + suffix
                     new_values[result_indx] += self._values[self_indx] * arg._values[arg_indx]
 
             result = Polynomial(new_values, new_mask, derivs={},
@@ -602,7 +615,7 @@ class Polynomial(Vector):
             # Extract the scalar value by indexing the last axis
             tail_indx = self._drank * (slice(None),)
             if tail_indx:
-                const_values = self._values[(Ellipsis, 0) + tail_indx]
+                const_values = self._values[(Ellipsis, 0, *tail_indx)]
             else:
                 const_values = self._values[..., 0]
 
