@@ -89,6 +89,35 @@ class Pair(Vector):
             that matches the denominator shape of the other arguments.
         """
 
+        # Handle None values by converting them to zero Scalars
+        args = [x, y]
+        non_none_args = [arg for arg in args if arg is not None]
+
+        if len(non_none_args) == 0:
+            # All are None, create zero Scalars
+            x = Scalar(0.)
+            y = Scalar(0.)
+        else:
+            # Convert non-None args to Scalars to determine denominator shape
+            scalars = []
+            for arg in non_none_args:
+                scalars.append(Scalar.as_scalar(arg, recursive=recursive))
+
+            # Find the denominator shape from non-None arguments
+            # Broadcast to find common denominator
+            if len(scalars) > 1:
+                scalars = Qube.broadcast(*scalars, recursive=recursive)
+            example_scalar = scalars[0]
+
+            # Create a zero Scalar matching the denominator shape of the example
+            zero_scalar = example_scalar.zero()
+
+            # Replace None values with zero Scalars matching the denominator
+            if x is None:
+                x = zero_scalar
+            if y is None:
+                y = zero_scalar
+
         return Qube.from_scalars(x, y, recursive=recursive, readonly=readonly,
                                  classes=[Pair])
 
@@ -152,7 +181,7 @@ class Pair(Vector):
         # Fill in the derivatives if necessary
         if recursive:
             for key, deriv in self._derivs.items():
-                obj.insert_deriv(key, deriv.rot90(False))
+                obj.insert_deriv(key, deriv.rot90(recursive=False))
 
         return obj
 
@@ -182,8 +211,8 @@ class Pair(Vector):
                 ignore.
             upper (Pair or None): Coordinates of the upper limit (inclusive). None or a
                 masked value to ignore.
-            remask (bool, optional): True to include the new mask into the object's mask;
-                False to replace the values but leave them unmasked.
+            remask (bool, optional): True to keep the mask; False to replace the values but
+                make them unmasked.
 
         Returns:
             Pair: A new Pair with values clipped to the specified limits.
