@@ -1,4 +1,4 @@
 ################################################################################
 # polymath/extensions/__init__.py
 ################################################################################
-# All mixins are imported directory by qube.py
+# All mixins are imported directly by qube.py

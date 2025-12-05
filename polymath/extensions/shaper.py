@@ -233,7 +233,6 @@ class QubeShaper:
         return obj
 
     @staticmethod
-    @staticmethod
     def stack(*args, recursive=True):
         """Stack objects into one with a new leading axis.
 

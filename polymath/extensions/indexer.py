@@ -517,7 +517,7 @@ class QubeIndexer:
                     first_array_loc)
 
         except Exception as e:
-            raise IndexError(e)
+            raise IndexError(e) from e
 
     def _prep_scalar_index(self, indx):
         """Prepare the index, assumed suitable for a shapeless object.

@@ -6,7 +6,7 @@ import numpy as np
 
 
 class QubeShrinker:
-    """Mix-in class providing operations for Qube objects."""
+    """Mix-in class providing shrink and unshrink operations for Qube objects."""
 
     def shrink(self, antimask):
         """A 1-D version of this object, containing only the samples in the antimask provided.

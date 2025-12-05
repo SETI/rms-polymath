@@ -189,8 +189,8 @@ class QubeItemOps:
 
         from polymath.qube import Qube
 
-        self._require_axis_in_range(axis1, self._nrank, 'slice_numer()', 'axis1')
-        self._require_axis_in_range(axis2, self._nrank, 'slice_numer()', 'axis2')
+        self._require_axis_in_range(axis1, self._nrank, 'transpose_numer()', 'axis1')
+        self._require_axis_in_range(axis2, self._nrank, 'transpose_numer()', 'axis2')
 
         # Position axis1 from left
         a1 = axis1 if axis1 >= 0 else axis1 + self._nrank
@@ -333,7 +333,7 @@ class QubeItemOps:
         # Validate the shape
         shape = tuple(shape)
         if self.dsize != int(np.prod(shape)):
-            opstr = self._opstr('reshape_numer()')
+            opstr = self._opstr('reshape_denom()')
             raise ValueError(f'{opstr} denominator size must be unchanged: {self._denom}, '
                              f'{shape}')
 

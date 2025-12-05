@@ -90,7 +90,6 @@ class QubeTVL:
             masked (bool, optional): The value to return if builtins is True but the returned
                 value is masked. Default is to return a masked value instead of a builtin
                 type.
-                value specified by Qube.PREFER_BUILTIN_TYPES.
 
         Returns:
             (Boolean or bool): The result of the three-valued logic "or" operation.

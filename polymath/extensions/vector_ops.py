@@ -135,7 +135,7 @@ class QubeVectorOps:
             try:
                 _ = selections[i]
             except IndexError:
-                raise IndexError(f'axis is out of range ({-self._rank},{self._rank}) in '
+                raise IndexError(f'axis is out of range ({-self._ndims},{self._ndims}) in '
                                  f'{type(self)}.{op}: {i}')
 
             if selections[i]:
@@ -163,6 +163,8 @@ class QubeVectorOps:
                 indx[i] = 0
             else:
                 indx[i] = 0
+        else:
+            indx[axis] = 0
 
         return self[tuple(indx)]
 
@@ -279,7 +281,6 @@ class QubeVectorOps:
         return obj
 
     @staticmethod
-    @staticmethod
     def norm(arg, axis=-1, *, classes=(), recursive=True):
         """Calculate the norm of an object along one axis.
 
@@ -335,7 +336,6 @@ class QubeVectorOps:
         return obj
 
     @staticmethod
-    @staticmethod
     def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
         """Calculate the square of the norm of an object along one axis.
 
@@ -389,7 +389,6 @@ class QubeVectorOps:
 
         return obj
 
-    @staticmethod
     @staticmethod
     def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         """Calculate the cross product of two objects.
@@ -562,7 +561,6 @@ class QubeVectorOps:
         return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0]
 
     @staticmethod
-    @staticmethod
     def outer(arg1, arg2, classes=(), recursive=True):
         """Calculate the outer product of two objects.
 
@@ -637,7 +635,6 @@ class QubeVectorOps:
 
         return obj
 
-    @staticmethod
     @staticmethod
     def as_diagonal(arg, axis, classes=(), recursive=True):
         """Return a copy with one axis converted to a diagonal across two.

@@ -285,7 +285,7 @@ class QubePickler:
                 new_digits.append(digit)
 
         except (ValueError, IndexError, TypeError):
-            raise ValueError('invalid pickle digits: ' + repr(original_digits))
+            raise ValueError('invalid pickle digits: ' + repr(original_digits)) from None
 
         return tuple(new_digits)
 
@@ -311,10 +311,10 @@ class QubePickler:
                     pass
                 elif reference not in {'smallest', 'largest', 'mean', 'median', 'logmean',
                                        'fpzip'}:
-                    raise ValueError('invalid pickle reference {reference!r}')
+                    raise ValueError(f'invalid pickle reference {reference!r}')
 
         except (ValueError, IndexError, TypeError):
-            raise ValueError('invalid pickle reference {original_references!r}')
+            raise ValueError(f'invalid pickle reference {original_references!r}')
 
         return references
 
@@ -410,10 +410,12 @@ class QubePickler:
                 if _PICKLE_WARNINGS and first_exception is not None:
                     if precision != initial_precision:
                         warnings.warn('fpzip.compress increased precision from '
-                                      f'{initial_precision} to {precision}')
+                                      f'{initial_precision} to {precision}',
+                                      stacklevel=2)
                     if shape != initial_shape:
                         warnings.warn('fpzip.compress reduced shape from '
-                                      f'{initial_shape} to {shape}')
+                                      f'{initial_shape} to {shape}',
+                                      stacklevel=2)
 
                 return (fpzip_bytes, zeroed_bits)
 
