@@ -593,7 +593,7 @@ class Test_Qube_mask_ops(unittest.TestCase):
         # Additional coverage tests for missing lines
         ##################################################################################
 
-        # Test mask_where with scalar object and replace=None (line 52)
+        # Test mask_where with scalar object and replace=None
         a = Scalar(5.)
         mask = True
         b = a.mask_where(mask, replace=None, remask=True)
@@ -614,7 +614,7 @@ class Test_Qube_mask_ops(unittest.TestCase):
         self.assertFalse(b.mask)
         self.assertEqual(b.values, 99.)
 
-        # Test mask_where_outside with mask_endpoints as single value (not tuple/list) (line 343->346)
+        # Test mask_where_outside with mask_endpoints as single value (not tuple/list)
         a = Scalar([1., 2., 3., 4., 5., 6.])
         b = a.mask_where_outside(2., 4., mask_endpoints=True)
         # mask_endpoints=True should be converted to (True, True)
@@ -623,7 +623,7 @@ class Test_Qube_mask_ops(unittest.TestCase):
         self.assertFalse(b.mask[2])
         self.assertTrue(b.mask[3])
 
-        # Test mask_where_between with mask_endpoints as single value (line 343->346)
+        # Test mask_where_between with mask_endpoints as single value
         a = Scalar([1., 2., 3., 4., 5., 6.])
         b = a.mask_where_between(2., 4., mask_endpoints=False)
         # mask_endpoints=False should be converted to (False, False)
@@ -641,7 +641,7 @@ class Test_Qube_mask_ops(unittest.TestCase):
         self.assertTrue(np.allclose(b.d_dt.values[0], 0.))
         self.assertTrue(np.allclose(b.d_dt.values[5], 0.))
 
-        # Test clip with inclusive=False and upper limit (line 421)
+        # Test clip with inclusive=False and upper limit
         a = Scalar([1., 2., 3., 4., 5., 6.])
         b = a.clip(2., 4., remask=True, inclusive=False)
         # With inclusive=False, value exactly at upper limit (4) should be masked
@@ -662,7 +662,7 @@ class Test_Qube_mask_ops(unittest.TestCase):
         b = a.clip(limit, None, remask=False)
         self.assertEqual(b.shape, a.shape)
 
-        # Test _limit_from_qube with np.ndarray limit and self._rank > 0 (lines 447-449)
+        # Test _limit_from_qube with np.ndarray limit and self._rank > 0
         # When self has rank > 0, limit is reshaped
         a = Scalar([1., 2., 3., 4., 5.])
         limit = np.array(2.)  # Scalar array
@@ -698,7 +698,7 @@ class Test_Qube_mask_ops(unittest.TestCase):
         # Actually, this requires a Qube with numer, which Vector has, but Vector doesn't support clip
         # So this path is difficult to test directly
 
-        # Test _limit_from_qube with masked Qube limit (partial mask)
+        # Test _limit_from_qube with masked Qube limit (partial mask) - lines 474-478
         a = Scalar([1., 2., 3., 4., 5.])
         limit = Scalar([2., 3., 4., 5., 6.], mask=[False, False, True, False, False])
         # Masked limit values should use the masked parameter
@@ -706,20 +706,109 @@ class Test_Qube_mask_ops(unittest.TestCase):
         # The masked limit at index 2 should be ignored (treated as -inf)
         self.assertEqual(b[2], 3.)  # No lower limit due to masking
 
-        # Test _limit_from_qube with Qube limit that has no numer but self has numer
-        # Vector doesn't support clip, so let's test with mask_where_ge which also uses _limit_from_qube
+        # Test _limit_from_qube with Qube limit that has denominator
+        # Create a derivative which has drank > 0
         a = Scalar([1., 2., 3., 4., 5.])
-        limit = Scalar(2.)
-        # This should work - limit is broadcast to match
+        # Create a derivative with drank=1 by using a Vector as derivative
+        # Actually, derivatives are typically Scalars, so let's create one with drank
+        # We can create a Scalar with drank by using extract_denom or similar
+        # Actually, let's create a derivative manually with drank
+        deriv = Scalar([0.1, 0.2, 0.3, 0.4, 0.5], drank=1)
+        a.insert_deriv('t', deriv)
+        limit = a.d_dt  # This has drank=1
+        # This should raise ValueError about denominators
+        self.assertRaises(ValueError, a.mask_where_ge, limit)
+
+        # Test _limit_from_qube with Qube limit that has different numer
+        # We need to test with a Vector limit on a Scalar
+        # But Vector doesn't work as a limit for Scalar operations
+        # Let's test by creating a custom Qube-like object
+        # Actually, let's test through clip which also uses _limit_from_qube
+        # But clip requires scalar items, so Vector won't work
+        # Let's test the error path by trying to use a Vector as limit
+        a = Scalar([1., 2., 3., 4., 5.])
+        limit = Vector([1., 2., 3.])  # Vector has numer (3,), Scalar has numer ()
+        # This should raise ValueError about incompatible numers
+        self.assertRaises(ValueError, a.mask_where_ge, limit)
+
+        # Test _limit_from_qube with self._numer but limit has no numer
+        # This path is: elif self._numer: tail = self._nrank * (1,) + tail
+        # We need a Qube with numer (like Vector) but Vector doesn't support mask_where_ge
+        # So we can't easily test this path through public methods
+        # This path is difficult to test without direct access to _limit_from_qube
+        # Let's skip this specific test for now as it requires a Qube subclass
+        # that has numer and supports methods using _limit_from_qube
+
+        # Test _limit_from_qube with np.ndarray limit and self._rank > 0
+        # This path requires self._rank > 0, which means the Qube has item dimensions
+        # Scalar has _rank=0, Vector has _rank=1
+        # But Vector doesn't support methods that use _limit_from_qube
+        # This path is difficult to test without a Qube subclass that has _rank > 0
+        # and supports methods using _limit_from_qube
+        # Let's skip this specific test for now
+
+        # Test mask_where_outside with mask_endpoints as list
+        a = Scalar([1., 2., 3., 4., 5., 6.])
+        b = a.mask_where_outside(2., 4., mask_endpoints=[True, False])
+        # mask_endpoints as list should be converted to tuple
+        # mask_endpoints[0]=True means use __le__ (<=), so values <= 2 are masked
+        # mask_endpoints[1]=False means use __gt__ (>), so values > 4 are masked
+        self.assertTrue(b.mask[0])  # 1 <= 2, masked
+        self.assertTrue(b.mask[1])  # 2 <= 2, masked (endpoint included)
+        self.assertFalse(b.mask[2])  # 3 between 2 and 4, not masked
+        self.assertFalse(b.mask[3])  # 4 == 4, not masked (endpoint excluded, 4 is not > 4)
+        self.assertTrue(b.mask[4])  # 5 > 4, masked
+
+        # Test _limit_from_qube with masked Qube limit that has mask array
+        a = Scalar([1., 2., 3., 4., 5.])
+        limit = Scalar([2., 3., 4., 5., 6.], mask=[False, False, True, False, False])
+        # The masked limit values should be replaced with the masked parameter
+        b = a.clip(limit, None, remask=False)
+        # Index 2 has masked limit, so it should be treated as -inf (no lower limit)
+        self.assertEqual(b.values[2], 3.)  # No clipping from below
+
+        # Test _limit_from_qube with masked Qube limit that has mask array - more comprehensive
+        # Test with mask_where_ge which uses _limit_from_qube
+        a = Scalar([1., 2., 3., 4., 5.])
+        limit = Scalar([10., 10., 10., 10., 10.], mask=[False, False, True, False, False])
+        # limit[2] is masked, so it should be treated as +inf for mask_where_ge
+        b = a.mask_where_ge(limit, remask=False)
+        # All values should be unmasked because they're all < 10
+        # The masked limit at index 2 is treated as +inf, so 3 < +inf, not masked
+        if isinstance(b.mask, np.ndarray):
+            self.assertFalse(b.mask[0])
+            self.assertFalse(b.mask[1])
+            self.assertFalse(b.mask[2])  # limit is masked, treated as +inf, so 3 < +inf, not masked
+            self.assertFalse(b.mask[3])
+            self.assertFalse(b.mask[4])
+        else:
+            # If mask is scalar False, all are unmasked
+            self.assertFalse(b.mask)
+
+        # Test _limit_from_qube with Qube limit that has matching numer
+        # We need limit._numer to exist and match self._numer
+        # For Scalar, numer is (), so we need a Scalar limit
+        a = Scalar([1., 2., 3., 4., 5.])
+        limit = Scalar([2., 3., 4., 5., 6.])  # Scalar has numer (), matches a
+        # This should work and execute line 465: tail = limit._numer + tail
         b = a.clip(limit, None, remask=False)
         self.assertEqual(b.shape, a.shape)
 
-        # Test _limit_from_qube with masked Qube limit
-        a = Scalar([1., 2., 3., 4., 5.])
-        limit = Scalar([2., 3., 4., 5., 6.], mask=[False, False, True, False, False])
-        # Masked limit values should use the masked parameter
-        b = a.clip(limit, None, remask=False)
-        # The masked limit at index 2 should be ignored (treated as -inf)
-        self.assertEqual(b[2], 3.)  # No lower limit due to masking
+        # Test _limit_from_qube with np.ndarray limit and self._rank > 0
+        # This requires self._rank > 0, which means the Qube has item dimensions
+        # Scalar has _rank=0, Vector has _rank=1 but doesn't support clip/mask_where_ge
+        # This path is difficult to test through public API
+        # However, we can test it by creating a Vector with shape and using it indirectly
+        # Actually, let's try using a Vector derivative which might have _rank > 0
+        # But derivatives are also Scalars or Vectors
+        # This path appears to be unreachable through public API for methods that use _limit_from_qube
+        # Let's skip this for now as it requires a Qube subclass with _rank > 0
+        # that supports methods using _limit_from_qube, which doesn't exist
+
+        # Test _limit_from_qube with self._numer but limit has no numer
+        # This requires self to have numer (like Vector) but Vector doesn't support
+        # methods that use _limit_from_qube (they require scalar items)
+        # This path also appears to be unreachable through public API
+        # Let's skip this for now
 
 ##########################################################################################

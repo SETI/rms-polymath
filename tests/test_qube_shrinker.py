@@ -455,7 +455,7 @@ class Test_Qube_shrinker(unittest.TestCase):
         finally:
             Qube._DISABLE_SHRINKING = original_disable
 
-        # Test shrink with cache path (line 45->47)
+        # Test shrink with cache path
         original_disable_cache = Qube._DISABLE_CACHE
         try:
             Qube._DISABLE_CACHE = False
@@ -467,15 +467,100 @@ class Test_Qube_shrinker(unittest.TestCase):
         finally:
             Qube._DISABLE_CACHE = original_disable_cache
 
-        # Test shrink with broadcast_to path (extras < 0)
-        # This happens when antimask has more dimensions than self
-        # For a 1-D object, we can't easily create an antimask with more dims
-        # Let's test with a 2-D object and 3-D antimask (not possible)
-        # Actually, when antimask has more dims, self is broadcast
-        a = Scalar([1., 2., 3.])  # 1-D
-        # Can't easily test extras < 0 without complex setup
+        # Test shrink with _DISABLE_CACHE=False
+        # This path is hit when we return masked_single early
+        original_disable_cache = Qube._DISABLE_CACHE
+        try:
+            Qube._DISABLE_CACHE = False
+            # Use a case that triggers the early return at line 42-43
+            # Option 1: object is fully masked
+            a = Scalar([1., 2., 3., 4., 5.], mask=[True, True, True, True, True])
+            antimask = np.array([True, False, True, False, True])
+            b = a.shrink(antimask)
+            # Should return masked_single and cache unshrunk if _DISABLE_CACHE is False
+            self.assertEqual(b, Scalar.MASKED)
+            self.assertTrue('unshrunk' in b._cache)
+        finally:
+            Qube._DISABLE_CACHE = original_disable_cache
 
-        # Test shrink with shape mismatch that requires broadcasting (line 77, 79)
+        # Test shrink with shape mismatch requiring broadcast_to
+        a = Scalar(np.arange(20).reshape(4, 5))
+        # Create antimask that requires broadcasting of self
+        # antimask shape (4, 5) matches after, but we need to trigger the broadcast_to path
+        # Let's create a case where new_after != after
+        antimask = np.array([[True, False, True, False, True],
+                             [False, False, False, False, False],
+                             [True, True, False, False, False],
+                             [False, False, False, False, False]])
+        # This should work, but let's test with a shape that requires broadcasting
+        # Actually, for a (4, 5) object, antimask (4, 5) is correct
+        # To trigger line 77, we need new_shape != self._shape
+        # This happens when new_after != after
+        # Let's use a 3-D object where antimask matches only last 2 dims
+        a = Scalar(np.arange(40).reshape(2, 4, 5))
+        antimask = np.array([[True, False, True, False, True],
+                             [False, False, False, False, False],
+                             [True, True, False, False, False],
+                             [False, False, False, False, False]])  # (4, 5) antimask for (2, 4, 5) object
+        # extras = 1, after = (4, 5), antimask.shape = (4, 5)
+        # new_after = (4, 5) (max of after and antimask), so new_shape = (2, 4, 5)
+        # This matches self._shape, so line 77 won't be hit
+        # To hit line 77, we need new_after to be different from after
+        # This is hard to achieve because new_after is max(after[k], antimask.shape[k])
+        # So new_after >= after always
+        # Actually, if antimask has a larger dimension, new_after will be larger
+        # But antimask must be broadcastable, so this is tricky
+        # Let's try a different approach - use a case where broadcasting is needed
+        b = a.shrink(antimask)
+        self.assertTrue(b.readonly)
+
+        # Test shrink with all mask True
+        a = Scalar([1., 2., 3., 4., 5.], mask=[True, True, True, True, True])
+        antimask = np.array([True, False, True, False, True])
+        b = a.shrink(antimask)
+        # When all mask is True, should return masked_single
+        self.assertEqual(b, Scalar.MASKED)
+
+        # Test unshrink with scalar object
+        a = Scalar(7.)  # Scalar with shape ()
+        antimask = True
+        b = a.unshrink(antimask)
+        # Scalar object should return as is
+        self.assertEqual(a, b)
+
+        # Test unshrink with _is_array and default as Qube
+        a = Scalar([1., 2., 3., 4., 5.])
+        antimask = np.array([True, False, True, False, True])
+        b = a.shrink(antimask)
+        # Now unshrink - this should use the _is_array path
+        c = b.unshrink(antimask)
+        self.assertEqual(c.shape, a.shape)
+        # The default is a Scalar (Qube), so it should use the _is_array path
+        # and handle default as Qube
+
+        # Test unshrink with derivatives
+        a = Scalar([1., 2., 3., 4., 5.])
+        a.insert_deriv('t', Scalar([0.1, 0.2, 0.3, 0.4, 0.5]))
+        antimask = np.array([True, False, True, False, True])
+        b = a.shrink(antimask)
+        c = b.unshrink(antimask)
+        # Derivatives should be unshrunk too
+        self.assertTrue(hasattr(c, 'd_dt'))
+        self.assertEqual(c.d_dt.shape, a.d_dt.shape)
+
+        # Test shrink with broadcast_to path (extras < 0, lines 63-65)
+        # This happens when antimask has more dimensions than self
+        a = Scalar([1., 2., 3., 4., 5.])  # 1-D, shape (5,)
+        antimask = np.array([[True, False, True, False, True],
+                             [True, False, True, False, True]])  # 2-D, shape (2, 5)
+        # self_rank = 1, antimask_rank = 2, so extras = -1
+        # This should trigger line 63: self = self.broadcast_to(antimask.shape, recursive=False)
+        b = a.shrink(antimask)
+        self.assertTrue(b.readonly)
+        # The result should have shape based on the shrunk antimask
+        self.assertEqual(b.shape[0], np.sum(antimask))
+
+        # Test shrink with shape mismatch that requires broadcasting
         a = Scalar(np.arange(20).reshape(4, 5))
         # Create antimask with compatible but different shape
         antimask = np.array([[True, False, True, False, True],
@@ -485,7 +570,7 @@ class Test_Qube_shrinker(unittest.TestCase):
         b = a.shrink(antimask)
         self.assertTrue(b.readonly)
 
-        # Test shrink with shape mismatch - self needs broadcasting (line 77)
+        # Test shrink with shape mismatch - self needs broadcasting
         # When self._shape != new_shape, self is broadcast
         # For a (4, 5) object, antimask should be (4, 5) or broadcastable
         # Let's test with a compatible shape that triggers the path
@@ -497,7 +582,7 @@ class Test_Qube_shrinker(unittest.TestCase):
         b = a.shrink(antimask)
         self.assertTrue(b.readonly)
 
-        # Test shrink with antimask shape mismatch (line 79)
+        # Test shrink with antimask shape mismatch
         # When antimask.shape != new_after, antimask is broadcast
         # For a (4, 5) object, antimask (1, 5) should be broadcastable
         a = Scalar(np.arange(20).reshape(4, 5))
@@ -506,21 +591,33 @@ class Test_Qube_shrinker(unittest.TestCase):
         b = a.shrink(antimask)
         self.assertTrue(b.readonly)
 
-        # Test shrink with all mask True (line 88-90)
+        # Test shrink with all mask True after indexing
+        # We need mask (from self._mask[antimask]) to be all True
+        # This happens when all selected elements are masked, but object is not fully masked
+        a = Scalar([1., 2., 3., 4., 5.], mask=[True, True, True, False, False])
+        antimask = np.array([True, True, True, False, False])  # Select first 3, all are masked
+        b = a.shrink(antimask)
+        # When all selected mask is True, should return masked_single
+        # The result should be a single masked value
+        self.assertEqual(b.shape, ())
+        self.assertTrue(b.mask)
+        self.assertTrue(b.readonly)
+
+        # Test shrink with all mask True (earlier return path)
         a = Scalar([1., 2., 3., 4., 5.], mask=[True, True, True, True, True])
         antimask = np.array([True, False, True, False, True])
         b = a.shrink(antimask)
-        # When all mask is True, should return masked_single with cache
+        # When all mask is True, should return masked_single (earlier return at line 44)
         self.assertEqual(b, Scalar.MASKED)
         self.assertTrue(b.readonly)
 
-        # Test unshrink with _is_scalar path (line 152)
+        # Test unshrink with _is_scalar path
         a = Scalar(7.)
         b = a.unshrink(False, shape=(5,))
         self.assertEqual(b.shape, (5,))
         self.assertTrue(np.all(b.mask))
 
-        # Test unshrink with default as Qube (line 164)
+        # Test unshrink with default as Qube
         # This is when default is a Qube instance, not a scalar
         # Vector has a default that might be a Qube
         # For a Vector with shape (3,), shrinking with [True, False, True] gives shape (2,)
@@ -535,14 +632,14 @@ class Test_Qube_shrinker(unittest.TestCase):
         self.assertEqual(c.shape, antimask.shape)
         self.assertEqual(c.numer, a.numer)
 
-        # Test unshrink with _is_array path (line 173)
+        # Test unshrink with _is_array path
         a = Scalar([1., 2., 3., 4., 5.])
         antimask = np.array([True, False, True, False, True])
         b = a.shrink(antimask)
         c = b.unshrink(antimask)
         self.assertEqual(c.shape, a.shape)
 
-        # Test unshrink with derivatives (line 187)
+        # Test unshrink with derivatives
         a = Scalar([1., 2., 3., 4., 5.])
         da_dt = Scalar([10., 20., 30., 40., 50.])
         a.insert_deriv('t', da_dt)

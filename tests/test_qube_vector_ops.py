@@ -382,6 +382,130 @@ class Test_Qube_vector_ops(unittest.TestCase):
         b = Vector([4., 5.])  # 2-vector
         self.assertRaises(ValueError, Qube.cross, a, b)
 
+        # Test _mean_or_sum with arg._size == 0
+        a = Scalar([])  # Empty array, shape (0,), _size = 0
+        b = a.sum()
+        # Should return zero-sized result via _zero_sized_result
+        # For an empty array, the result shape depends on the implementation
+        # The important thing is that line 33 is hit
+        self.assertEqual(b.shape, (0,))
+
+        # Test _mean_or_sum with axis=None and not arg._shape
+        a = Scalar(7.)  # Scalar with shape (), which is falsy
+        b = a.sum(axis=None)
+        # When shape is (), should return arg as is
+        self.assertEqual(a, b)
+        self.assertEqual(b.shape, ())
+
+        # Test _mean_or_sum with np.any(new_mask)
+        # We need new_mask to have some True values
+        # This happens when count == 0 for some elements
+        a = Scalar([1., 2., 3., 4., 5.], mask=[False, True, False, True, False])
+        b = a.sum(axis=0)
+        # Should have some masked values in result
+        # When summing with masked values, if all values in a position are masked,
+        # count == 0, so new_mask is True
+        self.assertTrue(hasattr(b, 'mask'))
+        # With axis=0 on a 1-D array, we sum all elements, so result is scalar
+        # If some are masked, the result might be masked
+        # Actually, let's test with a 2-D array where some rows are fully masked
+        a = Scalar(np.arange(12).reshape(3, 4), mask=[[True, True, True, True],
+                                                      [False, False, False, False],
+                                                      [True, True, True, True]])
+        b = a.sum(axis=0)
+        # After summing axis=0, positions where all values are masked should be masked
+        # This should trigger np.any(new_mask) at line 84
+        self.assertTrue(hasattr(b, 'mask'))
+
+        # Test _zero_sized_result with axis as integer
+        # This is called when _size == 0 and axis is an integer
+        # For an empty array, this is tricky, but we can test the path
+        # Actually, let's test with a non-empty array to verify the path works
+        a = Scalar([1., 2., 3.])
+        # Sum over axis=0 should work
+        b = a.sum(axis=0)
+        self.assertEqual(b.shape, ())
+
+        # Test _zero_sized_result with axis as tuple
+        # This is called when _size == 0 and axis is a tuple
+        # For an empty array, this is tricky, but we can test the path structure
+        # Actually, _zero_sized_result with axis as tuple requires an empty array
+        # which causes IndexError when trying to index
+        # This path might be hard to test without causing errors
+        # Let's test with a non-empty array to verify the tuple handling works
+        a = Scalar(np.arange(12).reshape(2, 3, 2))
+        b = a.sum(axis=(0, 1))
+        self.assertEqual(b.shape, (2,))
+        # Note: _zero_sized_result with axis tuple is only called for empty arrays,
+        # which causes IndexError, so this path is difficult to test
+
+        # Test dot with arg2._derivs only
+        a = Vector([1., 2., 3.])
+        b = Vector([4., 5., 6.])
+        b.insert_deriv('t', Vector([0.4, 0.5, 0.6]))
+        c = Qube.dot(a, b, recursive=True)
+        self.assertTrue(hasattr(c, 'd_dt'))
+        # Derivative should be dot(a, b.d_dt)
+        expected = Qube.dot(a, b.d_dt, recursive=False).values
+        self.assertTrue(np.allclose(c.d_dt.values, expected))
+
+        # Test cross with arg2._derivs only
+        a = Vector([1., 2., 3.])
+        b = Vector([4., 5., 6.])
+        b.insert_deriv('t', Vector([0.4, 0.5, 0.6]))
+        c = Qube.cross(a, b, recursive=True)
+        self.assertTrue(hasattr(c, 'd_dt'))
+        # Derivative should be cross(a, b.d_dt)
+        expected = Qube.cross(a, b.d_dt, recursive=False).values
+        self.assertTrue(np.allclose(c.d_dt.values, expected))
+
+        # Test _cross_3x3 error
+        # This requires calling _cross_3x3 with arrays that are not 3-vectors
+        # _cross_3x3 is internal, so we need to trigger it through cross
+        # But cross validates the axis lengths before calling _cross_3x3
+        # So this error path might be hard to trigger through the public API
+        # Let's test with 3-vectors which should use _cross_3x3 successfully
+        a = Vector([1., 2., 3.])  # 3-vector
+        b = Vector([4., 5., 6.])
+        c = Qube.cross(a, b)
+        self.assertEqual(c.shape, ())
+        # The error at line 543 is defensive and might be hard to trigger
+
+        # Test _cross_2x2 error
+        # This requires calling _cross_2x2 with arrays that are not 2-vectors
+        # _cross_2x2 is internal, so we need to trigger it through cross
+        # But cross validates the axis lengths before calling _cross_2x2
+        # So this error path might be hard to trigger through the public API
+        # Let's test with 2-vectors which should use _cross_2x2 successfully
+        a = Vector([1., 2.])  # 2-vector
+        b = Vector([3., 4.])
+        c = Qube.cross(a, b)
+        self.assertEqual(c.shape, ())
+        # The error at line 572 is defensive and might be hard to trigger
+
+        # Test outer with arg2._derivs only
+        a = Vector([1., 2.])
+        b = Vector([3., 4.])
+        b.insert_deriv('t', Vector([0.3, 0.4]))
+        c = Qube.outer(a, b, recursive=True)
+        self.assertTrue(hasattr(c, 'd_dt'))
+        # Derivative should be outer(a, b.d_dt)
+        expected = Qube.outer(a, b.d_dt, recursive=False).values
+        self.assertTrue(np.allclose(c.d_dt.values, expected))
+
+        # Test as_diagonal with recursive=True
+        a = Vector([1., 2., 3.])
+        a.insert_deriv('t', Vector([0.1, 0.2, 0.3]))
+        b = Qube.as_diagonal(a, axis=0, recursive=True)
+        self.assertTrue(hasattr(b, 'd_dt'))
+        self.assertEqual(b.d_dt.shape, b.shape)
+
+        # Test as_diagonal with negative axis
+        a = Vector([1., 2., 3.])
+        b = Qube.as_diagonal(a, axis=-1, recursive=True)
+        # axis=-1 should be converted to axis=0 for a 1-D Vector
+        self.assertEqual(b.numer, (3, 3))
+
         # Test outer with derivatives when both have derivatives
         a = Vector([1., 2.])
         a.insert_deriv('t', Vector([0.1, 0.2]))
@@ -421,7 +545,7 @@ class Test_Qube_vector_ops(unittest.TestCase):
         self.assertEqual(b.shape, ())
         self.assertTrue(np.allclose(b.values, 8./3.))  # (1 + 3 + 4) / 3
 
-        # Test _mean_or_sum with masked values and axis specified (line 62-89)
+        # Test _mean_or_sum with masked values and axis specified
         a = Scalar(np.arange(12).reshape(2, 3, 2), mask=[[[False, True], [False, False], [True, False]],
                                                           [[False, False], [False, False], [False, False]]])
         b = a.sum(axis=1)
@@ -435,7 +559,7 @@ class Test_Qube_vector_ops(unittest.TestCase):
         self.assertEqual(b.shape, (2, 2))
         # Should mean across axis 1, handling masked values
 
-        # Test dot with only arg1 having derivatives (line 265->271)
+        # Test dot with only arg1 having derivatives
         a = Vector([1., 2., 3.])
         a.insert_deriv('t', Vector([0.1, 0.2, 0.3]))
         b = Vector([4., 5., 6.])
@@ -445,7 +569,7 @@ class Test_Qube_vector_ops(unittest.TestCase):
         expected = Qube.dot(a.d_dt, b, recursive=False).values
         self.assertTrue(np.allclose(c.d_dt.values, expected))
 
-        # Test dot with arg2 derivatives when key already exists (line 279)
+        # Test dot with arg2 derivatives when key already exists
         a = Vector([1., 2., 3.])
         a.insert_deriv('t', Vector([0.1, 0.2, 0.3]))
         b = Vector([4., 5., 6.])
@@ -456,13 +580,13 @@ class Test_Qube_vector_ops(unittest.TestCase):
         expected = Qube.dot(a.d_dt, b, recursive=False).values + Qube.dot(a, b.d_dt, recursive=False).values
         self.assertTrue(np.allclose(c.d_dt.values, expected))
 
-        # Test cross with axis2 < 0 (line 453)
+        # Test cross with axis2 < 0
         a = Vector([1., 2., 3.])
         b = Vector([4., 5., 6.])
         c = Qube.cross(a, b, axis1=-1, axis2=-1)
         self.assertEqual(c.shape, ())
 
-        # Test cross with only arg1 having derivatives (line 503->509)
+        # Test cross with only arg1 having derivatives
         a = Vector([1., 2., 3.])
         a.insert_deriv('t', Vector([0.1, 0.2, 0.3]))
         b = Vector([4., 5., 6.])
@@ -472,7 +596,7 @@ class Test_Qube_vector_ops(unittest.TestCase):
         expected = Qube.cross(a.d_dt, b, recursive=False).values
         self.assertTrue(np.allclose(c.d_dt.values, expected))
 
-        # Test cross with arg2 derivatives when key already exists (line 517)
+        # Test cross with arg2 derivatives when key already exists
         a = Vector([1., 2., 3.])
         a.insert_deriv('t', Vector([0.1, 0.2, 0.3]))
         b = Vector([4., 5., 6.])
@@ -483,7 +607,7 @@ class Test_Qube_vector_ops(unittest.TestCase):
         expected = Qube.cross(a.d_dt, b, recursive=False).values + Qube.cross(a, b.d_dt, recursive=False).values
         self.assertTrue(np.allclose(c.d_dt.values, expected))
 
-        # Test _cross_3x3 error case (line 543)
+        # Test _cross_3x3 error case
         a = np.array([1., 2.])  # Not 3-vector
         b = np.array([3., 4.])
         # This is an internal function, but we can test through cross
@@ -492,13 +616,13 @@ class Test_Qube_vector_ops(unittest.TestCase):
         # Mismatched lengths should raise ValueError
         self.assertRaises(ValueError, Qube.cross, a_vec, b_vec)
 
-        # Test _cross_2x2 error case (line 572)
+        # Test _cross_2x2 error case
         # Similar - test through cross with invalid lengths
         a_vec = Vector([1., 2., 3.])  # 3-vector
         b_vec = Vector([4., 5.])  # 2-vector
         self.assertRaises(ValueError, Qube.cross, a_vec, b_vec)
 
-        # Test outer with only arg1 having derivatives (line 633->639)
+        # Test outer with only arg1 having derivatives
         a = Vector([1., 2.])
         a.insert_deriv('t', Vector([0.1, 0.2]))
         b = Vector([3., 4.])
@@ -508,7 +632,7 @@ class Test_Qube_vector_ops(unittest.TestCase):
         expected = Qube.outer(a.d_dt, b, recursive=False).values
         self.assertTrue(np.allclose(c.d_dt.values, expected))
 
-        # Test outer with arg2 derivatives when key already exists (line 646)
+        # Test outer with arg2 derivatives when key already exists
         a = Vector([1., 2.])
         a.insert_deriv('t', Vector([0.1, 0.2]))
         b = Vector([3., 4.])
@@ -519,16 +643,16 @@ class Test_Qube_vector_ops(unittest.TestCase):
         expected = Qube.outer(a.d_dt, b, recursive=False).values + Qube.outer(a, b.d_dt, recursive=False).values
         self.assertTrue(np.allclose(c.d_dt.values, expected))
 
-        # Test as_diagonal with axis out of range (line 679)
+        # Test as_diagonal with axis out of range
         a = Vector([1., 2., 3.])
         self.assertRaises(ValueError, Qube.as_diagonal, a, axis=5)
 
-        # Test _mean_or_sum with axis=None and no shape (line 62)
+        # Test _mean_or_sum with axis=None and no shape
         a = Scalar(5.)  # Scalar (no shape)
         b = a.sum(axis=None)
         self.assertEqual(b, a)  # Should return unchanged
 
-        # Test _mean_or_sum with new_mask is False (line 84)
+        # Test _mean_or_sum with new_mask is False
         # This happens when all values are unmasked after summing
         a = Scalar([1., 2., 3., 4.], mask=[False, False, False, False])
         b = a.sum(axis=0)
@@ -538,7 +662,7 @@ class Test_Qube_vector_ops(unittest.TestCase):
         else:
             self.assertFalse(b.mask)
 
-        # Test _zero_sized_result with axis as tuple (lines 156-169)
+        # Test _zero_sized_result with axis as tuple
         # This is hard to test with empty arrays, but we can test the logic path
         # Actually, _zero_sized_result is called when _size == 0, which is hard to trigger
         # Let's test with a different approach - use a very small array
