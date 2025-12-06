@@ -12,9 +12,10 @@ def tvl_and(self, arg, builtins=None, masked=None):
     Masked values are treated as indeterminate rather than being ignored. These are the
     rules:
 
-        * False and anything = False
+        * False (unmasked) and anything = False (even if the other operand is masked)
         * True and True = True
         * True and Masked = Masked
+        * Masked and Masked = Masked
 
     Parameters:
         arg (Qube or bool): The right-hand operand for the AND operation.
@@ -26,7 +27,9 @@ def tvl_and(self, arg, builtins=None, masked=None):
             type.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "and" operation.
+        (Boolean or bool): The result of the three-valued logic "and" operation. When the
+        result is masked, the underlying boolean value may be either True or False, and
+        the mask indicates indeterminacy.
     """
 
     # Truth table...
@@ -38,24 +41,51 @@ def tvl_and(self, arg, builtins=None, masked=None):
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
     arg = Qube._BOOLEAN_CLASS.as_boolean(arg)
 
+    # Determine if each operand is False (unmasked)
+    # False (unmasked) and anything = False, so we need to detect unmasked False values
     if Qube.is_one_false(self._mask):
-        self_is_true = self._values
-        self_is_not_false = self._values
+        self_is_false_unmasked = np.logical_not(self._values)
     else:
-        self_is_true = self._values & self.antimask
-        self_is_not_false = self._values | self._mask
+        # False if value is False and unmasked
+        self_is_false_unmasked = np.logical_not(self._values) & self.antimask
 
     if Qube.is_one_false(arg._mask):
-        arg_is_true = arg._values
-        arg_is_not_false = arg._values
+        arg_is_false_unmasked = np.logical_not(arg._values)
     else:
-        arg_is_true = arg._values & arg.antimask
-        arg_is_not_false = arg._values | arg._mask
+        # False if value is False and unmasked
+        arg_is_false_unmasked = np.logical_not(arg._values) & arg.antimask
 
-    result_is_true = self_is_true & arg_is_true
-    result_is_not_false = self_is_not_false & arg_is_not_false
+    # If either operand is False (unmasked), result is False and unmasked
+    result_is_false = self_is_false_unmasked | arg_is_false_unmasked
 
-    result_is_masked = Qube.and_(np.logical_not(result_is_true), result_is_not_false)
+    # For non-False cases, determine truth values
+    # True and Masked = Masked, so we need to check if either is masked
+    if Qube.is_one_false(self._mask):
+        self_is_true_unmasked = self._values
+        self_is_masked = False
+    else:
+        self_is_true_unmasked = self._values & self.antimask
+        # Masked if mask is True and value is not False (unmasked)
+        self_is_masked = self._mask & np.logical_not(self_is_false_unmasked)
+
+    if Qube.is_one_false(arg._mask):
+        arg_is_true_unmasked = arg._values
+        arg_is_masked = False
+    else:
+        arg_is_true_unmasked = arg._values & arg.antimask
+        # Masked if mask is True and value is not False (unmasked)
+        arg_is_masked = arg._mask & np.logical_not(arg_is_false_unmasked)
+
+    # Result is True only if both are True and unmasked
+    result_is_true = self_is_true_unmasked & arg_is_true_unmasked
+
+    # Result is masked if:
+    # - Both are masked (and neither is False unmasked), OR
+    # - One is True (unmasked) and the other is masked (True and Masked = Masked)
+    result_is_masked = (self_is_masked & arg_is_masked) | (self_is_true_unmasked & arg_is_masked) | (self_is_masked & arg_is_true_unmasked)
+
+    # Override: if result is False, it's never masked
+    result_is_masked = result_is_masked & np.logical_not(result_is_false)
 
     result = Qube._BOOLEAN_CLASS(result_is_true, result_is_masked)
 
@@ -75,9 +105,10 @@ def tvl_or(self, arg, builtins=None, masked=None):
     Masked values are treated as indeterminate rather than being ignored. These are the
     rules:
 
-        * True or anything = True
+        * True (unmasked) or anything = True (even if the other operand is masked)
         * False or False = False
         * False or Masked = Masked
+        * Masked or Masked = Masked
 
     Parameters:
         arg (Qube or bool): The right-hand operand for the OR operation.
@@ -87,10 +118,11 @@ def tvl_or(self, arg, builtins=None, masked=None):
         masked (bool, optional): The value to return if builtins is True but the returned
             value is masked. Default is to return a masked value instead of a builtin
             type.
-            value specified by Qube.PREFER_BUILTIN_TYPES.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "or" operation.
+        (Boolean or bool): The result of the three-valued logic "or" operation. When the
+        result is masked, the underlying boolean value may be either True or False, and
+        the mask indicates indeterminacy.
     """
 
     # Truth table...
@@ -102,26 +134,53 @@ def tvl_or(self, arg, builtins=None, masked=None):
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
     arg = Qube._BOOLEAN_CLASS.as_boolean(arg)
 
+    # Determine if each operand is True (unmasked)
+    # True (unmasked) or anything = True, so we need to detect unmasked True values
     if Qube.is_one_false(self._mask):
-        self_is_true = self._values
-        self_is_not_false = self._values
+        self_is_true_unmasked = self._values
     else:
-        self_is_true = self._values & self.antimask
-        self_is_not_false = self._values | self._mask
+        # True if value is True and unmasked
+        self_is_true_unmasked = self._values & self.antimask
 
     if Qube.is_one_false(arg._mask):
-        arg_is_true = arg._values
-        arg_is_not_false = arg._values
+        arg_is_true_unmasked = arg._values
     else:
-        arg_is_true = arg._values & arg.antimask
-        arg_is_not_false = arg._values | arg._mask
+        # True if value is True and unmasked
+        arg_is_true_unmasked = arg._values & arg.antimask
 
-    result_is_true = self_is_true | arg_is_true
-    result_is_not_false = self_is_not_false | arg_is_not_false
+    # If either operand is True (unmasked), result is True and unmasked
+    result_is_true = self_is_true_unmasked | arg_is_true_unmasked
 
-    result_is_masked = Qube.and_(np.logical_not(result_is_true), result_is_not_false)
+    # For non-True cases, determine false/masked values
+    # False or Masked = Masked, so we need to check if either is masked
+    if Qube.is_one_false(self._mask):
+        self_is_false_unmasked = np.logical_not(self._values)
+        self_is_masked = False
+    else:
+        self_is_false_unmasked = np.logical_not(self._values) & self.antimask
+        # Masked if mask is True and value is not True (unmasked)
+        self_is_masked = self._mask & np.logical_not(self_is_true_unmasked)
 
-    result = Qube._BOOLEAN_CLASS(result_is_not_false, result_is_masked)
+    if Qube.is_one_false(arg._mask):
+        arg_is_false_unmasked = np.logical_not(arg._values)
+        arg_is_masked = False
+    else:
+        arg_is_false_unmasked = np.logical_not(arg._values) & arg.antimask
+        # Masked if mask is True and value is not True (unmasked)
+        arg_is_masked = arg._mask & np.logical_not(arg_is_true_unmasked)
+
+    # Result is False only if both are False and unmasked
+    result_is_false = self_is_false_unmasked & arg_is_false_unmasked
+
+    # Result is masked if:
+    # - Both are masked (and neither is True unmasked), OR
+    # - One is False (unmasked) and the other is masked (False or Masked = Masked)
+    result_is_masked = (self_is_masked & arg_is_masked) | (self_is_false_unmasked & arg_is_masked) | (self_is_masked & arg_is_false_unmasked)
+
+    # Override: if result is True, it's never masked
+    result_is_masked = result_is_masked & np.logical_not(result_is_true)
+
+    result = Qube._BOOLEAN_CLASS(result_is_true, result_is_masked)
 
     # Convert result to a Python bool if necessary
     if builtins is None:
@@ -147,7 +206,9 @@ def tvl_any(self, axis=None, builtins=None, masked=None):
         axis (int or tuple, optional): An integer axis or a tuple of axes. The
             any operation is performed across these axes, leaving any remaining
             axes in the returned value. If None (the default), then the any
-            operation is performed across all axes of the object.
+            operation is performed across all axes of the object, reducing to a
+            scalar result. When axis is specified, the result shape is the original
+            shape with the specified axes removed.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
             Default is to use the global setting defined by Qube.prefer_builtins().
@@ -156,7 +217,15 @@ def tvl_any(self, axis=None, builtins=None, masked=None):
             type.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "any" operation.
+        (Boolean or bool): The result of the three-valued logic "any" operation. The
+        result is masked if any values along the specified axes are masked, unless
+        an unmasked True value is found.
+
+    Examples:
+        >>> a = Boolean([True, False, True])
+        >>> a.tvl_any()  # Returns True
+        >>> a = Boolean([False, False, False], mask=[False, True, False])
+        >>> a.tvl_any()  # Returns Masked (indeterminate due to masked False)
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
@@ -202,7 +271,9 @@ def tvl_all(self, axis=None, builtins=None, masked=None):
         axis (int or tuple, optional): An integer axis or a tuple of axes. The
             all operation is performed across these axes, leaving any remaining
             axes in the returned value. If None (the default), then the all
-            operation is performed across all axes of the object.
+            operation is performed across all axes of the object, reducing to a
+            scalar result. When axis is specified, the result shape is the original
+            shape with the specified axes removed.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
             Default is to use the global setting defined by Qube.prefer_builtins().
@@ -211,7 +282,15 @@ def tvl_all(self, axis=None, builtins=None, masked=None):
             type.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "all" operation.
+        (Boolean or bool): The result of the three-valued logic "all" operation. The
+        result is masked if any values along the specified axes are masked, unless
+        an unmasked False value is found.
+
+    Examples:
+        >>> a = Boolean([True, True, True])
+        >>> a.tvl_all()  # Returns True
+        >>> a = Boolean([True, True, True], mask=[False, True, False])
+        >>> a.tvl_all()  # Returns Masked (indeterminate due to masked True)
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
@@ -257,7 +336,10 @@ def tvl_eq(self, arg, builtins=None):
             Default is to use the global setting defined by Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic equality comparison.
+        (Boolean or bool): The result of the three-valued logic equality comparison. When
+        the result is masked, the underlying boolean value may be either True or False, and
+        the mask indicates indeterminacy. The `builtins` parameter affects the return type
+        but not the masking behavior.
     """
 
     return self._tvl_op(arg, (self == arg), builtins=builtins)
@@ -276,7 +358,10 @@ def tvl_ne(self, arg, builtins=None):
             Default is to use the global setting defined by Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic inequality comparison.
+        (Boolean or bool): The result of the three-valued logic inequality comparison. When
+        the result is masked, the underlying boolean value may be either True or False, and
+        the mask indicates indeterminacy. The `builtins` parameter affects the return type
+        but not the masking behavior.
     """
 
     return self._tvl_op(arg, (self != arg), builtins=builtins)
@@ -295,7 +380,10 @@ def tvl_lt(self, arg, builtins=None):
             Default is to use the global setting defined by Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "less than" comparison.
+        (Boolean or bool): The result of the three-valued logic "less than" comparison. When
+        the result is masked, the underlying boolean value may be either True or False, and
+        the mask indicates indeterminacy. The `builtins` parameter affects the return type
+        but not the masking behavior.
     """
 
     return self._tvl_op(arg, (self < arg), builtins=builtins)
@@ -315,6 +403,9 @@ def tvl_gt(self, arg, builtins=None):
 
     Returns:
         (Boolean or bool): The result of the three-valued logic "greater than" comparison.
+        When the result is masked, the underlying boolean value may be either True or False,
+        and the mask indicates indeterminacy. The `builtins` parameter affects the return
+        type but not the masking behavior.
     """
 
     return self._tvl_op(arg, (self > arg), builtins=builtins)
@@ -334,7 +425,9 @@ def tvl_le(self, arg, builtins=None):
 
     Returns:
         (Boolean or bool): The result of the three-valued logic "less than or equal to"
-        comparison.
+        comparison. When the result is masked, the underlying boolean value may be either
+        True or False, and the mask indicates indeterminacy. The `builtins` parameter affects
+        the return type but not the masking behavior.
     """
 
     return self._tvl_op(arg, (self <= arg), builtins=builtins)
@@ -354,7 +447,9 @@ def tvl_ge(self, arg, builtins=None):
 
     Returns:
         (Boolean or bool): The result of the three-valued logic "greater than or equal to"
-        comparison.
+        comparison. When the result is masked, the underlying boolean value may be either
+        True or False, and the mask indicates indeterminacy. The `builtins` parameter affects
+        the return type but not the masking behavior.
     """
 
     return self._tvl_op(arg, (self >= arg), builtins=builtins)

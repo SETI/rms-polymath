@@ -1902,10 +1902,22 @@ class Qube(object):
 
         obj = self.clone(recursive=recursive)
         obj._unit = None
+
+        # Strip units from derivatives if recursive is True
+        if recursive and obj._derivs:
+            for key, deriv in obj._derivs.items():
+                if deriv._unit is not None:
+                    obj._derivs[key] = deriv.without_unit(recursive=True)
+
         return obj
 
     def into_unit(self, recursive=False):
         """The values property of this object, converted to its unit.
+
+        This method converts values from standard units (kilometers, seconds, radians)
+        to this object's specified unit. For example, if the object has unit=Unit.M
+        (meters) and the internal values are in kilometers (standard units), this
+        method converts from km to m by multiplying by 1000.
 
         Parameters:
             recursive (bool, optional): If True, also return the derivatives converted to
@@ -1913,9 +1925,13 @@ class Qube(object):
 
         Returns:
             (numpy.ndarray, float, int, bool, or tuple): The values attribute of this
-            object, converted to this object's units. If `recursive` is True, it returns a
-            tuple (`values`, `derivs`), where `derivs` is a dictionary of the derivative
-            values converted to their units.
+            object, converted from standard units to this object's unit. If `recursive`
+            is True, it returns a tuple (`values`, `derivs`), where `derivs` is a
+            dictionary of the derivative values converted to their units.
+
+        Examples:
+            >>> a = Scalar([1.0, 2.0, 3.0], unit=Unit.M)  # values in km (standard)
+            >>> a.into_unit()  # Returns [1000.0, 2000.0, 3000.0] (converted to meters)
         """
 
         if self._unit is None or self._unit.into_unit_factor == 1.:
