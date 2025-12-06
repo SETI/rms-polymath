@@ -100,7 +100,9 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
     """Set the desired number of decimal digits of precision in the storage of this
     object's floating-point values and their derivatives.
 
-    This attribute is ignored for integer and boolean values.
+    This attribute is ignored for integer and boolean values. The method will still
+    set the attribute on the object, but it will not be used during pickling of
+    integer or boolean arrays.
 
     Parameters:
         digits (int, float, str or tuple, optional):
@@ -741,7 +743,7 @@ def _decode_bools(values, shape, size):
 def __getstate__(self):
     """The state is defined by a dictionary containing most of the Qube attributes.
 
-    "_cache" is removed.
+    "_cache" is removed or set to an empty dictionary.
 
     "_mask", and "_values" are replaced by encodings, as discussed below.
 
@@ -763,6 +765,12 @@ def __getstate__(self):
     * ('FLOAT', digits, reference) for any floating-point compression performed.
     * ('BOOL', shape, size) if packbits plus BZ2 compression was performed.
     * ('INT', shape) if BZ2 compression of integers was performed.
+
+    Note:
+        For floating-point arrays using lossy compression methods (e.g., when digits < 16
+        or reference != 'double'), the round-trip values may differ slightly from the original
+        due to compression precision limits. Use 'double' precision with 'fpzip' reference for
+        lossless compression.
     """
 
     # Start with a shallow clone; save derivatives for later
@@ -878,6 +886,20 @@ def __getstate__(self):
 
 
 def __setstate__(self, state):
+    """Restore the object state from a pickled dictionary.
+
+    This method decodes the mask and values from their encoded forms (as stored by
+    __getstate__), handles version compatibility, and restores the object to its
+    original state.
+
+    Note: For floating-point arrays using lossy compression methods (e.g., when digits < 16
+    or reference != 'double'), the restored values may differ slightly from the original
+    due to compression precision limits. Use 'double' precision with 'fpzip' reference for
+    lossless compression.
+
+    Parameters:
+        state (dict): The state dictionary as returned by __getstate__().
+    """
 
     # Handle renamed keys
     if '_units_' in state:

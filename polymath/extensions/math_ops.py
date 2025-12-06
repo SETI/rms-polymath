@@ -85,7 +85,10 @@ def __add__(self, /, arg, *, recursive=True):
     """self + arg, element-by-element addition.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
+            For simple scalar operations (when self._rank == 0), Python numbers are handled
+            directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -135,7 +138,8 @@ def __radd__(self, /, arg, *, recursive=True):
     """arg + self, element-by-element addition.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -223,7 +227,10 @@ def __sub__(self, /, arg, *, recursive=True):
     """self - arg, element-by-element subtraction.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
+            For simple scalar operations (when self._rank == 0), Python numbers are handled
+            directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -273,7 +280,8 @@ def __rsub__(self, /, arg, *, recursive=True):
     """arg - self, element-by-element subtraction.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -284,6 +292,9 @@ def __rsub__(self, /, arg, *, recursive=True):
     if not isinstance(arg, Qube):
         arg = self.as_this_type(arg, coerce=False, op='-')
         return arg.__sub__(self, recursive=recursive)
+
+    # If arg is already a Qube, compute arg - self
+    return arg.__sub__(self, recursive=recursive)
 
 
 def __isub__(self, /, arg):
@@ -365,7 +376,10 @@ def __mul__(self, /, arg, *, recursive=True):
     """self * arg, element-by-element multiplication.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
+            For simple scalar operations (when self._rank == 0), Python numbers are handled
+            directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -416,7 +430,8 @@ def __rmul__(self, /, arg, *, recursive=True):
     """arg * self, element-by-element multiplication.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -573,7 +588,10 @@ def __truediv__(self, /, arg, *, recursive=True):
     Cases of divide-by-zero are masked.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
+            For simple scalar operations (when self._rank == 0), Python numbers are handled
+            directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -627,7 +645,8 @@ def __rtruediv__(self, /, arg, *, recursive=True):
     Cases of divide-by-zero are masked.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): Argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Scalar.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -781,10 +800,11 @@ def __floordiv__(self, /, arg):
     Cases of divide-by-zero are masked. Derivatives are ignored.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
 
     Returns:
-        Qube: The result of the floor dividion.
+        Qube: The result of the floor division.
     """
 
     # Convert arg to a Scalar if necessary
@@ -822,10 +842,11 @@ def __rfloordiv__(self, /, arg):
     Cases of divide-by-zero are masked. Derivatives are ignored.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Scalar.
 
     Returns:
-        Qube: The result of the floor dividion.
+        Qube: The result of the floor division.
     """
 
     # Convert arg to a Scalar and try again
@@ -936,7 +957,8 @@ def __mod__(self, /, arg, *, recursive=True):
     not in the denominator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -982,7 +1004,8 @@ def __rmod__(self, /, arg, *, recursive=True):
     not in the denominator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Scalar.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -1097,7 +1120,7 @@ def _mod_by_scalar(self, /, arg, *, recursive=True):
 ##########################################################################################
 
 def __pow__(self, /, arg):
-    """arg ** self, element-by-element exponentiation.
+    """self ** arg, element-by-element exponentiation.
 
     Derivatives are not supported.
 
@@ -1418,9 +1441,14 @@ def __bool__(self):
     """True if nonzero, otherwise False, element by element.
 
     This method also supports "if a == b: ..." and "if a != b: ..." statements using the
-    internal attributes _truth_if_all and _truth_if_any. In this case, equality requires
-    that every unmasked element of a and b be equal and both objects be masked at the same
-    locations.
+    internal attributes _truth_if_all and _truth_if_any. These attributes are set by
+    the __eq__() and __ne__() methods respectively. When _truth_if_all is True (set by
+    __eq__()), the result is True only if all unmasked elements are True. When
+    _truth_if_any is True (set by __ne__()), the result is True if any unmasked element
+    is True.
+
+    In this case, equality requires that every unmasked element of a and b be equal and
+    both objects be masked at the same locations.
 
     Comparison of objects of shape () is also supported.
 
@@ -1866,11 +1894,11 @@ def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=N
     """The mean of the unmasked values along the specified axis or axes.
 
     Parameters:
-        axis (int or tuple, optional): An integer axis or a tuple of axes. The sum is
+        axis (int or tuple, optional): An integer axis or a tuple of axes. The mean is
             determined across these axes, leaving any remaining axes in the returned
-            value. If None (the default), then the sum is performed across all axes if the
+            value. If None (the default), then the mean is performed across all axes of the
             object.
-        recursive (bool, optional): True to include the sums of the derivatives inside the
+        recursive (bool, optional): True to include the means of the derivatives inside the
             returned Scalar.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
@@ -1878,8 +1906,15 @@ def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=N
         masked (bool, optional): The value to return if builtins is True but the returned
             value is masked. Default is to return a masked value instead of a builtin
             type.
-        dtype (optional): Ignored. This enables "np.sum(Qube)" to work.
-        out (optional): Ignored. This enables "np.sum(Qube)" to work.
+        dtype (optional): Ignored. This enables "np.mean(Qube)" to work.
+        out (optional): Ignored. This enables "np.mean(Qube)" to work.
+
+    Examples:
+        For an object with shape (2, 3, 2):
+        - axis=0 → result shape (3, 2)
+        - axis=1 → result shape (2, 2)
+        - axis=(0, 1) → result shape (2,)
+        - axis=None → result shape ()
     """
 
     result = self._mean_or_sum(axis, recursive=recursive, _combine_as_mean=True)
