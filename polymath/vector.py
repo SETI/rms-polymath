@@ -31,7 +31,13 @@ class Vector(Qube):
             arg (ndarray, float, int, list, or tuple): The input data to construct
                 the Vector. A Python scalar will be converted to an array of shape (1,).
             *args: Additional arguments passed to the Qube constructor.
-            **kwargs: Additional "keyword=value" arguments passd to the Qube constructor.
+            **kwargs: Additional "keyword=value" arguments passd to the Qube
+                constructor. If `drank` is specified, the input array must have at least
+                `nrank + drank` dimensions. For example, with `drank=1`, the minimum shape
+                is (n, m) where n is the numerator size and m is the denominator size.
+
+        Raises:
+            ValueError: If the array shape is incompatible with the specified `drank`.
         """
 
         if isinstance(arg, (float, int)):

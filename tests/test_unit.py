@@ -4,7 +4,6 @@
 
 import numpy as np
 import unittest
-import math
 
 from polymath import Unit
 

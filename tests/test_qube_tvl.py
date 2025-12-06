@@ -5,7 +5,7 @@
 import numpy as np
 import unittest
 
-from polymath import Qube, Scalar, Boolean, Unit
+from polymath import Qube, Scalar, Boolean
 
 
 class Test_Qube_tvl(unittest.TestCase):

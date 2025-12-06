@@ -19,8 +19,8 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
             values unchanged.
         remask (bool, optional): True to leave the new values masked; False to replace
             the values but leave them unmasked.
-        recursive (bool, optional): True to mask the derivatives as well;
-            False to leave them unmasked.
+        recursive (bool, optional): True to include and mask the derivatives as well;
+            False to exclude derivatives from the returned object.
 
     Returns:
         Qube: A copy of this object with the mask applied.
@@ -49,9 +49,9 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
     # Shapeless case
     if self._is_scalar:
         if replace is None:
-            obj = self.copy(recursive=True)
+            obj = self.copy(recursive=recursive)
         else:
-            obj = replace.copy(recursive=True)
+            obj = replace.copy(recursive=recursive)
 
         if remask:
             obj = obj.remask(True, recursive=recursive)
@@ -61,7 +61,7 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
     # Case with no replacement
     if replace is None:
         # Note that the new mask must be a copy
-        obj = self.remask_or(mask, recursive=True)
+        obj = self.remask_or(mask, recursive=recursive)
         return obj
 
     # If replacement is an array or single Qube...
@@ -71,7 +71,7 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
     # use True, which will allow the replacement to broadcast as needed.
     rep_mask = mask if replace._shape else True
 
-    obj = self.copy()
+    obj = self.copy(recursive=recursive)
     obj[mask] = replace[rep_mask]   # handles derivatives too!
 
     if remask:
