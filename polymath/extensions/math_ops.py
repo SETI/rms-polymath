@@ -87,8 +87,8 @@ def __add__(self, /, arg, *, recursive=True):
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
             it will be converted to a Qube of the same type as self using as_this_type().
-            For simple scalar operations (when self._rank == 0), Python numbers are handled
-            directly for efficiency.
+            For simple scalar operations (when self._rank == 0), Python numbers are
+            handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -229,8 +229,8 @@ def __sub__(self, /, arg, *, recursive=True):
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
             it will be converted to a Qube of the same type as self using as_this_type().
-            For simple scalar operations (when self._rank == 0), Python numbers are handled
-            directly for efficiency.
+            For simple scalar operations (when self._rank == 0), Python numbers are
+            handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -378,8 +378,8 @@ def __mul__(self, /, arg, *, recursive=True):
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
             it will be converted to a Qube of the same type as self using as_this_type().
-            For simple scalar operations (when self._rank == 0), Python numbers are handled
-            directly for efficiency.
+            For simple scalar operations (when self._rank == 0), Python numbers are
+            handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -590,8 +590,8 @@ def __truediv__(self, /, arg, *, recursive=True):
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
             it will be converted to a Qube of the same type as self using as_this_type().
-            For simple scalar operations (when self._rank == 0), Python numbers are handled
-            directly for efficiency.
+            For simple scalar operations (when self._rank == 0), Python numbers are
+            handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -1896,10 +1896,10 @@ def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=N
     Parameters:
         axis (int or tuple, optional): An integer axis or a tuple of axes. The mean is
             determined across these axes, leaving any remaining axes in the returned
-            value. If None (the default), then the mean is performed across all axes of the
-            object.
-        recursive (bool, optional): True to include the means of the derivatives inside the
-            returned Scalar.
+            value. If None (the default), then the mean is performed across all axes of
+            the object.
+        recursive (bool, optional): True to include the means of the derivatives inside
+            the returned Scalar.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
             Default is to use the global setting defined by Qube.prefer_builtins().

@@ -89,34 +89,27 @@ class Pair(Vector):
             that matches the denominator shape of the other arguments.
         """
 
-        # Handle None values by converting them to zero Scalars
-        args = [x, y]
-        non_none_args = [arg for arg in args if arg is not None]
+        # Convert all non-None args to Scalars
+        non_none_args = [arg for arg in [x, y] if arg is not None]
 
-        if len(non_none_args) == 0:
-            # All are None, create zero Scalars
-            x = Scalar(0.)
-            y = Scalar(0.)
-        else:
-            # Convert non-None args to Scalars to determine denominator shape
-            scalars = []
-            for arg in non_none_args:
-                scalars.append(Scalar.as_scalar(arg, recursive=recursive))
-
-            # Find the denominator shape from non-None arguments
-            # Broadcast to find common denominator
+        if len(non_none_args) > 0:
+            # Convert to Scalars and broadcast to get common denominator/example
+            scalars = [Scalar.as_scalar(arg, recursive=recursive)
+                       for arg in non_none_args]
             if len(scalars) > 1:
                 scalars = Qube.broadcast(*scalars, recursive=recursive)
             example_scalar = scalars[0]
-
-            # Create a zero Scalar matching the denominator shape of the example
+            # Create a zero scalar from that example
             zero_scalar = example_scalar.zero()
+        else:
+            # All are None: create scalar-valued zero (no denominator shape)
+            zero_scalar = Scalar(0.)
 
-            # Replace None values with zero Scalars matching the denominator
-            if x is None:
-                x = zero_scalar
-            if y is None:
-                y = zero_scalar
+        # Replace any None with the zero scalar
+        if x is None:
+            x = zero_scalar
+        if y is None:
+            y = zero_scalar
 
         return Qube.from_scalars(x, y, recursive=recursive, readonly=readonly,
                                  classes=[Pair])

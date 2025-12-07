@@ -95,11 +95,11 @@ class Test_Polynomial_Basic(unittest.TestCase):
 
         # Test invert_line preserves derivatives
         p_linear_with_deriv = Polynomial([3., 2.])
-        p_linear_deriv = Polynomial([1., 0.])  # derivative of 2x + 3 is 2
+        p_linear_deriv = Polynomial([1., 0.])  # derivative of 3 + 2x is 2
         p_linear_with_deriv.insert_deriv('t', p_linear_deriv)
         p_inv_with_deriv = p_linear_with_deriv.invert_line(recursive=True)
         self.assertTrue(hasattr(p_inv_with_deriv, 'd_dt'))
-        # Derivative of inverse: if y = 2x + 3, then x = 0.5y - 1.5
+        # Derivative of inverse: if y = 3 + 2x (or 2x + 3), then x = 0.5y - 1.5
         # If dy/dt = 2, then dx/dt = 0.5 * 2 = 1
         # But we need to check the actual derivative structure
         self.assertEqual(type(p_inv_with_deriv.d_dt), Polynomial)

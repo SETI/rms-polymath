@@ -768,9 +768,9 @@ def __getstate__(self):
 
     Note:
         For floating-point arrays using lossy compression methods (e.g., when digits < 16
-        or reference != 'double'), the round-trip values may differ slightly from the original
-        due to compression precision limits. Use 'double' precision with 'fpzip' reference for
-        lossless compression.
+        or reference != 'double'), the round-trip values may differ slightly from the
+        original due to compression precision limits. Use 'double' precision with 'fpzip'
+        reference for lossless compression.
     """
 
     # Start with a shallow clone; save derivatives for later
@@ -892,10 +892,10 @@ def __setstate__(self, state):
     __getstate__), handles version compatibility, and restores the object to its
     original state.
 
-    Note: For floating-point arrays using lossy compression methods (e.g., when digits < 16
-    or reference != 'double'), the restored values may differ slightly from the original
-    due to compression precision limits. Use 'double' precision with 'fpzip' reference for
-    lossless compression.
+    Note: For floating-point arrays using lossy compression methods (e.g., when digits <
+    16 or reference != 'double'), the restored values may differ slightly from the
+    original due to compression precision limits. Use 'double' precision with 'fpzip'
+    reference for lossless compression.
 
     Parameters:
         state (dict): The state dictionary as returned by __getstate__().

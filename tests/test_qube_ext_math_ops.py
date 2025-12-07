@@ -6,7 +6,7 @@
 import numpy as np
 import unittest
 
-from polymath import Qube, Scalar, Vector, Vector3, Boolean, Matrix
+from polymath import Scalar, Vector, Boolean
 
 
 class Test_Qube_math_ops(unittest.TestCase):
@@ -362,7 +362,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         a = Scalar([2., 3., 4.])
         # Scalar might override this, so we test that it either raises or works
         try:
-            result = a ** 16
+            _ = a ** 16
             # If it doesn't raise, that's okay - Scalar may have different limits
         except ValueError:
             pass  # Expected for base Qube class
@@ -748,7 +748,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         a = Scalar([1., 2., 3.])
         # Try to add incompatible type
         try:
-            result = a + "invalid"
+            _ = a + "invalid"
             # If it doesn't raise, that's unexpected
             self.fail("Expected TypeError or ValueError")
         except (TypeError, ValueError):
@@ -766,7 +766,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         try:
             a = Vector(np.arange(6).reshape(2, 3), drank=1)
             b = Vector(np.arange(6, 12).reshape(2, 3), drank=1)
-            result = a * b
+            _ = a * b
             # If it doesn't raise, that's unexpected
             self.fail("Expected ValueError")
         except ValueError:

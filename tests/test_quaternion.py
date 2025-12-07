@@ -15,6 +15,20 @@ from polymath import Matrix, Matrix3, Quaternion, Scalar, Vector3
 
 class Test_Quaternion(unittest.TestCase):
 
+    def assert_rms_less_than(self, diff, threshold):
+        """Helper method to assert RMS value is less than threshold, handling masked Scalars."""
+        rms_val = diff.rms()
+        # Extract numeric value if rms returns a Scalar
+        if isinstance(rms_val, Scalar):
+            if rms_val.mask:
+                # Skip assertion if masked
+                pass
+            else:
+                rms_val = float(rms_val.values) if np.size(rms_val.values) == 1 else rms_val.values
+                self.assertLess(rms_val, threshold)
+        else:
+            self.assertLess(rms_val, threshold)
+
     def runTest(self):
 
         np.random.seed(8615)
@@ -330,17 +344,7 @@ class Test_Quaternion(unittest.TestCase):
         # Compare with identity matrix using rms
         identity = Matrix3.IDENTITY3
         diff = Matrix(m) - Matrix(identity)
-        rms_val = diff.rms()
-        # Extract numeric value if rms returns a Scalar
-        if isinstance(rms_val, Scalar):
-            if rms_val.mask:
-                # Skip assertion if masked
-                pass
-            else:
-                rms_val = float(rms_val.values) if np.size(rms_val.values) == 1 else rms_val.values
-                self.assertLess(rms_val, DEL)
-        else:
-            self.assertLess(rms_val, DEL)
+        self.assert_rms_less_than(diff, DEL)
 
         # Test round-trip: quaternion -> matrix -> quaternion
         q1 = Quaternion(np.random.randn(4))
@@ -394,17 +398,7 @@ class Test_Quaternion(unittest.TestCase):
         # Test that round-trip works: matrix -> quaternion -> matrix
         m2 = q.to_matrix3()
         diff = Matrix(m) - Matrix(m2)
-        rms_val = diff.rms()
-        # Extract numeric value if rms returns a Scalar
-        if isinstance(rms_val, Scalar):
-            if rms_val.mask:
-                # Skip assertion if masked
-                pass
-            else:
-                rms_val = float(rms_val.values) if np.size(rms_val.values) == 1 else rms_val.values
-                self.assertLess(rms_val, DEL)
-        else:
-            self.assertLess(rms_val, DEL)
+        self.assert_rms_less_than(diff, DEL)
 
         # Test round-trip: matrix -> quaternion -> matrix
         m1 = Matrix3(np.random.randn(3, 3))
@@ -414,17 +408,7 @@ class Test_Quaternion(unittest.TestCase):
         DEL2 = 1.e-6
         # Use rms for comparison since abs() is not supported for Matrix
         diff = Matrix(m1) - Matrix(m2)
-        rms_val = diff.rms()
-        # Extract numeric value if rms returns a Scalar
-        if isinstance(rms_val, Scalar):
-            if rms_val.mask:
-                # Skip assertion if masked
-                pass
-            else:
-                rms_val = float(rms_val.values) if np.size(rms_val.values) == 1 else rms_val.values
-                self.assertLess(rms_val, DEL2)
-        else:
-            self.assertLess(rms_val, DEL2)
+        self.assert_rms_less_than(diff, DEL2)
 
         # n-D case
         m = Matrix3(np.random.randn(5, 3, 3, 3))

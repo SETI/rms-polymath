@@ -6,7 +6,7 @@
 import numpy as np
 import unittest
 
-from polymath import Qube, Scalar, Vector, Vector3, Matrix
+from polymath import Qube, Scalar, Vector, Vector3
 
 
 class Test_Qube_vector_ops(unittest.TestCase):

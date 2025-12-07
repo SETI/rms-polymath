@@ -85,7 +85,9 @@ class Vector3(Vector):
         Notes:
             Input arguments need not have the same shape, but it must be possible to cast
             them to the same shape. A value of None is converted to a zero-valued Scalar
-            that matches the denominator shape of the other arguments.
+            that matches the denominator shape of the other arguments. If all arguments
+            (x, y, z) are None, scalar-valued zeros (Scalar(0.)) are used for each
+            component, i.e., no denominator shape is inferred.
         """
 
         # Handle None values by converting them to zero Scalars

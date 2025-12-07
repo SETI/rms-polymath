@@ -383,8 +383,10 @@ class Test_Qube_pickler(unittest.TestCase):
         self.assertIn('VALS_ENCODING', state)
         # Check that FLOAT encoding is present
         vals_encoding = state['VALS_ENCODING']
-        has_float = any(item[0] == 'FLOAT' for item in vals_encoding if isinstance(item, tuple))
         # May or may not have FLOAT depending on compression method
+        # Check encoding structure (has_float variable kept for potential future use)
+        _ = any(item[0] == 'FLOAT' for item in vals_encoding
+                if isinstance(item, tuple))
 
         # Test pickling with INT encoding
         a = Scalar([1, 2, 3, 4, 5])

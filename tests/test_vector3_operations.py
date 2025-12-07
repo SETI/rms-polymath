@@ -64,11 +64,14 @@ class Test_Vector3_Operations(unittest.TestCase):
         # Rotating (1,0,0) about z-axis by pi/2 should give (0,1,0)
         self.assertTrue(np.allclose(v37_spun.vals, [0., 1., 0.], atol=1e-10))
 
-        # Test spin with angle=None (uses pole magnitude)
+        # Test spin with angle=None (uses pole magnitude via arcsin)
         v38 = Vector3([1., 0., 0.])
-        pole38 = Vector3([0., 0., np.pi/2])  # magnitude is pi/2
+        # Use pole with magnitude 1.0 so arcsin(1.0) = pi/2
+        pole38 = Vector3([0., 0., 1.])  # magnitude is 1.0, arcsin(1.0) = pi/2
         v38_spun = v38.spin(pole38)
         self.assertEqual(type(v38_spun), Vector3)
+        # For v38 = (1,0,0) and pole38 with magnitude 1.0 (arcsin gives pi/2), the spun vector should be (0,1,0)
+        self.assertTrue(np.allclose(v38_spun.vals, [0., 1., 0.], atol=1e-10))
 
         # Test offset_angles method
         v40 = Vector3([1., 0., 0.])

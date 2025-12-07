@@ -627,13 +627,22 @@ class Polynomial(Vector):
                 # Convert derivatives from Polynomial to Scalar
                 derivs = {}
                 for key, deriv in self._derivs.items():
-                    # Derivative of a constant polynomial is also constant
-                    assert deriv.order == 0
-                    deriv_tail = deriv._drank * (slice(None),)
-                    if deriv_tail:
-                        deriv_const = deriv._values[(Ellipsis, 0) + deriv_tail]
+                    # Handle derivative: if order is 0, extract constant;
+                    # otherwise evaluate at 0
+                    if deriv.order == 0:
+                        deriv_tail = deriv._drank * (slice(None),)
+                        if deriv_tail:
+                            deriv_const = deriv._values[(Ellipsis, 0) + deriv_tail]
+                        else:
+                            deriv_const = deriv._values[..., 0]
                     else:
-                        deriv_const = deriv._values[..., 0]
+                        # Non-zero order derivative: evaluate at 0 to get a Scalar
+                        deriv_const_scalar = Scalar.as_scalar(
+                            deriv.eval(0., recursive=False))
+                        deriv_const = deriv_const_scalar._values
+                        # Use the mask and unit from the evaluated derivative
+                        deriv_mask = deriv_const_scalar._mask
+                        deriv_unit = deriv_const_scalar._unit
                     # Recursively convert derivative's derivatives
                     deriv_derivs = {}
                     if deriv._derivs:
@@ -651,8 +660,12 @@ class Polynomial(Vector):
                             else:
                                 deriv_derivs[dkey] = Scalar.as_scalar(
                                     dvalue.eval(0., recursive=False))
-                    derivs[key] = Scalar(deriv_const, deriv._mask,
-                                         derivs=deriv_derivs, unit=deriv._unit)
+                    if deriv.order == 0:
+                        derivs[key] = Scalar(deriv_const, deriv._mask,
+                                             derivs=deriv_derivs, unit=deriv._unit)
+                    else:
+                        derivs[key] = Scalar(deriv_const, deriv_mask,
+                                             derivs=deriv_derivs, unit=deriv_unit)
 
                 # Use example= to copy properties, but still need arg for the values
                 return Scalar(const_values, mask=None, derivs=derivs, example=self)

@@ -369,7 +369,7 @@ class Test_Pair(unittest.TestCase):
         self.assertTrue(np.allclose(p41_clipped.vals[0, 1], [2., 2.], atol=1e-10))
 
         # Test clip2d with remask=True
-        # Note: remask behavior may need verification - docstring says it includes new mask
+        # remask behavior: True keeps mask, False replaces values and unmasks
         p42 = Pair([5., 5.])
         lower = Pair([2., 2.])
         upper = Pair([4., 4.])
@@ -377,7 +377,7 @@ class Test_Pair(unittest.TestCase):
         self.assertEqual(type(p42_clipped), Pair)
         # Values should be clipped to (4, 4)
         self.assertTrue(np.allclose(p42_clipped.vals, [4., 4.], atol=1e-10))
-        # remask behavior may vary - check actual implementation
+        # With remask=True, the original mask is kept
 
         # Test clip2d raises ValueError for lower with shape
         p43 = Pair([1., 1.])
@@ -419,31 +419,31 @@ class Test_Pair(unittest.TestCase):
         self.assertTrue(np.allclose(p47_clipped.vals, [5., 5.], atol=1e-10))
 
         # Test inherited methods from Vector - to_scalar
-        p45 = Pair(np.random.randn(4, 1, 5, 2))
-        s45 = p45.to_scalar(0)
-        self.assertEqual(type(s45), Scalar)
-        self.assertEqual(s45.shape, p45.shape)
+        p_toscalar = Pair(np.random.randn(4, 1, 5, 2))
+        s_toscalar = p_toscalar.to_scalar(0)
+        self.assertEqual(type(s_toscalar), Scalar)
+        self.assertEqual(s_toscalar.shape, p_toscalar.shape)
 
         # Test to_scalars
-        scalars45 = p45.to_scalars()
-        self.assertEqual(len(scalars45), 2)
-        self.assertEqual(type(scalars45[0]), Scalar)
-        self.assertEqual(scalars45[0].shape, p45.shape)
+        scalars_from_pair = p_toscalar.to_scalars()
+        self.assertEqual(len(scalars_from_pair), 2)
+        self.assertEqual(type(scalars_from_pair[0]), Scalar)
+        self.assertEqual(scalars_from_pair[0].shape, p_toscalar.shape)
 
         # Test dot
-        p46 = Pair([1., 2.])
-        p47 = Pair([3., 4.])
-        dot46 = p46.dot(p47)
-        self.assertEqual(type(dot46), Scalar)
+        p_dot_a = Pair([1., 2.])
+        p_dot_b = Pair([3., 4.])
+        dot_result = p_dot_a.dot(p_dot_b)
+        self.assertEqual(type(dot_result), Scalar)
         # 1*3 + 2*4 = 3 + 8 = 11
-        self.assertTrue(np.allclose(dot46.vals, 11.))
+        self.assertTrue(np.allclose(dot_result.vals, 11.))
 
         # Test dot with n-D
-        p48 = Pair(np.random.randn(4, 1, 5, 2))
-        p49 = Pair(np.random.randn(8, 5, 2))
-        dot48 = p48.dot(p49)
+        p_dot_nd_a = Pair(np.random.randn(4, 1, 5, 2))
+        p_dot_nd_b = Pair(np.random.randn(8, 5, 2))
+        dot_nd_result = p_dot_nd_a.dot(p_dot_nd_b)
         # Broadcasting: (4, 1, 5) and (8, 5) -> (4, 8, 5)
-        self.assertEqual(dot48.shape, (4, 8, 5))
+        self.assertEqual(dot_nd_result.shape, (4, 8, 5))
 
         # Test norm
         p50 = Pair([3., 4.])
