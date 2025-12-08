@@ -726,7 +726,7 @@ class Test_Indices(unittest.TestCase):
         a = Scalar([1., 2., 3.])
         with self.assertRaises(IndexError):
             # This raises an error about multiple ellipses
-            # The correction < 0 case (line 326) is rare and hard to trigger directly
+            # The correction < 0 case is rare and hard to trigger directly
             _ = a[..., 0, ...]
 
         # IndexError float indexing

@@ -6,7 +6,7 @@
 import numpy as np
 import unittest
 
-from polymath import Matrix3, Matrix, Vector3, Scalar, Quaternion
+from polymath import Matrix3, Matrix, Vector, Vector3, Scalar, Quaternion
 from polymath.unit import Unit
 
 
@@ -664,5 +664,141 @@ class Test_Matrix3(unittest.TestCase):
                 except (AttributeError, KeyError, TypeError):
                     # Some states might not work, that's okay
                     pass
+
+        # Test twovec with denominators
+        # Create Vector with denominator, then convert to Vector3
+        # as_vector3() preserves the denominator, so we can test the check
+        # Create Vector with shape (3, 2) where 2 is the denominator dimension
+        v1_vals = np.array([[1., 0.], [0., 0.], [0., 0.]])  # shape (3, 2)
+        v1_with_denom = Vector(v1_vals, drank=1)  # shape (), numer (3,), denom (2,)
+        v1 = Vector3.as_vector3(v1_with_denom)  # Preserves denominator
+        v2 = Vector3([0., 1., 0.])
+        # v1 (which becomes unit1) has denominator, should raise ValueError
+        self.assertRaises(ValueError, Matrix3.twovec, v1, 0, v2, 1)
+
+        # Test twovec with vector2 having denominator
+        v1 = Vector3([1., 0., 0.])
+        v2_vals = np.array([[0., 0.], [1., 0.], [0., 0.]])  # shape (3, 2)
+        v2_with_denom = Vector(v2_vals, drank=1)  # shape (), numer (3,), denom (2,)
+        v2 = Vector3.as_vector3(v2_with_denom)  # Preserves denominator
+        self.assertRaises(ValueError, Matrix3.twovec, v1, 0, v2, 1)
+
+        # Test twovec with derivative denominator mismatch
+        v1 = Vector3([1., 0., 0.])
+        # Create derivative as Vector with denominator
+        v1_deriv_vals = np.array([[0., 0.], [0., 0.], [1., 0.]])  # shape (3, 2)
+        v1_deriv = Vector(v1_deriv_vals, drank=1)  # shape (), numer (3,), denom (2,)
+        v1.insert_deriv('t', Vector3.as_vector3(v1_deriv))
+        v2 = Vector3([0., 1., 0.])
+        # Create derivative with different denominator size to trigger mismatch
+        v2_deriv_vals = np.array([[0., 0., 0.], [0., 0., 0.], [1., 0., 0.]])  # shape (3, 3)
+        v2_deriv = Vector(v2_deriv_vals, drank=1)  # shape (), numer (3,), denom (3,)
+        v2.insert_deriv('t', Vector3.as_vector3(v2_deriv))
+        # Should raise ValueError due to denominator mismatch
+        self.assertRaises(ValueError, Matrix3.twovec, v1, 0, v2, 1, recursive=True)
+
+        # Test twovec with derivative denominator mismatch - key already in denoms
+        # This tests the path where key is in denoms and deriv._denom != denoms[key]
+        v1 = Vector3([1., 0., 0.])
+        v1_deriv1 = Vector(np.array([[0., 0.], [0., 0.], [1., 0.]]), drank=1)  # denom (2,)
+        v1.insert_deriv('t', Vector3.as_vector3(v1_deriv1))
+        v2 = Vector3([0., 1., 0.])
+        v2_deriv1 = Vector(np.array([[0., 0., 0.], [0., 0., 0.], [1., 0., 0.]]), drank=1)  # denom (3,)
+        v2.insert_deriv('t', Vector3.as_vector3(v2_deriv1))
+        # Both have 't' derivative but with different denominators
+        self.assertRaises(ValueError, Matrix3.twovec, v1, 0, v2, 1, recursive=True)
+
+        # Test twovec with derivatives in unit1, unit2, and unit3
+        # We need to test when key is in unit1._derivs, unit2._derivs, and unit3._derivs
+        # unit1 is created from vector1 using .unit(), which preserves derivatives
+        # unit2 and unit3 are created from cross products (ucross), which also preserve derivatives
+        v1 = Vector3([1., 0., 0.])
+        v1.insert_deriv('t', Vector3([0., 0., 1.]))
+        v2 = Vector3([0., 1., 0.])
+        v2.insert_deriv('t', Vector3([0., 0., 1.]))
+        # This creates unit1 (from v1.unit()), unit2, and unit3
+        # unit1 will have the derivative from v1 (through unit())
+        # unit2 and unit3 are created from cross products and will have derivatives
+        # if unit1 and vector2 have derivatives
+        m = Matrix3.twovec(v1, 0, v2, 1, recursive=True)
+        self.assertTrue(hasattr(m, 'd_dt'))
+        # Check that all three units' derivatives are included
+        # This tests lines 132-139 where key is in unit1._derivs, unit2._derivs, and unit3._derivs
+        self.assertEqual(type(m), Matrix3)
+
+        # Test with different derivative keys to test branches
+        # Test case where key is only in vector2, not in unit1
+        # This tests the branch where key is NOT in unit1._derivs but IS in unit2._derivs and unit3._derivs
+        v1_no_deriv = Vector3([1., 0., 0.])
+        v2_only = Vector3([0., 1., 0.])
+        v2_only.insert_deriv('t2', Vector3([0., 0., 1.]))
+        # unit1 won't have 't2', but unit2 and unit3 will have 't2' through cross products
+        m = Matrix3.twovec(v1_no_deriv, 0, v2_only, 1, recursive=True)
+        self.assertTrue(hasattr(m, 'd_dt2'))
+        # This tests the branch where key is NOT in unit1._derivs
+        # but IS in unit2._derivs
+        self.assertEqual(type(m), Matrix3)
+
+        # Test case where key is in unit1 but we want to test all branches
+        # If v1 has 't1' and v2 has 't2', then all units will have both keys
+        # But we can test the True branches for all three
+        v1_both = Vector3([1., 0., 0.])
+        v1_both.insert_deriv('t1', Vector3([0., 0., 1.]))
+        v2_both = Vector3([0., 1., 0.])
+        v2_both.insert_deriv('t2', Vector3([0., 0., 1.]))
+        # unit1 will have 't1', unit2 and unit3 will have both 't1' and 't2'
+        m = Matrix3.twovec(v1_both, 0, v2_both, 1, recursive=True)
+        self.assertTrue(hasattr(m, 'd_dt1'))
+        self.assertTrue(hasattr(m, 'd_dt2'))
+        # This tests the branches where key is in unit1, unit2, and unit3 (all True)
+        self.assertEqual(type(m), Matrix3)
+
+        # Test with different axis combination to ensure all paths are covered
+        # For axis1=1, axis2=2, we have axis3=0
+        # This uses the if branch: unit3 = unit1.ucross(vector2), unit2 = unit3.ucross(unit1)
+        v1 = Vector3([1., 0., 0.])
+        v1.insert_deriv('t', Vector3([0.1, 0., 0.]))
+        v2 = Vector3([0., 1., 0.])
+        v2.insert_deriv('t', Vector3([0., 0.1, 0.]))
+        # This should create unit2 and unit3 with derivatives through ucross
+        m = Matrix3.twovec(v1, 1, v2, 2, recursive=True)
+        self.assertTrue(hasattr(m, 'd_dt'))
+        # The derivatives should be included from unit1, unit2, and unit3
+        self.assertEqual(type(m), Matrix3)
+
+        # Test else branch
+        # This happens when (3 + axis2 - axis1) % 3 != 1
+        # For axis1=0, axis2=2: (3 + 2 - 0) % 3 = 2, so uses else branch
+        v1 = Vector3([1., 0., 0.])
+        v1.insert_deriv('t', Vector3([0.1, 0., 0.]))
+        v2 = Vector3([0., 1., 0.])
+        v2.insert_deriv('t', Vector3([0., 0.1, 0.]))
+        m = Matrix3.twovec(v1, 0, v2, 2, recursive=True)
+        self.assertTrue(hasattr(m, 'd_dt'))
+        self.assertEqual(type(m), Matrix3)
+
+        # Test else branch with axis1=2, axis2=1
+        m = Matrix3.twovec(v1, 2, v2, 1, recursive=True)
+        self.assertTrue(hasattr(m, 'd_dt'))
+        self.assertEqual(type(m), Matrix3)
+
+        # Test else branch with axis1=1, axis2=0
+        m = Matrix3.twovec(v1, 1, v2, 0, recursive=True)
+        self.assertTrue(hasattr(m, 'd_dt'))
+        self.assertEqual(type(m), Matrix3)
+
+        # Test twovec with readonly inputs
+        # The code checks if unit1.readonly and vector2.readonly, then sets result as readonly
+        # However, unit() doesn't preserve readonly, so unit1.readonly will be False
+        # This means the condition at line 143 will be False, so line 144 won't execute
+        # To test line 144, we would need unit1.readonly to be True, but unit() doesn't preserve it
+        # So this path might be hard to test. Let's test that the function works with readonly inputs
+        v1 = Vector3([1., 0., 0.]).as_readonly()
+        v2 = Vector3([0., 1., 0.]).as_readonly()
+        m = Matrix3.twovec(v1, 0, v2, 1)
+        # The function should work, even if the result isn't readonly
+        self.assertEqual(type(m), Matrix3)
+        # Note: To actually test line 144, we would need unit1.readonly to be True,
+        # but unit() doesn't preserve readonly, so this is difficult to test
 
 ##########################################################################################

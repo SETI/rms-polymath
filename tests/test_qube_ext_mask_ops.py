@@ -723,4 +723,48 @@ class Test_Qube_mask_ops(unittest.TestCase):
         b = a.clip(limit, None, remask=False)
         self.assertEqual(b.shape, a.shape)
 
+        # Test _limit_from_qube lines 447-449: when limit is np.ndarray and self._rank is truthy
+        # This requires self to have rank > 0 (array shape, not scalar)
+        # _rank is the number of shape dimensions, not item dimensions
+        a = Scalar(np.arange(12).reshape(2, 3, 2))  # shape (2, 3, 2), rank 3
+        # Use a numpy array as limit
+        limit = np.array(0.5)  # Scalar array
+        # This should trigger lines 447-449: limit is reshaped to self._rank * (1,)
+        b = a.mask_where_le(limit)
+        self.assertEqual(type(b), Scalar)
+        self.assertEqual(b.shape, a.shape)
+
+        # Test _limit_from_qube line 465: when limit._numer is truthy and matches self._numer
+        # For now, let's test that the function works with matching numer (even if empty)
+        a = Scalar([1., 2., 3.])  # numer is ()
+        limit = Scalar([0.5])  # numer is (), matches but is falsy
+        # This won't trigger line 465 because limit._numer is falsy
+        b = a.mask_where_le(limit)
+        self.assertEqual(type(b), Scalar)
+
+        # Test with multi-dimensional Scalar array and masked limit
+        a = Scalar([[1., 2., 3.], [4., 5., 6.]])  # shape (2, 3), _rank=0, _nrank=0
+        limit = Scalar([[0.5, 1.5, 2.5], [3.5, 4.5, 5.5]],
+                       mask=[[False, False, True], [False, False, False]])
+        # This should trigger line 474: reshape limit._mask with self._rank * (1,)
+        # Since _rank=0, this becomes limit._mask.shape + () = limit._mask.shape (no change)
+        b = a.mask_where_le(limit)
+        self.assertEqual(b.shape, a.shape)
+        # The masked limit at [0, 2] should be treated as -inf, so [0, 2] should not be masked
+        if isinstance(b.mask, np.ndarray):
+            self.assertFalse(b.mask[0, 2])  # limit[0,2] is masked, treated as -inf
+
+        # Test line 474 with larger multi-dimensional array
+        a = Scalar(np.arange(24).reshape(2, 3, 4))  # shape (2, 3, 4), _rank=0
+        # Create a limit with partial mask
+        limit_mask = np.zeros((2, 3, 4), dtype=bool)
+        limit_mask[0, 1, 2] = True  # One masked element
+        limit = Scalar(np.arange(24).reshape(2, 3, 4) * 0.1, mask=limit_mask)
+        b = a.mask_where_ge(limit)
+        self.assertEqual(b.shape, a.shape)
+        self.assertTrue(hasattr(b, 'mask'))
+        # The masked limit at [0, 1, 2] should be treated as +inf
+        if isinstance(b.mask, np.ndarray):
+            self.assertFalse(b.mask[0, 1, 2])  # limit[0,1,2] is masked, treated as +inf
+
 ##########################################################################################

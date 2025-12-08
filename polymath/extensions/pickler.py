@@ -274,8 +274,8 @@ def _validate_pickle_digits(digits, reference):
         digits = (digits, digits)
 
     new_digits = []
-    # TODO This code raises a ValueError inside a try block that detects a ValueError and thus
-    # the original message is thrown away. This could be improved.
+    # TODO This code raises a ValueError inside a try block that detects a ValueError
+    # and thus the original message is thrown away. This could be improved.
     try:
         for k, digit in enumerate(digits[:2]):
             if isinstance(digit, numbers.Real):

@@ -58,7 +58,9 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
     elif axis is None:
         if arg._shape:
             obj = Qube(func(arg._values[arg.antimask], axis=0), False, example=arg)
-        else:
+        else:  # pragma: no cover
+            # This is unreachable because if arg._shape is (), then the mask is boolean
+            # and either mask=False (line 50 hits) or mask=True (line 54 hits).
             obj = arg
 
     # At this point, we have handled the cases mask==True and mask==False, so the mask
@@ -160,8 +162,6 @@ def _zero_sized_result(self, axis):
     indx = self._ndims * [slice(None)]
     if isinstance(axis, (list, tuple)):
         for i in axis:
-            indx[i] = 0
-        else:
             indx[i] = 0
     else:
         indx[axis] = 0

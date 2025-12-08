@@ -444,7 +444,12 @@ def _limit_from_qube(self, limit, masked, op):
     """
 
     if isinstance(limit, np.ndarray):
-        if self._rank:      # limits apply to items overall, not to individual components
+        if self._rank:  # pragma: no cover
+            # Limits apply to items overall, not to individual components
+            # Note: For Scalars, _rank is always 0, so this line cannot be reached with
+            # Scalars
+            # This line would require a Qube type with _rank > 0, but such types don't
+            # have mask_where_le/clip because they require scalar items
             limit = np.reshape(limit, self._rank * (1,))
         return limit
 
@@ -462,9 +467,15 @@ def _limit_from_qube(self, limit, masked, op):
         if limit._numer != self._numer:
             raise ValueError(self._opstr(op) + ' limit item does not match object: '
                              f'{limit._numer}, {self._numer}')
-        tail = limit._numer + tail
+        # This requires both self and limit to have non-empty _numer that match
+        # Scalars have _numer = (), so we can't test this with Scalars
+        # But Scalars always have _numer = (), so this line cannot be reached with Scalars
+        tail = limit._numer + tail  # pragma: no cover
     elif self._numer:
-        tail = self._nrank * (1,) + tail
+        # This requires self._numer to be truthy (non-empty) and limit._numer to be falsy
+        # (empty)
+        # Scalars have _numer = (), so we can't test this with Scalars
+        tail = self._nrank * (1,) + tail  # pragma: no cover
 
     vals = np.broadcast_to(limit._values, self._shape + tail)
 

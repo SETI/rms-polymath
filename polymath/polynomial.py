@@ -668,10 +668,12 @@ class Polynomial(Vector):
                                              derivs=deriv_derivs, unit=deriv_unit)
 
                 # Use example= to copy properties, but still need arg for the values
-                return Scalar(const_values, mask=None, derivs=derivs, example=self)
+                # Explicitly preserve the mask from self
+                return Scalar(const_values, mask=self._mask, derivs=derivs, example=self)
             else:
                 # Use example=self.wod to copy properties without derivatives
-                return Scalar(const_values, mask=None, derivs={}, example=self.wod)
+                # Explicitly preserve the mask from self
+                return Scalar(const_values, mask=self._mask, derivs={}, example=self.wod)
 
         x = Scalar.as_scalar(x, recursive=recursive)
         x_powers = [1., x]

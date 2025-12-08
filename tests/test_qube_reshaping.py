@@ -669,4 +669,71 @@ class Test_qube_reshaping(unittest.TestCase):
         c = Qube.stack(a, b)
         self.assertEqual(c._unit, Unit.KM)
 
+        # Test move_axis with recursive=True and derivatives
+        a = Scalar(np.arange(12).reshape(3, 4))
+        a.insert_deriv('t', Scalar(np.arange(12).reshape(3, 4)))
+        b = a.move_axis(0, 1, recursive=True)
+        self.assertTrue(hasattr(b, 'd_dt'))
+        self.assertEqual(b.d_dt.shape, (4, 3))
+
+        # Test stack with float_arg logic (float_arg is None or not qubed)
+        # Case: float_arg is None
+        a = Scalar([1., 2., 3.])
+        b = Scalar([4., 5., 6.])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Case: float_arg is not None but qubed is True (arg was converted)
+        a = np.array([1., 2., 3.])
+        b = Scalar([4., 5., 6.])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with int_arg logic (int_arg is None or not qubed)
+        # Case: int_arg is None, float_arg is None
+        a = Scalar([1, 2, 3])
+        b = Scalar([4, 5, 6])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Case: int_arg is not None but qubed is True
+        a = np.array([1, 2, 3])
+        b = Scalar([4, 5, 6])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with bool_arg logic (bool_arg is None or not qubed)
+        # Case: bool_arg is None, int_arg is None, float_arg is None
+        from polymath.boolean import Boolean
+        a = Boolean([True, False, True])
+        b = Boolean([False, True, False])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Case: bool_arg is not None but qubed is True
+        a = np.array([True, False, True])
+        b = Boolean([False, True, False])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with float_arg is not None and qubed is True
+        # This tests the branch where float_arg is not None and qubed is True
+        # so the condition "float_arg is None or not qubed" is False
+        a = Scalar([1., 2., 3.])
+        b = np.array([4., 5., 6.])  # This will be converted (qubed=True)
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with int_arg is not None and qubed is True
+        a = Scalar([1, 2, 3])
+        b = np.array([4, 5, 6])  # This will be converted (qubed=True)
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with bool_arg is not None and qubed is True
+        a = Boolean([True, False, True])
+        b = np.array([False, True, False])  # This will be converted (qubed=True)
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
 ##########################################################################################
