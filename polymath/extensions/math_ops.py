@@ -301,7 +301,8 @@ def __isub__(self, /, arg):
     """self -= arg, element-by-element in-place subtraction.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Qube of the same type as self using as_this_type().
 
     Returns:
         Qube: self after the subtraction.
@@ -377,7 +378,7 @@ def __mul__(self, /, arg, *, recursive=True):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
             For simple scalar operations (when self._rank == 0), Python numbers are
             handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
@@ -431,7 +432,7 @@ def __rmul__(self, /, arg, *, recursive=True):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -459,7 +460,8 @@ def __imul__(self, /, arg):
     """Element-by-element in-place multiplication.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the multiplication.
@@ -589,7 +591,7 @@ def __truediv__(self, /, arg, *, recursive=True):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
             For simple scalar operations (when self._rank == 0), Python numbers are
             handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
@@ -646,7 +648,7 @@ def __rtruediv__(self, /, arg, *, recursive=True):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar.
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -676,7 +678,8 @@ def __itruediv__(self, /, arg):
     Cases of divide-by-zero are masked.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the division.
@@ -801,7 +804,7 @@ def __floordiv__(self, /, arg):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: The result of the floor division.
@@ -843,7 +846,7 @@ def __rfloordiv__(self, /, arg):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar.
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: The result of the floor division.
@@ -868,7 +871,8 @@ def __ifloordiv__(self, /, arg):
     Cases of divide-by-zero are masked. Derivatives are ignored.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the floor division.
@@ -958,7 +962,7 @@ def __mod__(self, /, arg, *, recursive=True):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -1005,7 +1009,7 @@ def __rmod__(self, /, arg, *, recursive=True):
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar.
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -1032,7 +1036,8 @@ def __imod__(self, /, arg):
     not in the denominator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the modulus operation.
@@ -1131,7 +1136,8 @@ def __pow__(self, /, arg):
     It is overridden by Scalar to obtain the normal behavior of the "**" operator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The exponent.
+        arg (Qube, array-like, float, int, or bool): The exponent. If not a Qube object,
+            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: The result of the exponentiation.

@@ -1,8 +1,9 @@
 ##########################################################################################
-# tests/test_qube_tvl.py
+# tests/test_qube_ext_tvl.py
 ##########################################################################################
 
 import numpy as np
+import numpy.ma as ma
 import unittest
 
 from polymath import Qube, Scalar, Boolean
@@ -666,7 +667,6 @@ class Test_Qube_tvl(unittest.TestCase):
         Qube.prefer_builtins(False)
 
         # Test _tvl_op with MaskedArray as arg
-        import numpy.ma as ma
         masked_array = ma.MaskedArray([1.0, 2.0, 3.0], mask=[False, True, False])
         a = Scalar([1.0, 2.0, 3.0])
         result = a.tvl_eq(masked_array)
@@ -702,19 +702,20 @@ class Test_Qube_tvl(unittest.TestCase):
         self.assertEqual(result, Boolean(True))
 
         # Test with masked self and non-Qube arg
-        # Note: When builtins is enabled, masked comparisons might return bool
+        # With prefer_builtins(False), result should always be a Boolean
         Qube.prefer_builtins(False)
         a_masked = Scalar(5.0, mask=True)
         result = a_masked.tvl_eq(5.0)
-        if isinstance(result, Boolean):
-            self.assertTrue(result.mask)
-        else:
-            # If builtins returned a bool, it means the comparison was handled differently
-            pass
+        self.assertIsInstance(result, Boolean)
+        self.assertTrue(result.mask)
+        # When masked, the underlying value is False (indeterminate)
+        self.assertFalse(result.values)
 
         result = a_masked.tvl_ne(6.0)
-        if isinstance(result, Boolean):
-            self.assertTrue(result.mask)
+        self.assertIsInstance(result, Boolean)
+        self.assertTrue(result.mask)
+        # When masked, the underlying value is True (5.0 != 6.0, but indeterminate due to mask)
+        self.assertTrue(result.values)
 
         Qube.prefer_builtins(False)
 

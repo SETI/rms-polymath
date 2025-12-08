@@ -1107,10 +1107,10 @@ class Test_Units(unittest.TestCase):
         self.assertEqual(result, Unit.KM)
 
         # Test name_to_dict with unclosed parenthesis
-        result = Unit.name_to_dict('(km')
+        self.assertIsInstance(Unit.name_to_dict('(km'), dict)
 
         # Test with nested unclosed parentheses
-        result = Unit.name_to_dict('((km')
+        self.assertIsInstance(Unit.name_to_dict('((km'), dict)
 
         ##################################################################################
         # Test name_to_dict with '**' in invalid position

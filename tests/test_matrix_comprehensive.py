@@ -154,13 +154,13 @@ class Test_Matrix_Comprehensive(unittest.TestCase):
         m25 = m23 * m24
         # Access individual matrices using indexing, then use to_scalar
         # For first matrix (index 0) - use extract_numer to get the matrix
-        m25_0 = Matrix(m25._values[0], m25._mask[0] if m25._mask is not False else False)
+        m25_0 = m25[0]
         self.assertAlmostEqual(m25_0.to_scalar(0, 0), 1., places=10)
         self.assertAlmostEqual(m25_0.to_scalar(0, 1), 0., places=10)
         self.assertAlmostEqual(m25_0.to_scalar(1, 0), 0., places=10)
         self.assertAlmostEqual(m25_0.to_scalar(1, 1), 1., places=10)
         # For second matrix (index 1)
-        m25_1 = Matrix(m25._values[1], m25._mask[1] if m25._mask is not False else False)
+        m25_1 = m25[1]
         self.assertAlmostEqual(m25_1.to_scalar(0, 0), 1., places=10)
         self.assertAlmostEqual(m25_1.to_scalar(0, 1), 0., places=10)
         self.assertAlmostEqual(m25_1.to_scalar(1, 0), 0., places=10)
@@ -252,9 +252,10 @@ class Test_Matrix_Comprehensive(unittest.TestCase):
         # First matrix is masked, should return True
         # Second matrix is diagonal, should return True
         # b5 is a Boolean, check it properly
-        self.assertTrue(b5.vals[0] if hasattr(b5, 'vals') and b5._is_array else bool(b5))
-        if hasattr(b5, 'vals') and b5._is_array:
-            self.assertTrue(b5.vals[1])
+        # b5 is a Boolean array with shape (2,)
+        self.assertEqual(b5.shape, (2,))
+        self.assertTrue(b5.vals[0])  # Masked matrix returns True
+        self.assertTrue(b5.vals[1])  # Diagonal matrix returns True
 
         # Test transpose with recursive=False
         m36 = Matrix([[1., 2.], [3., 4.]])
@@ -303,11 +304,8 @@ class Test_Matrix_Comprehensive(unittest.TestCase):
         # Test __floordiv__ (error) - these operators raise TypeError
         # The error handling is tested in the code itself
         m48 = Matrix([[1., 2.], [3., 4.]])
-        try:
+        with self.assertRaises(TypeError):
             _ = m48 // 2
-            self.fail("Should have raised TypeError")
-        except TypeError:
-            pass
 
         # Test identity with non-square matrix (error)
         m50 = Matrix([[1., 2., 3.], [4., 5., 6.]])

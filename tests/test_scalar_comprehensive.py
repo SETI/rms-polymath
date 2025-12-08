@@ -258,13 +258,13 @@ class Test_Scalar_Comprehensive(unittest.TestCase):
 
         # Test as_index_and_mask with masked parameter
         s74 = Scalar([0, 1, 2])
-        idx4, mask4 = s74.as_index_and_mask(masked=99)
+        idx4, _ = s74.as_index_and_mask(masked=99)
         self.assertTrue(np.allclose(idx4, [0, 1, 2]))
 
         # Test as_index_and_mask with purge=True
         s75 = Scalar([0, 1, 2])
         s75 = s75.mask_where_le(1)
-        idx5, mask5 = s75.as_index_and_mask(purge=True)
+        idx5, _ = s75.as_index_and_mask(purge=True)
         self.assertEqual(type(idx5), np.ndarray)
 
         # Test int() with clip parameter
@@ -483,8 +483,10 @@ class Test_Scalar_Comprehensive(unittest.TestCase):
         a3 = Scalar(1.)
         b3 = Scalar(1.)
         c3 = Scalar(1.)
-        x0_3, x1_3 = Scalar.solve_quadratic(a3, b3, c3)
-        # Should be masked
+        _x0_3, _x1_3 = Scalar.solve_quadratic(a3, b3, c3)
+        # Should be masked due to complex roots (discriminant < 0)
+        self.assertTrue(_x0_3.mask)
+        self.assertTrue(_x1_3.mask)
 
         # Test eval_quadratic with n-D
         s140 = Scalar([[1., 2.], [3., 4.]])

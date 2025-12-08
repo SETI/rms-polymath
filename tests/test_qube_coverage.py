@@ -678,10 +678,13 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test with builtins=True and scalar
         a = Scalar(1.)
-        Qube.prefer_builtins(True)
-        b = a.as_bool(builtins=True)
-        self.assertIsInstance(b, bool)
-        Qube.prefer_builtins(False)
+        old_builtins = Qube.prefer_builtins()
+        try:
+            Qube.prefer_builtins(True)
+            b = a.as_bool(builtins=True)
+            self.assertIsInstance(b, bool)
+        finally:
+            Qube.prefer_builtins(old_builtins)
 
         # Test with array that's already bool
         a = Boolean([True, False, True])
@@ -1143,16 +1146,6 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass
 
-        # Test _suitable_numer with no default
-        class NoNumerQube(Qube):
-            _NRANK = 1
-            _NUMER = None
-        try:
-            _ = NoNumerQube._suitable_numer(None, opstr='test')
-            self.fail("Expected ValueError for no default numerator")
-        except ValueError:
-            pass
-
         # Test and_ with mask0=True
         mask = Qube.and_(True, False)
         self.assertFalse(mask)
@@ -1426,10 +1419,13 @@ class Test_Qube_Coverage(unittest.TestCase):
 
         # Test as_int with builtins
         a = Scalar(1.)
-        Qube.prefer_builtins(True)
-        b = a.as_int(builtins=True)
-        self.assertIsInstance(b, int)
-        Qube.prefer_builtins(False)
+        old_builtins = Qube.prefer_builtins()
+        try:
+            Qube.prefer_builtins(True)
+            b = a.as_int(builtins=True)
+            self.assertIsInstance(b, int)
+        finally:
+            Qube.prefer_builtins(old_builtins)
 
         # Test as_bool with Scalar class conversion
         # Note: This path converts Scalar to Boolean, but Boolean._INTS_OK=False

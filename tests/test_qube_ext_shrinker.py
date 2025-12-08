@@ -1,5 +1,5 @@
 ##########################################################################################
-# tests/test_qube_shrinker.py
+# tests/test_qube_ext_shrinker.py
 #
 # Comprehensive unit tests for shrink and unshrink operations based on docstrings in shrinker.py
 ##########################################################################################
@@ -472,7 +472,6 @@ class Test_Qube_shrinker(unittest.TestCase):
         original_disable_cache = Qube._DISABLE_CACHE
         try:
             Qube._DISABLE_CACHE = False
-            # Use a case that triggers the early return at line 42-43
             # Option 1: object is fully masked
             a = Scalar([1., 2., 3., 4., 5.], mask=[True, True, True, True, True])
             antimask = np.array([True, False, True, False, True])
@@ -494,7 +493,6 @@ class Test_Qube_shrinker(unittest.TestCase):
                              [False, False, False, False, False]])
         # This should work, but let's test with a shape that requires broadcasting
         # Actually, for a (4, 5) object, antimask (4, 5) is correct
-        # To trigger line 77, we need new_shape != self._shape
         # This happens when new_after != after
         # Let's use a 3-D object where antimask matches only last 2 dims
         a = Scalar(np.arange(40).reshape(2, 4, 5))
@@ -504,13 +502,6 @@ class Test_Qube_shrinker(unittest.TestCase):
                              [False, False, False, False, False]])  # (4, 5) antimask for (2, 4, 5) object
         # extras = 1, after = (4, 5), antimask.shape = (4, 5)
         # new_after = (4, 5) (max of after and antimask), so new_shape = (2, 4, 5)
-        # This matches self._shape, so line 77 won't be hit
-        # To hit line 77, we need new_after to be different from after
-        # This is hard to achieve because new_after is max(after[k], antimask.shape[k])
-        # So new_after >= after always
-        # Actually, if antimask has a larger dimension, new_after will be larger
-        # But antimask must be broadcastable, so this is tricky
-        # Let's try a different approach - use a case where broadcasting is needed
         b = a.shrink(antimask)
         self.assertTrue(b.readonly)
 
@@ -554,7 +545,6 @@ class Test_Qube_shrinker(unittest.TestCase):
         antimask = np.array([[True, False, True, False, True],
                              [True, False, True, False, True]])  # 2-D, shape (2, 5)
         # self_rank = 1, antimask_rank = 2, so extras = -1
-        # This should trigger line 63: self = self.broadcast_to(antimask.shape, recursive=False)
         b = a.shrink(antimask)
         self.assertTrue(b.readonly)
         # The result should have shape based on the shrunk antimask
@@ -607,7 +597,7 @@ class Test_Qube_shrinker(unittest.TestCase):
         a = Scalar([1., 2., 3., 4., 5.], mask=[True, True, True, True, True])
         antimask = np.array([True, False, True, False, True])
         b = a.shrink(antimask)
-        # When all mask is True, should return masked_single (earlier return at line 44)
+        # When all mask is True, should return masked_single
         self.assertEqual(b, Scalar.MASKED)
         self.assertTrue(b.readonly)
 
@@ -684,13 +674,12 @@ class Test_Qube_shrinker(unittest.TestCase):
             Qube._DISABLE_CACHE = original_disable_cache
 
         # Test unshrink with default as Qube
-        # To hit line 164, we need default to be a Qube instance
         # Manually set _default to a Qube to test this path
         a = Vector([1., 2., 3.])
         antimask = np.array([True, False, True])
         b = a.shrink(antimask)
         self.assertEqual(b.shape, (2,))
-        # Manually set _default to a Qube to test line 164
+        # Manually set _default to a Qube
         b._default = Vector([1., 1., 1.])
         c = b.unshrink(antimask)
         self.assertEqual(c.shape, antimask.shape)
@@ -738,7 +727,6 @@ class Test_Qube_shrinker(unittest.TestCase):
         self.assertTrue(b.readonly)
 
         # Test unshrink with derivatives
-        # This line is hit when unshrinking derivatives in the loop
         a = Scalar([1., 2., 3., 4., 5.])
         da_dt = Scalar([10., 20., 30., 40., 50.])
         a.insert_deriv('t', da_dt)

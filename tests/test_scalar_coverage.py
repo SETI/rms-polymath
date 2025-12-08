@@ -6,8 +6,20 @@
 import numpy as np
 import unittest
 import warnings
+from contextlib import contextmanager
 
 from polymath import Scalar, Vector, Boolean, Qube, Unit
+
+
+@contextmanager
+def prefer_builtins(value):
+    """Context manager to temporarily set Qube.prefer_builtins() flag."""
+    old_value = Qube.prefer_builtins()
+    try:
+        Qube.prefer_builtins(value)
+        yield
+    finally:
+        Qube.prefer_builtins(old_value)
 
 
 class Test_Scalar_Coverage(unittest.TestCase):
@@ -161,10 +173,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test builtins
         a = Scalar(5.7)
-        Qube.prefer_builtins(True)
-        b = a.int()
-        self.assertIsInstance(b, int)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.int()
+            self.assertIsInstance(b, int)
 
         ##################################################################################
         # Test frac() error case
@@ -355,17 +366,16 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test builtins
         a = Scalar(1.)
-        Qube.prefer_builtins(True)
-        b = a.sign()
-        # sign() returns the sign, which for float 1.0 is 1.0 (float), not int
-        # But if it's an integer Scalar, it might return int
-        a_int = Scalar(1)  # Integer
-        b_int = a_int.sign()
-        # The result type depends on the input type
-        self.assertIsInstance(b, (int, float))
-        self.assertIsInstance(b_int, int)
-        self.assertEqual(b_int, 1)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.sign()
+            # sign() returns the sign, which for float 1.0 is 1.0 (float), not int
+            # But if it's an integer Scalar, it might return int
+            a_int = Scalar(1)  # Integer
+            b_int = a_int.sign()
+            # The result type depends on the input type
+            self.assertIsInstance(b, (int, float))
+            self.assertIsInstance(b_int, int)
+            self.assertEqual(b_int, 1)
 
         ##################################################################################
         # Test max() error case
@@ -390,10 +400,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.max()
-        self.assertIsInstance(b, (int, float))
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.max()
+            self.assertIsInstance(b, (int, float))
 
         ##################################################################################
         # Test min() error case
@@ -418,10 +427,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.min()
-        self.assertIsInstance(b, (int, float))
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.min()
+            self.assertIsInstance(b, (int, float))
 
         ##################################################################################
         # Test argmax() error cases
@@ -450,10 +458,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.argmax()
-        self.assertIsInstance(b, int)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.argmax()
+            self.assertIsInstance(b, int)
 
         ##################################################################################
         # Test argmin() error cases
@@ -482,10 +489,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.argmin()
-        self.assertIsInstance(b, int)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.argmin()
+            self.assertIsInstance(b, int)
 
         ##################################################################################
         # Test maximum() error cases
@@ -566,10 +572,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test builtins
         a = Scalar([1., 2., 3., 4., 5.])
-        Qube.prefer_builtins(True)
-        b = a.median()
-        self.assertIsInstance(b, float)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.median()
+            self.assertIsInstance(b, float)
 
         ##################################################################################
         # Test sort() error case
@@ -689,16 +694,15 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test builtins
         a = Scalar(1.)
         b = Scalar(2.)
-        Qube.prefer_builtins(True)
-        c = a <= b
-        self.assertIsInstance(c, bool)
-        c = a < b
-        self.assertIsInstance(c, bool)
-        c = a >= b
-        self.assertIsInstance(c, bool)
-        c = a > b
-        self.assertIsInstance(c, bool)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            c = a <= b
+            self.assertIsInstance(c, bool)
+            c = a < b
+            self.assertIsInstance(c, bool)
+            c = a >= b
+            self.assertIsInstance(c, bool)
+            c = a > b
+            self.assertIsInstance(c, bool)
 
         ##################################################################################
         # Test __round__
@@ -880,10 +884,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test int() with builtins
         a = Scalar(1.5)
-        Qube.prefer_builtins(True)
-        b = a.int(builtins=True)
-        self.assertIsInstance(b, int)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.int(builtins=True)
+            self.assertIsInstance(b, int)
 
         # Test frac() with denominators
         # Scalar with drank=1 needs values with shape (..., 1)
@@ -1004,10 +1007,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test sign() with builtins
         a = Scalar(1.0)
-        Qube.prefer_builtins(True)
-        b = a.sign(builtins=True)
-        self.assertIsInstance(b, float)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.sign(builtins=True)
+            self.assertIsInstance(b, float)
 
         # Test solve_quadratic with include_antimask
         a = Scalar([1., 2., 3.])
@@ -1039,10 +1041,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test min() with builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.min(builtins=True)
-        self.assertIsInstance(b, float)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.min(builtins=True)
+            self.assertIsInstance(b, float)
 
         # Test argmax() with denominators
         # Scalar with drank=1 needs values with shape (n, 1) for array of size n
@@ -1069,10 +1070,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test argmax() with builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.argmax(builtins=True)
-        self.assertIsInstance(b, int)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.argmax(builtins=True)
+            self.assertIsInstance(b, int)
 
         # Test argmin() with denominators
         a = Scalar([[1.], [2.], [3.]], drank=1)
@@ -1098,10 +1098,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test argmin() with builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.argmin(builtins=True)
-        self.assertIsInstance(b, int)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.argmin(builtins=True)
+            self.assertIsInstance(b, int)
 
         # Test maximum() with denominators
         a = Scalar([[1.], [2.], [3.]], drank=1)
@@ -1145,10 +1144,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test median() with builtins
         a = Scalar([1., 2., 3.])
-        Qube.prefer_builtins(True)
-        b = a.median(builtins=True)
-        self.assertIsInstance(b, float)
-        Qube.prefer_builtins(False)
+        with prefer_builtins(True):
+            b = a.median(builtins=True)
+            self.assertIsInstance(b, float)
 
         # Test sort() with denominators
         a = Scalar([[3.], [1.], [2.]], drank=1)

@@ -110,7 +110,7 @@ class Test_Qube_unit(unittest.TestCase):
         a_nd = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
         vals = a_nd.into_unit()
         self.assertEqual(vals.shape, (2, 3, 4))
-        expected = a_nd.values * 1000  # M to mm conversion
+        expected = a_nd.values * 1000  # KM to M conversion
         self.assertTrue(np.allclose(vals, expected))
 
         # Test with unitless object
@@ -301,9 +301,9 @@ class Test_Qube_unit(unittest.TestCase):
         vals = a.into_unit(recursive=True)
         self.assertTrue(np.all(vals[0] == (1000, 2000, 3000)))
         self.assertEqual(set(vals[1].keys()), {'t', 'x'})
-        # da_dt: CM/S to mm/s = 400000, 500000, 600000
+        # da_dt: CM/S to M/S = 400000, 500000, 600000
         self.assertTrue(np.allclose(vals[1]['t'], (400000, 500000, 600000)))
-        # da_dx: M/KM to mm/km = 7000, 8000, 9000
+        # da_dx: M/KM to M/KM = 7000, 8000, 9000
         self.assertTrue(np.allclose(vals[1]['x'], (7000, 8000, 9000)))
 
         # Test with n-D arrays and recursive=True

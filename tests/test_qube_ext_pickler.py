@@ -1,5 +1,5 @@
 ##########################################################################################
-# tests/test_qube_pickler.py
+# tests/test_qube_ext_pickler.py
 # Unit tests for Qube pickling operations
 ##########################################################################################
 
@@ -430,7 +430,11 @@ class Test_Qube_pickler(unittest.TestCase):
             b = Scalar.__new__(Scalar)
             b.__setstate__(state)
             # Check if encoding info is preserved
-            self.assertTrue(hasattr(b, 'ENCODED_MASK') or not hasattr(b, 'ENCODED_MASK'))
+            self.assertTrue(hasattr(b, 'ENCODED_MASK'))
+            self.assertTrue(hasattr(b, 'ENCODED_VALS'))
+            # Verify the encoded values are preserved
+            self.assertIsNotNone(b.ENCODED_MASK)
+            self.assertIsNotNone(b.ENCODED_VALS)
         finally:
             Qube._pickle_debug(False)
 
@@ -680,7 +684,11 @@ class Test_Qube_pickler(unittest.TestCase):
             b = Scalar.__new__(Scalar)
             b.__setstate__(state)
             # With _PICKLE_DEBUG, encoding info should be preserved
-            self.assertTrue(hasattr(b, 'ENCODED_MASK') or not hasattr(b, 'ENCODED_MASK'))
+            self.assertTrue(hasattr(b, 'ENCODED_MASK'))
+            self.assertTrue(hasattr(b, 'ENCODED_VALS'))
+            # Verify the encoded values are preserved
+            self.assertIsNotNone(b.ENCODED_MASK)
+            self.assertIsNotNone(b.ENCODED_VALS)
         finally:
             Qube._pickle_debug(False)
 
@@ -1062,7 +1070,11 @@ class Test_Qube_pickler(unittest.TestCase):
             b = Scalar.__new__(Scalar)
             b.__setstate__(state)
             # Check if debug attributes are set
-            self.assertTrue(hasattr(b, 'ENCODED_MASK') or not hasattr(b, 'ENCODED_MASK'))
+            self.assertTrue(hasattr(b, 'ENCODED_MASK'))
+            self.assertTrue(hasattr(b, 'ENCODED_VALS'))
+            # Verify the encoded values are preserved
+            self.assertIsNotNone(b.ENCODED_MASK)
+            self.assertIsNotNone(b.ENCODED_VALS)
             self.assertEqual(b.shape, a.shape)
         finally:
             pickler._PICKLE_DEBUG = original_debug

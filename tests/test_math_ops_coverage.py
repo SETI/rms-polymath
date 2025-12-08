@@ -18,43 +18,34 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test __abs__ error case
         ##################################################################################
-        # Test abs() on a Qube that doesn't override it
-        # We need a Qube subclass that doesn't override __abs__
-        # Vector doesn't override it, so it should raise
-        try:
-            v = Vector([1., 2., 3.])
-            _ = abs(v)
-            # If Vector overrides it, try with a custom case
-        except TypeError:
-            pass  # Expected
+        # Vector actually supports abs(), so we test a case that doesn't work
+        # The abs() test is covered by other operations that actually fail
 
         ##################################################################################
         # Test __add__ error cases
         ##################################################################################
         # Test incompatible types
         a = Scalar([1., 2., 3.])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a + "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
-        # Test incompatible numers
+        # Test incompatible numers - different types raise unsupported_op
         a = Scalar([1., 2., 3.])
         b = Vector([1., 2., 3.])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a + b
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test incompatible denoms
-        # Create objects with different denominators
-        try:
-            a = Vector(np.arange(6).reshape(2, 3), drank=1)
-            b = Vector(np.arange(6, 12).reshape(2, 3), drank=1)
-            # They have same drank but different denom shapes would cause error
-            # Actually, let's test with incompatible denoms properly
-        except (TypeError, ValueError):
-            pass
+        a = Vector(np.arange(6).reshape(2, 3), drank=1)
+        b = Vector(np.arange(6, 12).reshape(2, 3), drank=1)
+        # Create incompatible denominator shapes
+        a._denom = (2,)
+        b._denom = (3,)
+        with self.assertRaises(ValueError) as cm:
+            _ = a + b
+        self.assertIn('incompatible denominator shapes', str(cm.exception))
 
         # Test __add__ with non-recursive
         a = Scalar([1., 2., 3.])
@@ -72,18 +63,16 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test incompatible types
         a = Scalar([1., 2., 3.])
-        try:
+        with self.assertRaises(TypeError) as cm:
             a += "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test integer result from non-integer
         a = Scalar([1, 2, 3])  # Integer
         b = Scalar([1., 2., 3.])  # Float
-        try:
+        with self.assertRaises(TypeError) as cm:
             a += b
-        except TypeError:
-            pass  # Expected
+        self.assertIn('operation returns non-integer result', str(cm.exception))
 
         # Test with np.ndarray
         a = Scalar([1., 2., 3.])
@@ -94,10 +83,9 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test incompatible types
         a = Scalar([1., 2., 3.])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a - "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test __sub__ with non-recursive
         a = Scalar([1., 2., 3.])
@@ -113,10 +101,9 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         # Test integer result from non-integer
         a = Scalar([1, 2, 3])  # Integer
         b = Scalar([1., 2., 3.])  # Float
-        try:
+        with self.assertRaises(TypeError) as cm:
             a -= b
-        except TypeError:
-            pass  # Expected
+        self.assertIn('operation returns non-integer result', str(cm.exception))
 
         # Test with np.ndarray
         a = Scalar([1., 2., 3.])
@@ -127,27 +114,22 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test incompatible types
         a = Scalar([1., 2., 3.])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a * "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test dual denominators
-        try:
-            a = Vector(np.arange(6).reshape(2, 3), drank=1)
-            b = Vector(np.arange(6, 12).reshape(2, 3), drank=1)
+        a = Vector(np.arange(6).reshape(2, 3), drank=1)
+        b = Vector(np.arange(6, 12).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError) as cm:
             _ = a * b
-        except ValueError:
-            pass  # Expected
+        self.assertIn('only one operand', str(cm.exception))
 
-        # Test exception revision
-        # This is tricky - need to trigger an exception after arg conversion
-        try:
-            a = Scalar([1., 2., 3.])
-            # Create a case where conversion succeeds but operation fails
-            _ = a * object()  # This should fail conversion
-        except (TypeError, ValueError):
-            pass
+        # Test exception revision - object() cannot be converted
+        a = Scalar([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
+            _ = a * object()
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test __mul__ with non-recursive
         a = Scalar([1., 2., 3.])
@@ -160,12 +142,10 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test __rmul__ error cases
         ##################################################################################
-        # Test exception revision
-        try:
-            a = Scalar([1., 2., 3.])
-            _ = object().__rmul__(a)  # This won't work, but tests the path
-        except (TypeError, AttributeError):
-            pass
+        # Test exception revision - object() doesn't have __rmul__
+        a = Scalar([1., 2., 3.])
+        with self.assertRaises(AttributeError):
+            _ = object().__rmul__(a)
 
         ##################################################################################
         # Test __imul__ error cases
@@ -173,51 +153,45 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         # Test integer result from non-integer
         a = Scalar([1, 2, 3])  # Integer
         b = Scalar([1., 2., 3.])  # Float
-        try:
+        with self.assertRaises(TypeError) as cm:
             a *= b
-        except TypeError:
-            pass  # Expected
+        self.assertIn('operation returns non-integer result', str(cm.exception))
 
-        # Test matrix multiply case
-        try:
-            a = Matrix([[1., 2.], [3., 4.]])
-            b = Matrix([[5., 6.], [7., 8.]])
-            a *= b
-        except (TypeError, ValueError):
-            pass  # May or may not work depending on implementation
+        # Test matrix multiply case - Matrix *= actually works (matrix multiplication)
+        a = Matrix([[1., 2.], [3., 4.]])
+        b = Matrix([[5., 6.], [7., 8.]])
+        a *= b
+        # Verify matrix multiplication result
+        self.assertTrue(np.allclose(a.values, [[19., 22.], [43., 50.]]))
 
         ##################################################################################
         # Test __truediv__ error cases
         ##################################################################################
         # Test incompatible types
         a = Scalar([1., 2., 3.])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a / "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test right denominator
-        try:
-            a = Scalar([1., 2., 3.])
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        a = Scalar([1., 2., 3.])
+        b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError) as cm:
             _ = a / b
-        except ValueError:
-            pass  # Expected
+        self.assertIn('right operand has denominator', str(cm.exception))
 
         # Test exception revision
-        try:
-            a = Scalar([1., 2., 3.])
-            _ = a / object()  # Should fail conversion
-        except (TypeError, ValueError):
-            pass
+        a = Scalar([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
+            _ = a / object()
+        self.assertIn('unsupported operand type', str(cm.exception))
 
-        # Test matrix / matrix
-        try:
-            a = Matrix([[1., 2.], [3., 4.]])
-            b = Matrix([[5., 6.], [7., 8.]])
-            _ = a / b
-        except (TypeError, ValueError):
-            pass  # May or may not work
+        # Test matrix / matrix - actually works (matrix division via inverse)
+        a = Matrix([[1., 2.], [3., 4.]])
+        b = Matrix([[5., 6.], [7., 8.]])
+        c = a / b
+        # Verify matrix division result (a * b^-1)
+        self.assertTrue(np.allclose(c.values, [[3., -2.], [2., -1.]]))
 
         # Test __truediv__ with non-recursive
         a = Scalar([1., 2., 3.])
@@ -230,107 +204,96 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test __rtruediv__ error cases
         ##################################################################################
-        # Test exception revision
-        try:
-            a = Scalar([1., 2., 3.])
+        # Test exception revision - object() doesn't have __rtruediv__
+        a = Scalar([1., 2., 3.])
+        with self.assertRaises(AttributeError):
             _ = object().__rtruediv__(a)
-        except (TypeError, AttributeError):
-            pass
 
         ##################################################################################
         # Test __itruediv__ error cases
         ##################################################################################
         # Test integer division
         a = Scalar([1, 2, 3])  # Integer
-        try:
+        with self.assertRaises(TypeError) as cm:
             a /= 2.
-        except TypeError:
-            pass  # Expected for integer
+        self.assertIn('operation returns non-integer result', str(cm.exception))
 
-        # Test division by zero
+        # Test division by zero - should mask
         a = Scalar([1., 2., 3.])
-        a /= 0.  # Should mask or handle gracefully
+        a /= 0.
+        self.assertTrue(np.all(a.mask))
 
         # Test exception revision
-        try:
-            a = Scalar([1., 2., 3.])
-            a /= object()  # Should fail
-        except (TypeError, ValueError):
-            pass
+        a = Scalar([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
+            a /= object()
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         ##################################################################################
         # Test __floordiv__ error cases
         ##################################################################################
         # Test incompatible types
         a = Scalar([7, 8, 9])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a // "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test right denominator
-        try:
-            a = Scalar([7, 8, 9])
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        a = Scalar([7, 8, 9])
+        b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError) as cm:
             _ = a // b
-        except ValueError:
-            pass  # Expected
+        self.assertIn('right operand has denominator', str(cm.exception))
 
         # Test exception revision
-        try:
-            a = Scalar([7, 8, 9])
-            _ = a // object()  # Should fail
-        except (TypeError, ValueError):
-            pass
+        a = Scalar([7, 8, 9])
+        with self.assertRaises(TypeError) as cm:
+            _ = a // object()
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         ##################################################################################
         # Test __rfloordiv__ error cases
         ##################################################################################
-        # Test exception revision
-        try:
-            a = Scalar([2, 3, 4])
+        # Test exception revision - object() doesn't have __rfloordiv__
+        a = Scalar([2, 3, 4])
+        with self.assertRaises(AttributeError):
             _ = object().__rfloordiv__(a)
-        except (TypeError, AttributeError):
-            pass
 
         ##################################################################################
         # Test __ifloordiv__ error cases
         ##################################################################################
-        # Test division by zero
+        # Test division by zero - should mask
         a = Scalar([5., 7., 9.])
-        a //= 0  # Should mask or handle
+        a //= 0
+        self.assertTrue(np.all(a.mask))
 
         # Test exception
-        try:
-            a = Scalar([5., 7., 9.])
-            a //= object()  # Should fail
-        except (TypeError, ValueError):
-            pass
+        a = Scalar([5., 7., 9.])
+        with self.assertRaises(TypeError) as cm:
+            a //= object()
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         ##################################################################################
         # Test __mod__ error cases
         ##################################################################################
         # Test incompatible types
         a = Scalar([7, 8, 9])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a % "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test right denominator
-        try:
-            a = Scalar([7, 8, 9])
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        a = Scalar([7, 8, 9])
+        b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError) as cm:
             _ = a % b
-        except ValueError:
-            pass  # Expected
+        self.assertIn('right operand has denominator', str(cm.exception))
 
         # Test exception revision
-        try:
-            a = Scalar([7, 8, 9])
-            _ = a % object()  # Should fail
-        except (TypeError, ValueError):
-            pass
+        a = Scalar([7, 8, 9])
+        with self.assertRaises(TypeError) as cm:
+            _ = a % object()
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         # Test __mod__ with non-recursive
         a = Scalar([7, 8, 9])
@@ -343,44 +306,40 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test __rmod__ error cases
         ##################################################################################
-        # Test exception revision
-        try:
-            a = Scalar([3, 4, 5])
+        # Test exception revision - object() doesn't have __rmod__
+        a = Scalar([3, 4, 5])
+        with self.assertRaises(AttributeError):
             _ = object().__rmod__(a)
-        except (TypeError, AttributeError):
-            pass
 
         ##################################################################################
         # Test __imod__ error cases
         ##################################################################################
-        # Test division by zero
+        # Test division by zero - should mask
         a = Scalar([5., 7., 9.])
-        a %= 0  # Should mask or handle
+        a %= 0
+        self.assertTrue(np.all(a.mask))
 
         # Test exception
-        try:
-            a = Scalar([5., 7., 9.])
-            a %= object()  # Should fail
-        except (TypeError, ValueError):
-            pass
+        a = Scalar([5., 7., 9.])
+        with self.assertRaises(TypeError) as cm:
+            a %= object()
+        self.assertIn('unsupported operand type', str(cm.exception))
 
         ##################################################################################
         # Test __pow__ error cases
         ##################################################################################
         # Test incompatible types
         a = Scalar([2., 3., 4.])
-        try:
+        with self.assertRaises(TypeError) as cm:
             _ = a ** "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('invalid Scalar data type', str(cm.exception))
 
         # Test array exponent
-        try:
-            a = Scalar([2., 3., 4.])
-            b = Scalar([1., 2.])  # Array exponent
+        a = Scalar([2., 3., 4.])
+        b = Scalar([1., 2.])  # Array exponent
+        with self.assertRaises(ValueError) as cm:
             _ = a ** b
-        except (TypeError, ValueError):
-            pass  # Expected
+        self.assertIn('could not be broadcast together', str(cm.exception))
 
         # Test masked exponent
         a = Scalar([2., 3., 4.])
@@ -388,19 +347,15 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         c = a ** b
         self.assertTrue(np.all(c.mask))
 
-        # Test non-integer exponent
-        try:
-            a = Scalar([2., 3., 4.])
-            _ = a ** 2.5  # Non-integer, may work for Scalar but not base Qube
-        except (TypeError, ValueError):
-            pass
+        # Test non-integer exponent - Scalar supports float exponents
+        a = Scalar([2., 3., 4.])
+        b = a ** 2.5
+        self.assertTrue(np.allclose(b.values, [2.**2.5, 3.**2.5, 4.**2.5]))
 
-        # Test out of range exponent
-        try:
-            a = Scalar([2., 3., 4.])
-            _ = a ** 16  # Out of range for base Qube
-        except ValueError:
-            pass  # Expected for base Qube
+        # Test out of range exponent - Scalar supports high powers
+        a = Scalar([2., 3., 4.])
+        b = a ** 16
+        self.assertTrue(np.allclose(b.values, [2.**16, 3.**16, 4.**16]))
 
         # Test __pow__ with zero exponent and derivatives
         a = Scalar([2., 3., 4.])
@@ -438,32 +393,32 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         # Test comparison operators error cases
         ##################################################################################
         # Test __le__ on non-Scalar
-        try:
-            v = Vector([1., 2., 3.])
+        v = Vector([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
             _ = v <= Scalar(2.)
-        except (ValueError, TypeError):
-            pass  # Expected
+        self.assertIn('operation is not supported', str(cm.exception))
+        self.assertIn('<=', str(cm.exception))
 
         # Test __lt__ on non-Scalar
-        try:
-            v = Vector([1., 2., 3.])
+        v = Vector([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
             _ = v < Scalar(2.)
-        except (ValueError, TypeError):
-            pass  # Expected
+        self.assertIn('operation is not supported', str(cm.exception))
+        self.assertIn('<', str(cm.exception))
 
         # Test __ge__ on non-Scalar
-        try:
-            v = Vector([1., 2., 3.])
+        v = Vector([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
             _ = v >= Scalar(2.)
-        except (ValueError, TypeError):
-            pass  # Expected
+        self.assertIn('operation is not supported', str(cm.exception))
+        self.assertIn('>=', str(cm.exception))
 
         # Test __gt__ on non-Scalar
-        try:
-            v = Vector([1., 2., 3.])
+        v = Vector([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
             _ = v > Scalar(2.)
-        except (ValueError, TypeError):
-            pass  # Expected
+        self.assertIn('operation is not supported', str(cm.exception))
+        self.assertIn('>', str(cm.exception))
 
         ##################################################################################
         # Test __eq__ edge cases
@@ -575,10 +530,13 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
 
         # Test any with builtins
         a = Boolean([False, True, False])
-        Qube.prefer_builtins(True)
-        b = a.any()
-        self.assertIsInstance(b, bool)
-        Qube.prefer_builtins(False)
+        old_builtins = Qube.prefer_builtins()
+        try:
+            Qube.prefer_builtins(True)
+            b = a.any()
+            self.assertIsInstance(b, bool)
+        finally:
+            Qube.prefer_builtins(old_builtins)
 
         # Test all with no shape
         a = Scalar(1.)
@@ -587,10 +545,13 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
 
         # Test all with builtins
         a = Boolean([True, True, True])
-        Qube.prefer_builtins(True)
-        b = a.all()
-        self.assertIsInstance(b, bool)
-        Qube.prefer_builtins(False)
+        old_builtins = Qube.prefer_builtins()
+        try:
+            Qube.prefer_builtins(True)
+            b = a.all()
+            self.assertIsInstance(b, bool)
+        finally:
+            Qube.prefer_builtins(old_builtins)
 
         # Test any_true_or_masked with no shape
         a = Scalar(1.)
@@ -606,49 +567,46 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         # Test reciprocal error case
         ##################################################################################
         # Test on non-Scalar
-        try:
-            v = Vector([1., 2., 3.])
+        v = Vector([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
             _ = v.reciprocal()
-        except TypeError:
-            pass  # Expected for base Qube
+        self.assertIn('reciprocal()', str(cm.exception))
+        self.assertIn('not supported', str(cm.exception))
 
         ##################################################################################
         # Test identity error case
         ##################################################################################
         # Test on non-Scalar/Matrix/Boolean
-        try:
-            v = Vector([1., 2., 3.])
+        v = Vector([1., 2., 3.])
+        with self.assertRaises(TypeError) as cm:
             _ = v.identity()
-        except TypeError:
-            pass  # Expected for base Qube
+        self.assertIn('identity() operation is not supported', str(cm.exception))
 
         ##################################################################################
         # Test sum/mean with builtins
         ##################################################################################
         a = Scalar([1., 2., 3., 4.])
-        Qube.prefer_builtins(True)
-        b = a.sum()
-        self.assertIsInstance(b, (int, float))
-        c = a.mean()
-        self.assertIsInstance(c, float)
-        Qube.prefer_builtins(False)
+        old_builtins = Qube.prefer_builtins()
+        try:
+            Qube.prefer_builtins(True)
+            b = a.sum()
+            self.assertIsInstance(b, (int, float))
+            c = a.mean()
+            self.assertIsInstance(c, float)
+        finally:
+            Qube.prefer_builtins(old_builtins)
 
         ##################################################################################
         # Test error message functions
         ##################################################################################
-        # Test _raise_unsupported_op with obj2=None
-        try:
-            v = Vector([1., 2., 3.])
-            v.reciprocal()
-        except TypeError:
-            pass  # Expected
+        # Test _raise_unsupported_op with obj2=None - already tested above with reciprocal
 
         # Test _raise_unsupported_op with array-like obj1
-        try:
-            arr = np.array([1., 2., 3.])
-            _ = arr + Scalar([1., 2., 3.])
-        except (TypeError, ValueError):
-            pass  # May or may not work
+        # NumPy arrays actually work with Qube objects through __radd__
+        # So this test is not applicable - the operation succeeds
+        arr = np.array([1., 2., 3.])
+        result = arr + Scalar([1., 2., 3.])
+        self.assertTrue(np.allclose(result.values, [2., 4., 6.]))
 
         # Test _raise_incompatible_shape
         # This is called internally, hard to test directly
@@ -698,16 +656,14 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _div_derivs edge cases
         ##################################################################################
-        # Test with nozeros=False
+        # Test with nozeros=False - division by zero should mask
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = Scalar([2., 0., 4.])
         b.insert_deriv('t', Scalar([0.4, 0.5, 0.6]))
-        # This will call _div_derivs internally through division
-        try:
-            c = a / b
-        except Exception:
-            pass
+        c = a / b
+        self.assertTrue(c.mask[1])  # Division by zero should be masked
+        self.assertTrue(hasattr(c, 'd_dt'))
 
         ##################################################################################
         # Test _mod_by_number edge cases
@@ -722,7 +678,14 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         a = Scalar([7, 8, 9])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a._mod_by_number(3, recursive=False)
-        # Mod preserves derivatives in numerator
+        # Check values match expected remainders: 7%3=1, 8%3=2, 9%3=0
+        self.assertTrue(np.allclose(b.values, [1, 2, 0]))
+        # With recursive=False, derivatives are not preserved
+        self.assertFalse(hasattr(b, 'd_dt'))
+        # Test with recursive=True to verify derivatives are preserved
+        b_recursive = a._mod_by_number(3, recursive=True)
+        self.assertTrue(hasattr(b_recursive, 'd_dt'))
+        self.assertIsNotNone(b_recursive.d_dt)
 
         ##################################################################################
         # Test _mod_by_scalar edge cases
@@ -739,7 +702,14 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = Scalar([3, 4, 5])
         c = a._mod_by_scalar(b, recursive=False)
-        # Still preserves derivatives per docstring
+        # Check values match expected remainders: 7%3=1, 8%4=0, 9%5=4
+        self.assertTrue(np.allclose(c.values, [1, 0, 4]))
+        # With recursive=False, derivatives are not preserved
+        self.assertFalse(hasattr(c, 'd_dt'))
+        # Test with recursive=True to verify derivatives are preserved
+        c_recursive = a._mod_by_scalar(b, recursive=True)
+        self.assertTrue(hasattr(c_recursive, 'd_dt'))
+        self.assertIsNotNone(c_recursive.d_dt)
 
         ##################################################################################
         # Test _floordiv_by_number edge cases
@@ -754,9 +724,15 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         ##################################################################################
         # Test floor division by scalar with zero
         a = Scalar([7, 8, 9])
+        a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = Scalar([2, 0, 4])
         c = a._floordiv_by_scalar(b)
-        self.assertTrue(c.mask[1])  # Division by zero should be masked
+        # Division by zero should be masked
+        self.assertTrue(c.mask[1])
+        # Check non-zero positions have correct floor division values: 7//2=3, 9//4=2
+        self.assertEqual(c.values[0], 3)  # 7 // 2 = 3
+        self.assertEqual(c.values[2], 2)  # 9 // 4 = 2
+        # _floordiv_by_scalar doesn't preserve derivatives (no recursive parameter)
 
         ##################################################################################
         # Test _add_derivs edge cases
@@ -834,12 +810,12 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         # Test _mul_by_scalar with denominator alignment
         ##################################################################################
         # Test case where arg has denominator and self has shape
-        try:
-            a = Scalar([1., 2., 3.])
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
-            # This is complex, may not work directly
-        except (TypeError, ValueError):
-            pass
+        a = Scalar([1., 2., 3.])
+        b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        # This should work - Scalar can multiply Vector with denominator
+        c = a * b
+        self.assertEqual(c.shape, (3,))
+        self.assertEqual(c.denom, (3,))  # The denominator comes from the Vector's drank
 
         ##################################################################################
         # Test _mul_by_number with derivatives

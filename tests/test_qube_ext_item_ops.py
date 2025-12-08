@@ -1,5 +1,5 @@
 ##########################################################################################
-# tests/test_qube_item_ops.py
+# tests/test_qube_ext_item_ops.py
 #
 # Comprehensive unit tests for item operations based on docstrings in item_ops.py
 ##########################################################################################
@@ -492,14 +492,6 @@ class Test_Qube_item_ops(unittest.TestCase):
         # For chain, we need a.denom to match b.numer
         a = Vector(np.arange(12).reshape(2, 3, 2), drank=1)  # shape (2,), numer (3,), denom (2,)
         b = Vector(np.arange(12, 24).reshape(2, 2, 3), drank=1)  # shape (2,), numer (2,), denom (3,)
-        # Actually, wait - chain multiplies denom of first by numer of second
-        # So if a has denom (3,) and b has numer (3,), result should have numer () and denom (3,)
-        # But the docstring says it returns denominator of first times numerator of second
-        # Let me re-read: "Returns the denominator of the first object times the numerator of the second"
-        # So result numer = a.denom, result denom = b.denom? No, that doesn't make sense.
-        # Actually, it's a matrix multiplication: a.denom (3,) dot b.numer (3,) = scalar
-        # But the result should be of the same class as the first object
-        # Let me test with a clearer example
 
         a = Vector(np.arange(12).reshape(2, 3, 2), drank=1)  # shape (2,), numer (3,), denom (2,)
         b = Vector(np.arange(12).reshape(2, 2, 3), drank=1)  # shape (2,), numer (2,), denom (3,)

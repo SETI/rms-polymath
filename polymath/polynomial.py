@@ -815,19 +815,13 @@ class Polynomial(Vector):
                     root_mask[k, ...] = True
 
         # Mask duplicated values before sorting (so we can detect them)
-        if isinstance(root_mask, np.ndarray):
-            for k in range(1, self.order):
-                mask = ((root_values[k, ...] == root_values[k - 1, ...])
-                        & ~root_mask[k, ...])
-                if np.any(mask):
-                    root_mask[k, ...] |= mask
-        else:
-            # Scalar case - check if roots are equal
-            for k in range(1, self.order):
-                if (root_values[k] == root_values[k - 1] and
-                        not root_mask):
-                    root_mask = True
-                    break
+        # Code here originally handled the case of root_mask being a scalar,
+        # but that's not actually possible given the above code.
+        for k in range(1, self.order):
+            mask = ((root_values[k, ...] == root_values[k - 1, ...])
+                    & ~root_mask[k, ...])
+            if np.any(mask):
+                root_mask[k, ...] |= mask
 
         roots = Scalar(root_values, Qube.as_one_bool(root_mask))
         roots = roots.sort(axis=0)

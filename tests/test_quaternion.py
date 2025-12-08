@@ -10,7 +10,7 @@
 import numpy as np
 import unittest
 
-from polymath import Matrix, Matrix3, Quaternion, Scalar, Vector3
+from polymath import Matrix, Matrix3, Quaternion, Scalar, Vector, Vector3
 
 
 class Test_Quaternion(unittest.TestCase):
@@ -667,7 +667,6 @@ class Test_Quaternion(unittest.TestCase):
 
         # Test as_quaternion with Qube that's not Vector3
         # Use a Vector with 4 elements which can be converted to Quaternion
-        from polymath import Vector
         v = Vector([1., 0., 0., 0.])
         q = Quaternion.as_quaternion(v, recursive=False)
         self.assertEqual(type(q), Quaternion)

@@ -1911,7 +1911,7 @@ class Qube(object):
 
         return obj
 
-    def into_unit(self, recursive=False):
+    def into_unit(self, *, recursive=False):
         """The values property of this object, converted to its unit.
 
         This method converts values from standard units (kilometers, seconds, radians)
