@@ -1653,9 +1653,9 @@ class Qube(object):
         if preserve:
 
             # Delete derivatives not on the list
-            for key in self._derivs.keys():
+            for key in list(self._derivs.keys()):
                 if key not in preserve:
-                    self.delete_deriv(key, override)
+                    self.delete_deriv(key, override=override)
 
             return
 
@@ -2323,7 +2323,7 @@ class Qube(object):
 
         if isinstance(self._values, np.ndarray) and self._values.dtype.kind == 'f':
             if copy:
-                return self.__copy__(recursive=recursive)
+                return self.copy(recursive=recursive)
             return self if recursive else self.wod
 
         cls = type(self)
@@ -2430,7 +2430,8 @@ class Qube(object):
         if cls is Qube._SCALAR_CLASS:
             cls = Qube._BOOLEAN_CLASS
 
-        if not cls._INTS_OK:
+        if not cls._INTS_OK:  # pragma: no cover
+            # This should never happen
             raise TypeError(f'{cls.__name__} object cannot contain bools')
 
         values = bool(self._values) if self._is_scalar else self._values.astype(np.bool_)
@@ -2488,7 +2489,9 @@ class Qube(object):
             changed = True
 
         # Validate derivs
-        if has_derivs and not self._DERIVS_OK:
+        if has_derivs and not self._DERIVS_OK:  # pragma: no cover
+            # This should never happen because creating Qube with derivs when
+            # _DERIVS_OK is False raises an error earlier
             changed = True
         if has_derivs and not recursive:
             changed = True
@@ -2615,7 +2618,9 @@ class Qube(object):
             if np.shape(self._mask):
                 new_mask = self._mask[indx]
             else:
-                new_mask = np.array([self._mask])[indx]
+                # For scalar mask, create array matching new_values shape
+                new_mask = np.full(new_values.shape[:len(new_values.shape) - self._rank],
+                                   self._mask, dtype=np.bool_)
 
         obj.__init__(new_values, new_mask, example=self)
 

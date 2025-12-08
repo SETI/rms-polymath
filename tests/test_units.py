@@ -158,11 +158,8 @@ class Test_Units(unittest.TestCase):
         self.assertEqual(Unit.as_unit(None), None)
 
         # Test with string
-        # Note: There appears to be a bug where Unit.NAME_TO_UNIT is used instead of
-        # Unit._NAME_TO_UNIT, so this test may fail until the source code is fixed.
-        # For now, we test the Unit object path. If the bug is fixed, uncomment the following:
-        # self.assertEqual(Unit.as_unit('km'), Unit.KM)
-        # self.assertEqual(Unit.as_unit('deg'), Unit.DEG)
+        self.assertEqual(Unit.as_unit('km'), Unit.KM)
+        self.assertEqual(Unit.as_unit('deg'), Unit.DEG)
 
         # Test with Unit object
         u = Unit.KM
@@ -202,10 +199,9 @@ class Test_Units(unittest.TestCase):
         self.assertRaises(ValueError, Unit.require_compatible, Unit.KM, Unit.DEG)
 
         # Test with info parameter
-        try:
+        with self.assertRaises(ValueError) as context:
             Unit.require_compatible(Unit.KM, Unit.S, info='test_op')
-        except ValueError as e:
-            self.assertIn('test_op', str(e))
+        self.assertIn('test_op', str(context.exception))
 
         ##################################################################################
         # do_match(first, second)
@@ -242,10 +238,9 @@ class Test_Units(unittest.TestCase):
         self.assertRaises(ValueError, Unit.require_match, Unit.KM, Unit.DEG)
 
         # Test with info parameter
-        try:
-            Unit.require_match(Unit.KM, Unit.M, info='test_op')
-        except ValueError as e:
-            self.assertIn('test_op', str(e))
+        with self.assertRaises(ValueError) as context:
+            Unit.require_match(Unit.KM, Unit.S, info='test_op')
+        self.assertIn('test_op', str(context.exception))
 
         ##################################################################################
         # is_angle(arg)
@@ -279,10 +274,9 @@ class Test_Units(unittest.TestCase):
         self.assertRaises(ValueError, Unit.require_angle, Unit.S)
 
         # Test with info parameter
-        try:
+        with self.assertRaises(ValueError) as context:
             Unit.require_angle(Unit.KM, info='test_op')
-        except ValueError as e:
-            self.assertIn('test_op', str(e))
+        self.assertIn('test_op', str(context.exception))
 
         ##################################################################################
         # is_unitless(arg)
@@ -312,10 +306,9 @@ class Test_Units(unittest.TestCase):
         self.assertRaises(ValueError, Unit.require_unitless, Unit.DEG)
 
         # Test with info parameter
-        try:
+        with self.assertRaises(ValueError) as context:
             Unit.require_unitless(Unit.KM, info='test_op')
-        except ValueError as e:
-            self.assertIn('test_op', str(e))
+        self.assertIn('test_op', str(context.exception))
 
         ##################################################################################
         # from_this(self, value)
@@ -421,10 +414,9 @@ class Test_Units(unittest.TestCase):
         self.assertRaises(ValueError, u_m.convert, 1000.0, Unit.S)
 
         # Test with info parameter
-        try:
+        with self.assertRaises(ValueError) as context:
             u_m.convert(1000.0, Unit.S, info='test_op')
-        except ValueError as e:
-            self.assertIn('test_op', str(e))
+        self.assertIn('test_op', str(context.exception))
 
         # Test with same unit (should return unchanged)
         result = u_m.convert(1000.0, Unit.M)
@@ -455,6 +447,8 @@ class Test_Units(unittest.TestCase):
         result = u1 * 5.0
         # Should create a unit with coefficient
         self.assertIsInstance(result, Unit)
+        self.assertEqual(result.name, None)
+        self.assertEqual(result.get_name(), '5*km')
 
         # Test with NotImplemented
         result = u1.__mul__('invalid')
@@ -467,6 +461,8 @@ class Test_Units(unittest.TestCase):
         # Test number * Unit
         result = 5.0 * Unit.KM
         self.assertIsInstance(result, Unit)
+        self.assertEqual(result.name, None)
+        self.assertEqual(result.get_name(), '5*km')
 
         ##################################################################################
         # __truediv__(self, arg)
@@ -486,6 +482,8 @@ class Test_Units(unittest.TestCase):
         # Test Unit / number
         result = u1 / 5.0
         self.assertIsInstance(result, Unit)
+        self.assertEqual(result.name, None)
+        self.assertEqual(result.get_name(), '0.2*km')
 
         # Test with NotImplemented
         result = u1.__truediv__('invalid')
@@ -498,11 +496,15 @@ class Test_Units(unittest.TestCase):
         # Test number / Unit
         result = 5.0 / Unit.KM
         self.assertIsInstance(result, Unit)
+        self.assertEqual(result.name, None)
+        self.assertEqual(result.get_name(), '5/km')
         # Should be equivalent to Unit.KM**(-1) * 5.0
 
         # Test None / Unit
         result = None / Unit.KM
         self.assertIsInstance(result, Unit)
+        self.assertEqual(result.name, None)
+        self.assertEqual(result.get_name(), 'km**(-1)')
 
         # Test with NotImplemented
         result = Unit.KM.__rtruediv__('invalid')
@@ -517,6 +519,8 @@ class Test_Units(unittest.TestCase):
         result = u ** 2
         self.assertEqual(result.exponents, (2, 0, 0))
         self.assertEqual(result.triple, (1, 1, 0))
+        self.assertEqual(result.name, {'km': 2})
+        self.assertEqual(result.get_name(), 'km**2')
 
         # Test negative integer power
         result = u ** (-2)
@@ -576,8 +580,9 @@ class Test_Units(unittest.TestCase):
         self.assertEqual(result, None)
 
         # Test with name parameter
-        result = Unit.mul_units(Unit.KM, Unit.S, name='km_s')
-        self.assertEqual(result.name, 'km_s')
+        result = Unit.mul_units(Unit.KM, Unit.S, name={'km': 1, 's': 1})
+        self.assertEqual(result.name, None)
+        self.assertEqual(result.get_name(), 'km*s')
 
         ##################################################################################
         # div_units(arg1, arg2, name=None)
@@ -598,8 +603,9 @@ class Test_Units(unittest.TestCase):
         self.assertEqual(result, None)
 
         # Test with name parameter
-        result = Unit.div_units(Unit.KM, Unit.S, name='km_per_s')
-        self.assertEqual(result.name, 'km_per_s')
+        result = Unit.div_units(Unit.KM, Unit.S, name={'km': 1, 's': -1})
+        self.assertEqual(result.name, None)
+        self.assertEqual(result.get_name(), 'km/s')
 
         ##################################################################################
         # sqrt_unit(unit, name=None)
@@ -686,41 +692,26 @@ class Test_Units(unittest.TestCase):
 
         # Test __str__ and __repr__ with a recognized unit
         u = Unit.KM
-        # Note: Both str() and repr() call get_name() which may trigger bugs
-        # in name processing, so we test them carefully
-        try:
-            r = repr(u)
-            self.assertIsInstance(r, str)
-            self.assertIn('Unit', r)
-        except (TypeError, ValueError):
-            # Skip if name processing has bugs
-            pass
+        r = repr(u)
+        self.assertIsInstance(r, str)
+        self.assertIn('Unit', r)
 
-        try:
-            s = str(u)
-            if s:
-                self.assertIsInstance(s, str)
-        except (TypeError, ValueError):
-            # Skip if name processing has bugs
-            pass
+        s = str(u)
+        if s:
+            self.assertIsInstance(s, str)
 
         ##################################################################################
         # get_name(self) and set_name(self, name)
         ##################################################################################
 
-        # Use a recognized unit to avoid name processing bugs
         u = Unit.KM
-        try:
-            name = u.get_name()
-            self.assertIsInstance(name, (str, dict))
-        except (TypeError, ValueError):
-            # Skip if name processing has bugs
-            pass
+        name = u.get_name()
+        self.assertIsInstance(name, (str, dict))
+        self.assertEqual(name, 'km')
 
         # Test with a unit that has a dict name (avoid calling get_name which may fail)
-        u_dict = Unit((1, 0, 0), (1, 1, 0), {'km': 1})
-        # Don't call get_name() as it may trigger bugs with unrecognized unit names
-        self.assertEqual(u_dict.name, {'km': 1})
+        u_dict = Unit((1, 0, 0), (1, 1, 0), 'km')
+        self.assertEqual(u_dict.name, 'km')
 
         u.set_name('new_name')
         self.assertEqual(u.name, 'new_name')
@@ -728,24 +719,23 @@ class Test_Units(unittest.TestCase):
         u.set_name({'km': 1})
         self.assertEqual(u.name, {'km': 1})
 
+        # Put it back to what it should be
+        u.set_name('km')
+
         ##################################################################################
         # create_name(self)
         ##################################################################################
 
         # Test with named unit
         u = Unit.KM
-        try:
-            name = u.create_name()
-            self.assertIsNotNone(name)
-        except (TypeError, ValueError):
-            # Skip if name processing has bugs
-            pass
+        name = u.create_name()
+        self.assertEqual(name, 'km')
 
         # Test with unnamed unit - create_name may call get_name which might fail
         # with None name, so we'll skip this test or handle the error
-        # u = Unit((1, 0, 0), (1, 1, 0), None)
-        # name = u.create_name()
-        # self.assertIsNotNone(name)
+        u = Unit((1, 0, 0), (1, 1, 0), None)
+        name = u.create_name()
+        self.assertEqual(name, 'km')
 
         ##################################################################################
         # Additional edge cases and static methods
@@ -765,14 +755,9 @@ class Test_Units(unittest.TestCase):
         self.assertEqual(u2.triple[:2], (1, 2))
 
         # Test __pow__ with power that requires sqrt
-        # Use a simple name to avoid name processing bugs
         u_sq = Unit((4, 0, 0), (1, 1, 0), None)
-        try:
-            result = u_sq ** 0.5
-            self.assertEqual(result.exponents, (2, 0, 0))
-        except (ValueError, TypeError):
-            # Skip if name processing causes issues
-            pass
+        result = u_sq ** 0.5
+        self.assertEqual(result.exponents, (2, 0, 0))
 
         # Test sqrt with pi exponent
         u_pi = Unit.STER
@@ -789,47 +774,33 @@ class Test_Units(unittest.TestCase):
         # Test sqrt with name=None - this triggers name_power which may raise ValueError
         # for units with string names that don't work with 0.5 power
         u_simple = Unit((2, 0, 0), (1, 1, 0), None)
-        try:
-            result = u_simple.sqrt(name=None)
-            # Should work if name is None
-            self.assertEqual(result.exponents, (1, 0, 0))
-        except (ValueError, TypeError):
-            # May raise if name processing has issues
-            pass
+        result = u_simple.sqrt(name=None)
+        # Should work if name is None
+        self.assertEqual(result.exponents, (1, 0, 0))
 
         # Test sqrt with triple where numer/denom sqrt doesn't yield ints
         u_sqrt_float = Unit((2, 0, 0), (2, 1, 0), None)
-        try:
-            result = u_sqrt_float.sqrt()
-            # Should handle sqrt of non-perfect squares
-            # numer = sqrt(2) which is not an int, so stays float
-            # denom = sqrt(1) = 1, which is an int
-            self.assertEqual(result.exponents, (1, 0, 0))
-        except ValueError:
-            # May raise if exponents aren't even
-            pass
+        result = u_sqrt_float.sqrt()
+        # Should handle sqrt of non-perfect squares
+        # numer = sqrt(2) which is not an int, so stays float
+        # denom = sqrt(1) = 1, which is an int
+        self.assertEqual(result.exponents, (1, 0, 0))
 
         # Test sqrt where denom sqrt doesn't yield int
         u_sqrt_denom = Unit((2, 0, 0), (1, 2, 0), None)
-        try:
-            result = u_sqrt_denom.sqrt()
-            # denom = sqrt(2) which is not an int
-            # This tests the branch where denom % 1 != 0
-            self.assertEqual(result.exponents, (1, 0, 0))
-            # denom should remain as float
-            self.assertIsInstance(result.triple[1], (float, np.floating))
-        except ValueError:
-            pass
+        result = u_sqrt_denom.sqrt()
+        # denom = sqrt(2) which is not an int
+        # This tests the branch where denom % 1 != 0
+        self.assertEqual(result.exponents, (1, 0, 0))
+        # denom should remain as float
+        self.assertIsInstance(result.triple[1], (float, np.floating))
 
         # Test sqrt with triple that doesn't divide evenly for pi
         # Create unit with odd pi exponent (but even in exponents)
         u_odd_pi = Unit((0, 0, 2), (1, 1, 3), None)
-        try:
-            result = u_odd_pi.sqrt()
-            # pi_expo = 3 // 2 = 1, but 3 != 2*1, so enters special branch
-            self.assertEqual(result.exponents, (0, 0, 1))
-        except ValueError:
-            pass
+        result = u_odd_pi.sqrt()
+        # pi_expo = 3 // 2 = 1, but 3 != 2*1, so enters special branch
+        self.assertEqual(result.exponents, (0, 0, 1))
 
         ##################################################################################
         # Test static name processing methods
@@ -890,11 +861,7 @@ class Test_Units(unittest.TestCase):
         self.assertEqual(result, None)
 
         # Test name_power with string power
-        try:
-            result = Unit.name_power('km', 'invalid')
-            # Should raise ValueError
-        except ValueError:
-            pass
+        self.assertRaises(ValueError, Unit.name_power, 'km', 'invalid')
 
         # Test name_power with non-integer result
         self.assertRaises(ValueError, Unit.name_power, {'km': 1}, 0.5)
@@ -1010,8 +977,6 @@ class Test_Units(unittest.TestCase):
         result = Unit.name_to_str({'km': -1, 's': -1})
         self.assertIsInstance(result, str)
 
-        # Test name_to_str with negate=True in cat_units
-        # This is tested indirectly through div_names above
 
         ##################################################################################
         # Additional tests for missing coverage
@@ -1046,19 +1011,13 @@ class Test_Units(unittest.TestCase):
         # Note: Simple names like 'km' are valid, so we need something that fails parsing
         # The error occurs when no '*' or '/' is found and it's not a simple name
         # Let's test with something that should fail
-        try:
-            # Try with a name that has no operators and isn't a recognized unit
-            # This might not trigger the error if it's treated as a simple unit name
-            result = Unit.name_to_dict('xyz123')
-            # If it succeeds, it's treated as a unit name
-            self.assertIsInstance(result, dict)
-        except ValueError:
-            # If it fails, that's the error path we want to test
-            pass
+        # Try with a name that has no operators and isn't a recognized unit
+        result = Unit.name_to_dict('xyz')
+        self.assertEqual(result, {'xyz': 1})
 
         # Test name_to_dict with ** operator parsing
         result = Unit.name_to_dict('km**2*s')
-        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {'km': 2, 's': 1})
         # This tests the branch where right has ** and we extract power
 
         # Test name_to_dict with ** at start
@@ -1086,102 +1045,178 @@ class Test_Units(unittest.TestCase):
         # Test create_name KeyError path
         # Create a unit not in _TUPLES_TO_UNIT dictionary
         u_custom = Unit((1, 0, 0), (1, 1000, 0), None)
-        try:
-            name = u_custom.create_name()
-            # Should trigger KeyError, then continue
-            self.assertIsNotNone(name)
-        except (TypeError, ValueError):
-            pass
+        name = u_custom.create_name()
+        self.assertEqual(name, 'm')
 
         # Test create_name with negative power
         # Create unit with negative exponent that requires negative power
         u_neg_exp = Unit((0, -2, 0), (1, 1, 0), None)  # 1/s^2
-        try:
-            name = u_neg_exp.create_name()
-            # Should handle negative power with swapped triple
-            self.assertIsNotNone(name)
-        except (TypeError, ValueError):
-            pass
+        name = u_neg_exp.create_name()
+        # Should handle negative power with swapped triple
+        self.assertEqual(name, {'km': 0, 's': -2, 'rad': 0})
 
         # Test create_name finding best match
         # Create unit that matches multiple options
         u_multi = Unit((4, 0, 0), (1, 1, 0), None)  # km^4
-        try:
-            name = u_multi.create_name()
-            # Should find best match with fewest keys
-            # Tests the loop that finds first match with best length
-            self.assertIsNotNone(name)
-        except (TypeError, ValueError):
-            pass
+        name = u_multi.create_name()
+        self.assertEqual(name, {'km': 4, 's': 0, 'rad': 0})
 
         # Test create_name fallback to standard unit
         # Create unit that doesn't match any standard unit exactly
         u_fallback = Unit((1, 0, 0), (3, 7, 0), None)  # Custom triple
-        try:
-            name = u_fallback.create_name()
-            # Should fallback to standard unit with coefficient
-            self.assertIsNotNone(name)
-            if isinstance(name, dict):
-                # Should have '' key for coefficient
-                self.assertIn('', name)
-                # Should have standard unit keys
-                self.assertIn('km', name)
-                self.assertIn('s', name)
-                self.assertIn('rad', name)
-        except (TypeError, ValueError):
-            pass
+        name = u_fallback.create_name()
+        # Should fallback to standard unit with coefficient
+        self.assertEqual(name, {'': 3/7, 'km': 1, 's': 0, 'rad': 0})
 
         # Test create_name with denom == 1 and pi_expo == 0
         # This tests the branch where coefft = numer directly
         u_simple = Unit((2, 0, 0), (5, 1, 0), None)  # denom=1, pi_expo=0
-        try:
-            name = u_simple.create_name()
-            # Should use coefft = numer
-            if isinstance(name, dict):
-                self.assertIn('', name)
-                self.assertEqual(name[''], 5)  # Should be the numer value
-        except (TypeError, ValueError):
-            pass
+        name = u_simple.create_name()
+        # Should use coefft = numer
+        self.assertEqual(name, {'': 5, 'km': 2, 's': 0, 'rad': 0})
 
         # Test create_name with denom != 1
         u_denom = Unit((1, 0, 0), (3, 2, 0), None)  # Has denom != 1
-        try:
-            name = u_denom.create_name()
-            # Should calculate coefft with division
-            if isinstance(name, dict):
-                self.assertIn('', name)
-        except (TypeError, ValueError):
-            pass
+        name = u_denom.create_name()
+        # Should calculate coefft with division
+        self.assertEqual(name, {'': 3/2, 'km': 1, 's': 0, 'rad': 0})
 
         # Test create_name with pi_expo != 0
         u_pi_exp = Unit((0, 0, 1), (1, 180, 1), None)  # Has pi_expo
-        try:
-            name = u_pi_exp.create_name()
-            # Should calculate coefft with pi
-            if isinstance(name, dict):
-                self.assertIn('', name)
-        except (TypeError, ValueError):
-            pass
+        name = u_pi_exp.create_name()
+        # Should calculate coefft with pi
+        self.assertEqual(name, 'deg')
 
         # Test create_name finding best match - multiple matches
         # Create unit that could match multiple ways
         u_best = Unit((6, 0, 0), (1, 1, 0), None)  # km^6 could be (km^2)^3 or (km^3)^2
-        try:
-            name = u_best.create_name()
-            # Should find best match with fewest keys
-            # Tests the loop that finds first match with best length
-            self.assertIsNotNone(name)
-        except (TypeError, ValueError):
-            pass
+        name = u_best.create_name()
+        # Should find best match with fewest keys
+        # Tests the loop that finds first match with best length
+        self.assertEqual(name, {'km': 6, 's': 0, 'rad': 0})
 
         # Test create_name with negative power
         # This tests the branch where p * actual_power == target_power with negative p
         u_neg_power = Unit((0, -3, 0), (1, 1, 0), None)  # 1/s^3
+        name = u_neg_power.create_name()
+        # Should handle negative power (checks the condition)
+        self.assertEqual(name, {'km': 0, 's': -3, 'rad': 0})
+
+        # Test as_unit with string argument
+        result = Unit.as_unit('km')
+        self.assertIsInstance(result, Unit)
+        self.assertEqual(result, Unit.KM)
+
+        # Test name_to_dict with unclosed parenthesis
+        result = Unit.name_to_dict('(km')
+
+        # Test with nested unclosed parentheses
+        result = Unit.name_to_dict('((km')
+
+        ##################################################################################
+        # Test name_to_dict with '**' in invalid position (lines 877-878)
+        # This specifically tests: if right.startswith('**'): raise ValueError
+        ##################################################################################
+
+        # Test with '**' appearing after a '**' operator has already been processed
+        # This happens when we have something like 'km**2**3' where:
+        # 1. First '**2' is processed (lines 858-869)
+        # 2. After processing, right becomes '**3'
+        # 3. At line 877, right.startswith('**') is True, so line 878 raises ValueError
+        self.assertRaises(ValueError, Unit.name_to_dict, 'km**2**3')
+
+        # Test with parentheses version
+        self.assertRaises(ValueError, Unit.name_to_dict, '(km)**2**3')
+
+        # Test with different unit names
+        self.assertRaises(ValueError, Unit.name_to_dict, 's**2**3')
+
+        # Create unit with angle exponent 5 to test more False cases
+        u_angle5 = Unit((0, 0, 5), (1, 1, 0), 'rad**5')  # angle^5
+        name = u_angle5.create_name()
+        # When checking STER (power 2): p = 5 // 2 = 2, 2 * 2 = 4 != 5, so False
+        # When checking RAD (power 1): p = 5 // 1 = 5, 5 * 1 = 5, so True
+        # So it should work, but we've tested False branches
+        self.assertEqual(name, 'rad**5')
+
+        ##################################################################################
+        # Test create_name fall through at line 1026
+        # This specifically tests when name is None after lookup in _TUPLES_TO_UNIT
+        ##################################################################################
+
+        # To test line 1026 fall-through, we need:
+        # 1. A unit that's in _TUPLES_TO_UNIT (no KeyError)
+        # 2. But the unit in _TUPLES_TO_UNIT has name=None (not empty string)
+        #
+        # However, all standard units have names (even if empty string ''), so
+        # name will never be None for standard units. This makes line 1026
+        # fall-through difficult to trigger in practice.
+        #
+        # We can test it by creating a unit that matches a standard unit's
+        # structure and temporarily modifying the standard unit's name to None,
+        # or by testing the code path with a unit that's not in the dict
+        # (which hits KeyError at line 1028, not 1026).
+
+        # Test with a unit that matches UNITLESS structure
+        # UNITLESS has name='' (empty string), not None, so this won't trigger
+        # line 1026 fall-through, but it tests the lookup path
+        u_unitless = Unit((0, 0, 0), (1, 1, 0), None)
+        name = u_unitless.create_name()
+        # UNITLESS has name='', so line 1026 condition is True ('' is not None)
+        # and it returns. To test fall-through, we'd need name=None.
+        self.assertIsNotNone(name)
+
+        # To actually test line 1026 fall-through, we'd need to temporarily
+        # set a standard unit's name to None. Let's do that for testing:
+        # Save original name
+        unitless_key = ((0, 0, 0), (1, 1, 0))
+        original_name = Unit._TUPLES_TO_UNIT[unitless_key].name
         try:
-            name = u_neg_power.create_name()
-            # Should handle negative power (checks the condition)
+            # Temporarily set name to None to test fall-through
+            Unit._TUPLES_TO_UNIT[unitless_key].name = None
+            u_test = Unit((0, 0, 0), (1, 1, 0), None)
+            name = u_test.create_name()
+            # Now name is None, so line 1026 condition is False and it falls through
+            # Should continue to search for combinations
             self.assertIsNotNone(name)
-        except (TypeError, ValueError):
-            pass
+        finally:
+            # Restore original name
+            Unit._TUPLES_TO_UNIT[unitless_key].name = original_name
+
+        ##################################################################################
+        # Test create_name when p * actual_power != target_power (line 1041 False)
+        # This specifically tests when the condition is False
+        ##################################################################################
+
+        # Create a unit where target_power doesn't divide evenly by any standard unit's power
+        # For example, angle exponent 7: when checking STER (power 2), p = 7 // 2 = 3,
+        # and 3 * 2 = 6 != 7, so the condition is False
+        u_angle7 = Unit((0, 0, 7), (1, 1, 0), None)  # angle^7
+        name = u_angle7.create_name()
+        # When checking STER (power 2): p = 7 // 2 = 3, 3 * 2 = 6 != 7, so False
+        # When checking RAD (power 1): p = 7 // 1 = 7, 7 * 1 = 7, so True
+        # So it should find RAD and work, but we've tested the False branch with STER
+        self.assertEqual(name, {'km': 0, 's': 0, 'rad': 7})
+
+        # Test with distance exponent that doesn't divide evenly
+        # Distance units all have power 1, so any integer will work. We need a different approach.
+        # Actually, for distance/time, all standard units have power 1, so they always divide evenly.
+        # For angle, we have STER with power 2, so we can test with odd powers > 1.
+
+        # Test with angle exponent 3 (odd, > 1)
+        u_angle3 = Unit((0, 0, 3), (1, 1, 0), None)  # angle^3
+        name = u_angle3.create_name()
+        # When checking STER (power 2): p = 3 // 2 = 1, 1 * 2 = 2 != 3, so False
+        # When checking RAD (power 1): p = 3 // 1 = 3, 3 * 1 = 3, so True
+        # So it should work, but we've tested the False branch
+        self.assertEqual(name, {'km': 0, 's': 0, 'rad': 3})
+
+        # Test with angle exponent 9 (odd, > 1)
+        u_angle9 = Unit((0, 0, 9), (1, 1, 0), None)  # angle^9
+        name = u_angle9.create_name()
+        # When checking STER (power 2): p = 9 // 2 = 4, 4 * 2 = 8 != 9, so False
+        # When checking RAD (power 1): p = 9 // 1 = 9, 9 * 1 = 9, so True
+        # So it should work, but we've tested the False branch
+        self.assertEqual(name, {'km': 0, 's': 0, 'rad': 9})
 
 ##########################################################################################

@@ -509,6 +509,12 @@ class Test_Qube_item_ops(unittest.TestCase):
         self.assertEqual(c.shape, (2,))
         self.assertEqual(type(c), Vector)
 
+        c = a @ b
+        # a.denom is (2,), b.numer is (2,), so dot product gives scalar
+        # But result should have numer (3,) and denom (3,)
+        self.assertEqual(c.shape, (2,))
+        self.assertEqual(type(c), Vector)
+
         # Test with __matmul__ operator (chain multiplication)
         # For chain to work, a.denom must match b.numer
         a = Vector(np.arange(12).reshape(2, 3, 2), drank=1)  # shape (2,), numer (3,), denom (2,)

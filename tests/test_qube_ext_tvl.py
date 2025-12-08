@@ -364,6 +364,20 @@ class Test_Qube_tvl(unittest.TestCase):
         a = Scalar(5.0)
         b = Scalar(5.0)
         result = a.tvl_eq(b)
+        self.assertIsInstance(result, Boolean)
+        self.assertEqual(result, Boolean(True))
+
+        Qube.prefer_builtins(True)
+        result = a.tvl_eq(5.0)
+        self.assertIs(result, True)
+
+        result = a.tvl_eq(5.0, builtins=False)
+        self.assertIsInstance(result, Boolean)
+        self.assertEqual(result, Boolean(True))
+
+        Qube.prefer_builtins(False)
+        result = a.tvl_eq(5.0)
+        self.assertIsInstance(result, Boolean)
         self.assertEqual(result, Boolean(True))
 
         # Test: Unequal values, both unmasked

@@ -516,7 +516,11 @@ class Quaternion(Vector):
 
         zero_mask = (r == 0.)
         if np.any(zero_mask):
-            if np.shape(zero_mask) == ():
+            if np.shape(zero_mask) == ():  # pragma: no cover
+                # The np.newaxis at line 499 adds a dimension, so even for a scalar
+                # Matrix3, Q has shape (1, 3, 3), making r shape (1,) and zero_mask
+                # shape (1,), not (). As a result, np.shape(zero_mask) == () is False,
+                # so this line can't be hit.
                 s = 0.
             else:
                 r_nozeros = r.copy()

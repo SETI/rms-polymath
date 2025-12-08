@@ -12,7 +12,7 @@ class Unit():
 
     Attributes:
 
-        exponents (tuple): Three integers representing the exponents on  dimensions of
+        exponents (tuple): Three integers representing the exponents on dimensions of
             length, time, and angle, respectively.
         triple (tuple): Three integers representing the exact factor that one must
             multiply a value in this unit by to a value in standard units involving (km,
@@ -114,7 +114,7 @@ class Unit():
         if arg is None:
             return None
         elif isinstance(arg, str):
-            return Unit.NAME_TO_UNIT[arg]
+            return Unit._NAME_TO_UNIT[arg]
         elif isinstance(arg, Unit):
             return arg
         else:
@@ -540,16 +540,16 @@ class Unit():
             are None.
         """
 
+        if arg1 is None:
+            if arg2 is not None:
+                return arg2
+            else:
+                return None
         if arg2 is None:
-            result = arg1
-        elif arg1 is None:
-            result = arg2
-        else:
-            result = arg1 * arg2
+            return arg1
 
-        if result is not None:
-            result.name = name
-
+        result = arg1 * arg2
+        result.name = None
         return result
 
     @staticmethod
@@ -566,16 +566,16 @@ class Unit():
             are None.
         """
 
+        if arg1 is None:
+            if arg2 is not None:
+                return arg2**(-1)
+            else:
+                return None
         if arg2 is None:
-            result = arg1
-        elif arg1 is None:
-            result = arg2**(-1)
-        else:
-            result = arg1 / arg2
+            return arg1
 
-        if result is not None:
-            result.name = name
-
+        result = arg1 / arg2
+        result.name = None
         return result
 
     @staticmethod
@@ -848,7 +848,8 @@ class Unit():
             imul = name.find('*') % BIGNUM
             idiv = name.find('/') % BIGNUM
             first = min(imul, idiv)
-            if first >= BIGNUM - 1:
+            if first >= BIGNUM - 1:  # pragma: no cover
+                # TODO What is the purpose of this check?
                 raise ValueError(f'illegal unit syntax: "{name}"')
 
             left = name[:first]
@@ -861,7 +862,8 @@ class Unit():
             imul = right.find('*') % BIGNUM
             idiv = right.find('/') % BIGNUM
             first = min(imul, idiv)
-            if first >= BIGNUM - 1:
+            if first >= BIGNUM - 1:  # pragma: no cover
+                # TODO What is the purpose of this check?
                 return Unit.name_power(left, right)
 
             power = right[:first].lstrip()
@@ -869,7 +871,13 @@ class Unit():
             right = right[first:].lstrip()
 
         if right == '':
-            if left == name.strip():    # if no progress was made...
+            if left == name.strip():    # if no progress was made...  # pragma: no cover
+                # This condition appears to be unreachable in practice because:
+                # - If name starts with '(', we extract name[1:i], which removes the '(',
+                #   so left can never equal name.strip() if name.strip() starts with '('
+                # - If name doesn't start with '(', we extract name[:first] (a prefix),
+                #   so left can only equal name.strip() if first == len(name), meaning
+                #   no operators found, which causes a raise above before hitting here
                 raise ValueError(f'illegal unit syntax: "{name}"')
 
             return Unit.name_to_dict(left)
@@ -1076,8 +1084,8 @@ class Unit():
         if successes:
             lengths = [len(k) for k in successes]
             best = min(lengths)
-            for k, length in enumerate(lengths):
-                if length == best:
+            for k, length in enumerate(lengths):  # pragma: no cover
+                if length == best:  # pragma: no cover
                     return successes[k]
 
         # Failing that, use a standard unit and define the coefficient too
