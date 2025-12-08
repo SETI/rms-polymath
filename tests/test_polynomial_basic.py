@@ -179,4 +179,51 @@ class Test_Polynomial_Basic(unittest.TestCase):
         # Derivatives should be preserved with recursive=True
         self.assertEqual(type(v_with_deriv.d_dt), Vector)
 
+        # Test eval with zero-order polynomial and zero-order derivative
+        p_const = Polynomial([5.])
+        p_deriv = Polynomial([3.])
+        p_const.insert_deriv('t', p_deriv)
+        result = p_const.eval(10., recursive=True)
+        self.assertEqual(result.values, 5.)
+        self.assertEqual(result.d_dt.values, 3.)
+
+        # Test eval with zero-order polynomial and non-zero-order derivative
+        # Manually set derivative to bypass numerator shape check
+        p_const3 = Polynomial([9.])
+        p_deriv3 = Polynomial([2., 1.])  # 2x + 1, order 1
+        p_const3._derivs['t'] = p_deriv3
+        result3 = p_const3.eval(8., recursive=True)
+        self.assertEqual(result3.values, 9.)
+        self.assertEqual(result3.d_dt.values, 1.)
+
+        # Test eval with zero-order polynomial, zero-order derivative with zero-order nested derivative
+        p_const2 = Polynomial([7.])
+        p_deriv2 = Polynomial([4.])
+        p_const2.insert_deriv('t', p_deriv2)
+        p_const2._derivs['t']._derivs = {'s': Polynomial([0.5])}
+        result2 = p_const2.eval(5., recursive=True)
+        self.assertEqual(result2.values, 7.)
+        self.assertEqual(result2.d_dt.values, 4.)
+
+        # Test eval with zero-order polynomial, non-zero-order derivative with nested derivatives
+        p_const4 = Polynomial([11.])
+        p_deriv4 = Polynomial([1., 5.])  # x + 5, order 1
+        p_nested_zero = Polynomial([6.])  # zero-order nested
+        p_nested_nonzero = Polynomial([2., 3.])  # 2x + 3, order 1 nested
+        p_deriv4._derivs = {'v': p_nested_zero, 'w': p_nested_nonzero}
+        p_const4._derivs['t'] = p_deriv4
+        result4 = p_const4.eval(12., recursive=True)
+        self.assertEqual(result4.values, 11.)
+        self.assertEqual(result4.d_dt.values, 5.)
+
+        # Test eval with zero-order polynomial, non-zero-order derivative with nested derivative that has drank > 0
+        p_const5 = Polynomial([13.])
+        p_deriv5 = Polynomial([3., 7.])  # 3x + 7, order 1
+        p_nested_with_drank = Polynomial(np.array([8.]).reshape(1, 1), drank=1)  # zero-order with drank > 0
+        p_deriv5._derivs = {'u': p_nested_with_drank}
+        p_const5._derivs['t'] = p_deriv5
+        result5 = p_const5.eval(14., recursive=True)
+        self.assertEqual(result5.values, 13.)
+        self.assertEqual(result5.d_dt.values, 7.)
+
 ##########################################################################################

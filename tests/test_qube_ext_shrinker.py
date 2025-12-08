@@ -649,4 +649,117 @@ class Test_Qube_shrinker(unittest.TestCase):
         self.assertTrue(hasattr(c, 'd_dt'))
         self.assertEqual(c.d_dt.shape, a.shape)
 
+        # Test shrink with cache path when returning masked_single
+        # This path is hit when object is fully masked or antimask is False
+        original_disable_cache = Qube._DISABLE_CACHE
+        try:
+            Qube._DISABLE_CACHE = False
+            # Case 1: Fully masked object
+            a = Scalar([1., 2., 3., 4., 5.], mask=True)
+            antimask = np.array([True, False, True, False, True])
+            b = a.shrink(antimask)
+            self.assertEqual(b, Scalar.MASKED)
+            self.assertTrue('unshrunk' in b._cache)
+            self.assertEqual(b._cache['unshrunk'], a)
+            # Case 2: False antimask
+            a = Scalar([1., 2., 3., 4., 5.])
+            b = a.shrink(False)
+            self.assertEqual(b, Scalar.MASKED)
+            self.assertTrue('unshrunk' in b._cache)
+        finally:
+            Qube._DISABLE_CACHE = original_disable_cache
+
+        # Test shrink with all mask True after indexing
+        # This is hit when np.all(mask) is True after constructing the mask
+        original_disable_cache = Qube._DISABLE_CACHE
+        try:
+            Qube._DISABLE_CACHE = False
+            a = Scalar([1., 2., 3., 4., 5.], mask=[True, True, True, False, False])
+            antimask = np.array([True, True, True, False, False])
+            b = a.shrink(antimask)
+            self.assertEqual(b, Scalar.MASKED)
+            self.assertTrue(b.readonly)
+            self.assertTrue('unshrunk' in b._cache)
+        finally:
+            Qube._DISABLE_CACHE = original_disable_cache
+
+        # Test unshrink with default as Qube
+        # To hit line 164, we need default to be a Qube instance
+        # Manually set _default to a Qube to test this path
+        a = Vector([1., 2., 3.])
+        antimask = np.array([True, False, True])
+        b = a.shrink(antimask)
+        self.assertEqual(b.shape, (2,))
+        # Manually set _default to a Qube to test line 164
+        b._default = Vector([1., 1., 1.])
+        c = b.unshrink(antimask)
+        self.assertEqual(c.shape, antimask.shape)
+        self.assertEqual(c.numer, a.numer)
+        # Check that the unshrunk object has the right shape
+        self.assertEqual(c.shape, (3,))
+        # Check that masked values are correct
+        self.assertTrue(np.all(c.mask[~antimask]))
+
+        # Test unshrink with _is_array False path
+        # To hit lines 173-174, we need self._is_array to be False
+        # Manually set _values and _is_array to test this path
+        a = Scalar([1., 2.])
+        antimask = np.array([True, False])
+        b = a.shrink(antimask)
+        # Manually set _values to a Python float and _is_array to False
+        original_values = b._values
+        original_is_array = b._is_array
+        b._values = float(b._values[0])  # Convert to Python float
+        b._is_array = False  # Must also set _is_array
+        c = b.unshrink(antimask)
+        self.assertEqual(c.shape, antimask.shape)
+        # Restore for cleanup
+        b._values = original_values
+        b._is_array = original_is_array
+
+        # Test unshrink with scalar object
+        a = Scalar(7.)
+        antimask = np.array([True, False, True])
+        b = a.shrink(antimask)
+        self.assertTrue(b._is_scalar)
+        c = b.unshrink(antimask)
+        self.assertTrue(c._is_scalar)
+        self.assertEqual(c, a)
+
+        # Test shrink with shape mismatch requiring broadcast_to
+        # Use a 3-D object where antimask matches only last 2 dims
+        a = Scalar(np.arange(40).reshape(2, 4, 5))
+        antimask = np.array([[True, False, True, False, True],
+                           [False, False, False, False, False],
+                           [True, True, False, False, False],
+                           [False, False, False, False, False]])
+        # This should trigger broadcasting when new_shape != self._shape
+        b = a.shrink(antimask)
+        self.assertTrue(b.readonly)
+
+        # Test unshrink with derivatives
+        # This line is hit when unshrinking derivatives in the loop
+        a = Scalar([1., 2., 3., 4., 5.])
+        da_dt = Scalar([10., 20., 30., 40., 50.])
+        a.insert_deriv('t', da_dt)
+        antimask = np.array([True, False, True, False, True])
+        b = a.shrink(antimask)
+        c = b.unshrink(antimask)
+        self.assertTrue(hasattr(c, 'd_dt'))
+        self.assertEqual(c.d_dt.shape, a.shape)
+        self.assertTrue(np.allclose(c.d_dt.values[antimask], da_dt.values[antimask]))
+        # Test with nested derivatives
+        a = Scalar([1., 2., 3., 4., 5.])
+        da_dt = Scalar([10., 20., 30., 40., 50.])
+        da_ds = Scalar([100., 200., 300., 400., 500.])
+        a.insert_deriv('t', da_dt)
+        a.d_dt.insert_deriv('s', da_ds)
+        b = a.shrink(antimask)
+        c = b.unshrink(antimask)
+        self.assertTrue(hasattr(c, 'd_dt'))
+        self.assertEqual(c.d_dt.shape, a.shape)
+        # Check that nested derivatives are preserved
+        if hasattr(c.d_dt, 'd_ds'):
+            self.assertEqual(c.d_dt.d_ds.shape, a.shape)
+
 ##########################################################################################

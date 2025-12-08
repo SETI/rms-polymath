@@ -18,38 +18,38 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test __init__ error cases
         ##################################################################################
-        # Test example not a Qube (line 205-206)
+        # Test example not a Qube
         try:
             _ = Scalar(1., example="not a qube")
         except TypeError:
             pass  # Expected
 
-        # Test derivatives disallowed (line 228-229)
+        # Test derivatives disallowed
         # Need a class that disallows derivatives
         # Boolean might allow them, so we'll test with a custom case
         # Actually, most classes allow derivatives, so this is hard to test directly
 
-        # Test unit disallowed (line 231-232)
+        # Test unit disallowed
         # Need a class that disallows units
         # Most classes allow units, so this is hard to test directly
 
-        # Test invalid numerator rank (line 235-236)
+        # Test invalid numerator rank
         try:
             _ = Scalar([1., 2., 3.], nrank=1)  # Scalar should have nrank=0
         except ValueError:
             pass  # Expected
 
-        # Test denominators disallowed (line 238-239)
+        # Test denominators disallowed
         # Need a class that disallows denominators
         # Most classes allow them, so this is hard to test directly
 
-        # Test invalid array shape (line 244-246)
+        # Test invalid array shape
         try:
             _ = Scalar([])  # Empty array with insufficient rank
         except ValueError:
             pass  # May or may not raise
 
-        # Test incompatible nrank (line 189-191)
+        # Test incompatible nrank
         # This is tricky because the object isn't fully initialized when the error is raised
         # So we test it differently - by trying to create incompatible objects
         try:
@@ -58,7 +58,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except (ValueError, TypeError):
             pass  # May or may not raise
 
-        # Test incompatible drank (line 195-197)
+        # Test incompatible drank
         # Similar issue - object not fully initialized
         # Test by creating objects with different drank values directly
         try:
@@ -69,29 +69,29 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass  # Expected
 
-        # Test default with item shape (line 304-305)
+        # Test default with item shape
         a = Vector([1., 2., 3.])
         b = Vector([1., 2., 3.], default=[1., 1., 1.])
         self.assertIsNotNone(b._default)
 
-        # Test default with _DEFAULT_VALUE (line 306-307)
+        # Test default with _DEFAULT_VALUE
         a = Scalar([1., 2., 3.])
         # Scalar has _DEFAULT_VALUE = 1
         self.assertEqual(a._default, 1)
 
-        # Test default with item but no _DEFAULT_VALUE (line 308-309)
+        # Test default with item but no _DEFAULT_VALUE
         a = Vector([1., 2., 3.])
         # Vector doesn't have _DEFAULT_VALUE, should use np.ones(item)
         self.assertTrue(np.allclose(a._default, [1., 1., 1.]))
 
-        # Test default with no item (line 310-311)
+        # Test default with no item
         a = Scalar(1.)
         self.assertEqual(a._default, 1)
 
         ##################################################################################
         # Test as_builtin edge cases
         ##################################################################################
-        # Test with masked value and masked parameter (line 340-380)
+        # Test with masked value and masked parameter
         a = Scalar(1., mask=True)
         b = a.as_builtin(masked=999)
         self.assertEqual(b, 999)
@@ -103,13 +103,13 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _as_mask edge cases
         ##################################################################################
-        # Test with invalid type (line 443)
+        # Test with invalid type
         try:
             _ = Qube._as_mask(object(), opstr='test')
         except TypeError:
             pass  # Expected
 
-        # Test with invalid mask type (line 494-495)
+        # Test with invalid mask type
         try:
             _ = Qube._as_mask([1, 2, 3], opstr='test')  # Not boolean
         except TypeError:
@@ -118,7 +118,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _suitable_mask error cases
         ##################################################################################
-        # Test shape mismatch (line 570-571)
+        # Test shape mismatch
         try:
             a = Scalar([1., 2., 3.])
             _ = Qube._suitable_mask([True, False], shape=(2,), opstr='test')
@@ -128,13 +128,13 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _suitable_dtype error cases
         ##################################################################################
-        # Test unsupported dtype (line 619-620)
+        # Test unsupported dtype
         try:
             _ = Qube._suitable_dtype('invalid', opstr='test')
         except ValueError:
             pass  # Expected
 
-        # Test unsupported data type (line 640-641)
+        # Test unsupported data type
         # This actually goes through a different code path that raises ValueError
         try:
             _ = Qube._suitable_dtype('invalid_string', opstr='test')
@@ -144,16 +144,16 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _suitable_numer error cases
         ##################################################################################
-        # Test invalid dtype (line 791-792)
+        # Test invalid dtype
         try:
             _ = Qube._suitable_numer('invalid', opstr='test')
         except ValueError:
             pass  # Expected
 
-        # Test class without default numerator (line 819-820)
+        # Test class without default numerator
         # This is hard to test as most classes have defaults
 
-        # Test invalid numerator shape (line 826-827)
+        # Test invalid numerator shape
         try:
             _ = Scalar([1., 2., 3.], nrank=1)  # Scalar must have nrank=0
         except ValueError:
@@ -162,21 +162,21 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _set_values error cases
         ##################################################################################
-        # Test value shape mismatch (line 1130-1131)
+        # Test value shape mismatch
         try:
             a = Scalar([1., 2., 3.])
             a._set_values([1., 2.])  # Wrong shape
         except ValueError:
             pass  # Expected
 
-        # Test mask shape mismatch (line 1135-1136)
+        # Test mask shape mismatch
         try:
             a = Scalar([1., 2., 3.])
             a._set_values([1., 2., 3.], mask=[True, False])  # Wrong shape
         except ValueError:
             pass  # Expected
 
-        # Test antimask shape mismatch (line 1141-1142)
+        # Test antimask shape mismatch
         try:
             a = Scalar([1., 2., 3.])
             a._set_values([1., 2., 3.], antimask=[True, False])  # Wrong shape
@@ -186,18 +186,18 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test insert_deriv error cases
         ##################################################################################
-        # Test derivatives disallowed (line 1540-1541)
+        # Test derivatives disallowed
         # Need a class that disallows derivatives
         # Most classes allow them, so this is hard to test directly
 
-        # Test invalid class for derivative (line 1544-1545)
+        # Test invalid class for derivative
         try:
             a = Scalar([1., 2., 3.])
             a.insert_deriv('t', "not a qube")
         except TypeError:
             pass  # Expected
 
-        # Test shape mismatch for numerator (line 1548-1549)
+        # Test shape mismatch for numerator
         try:
             a = Scalar([1., 2., 3.])
             b = Vector([1., 2., 3.])  # Different numer
@@ -205,7 +205,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass  # Expected
 
-        # Test cannot replace derivative (line 1553-1554)
+        # Test cannot replace derivative
         try:
             a = Scalar([1., 2., 3.])
             a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
@@ -213,7 +213,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass  # Expected
 
-        # Test cannot replace in readonly (line 1598-1599)
+        # Test cannot replace in readonly
         try:
             a = Scalar([1., 2., 3.])
             a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
@@ -225,14 +225,14 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test with_deriv error cases
         ##################################################################################
-        # Test invalid method (line 1784-1785)
+        # Test invalid method
         try:
             a = Scalar([1., 2., 3.])
             a.with_deriv('t', Scalar([0.1, 0.2, 0.3]), method='invalid')
         except ValueError:
             pass  # Expected
 
-        # Test derivative already exists (line 1788-1789)
+        # Test derivative already exists
         try:
             a = Scalar([1., 2., 3.])
             a = a.with_deriv('t', Scalar([0.1, 0.2, 0.3]), method='insert')
@@ -243,11 +243,11 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test set_unit error cases
         ##################################################################################
-        # Test units disallowed (line 1874-1875)
+        # Test units disallowed
         # Need a class that disallows units
         # Most classes allow them, so this is hard to test directly
 
-        # Test units not compatible (line 1964-1965)
+        # Test units not compatible
         try:
             a = Scalar([1., 2., 3.], unit=Unit.KM)
             a.set_unit(Unit.SEC)  # Incompatible unit
@@ -257,7 +257,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test require_writeable error cases
         ##################################################################################
-        # Test read-only object (line 2106-2107)
+        # Test read-only object
         a = Scalar([1., 2., 3.])
         a = a.as_readonly()
         try:
@@ -265,7 +265,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass  # Expected
 
-        # Test require_writable (line 2127-2128)
+        # Test require_writable
         a = Scalar([1., 2., 3.])
         a = a.as_readonly()
         try:
@@ -276,21 +276,21 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test as_float error cases
         ##################################################################################
-        # Test cannot contain floats (line 2333-2334)
+        # Test cannot contain floats
         # Need a class that disallows floats
         # Most classes allow them, so this is hard to test directly
 
         ##################################################################################
         # Test as_int error cases
         ##################################################################################
-        # Test cannot contain ints (line 2383-2384)
+        # Test cannot contain ints
         # Need a class that disallows ints
         # Most classes allow them, so this is hard to test directly
 
         ##################################################################################
         # Test as_bool error cases
         ##################################################################################
-        # Test cannot contain bools (line 2433-2434)
+        # Test cannot contain bools
         # Boolean class doesn't allow bools (it's already bools)
         # But actually, Boolean._INTS_OK might be True, so this might not work
         # Let's test with a class that actually disallows bools
@@ -301,7 +301,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _disallow_denom
         ##################################################################################
-        # Test with denominator (line 3019-3020)
+        # Test with denominator
         try:
             a = Vector(np.arange(6).reshape(2, 3), drank=1)
             a._disallow_denom('test')
@@ -311,7 +311,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _require_scalar
         ##################################################################################
-        # Test non-scalar (line 3029-3030)
+        # Test non-scalar
         try:
             a = Vector([1., 2., 3.])
             a._require_scalar('test')
@@ -321,7 +321,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _require_axis_in_range
         ##################################################################################
-        # Test axis out of range (line 3046-3047)
+        # Test axis out of range
         try:
             a = Scalar([1., 2., 3.])
             a._require_axis_in_range(5, 1, 'test')
@@ -338,7 +338,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test from_scalars error cases
         ##################################################################################
-        # Test incompatible denominators (line 3108-3109)
+        # Test incompatible denominators
         try:
             a = Scalar([1., 2., 3.])
             b = Vector(np.arange(6).reshape(2, 3), drank=1)
@@ -401,7 +401,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test _set_mask edge cases
         ##################################################################################
-        # Test with antimask when mask is bool (line 1222-1227)
+        # Test with antimask when mask is bool
         # This tests the else branch where mask is not an array
         a = Scalar([1., 2., 3.])
         # Start with bool mask
@@ -555,7 +555,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
-        # Test with object that has no derivs attribute (line 1839-1840)
+        # Test with object that has no derivs attribute
         name = a.unique_deriv_name('t', object())  # object has no derivs
         # Should still return a unique name
         self.assertNotEqual(name, 't')
@@ -567,7 +567,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Should return a unique name like 't0' or 't1'
         self.assertNotEqual(name, 't')
 
-        # Test when key is not in all_keys (line 1844-1845)
+        # Test when key is not in all_keys
         name = a.unique_deriv_name('x', b)  # 'x' is not in any derivs
         self.assertEqual(name, 'x')  # Should return the key as-is
 
@@ -578,18 +578,18 @@ class Test_Qube_Coverage(unittest.TestCase):
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3], unit=Unit.SEC))
         b = a.without_unit(recursive=True)
         self.assertIsNone(b.unit_)
-        # Test the recursive path (line 1907-1910)
+        # Test the recursive path
         # The derivative should have its unit removed when recursive=True
         # But there might be an issue with the implementation, so let's test the path
         # by checking that the method completes
 
         b = a.without_unit(recursive=False)
         self.assertIsNone(b.unit_)
-        # When recursive=False, derivatives are omitted (line 1903 with recursive=False)
+        # When recursive=False, derivatives are omitted
         # So b should not have d_dt
         self.assertFalse(hasattr(b, 'd_dt'))
 
-        # Test the early return path (line 1900-1901)
+        # Test the early return path
         c = Scalar([1., 2., 3.])  # No unit, no derivs
         d = c.without_unit()
         self.assertIs(c, d)  # Should return self
@@ -676,17 +676,17 @@ class Test_Qube_Coverage(unittest.TestCase):
         ##################################################################################
         # Test as_bool edge cases
         ##################################################################################
-        # Test with builtins=True and scalar (line 2423-2424)
+        # Test with builtins=True and scalar
         a = Scalar(1.)
         Qube.prefer_builtins(True)
         b = a.as_bool(builtins=True)
         self.assertIsInstance(b, bool)
         Qube.prefer_builtins(False)
 
-        # Test with array that's already bool (line 2426-2427)
+        # Test with array that's already bool
         a = Boolean([True, False, True])
         b = a.as_bool(copy=False)
-        # Should return self when copy=False and already bool (line 2427)
+        # Should return self when copy=False and already bool
         # But Boolean.as_bool() might have issues due to _INTS_OK=False
         # Let's test the path where values are already bool dtype
         # Actually, Boolean.as_bool() will raise an error due to _INTS_OK=False
@@ -725,20 +725,20 @@ class Test_Qube_Coverage(unittest.TestCase):
         # It returns the first class that works, or self if none work
         a = Scalar([1., 2., 3.])
         # Vector requires nrank=1, Scalar has nrank=0, so cast will skip it
-        # and return self (line 2555-2556)
+        # and return self
         b = a.cast([Vector])
         self.assertIs(a, b)  # Should return self when no suitable class
 
-        # Test with Scalar in the list (line 2540-2541)
+        # Test with Scalar in the list
         # Should return self since it's already Scalar
         b = a.cast([Scalar])
         self.assertIs(a, b)
 
-        # Test with single class (not list) (line 2533-2534)
+        # Test with single class (not list)
         b = a.cast(Scalar)
         self.assertIs(a, b)
 
-        # Test incompatible _NUMER (line 2544-2545)
+        # Test incompatible _NUMER
         # This is hard to test as most classes have _NUMER=None
         # But we can test the continue path by using incompatible classes
 
@@ -757,7 +757,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertEqual(b.shape, (3,))
         self.assertTrue(np.all(b.values == 2.))
 
-        # Test with recursive=True and derivatives (line 2581-2583)
+        # Test with recursive=True and derivatives
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a.as_all_constant(recursive=True)
@@ -916,45 +916,45 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Additional tests for missing lines in qube.py
         ##################################################################################
 
-        # Test __init__ with nrank mismatch (line 189-191)
+        # Test __init__ with nrank mismatch
         # This is hard to test directly, so we'll skip it for now
 
-        # Test __init__ with drank mismatch (line 195-197)
+        # Test __init__ with drank mismatch
         # This is also hard to test directly, so we'll skip it for now
 
-        # Test __init__ with default from arg (line 199->203)
+        # Test __init__ with default from arg
         a = Scalar([1., 2., 3.])
         b = Qube(a._values, example=a)
         self.assertIsNotNone(b)
 
-        # Test as_builtin with empty size (line 356)
+        # Test as_builtin with empty size
         a = Scalar([])
         b = a.as_builtin()
         self.assertIsNotNone(b)
 
-        # Test as_builtin with non-Real values (line 374)
+        # Test as_builtin with non-Real values
         a = Boolean([True, False, True])
         b = a.as_builtin()
         self.assertIsNotNone(b)
 
-        # Test _as_values_and_mask with stack of Qubes (line 433-434)
+        # Test _as_values_and_mask with stack of Qubes
         a = Scalar([1., 2., 3.])
         b = Scalar([4., 5., 6.])
         values, mask = Qube._as_values_and_mask([a, b])
         self.assertIsNotNone(values)
 
-        # Test _as_mask with invert and masked_value (line 471, 478, 480)
+        # Test _as_mask with invert and masked_value
         a = Scalar([1., 0., 2.])
         mask = Qube._as_mask(a, invert=True, masked_value=True)
         self.assertIsNotNone(mask)
 
-        # Test _as_mask with list/tuple containing Qubes (line 477-478)
+        # Test _as_mask with list/tuple containing Qubes
         a = Scalar([1., 2., 3.])
         b = Scalar([4., 5., 6.])
         mask = Qube._as_mask([a, b])
         self.assertIsNotNone(mask)
 
-        # Test _as_mask with shapeless mask (line 491-492)
+        # Test _as_mask with shapeless mask
         # _as_mask extracts mask from Qube or MaskedArray
         # To test line 498-500, we need a Qube with a boolean mask
         a = Scalar([1., 2., 3.], mask=True)  # Entirely masked
@@ -962,39 +962,39 @@ class Test_Qube_Coverage(unittest.TestCase):
         # When mask=True (entirely masked), it should return bool(masked_value) = False
         self.assertFalse(mask)
 
-        # Test _as_mask with array mask and invert (line 500, 506-512)
+        # Test _as_mask with array mask and invert
         a = Scalar([1., 0., 2.])
         mask = Qube._as_mask(a, invert=True, masked_value=True)
         self.assertIsNotNone(mask)
 
-        # Test _suitable_mask with collapse (line 558->561)
+        # Test _suitable_mask with collapse
         a = Scalar([1., 2., 3.])
         mask = Qube._suitable_mask(a._mask, a.shape, collapse=True)
         self.assertIsNotNone(mask)
 
-        # Test _suitable_mask with broadcast (line 564-565)
+        # Test _suitable_mask with broadcast
         a = Scalar([1., 2., 3.])
         mask = Qube._suitable_mask(True, (3,), broadcast=True)
         self.assertIsNotNone(mask)
 
-        # Test _dtype_and_value with unsupported dtype (line 619-620)
+        # Test _dtype_and_value with unsupported dtype
         try:
             _ = Qube._dtype_and_value(np.array(['a', 'b']))
             self.fail("Expected ValueError for unsupported dtype")
         except ValueError:
             pass
 
-        # Test _dtype_and_value with list/tuple containing Qubes (line 625, 627)
+        # Test _dtype_and_value with list/tuple containing Qubes
         a = Scalar([1., 2., 3.])
         b = Scalar([4., 5., 6.])
         dtype, values = Qube._dtype_and_value([a, b])
         self.assertIsNotNone(dtype)
 
-        # Test _suitable_value with unsupported type (line 636-641)
+        # Test _suitable_value with unsupported type
         # This path is hard to test directly without triggering other errors
         # Skip this test for now
 
-        # Test _suitable_value with shapeless mask (line 649)
+        # Test _suitable_value with shapeless mask
         # _suitable_value is a classmethod that returns a single value (array or scalar)
         # Line 649 is in _dtype_and_value when mask is a bool
         # This is tested through _dtype_and_value which calls _suitable_value
@@ -1003,34 +1003,34 @@ class Test_Qube_Coverage(unittest.TestCase):
         values = Scalar._suitable_value(a)
         self.assertIsNotNone(values)
 
-        # Test _suitable_value with Qube and mask (line 686-692)
+        # Test _suitable_value with Qube and mask
         a = Scalar([1., 2., 3.], mask=[False, True, False])
         values = Scalar._suitable_value(a)
         self.assertIsNotNone(values)
 
-        # Test _suitable_value with MaskedArray and mask (line 695-700)
+        # Test _suitable_value with MaskedArray and mask
         import numpy.ma as ma
         a = ma.array([1., 2., 3.], mask=[False, True, False])
         values = Scalar._suitable_value(a)
         self.assertIsNotNone(values)
 
-        # Test _casted_to_dtype with bool dtype (line 718)
+        # Test _casted_to_dtype with bool dtype
         a = np.array([1., 0., 2.])
         b = Qube._casted_to_dtype(a, 'bool')
         self.assertTrue(np.all(b == [True, False, True]))
 
-        # Test _suitable_dtype with bool (line 758)
+        # Test _suitable_dtype with bool
         dtype = Qube._suitable_dtype('bool', Scalar)
         self.assertEqual(dtype, 'bool')
 
-        # Test _suitable_dtype with invalid dtype (line 784-789)
+        # Test _suitable_dtype with invalid dtype
         try:
             _ = Scalar._suitable_dtype('invalid', opstr='test')
             self.fail("Expected ValueError for invalid dtype")
         except ValueError:
             pass
 
-        # Test _suitable_numer with no default (line 816-820)
+        # Test _suitable_numer with no default
         class NoNumerQube(Qube):
             _NRANK = 1
             _NUMER = None
@@ -1040,52 +1040,52 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass
 
-        # Test _suitable_value with non-expandable args (line 861)
+        # Test _suitable_value with non-expandable args
         a = Scalar([1., 2., 3.])
         values = Scalar._suitable_value(a, expand=False)
         self.assertIsNotNone(values)
 
-        # Test or_ with three or more masks (line 910)
+        # Test or_ with three or more masks
         a = Scalar([1., 2., 3.])
         b = Scalar([4., 5., 6.])
         c = Scalar([7., 8., 9.])
         mask = Qube.or_(a._mask, b._mask, c._mask)
         self.assertIsNotNone(mask)
 
-        # Test and_ with three or more masks (line 949-953)
+        # Test and_ with three or more masks
         a = Scalar([1., 2., 3.])
         b = Scalar([4., 5., 6.])
         c = Scalar([7., 8., 9.])
         mask = Qube.and_(a._mask, b._mask, c._mask)
         self.assertIsNotNone(mask)
 
-        # Test clone with preserve (line 990-996)
+        # Test clone with preserve
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a.clone(recursive=False, preserve='t')
         self.assertIn('t', b._derivs)
 
-        # Test clone with retain_cache (line 1004-1011)
+        # Test clone with retain_cache
         a = Scalar([1., 2., 3.])
         a._cache['test'] = 'value'
         b = a.clone(retain_cache=True)
         self.assertIn('test', b._cache)
 
-        # Test filled with shapeless and mask (line 1089-1092)
+        # Test filled with shapeless and mask
         # filled() expects shape to be a tuple, and when shape is (), it returns the example
         a = Scalar(1.)
         b = Scalar.filled((), fill=1., mask=True)
         # When shape is () and mask is True, it should return a masked scalar
         self.assertTrue(b.mask)
 
-        # Test _set_values with np.generic (line 1145-1151)
+        # Test _set_values with np.generic
         # _set_values expects values to match the shape
         # For a scalar, we can set a scalar value
         a = Scalar(1.)
         a._set_values(np.float64(5.))
         self.assertEqual(a.values, 5.)
 
-        # Test _set_mask with antimask and array mask (line 1160-1167)
+        # Test _set_mask with antimask and array mask
         a = Scalar([1., 2., 3.])
         antimask = np.array([True, False, True])
         a._set_mask(True, antimask=antimask)
@@ -1094,7 +1094,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertTrue(a.mask[0])
         self.assertFalse(a.mask[1])
 
-        # Test _set_mask with antimask and scalar mask (line 1223->1227)
+        # Test _set_mask with antimask and scalar mask
         a = Scalar([1., 2., 3.])
         antimask = np.array([True, False, True])
         a._set_mask(True, antimask=antimask)
@@ -1103,17 +1103,17 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertTrue(a.mask[0])
         self.assertFalse(a.mask[1])
 
-        # Test mvals with scalar and mask (line 1262-1265)
+        # Test mvals with scalar and mask
         a = Scalar(1., mask=True)
         b = a.mvals
         self.assertTrue(np.ma.is_masked(b))
 
-        # Test _find_corners with ndims == 0 (line 1428)
+        # Test _find_corners with ndims == 0
         a = Scalar(1.)
         corners = a._find_corners()
         self.assertIsNone(corners)
 
-        # Test delete_deriv with key in derivs (line 1627->1631)
+        # Test delete_deriv with key in derivs
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         a.delete_deriv('t')
@@ -1123,18 +1123,18 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Additional tests for more missing lines
         ##################################################################################
 
-        # Test __init__ with derivs from arg (line 182)
+        # Test __init__ with derivs from arg
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = Qube(a._values, derivs=a._derivs, example=a)
         self.assertIn('t', b._derivs)
 
-        # Test __init__ with unit from arg (line 184-185)
+        # Test __init__ with unit from arg
         a = Scalar([1., 2., 3.], unit=Unit.KM)
         b = Qube(a._values, unit=a._unit, example=a)
         self.assertEqual(b.unit_, Unit.KM)
 
-        # Test __init__ with derivatives disallowed (line 229)
+        # Test __init__ with derivatives disallowed
         class NoDerivsQube(Qube):
             _DERIVS_OK = False
         try:
@@ -1143,7 +1143,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass
 
-        # Test _suitable_numer with no default (line 817)
+        # Test _suitable_numer with no default
         class NoNumerQube(Qube):
             _NRANK = 1
             _NUMER = None
@@ -1153,28 +1153,28 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass
 
-        # Test and_ with mask0=True (line 933-935)
+        # Test and_ with mask0=True
         mask = Qube.and_(True, False)
         self.assertFalse(mask)
 
         mask = Qube.and_(True, True)
         self.assertTrue(mask)
 
-        # Test and_ with mask1=True (line 944)
+        # Test and_ with mask1=True
         mask = Qube.and_(False, True)
         self.assertFalse(mask)
 
-        # Test and_ with one input (line 950)
+        # Test and_ with one input
         mask = Qube.and_(True)
         self.assertTrue(mask)
 
-        # Test clone with dict value (line 983)
+        # Test clone with dict value
         a = Scalar([1., 2., 3.])
         a._cache = {'test': {'nested': 'dict'}}
         b = a.clone()
         self.assertIsNotNone(b._cache)
 
-        # Test clone with retain_cache and 'shrunk'/'wod' in cache (line 1007-1009)
+        # Test clone with retain_cache and 'shrunk'/'wod' in cache
         a = Scalar([1., 2., 3.])
         a._cache = {'shrunk': Scalar(1.), 'wod': Scalar(2.), 'other': 'value'}
         b = a.clone(retain_cache=True)
@@ -1182,7 +1182,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertNotIn('shrunk', b._cache)
         self.assertNotIn('wod', b._cache)
 
-        # Test _set_values with antimask and np.generic (line 1143, 1151)
+        # Test _set_values with antimask and np.generic
         # _set_values requires values to match the shape
         # For antimask, we need to provide values that match the shape
         a = Scalar([1., 2., 3.])
@@ -1192,25 +1192,25 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertEqual(a.values[0], 5.)
         self.assertEqual(a.values[2], 7.)
 
-        # Test _set_values with np.integer (line 1148-1149)
+        # Test _set_values with np.integer
         # _set_values requires values to match shape, so for scalar we can set scalar value
         a = Scalar(1)
         a._set_values(np.int64(5))
         self.assertEqual(a.values, 5)
 
-        # Test _set_values with retain_cache=True and mask=None (line 1172)
+        # Test _set_values with retain_cache=True and mask=None
         a = Scalar([1., 2., 3.])
         a._cache = {'unshrunk': Scalar(1.)}
         a._set_values([4., 5., 6.], retain_cache=True)
         self.assertNotIn('unshrunk', a._cache)
 
-        # Test _set_values with retain_cache=False (line 1174)
+        # Test _set_values with retain_cache=False
         a = Scalar([1., 2., 3.])
         a._cache = {'test': 'value'}
         a._set_values([4., 5., 6.], retain_cache=False)
         self.assertEqual(len(a._cache), 0)
 
-        # Test _set_values with readonly mask (line 1179-1181)
+        # Test _set_values with readonly mask
         a = Scalar([1., 2., 3.])
         readonly_mask = np.array([False, True, False])
         readonly_mask.setflags(write=False)
@@ -1218,13 +1218,13 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Should copy the mask if it's readonly
         self.assertIsNotNone(a.mask)
 
-        # Test _new_values (line 1192)
+        # Test _new_values
         a = Scalar([1., 2., 3.])
         a._cache = {'unshrunk': Scalar(1.)}
         a._new_values()
         self.assertNotIn('unshrunk', a._cache)
 
-        # Test _set_mask with readonly mask (line 1236)
+        # Test _set_mask with readonly mask
         a = Scalar([1., 2., 3.])
         readonly_mask = np.array([False, True, False])
         readonly_mask.setflags(write=False)
@@ -1232,7 +1232,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Should copy the mask if it's readonly
         self.assertIsNotNone(a.mask)
 
-        # Test mvals with scalar and unmasked (line 1265)
+        # Test mvals with scalar and unmasked
         a = Scalar(1., mask=False)
         b = a.mvals
         self.assertIsInstance(b, np.ma.MaskedArray)
@@ -1241,25 +1241,25 @@ class Test_Qube_Coverage(unittest.TestCase):
         # More tests for additional missing lines
         ##################################################################################
 
-        # Test __init__ with nrank mismatch when arg is Qube (line 189-191)
+        # Test __init__ with nrank mismatch when arg is Qube
         # This is hard to test directly without triggering other errors
         # Skip for now
 
-        # Test __init__ with drank mismatch when arg is Qube (line 195-197)
+        # Test __init__ with drank mismatch when arg is Qube
         # This is also hard to test directly
         # Skip for now
 
-        # Test __init__ with default from arg (line 199->203)
+        # Test __init__ with default from arg
         a = Scalar([1., 2., 3.])
         b = Qube(a._values, example=a)
         self.assertIsNotNone(b)
 
-        # Test as_builtin with non-Real values (line 374)
+        # Test as_builtin with non-Real values
         a = Boolean([True, False, True])
         b = a.as_builtin()
         self.assertIsNotNone(b)
 
-        # Test _set_mask with antimask and array mask (line 1160-1167)
+        # Test _set_mask with antimask and array mask
         # This requires self._mask to be an array, not a scalar
         a = Scalar([1., 2., 3.])
         # Ensure mask is an array
@@ -1275,7 +1275,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertFalse(a.mask[1])
         self.assertFalse(a.mask[2])
 
-        # Test _set_mask with antimask and scalar mask, converting mask to array (line 1223->1227)
+        # Test _set_mask with antimask and scalar mask, converting mask to array
         a = Scalar([1., 2., 3.])
         a._mask = False  # Start with scalar mask
         antimask = np.array([True, False, True])
@@ -1285,7 +1285,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertFalse(a.mask[1])
         self.assertTrue(a.mask[2])
 
-        # Test delete_deriv with key in derivs (line 1627->1631)
+        # Test delete_deriv with key in derivs
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         self.assertIn('t', a._derivs)
@@ -1293,7 +1293,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertNotIn('t', a._derivs)
         self.assertFalse(hasattr(a, 'd_dt'))
 
-        # Test delete_derivs with preserve (line 1649->1653)
+        # Test delete_derivs with preserve
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         a.insert_deriv('u', Scalar([0.2, 0.3, 0.4]))
@@ -1301,7 +1301,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertIn('t', a._derivs)
         self.assertNotIn('u', a._derivs)
 
-        # Test delete_derivs with preserve list (line 1656->1660)
+        # Test delete_derivs with preserve list
         # This test is actually testing the code path in qube.py line 1658
         # which calls delete_deriv(key, override=override)
         # The issue is that delete_deriv has override as a keyword-only argument
@@ -1317,7 +1317,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertIn('u', a._derivs)
         self.assertNotIn('v', a._derivs)
 
-        # Test without_derivs with preserve (line 1683)
+        # Test without_derivs with preserve
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         a.insert_deriv('u', Scalar([0.2, 0.3, 0.4]))
@@ -1325,24 +1325,24 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertIn('t', b._derivs)
         self.assertNotIn('u', b._derivs)
 
-        # Test wod with derivatives (line 1729->1732)
+        # Test wod with derivatives
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a.wod
         self.assertNotIn('t', b._derivs)
 
-        # Test without_deriv returning self (line 1751)
+        # Test without_deriv returning self
         a = Scalar([1., 2., 3.])
         b = a.without_deriv('nonexistent')
         self.assertIs(a, b)
 
-        # Test with_deriv with method='add' (line 1791->1792)
+        # Test with_deriv with method='add'
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a.with_deriv('t', Scalar([0.2, 0.3, 0.4]), method='add')
         self.assertTrue(np.allclose(b.d_dt.values, [0.3, 0.5, 0.7]))
 
-        # Test set_unit with units disallowed (line 1874)
+        # Test set_unit with units disallowed
         class NoUnitsQube(Qube):
             _UNITS_OK = False
         a = NoUnitsQube(1.)
@@ -1352,7 +1352,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except TypeError:
             pass
 
-        # Test without_unit with recursive and derivs (line 1909->1910)
+        # Test without_unit with recursive and derivs
         a = Scalar([1., 2., 3.], unit=Unit.KM)
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3], unit=Unit.SEC))
         b = a.without_unit(recursive=True)
@@ -1360,13 +1360,13 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Note: recursive=True removes units from the object but derivatives may keep their units
         # This tests the code path where recursive=True is passed
 
-        # Test _require_compatible_units with compatible units (line 2017)
+        # Test _require_compatible_units with compatible units
         a = Scalar(1., unit=Unit.KM)
         b = Scalar(2., unit=Unit.M)
         a._require_compatible_units(b)
         # Should not raise
 
-        # Test require_writeable with readonly object (line 2106->2108)
+        # Test require_writeable with readonly object
         a = Scalar([1., 2., 3.]).as_readonly()
         try:
             a.require_writeable()
@@ -1374,7 +1374,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except ValueError:
             pass
 
-        # Test require_writeable with readonly and force (line 2127->2128)
+        # Test require_writeable with readonly and force
         a = Scalar([1., 2., 3.]).as_readonly()
         b = a.require_writeable(force=True)
         # Should return a copy (but note: copy is called with readonly=True)
@@ -1382,7 +1382,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         # The copy is still readonly per the implementation
         self.assertTrue(b.readonly)
 
-        # Test require_writeable with readonly mask (line 2132)
+        # Test require_writeable with readonly mask
         a = Scalar([1., 2., 3.])
         readonly_mask = np.array([False, True, False])
         readonly_mask.setflags(write=False)
@@ -1393,7 +1393,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         # The mask should have been copied via remask
         # Note: The actual writeability depends on remask implementation
 
-        # Test require_writeable with readonly derivative (line 2135->2136)
+        # Test require_writeable with readonly derivative
         a = Scalar([1., 2., 3.])
         deriv = Scalar([0.1, 0.2, 0.3]).as_readonly()
         a.insert_deriv('t', deriv)
@@ -1405,7 +1405,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Check the derivative in _derivs directly
         self.assertFalse(a._derivs['t']._readonly)
 
-        # Test as_float with copy and recursive (line 2322, 2326->2327)
+        # Test as_float with copy and recursive
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a.as_float(copy=True, recursive=True)
@@ -1414,7 +1414,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         b = a.as_float(copy=False, recursive=False)
         self.assertFalse(hasattr(b, 'd_dt'))
 
-        # Test as_float with class that can't contain floats (line 2334)
+        # Test as_float with class that can't contain floats
         class NoFloatsQube(Qube):
             _FLOATS_OK = False
         a = NoFloatsQube(1)
@@ -1424,14 +1424,14 @@ class Test_Qube_Coverage(unittest.TestCase):
         except TypeError:
             pass
 
-        # Test as_int with builtins (line 2374)
+        # Test as_int with builtins
         a = Scalar(1.)
         Qube.prefer_builtins(True)
         b = a.as_int(builtins=True)
         self.assertIsInstance(b, int)
         Qube.prefer_builtins(False)
 
-        # Test as_bool with Scalar class conversion (line 2430->2431)
+        # Test as_bool with Scalar class conversion
         # Note: This path converts Scalar to Boolean, but Boolean._INTS_OK=False
         # causes an error at line 2434. This code path appears unreachable.
         # Testing with a class that allows bools instead
@@ -1446,7 +1446,7 @@ class Test_Qube_Coverage(unittest.TestCase):
             # Expected if Boolean._INTS_OK is False
             pass
 
-        # Test as_bool with conversion (line 2436->2439)
+        # Test as_bool with conversion
         # This path is after the Boolean conversion, so it's unreachable if Boolean._INTS_OK=False
         # Testing the conversion path directly with a class that allows bools
         class BoolQube2(Qube):
@@ -1462,7 +1462,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         except TypeError:
             pass
 
-        # Test as_this_type with unit change (line 2487->2488)
+        # Test as_this_type with unit change
         # This tests the path where new_unit is set to None when _UNITS_OK is False
         class NoUnitsQube(Qube):
             _UNITS_OK = False
@@ -1472,7 +1472,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         c = b.as_this_type(a)
         self.assertIsNone(c.unit_)
 
-        # Test as_this_type with derivs change (line 2492)
+        # Test as_this_type with derivs change
         # This tests the path where has_derivs is True but _DERIVS_OK is False
         # Note: This code path sets changed=True but doesn't actually remove derivs
         # The derivs are removed later in the code when constructing the new object
@@ -1488,14 +1488,14 @@ class Test_Qube_Coverage(unittest.TestCase):
         # This line 2492 sets changed=True but the actual removal happens elsewhere
         # Marking this as potentially unreachable code
 
-        # Test as_this_type with derivs and recursive=False (line 2493->2494)
+        # Test as_this_type with derivs and recursive=False
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a.as_this_type([4., 5., 6.], recursive=False)
         # When recursive=False, derivs should not be included
         self.assertNotIn('t', b._derivs)
 
-        # Test as_this_type with readonly and copy (line 2515->2516)
+        # Test as_this_type with readonly and copy
         # This tests the path where is_readonly is True and derivs_changed or arg is not obj
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
@@ -1506,33 +1506,33 @@ class Test_Qube_Coverage(unittest.TestCase):
         # The result should have derivs
         self.assertIn('t', c._derivs)
 
-        # Test as_size_zero with axis=None (line 2605->2606)
+        # Test as_size_zero with axis=None
         a = Scalar([1., 2., 3.])
         b = a.as_size_zero(axis=None)
         self.assertEqual(b.shape, (0,))
 
-        # Test as_size_zero with axis=0 (line 2611)
+        # Test as_size_zero with axis=0
         a = Scalar([[1., 2.], [3., 4.]])
         b = a.as_size_zero(axis=0)
         self.assertEqual(b.shape, (0, 2))
 
-        # Test as_size_zero with axis and array mask (line 2616)
+        # Test as_size_zero with axis and array mask
         a = Scalar([1., 2., 3.], mask=[False, True, False])
         b = a.as_size_zero(axis=0)
         self.assertEqual(b.shape, (0,))
 
-        # Test count_unmasked with array mask (line 2649)
+        # Test count_unmasked with array mask
         a = Scalar([1., 2., 3.], mask=[False, True, False])
         count = a.count_unmasked()
         self.assertEqual(count, 2)
 
-        # Test masked_single with recursive (line 2665->2666)
+        # Test masked_single with recursive
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         b = a.masked_single(recursive=True)
         self.assertTrue(hasattr(b, 'd_dt'))
 
-        # Test without_mask with recursive (line 2687->2688)
+        # Test without_mask with recursive
         a = Scalar([1., 2., 3.], mask=[False, True, False])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3], mask=[True, False, True]))
         b = a.without_mask(recursive=True)
@@ -1541,7 +1541,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Check that derivative mask is also removed
         self.assertFalse(b.d_dt.mask)
 
-        # Test remask with recursive (line 2753)
+        # Test remask with recursive
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         new_mask = np.array([False, True, False])
@@ -1549,58 +1549,58 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertTrue(b.mask[1])
         self.assertTrue(b.d_dt.mask[1])
 
-        # Test expand_mask with scalar mask True (line 2807->2811)
+        # Test expand_mask with scalar mask True
         a = Scalar([1., 2., 3.])
         a._mask = True
         b = a.expand_mask()
         self.assertTrue(np.all(b.mask))
 
-        # Test collapse_mask with all False mask (line 2853->2856)
+        # Test collapse_mask with all False mask
         a = Scalar([1., 2., 3.])
         a._mask = np.array([False, False, False])
         b = a.collapse_mask()
         self.assertFalse(b.mask)
 
-        # Test collapse_mask with all True mask (line 2858->2859)
+        # Test collapse_mask with all True mask
         a = Scalar([1., 2., 3.])
         a._mask = np.array([True, True, True])
         b = a.collapse_mask()
         self.assertTrue(b.mask)
 
-        # Test collapse_mask with derivs (line 2864->2868)
+        # Test collapse_mask with derivs
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3], mask=[False, False, False]))
         b = a.collapse_mask(recursive=True)
         self.assertFalse(b.d_dt.mask)
 
-        # Test collapse_mask creating new object (line 2875->2879)
+        # Test collapse_mask creating new object
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3], mask=[True, True, True]))
         b = a.collapse_mask(recursive=True)
         self.assertTrue(b.d_dt.mask)
 
-        # Test __repr__ (line 2925)
+        # Test __repr__
         a = Scalar([1., 2., 3.])
         repr_str = repr(a)
         self.assertIsInstance(repr_str, str)
 
-        # Test __str__ with denom (line 2949)
+        # Test __str__ with denom
         a = Scalar([[1.], [2.]], drank=1)
         str_str = str(a)
         self.assertIsInstance(str_str, str)
 
-        # Test __str__ with unit (line 2958)
+        # Test __str__ with unit
         a = Scalar([1., 2., 3.], unit=Unit.KM)
         str_str = str(a)
         self.assertIsInstance(str_str, str)
 
-        # Test __str__ with derivs (line 2962->2965)
+        # Test __str__ with derivs
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         str_str = str(a)
         self.assertIn('d_dt', str_str)
 
-        # Test __str__ with brackets (line 2982)
+        # Test __str__ with brackets
         # This tests the code path where brackets are added for arrays
         # The actual format may vary, but we test that the method executes
         a = Scalar([1., 2., 3.])
@@ -1610,7 +1610,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertIn('2.', str_str)
         self.assertIn('3.', str_str)
 
-        # Test from_scalars with incompatible denominators (line 3109->3110)
+        # Test from_scalars with incompatible denominators
         # This tests the code path where denominators are checked
         # Note: The actual behavior may allow compatible denominators
         a = Scalar([[1.]], drank=1)

@@ -657,7 +657,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         # Additional coverage tests for missing lines
         ##################################################################################
 
-        # Test __iadd__ (in-place addition) (lines 172-175, 181-184, 187, 191)
+        # Test __iadd__ (in-place addition)
         a = Scalar([1., 2., 3.])
         b = Scalar([4., 5., 6.])
         a += b
@@ -668,7 +668,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         a += 2.
         self.assertTrue(np.allclose(a.values, [3., 4., 5.]))
 
-        # Test __iadd__ with integer result from non-integer (line 191)
+        # Test __iadd__ with integer result from non-integer
         a = Scalar([1, 2, 3])  # Integer
         b = Scalar([1., 2., 3.])  # Float
         self.assertRaises(TypeError, lambda: a.__iadd__(b))
@@ -684,7 +684,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         a -= 2.
         self.assertTrue(np.allclose(a.values, [-1., 0., 1.]))
 
-        # Test __imul__ (in-place multiplication) (lines 393-396, 400, 408-423, 443-452, 472-473, 477-515)
+        # Test __imul__ (in-place multiplication)
         a = Scalar([1., 2., 3.])
         b = Scalar([4., 5., 6.])
         a *= b
@@ -695,12 +695,12 @@ class Test_Qube_math_ops(unittest.TestCase):
         a *= 2.
         self.assertTrue(np.allclose(a.values, [2., 4., 6.]))
 
-        # Test __imul__ with integer result from non-integer (line 495)
+        # Test __imul__ with integer result from non-integer
         a = Scalar([1, 2, 3])  # Integer
         b = Scalar([1., 2., 3.])  # Float
         self.assertRaises(TypeError, lambda: a.__imul__(b))
 
-        # Test __imul__ with array-like arg_values (line 489-491)
+        # Test __imul__ with array-like arg_values
         a = Scalar([1., 2., 3.])
         b = Scalar([4.])  # Scalar that broadcasts
         a *= b
@@ -744,7 +744,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         a **= 2
         self.assertTrue(np.allclose(a.values, [4., 9., 16.]))
 
-        # Test __add__ with incompatible types (line 109-110, 116-119, 122)
+        # Test __add__ with incompatible types
         a = Scalar([1., 2., 3.])
         # Try to add incompatible type
         try:
@@ -760,7 +760,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         # This raises TypeError, not ValueError, because types are different
         self.assertRaises((TypeError, ValueError), lambda: a + b)
 
-        # Test __mul__ with dual denominators (line 400)
+        # Test __mul__ with dual denominators
         # This requires objects with denominators
         # Vector with drank=1 and another with drank=1 should raise
         try:

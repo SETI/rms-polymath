@@ -533,7 +533,8 @@ class Unit():
         Parameters:
             arg1 (Unit or None): The first Unit object.
             arg2 (Unit or None): The second Unit object.
-            name (str or dict, optional): The name for the resulting unit.
+            name (str or dict, optional): The name for the resulting unit if a new
+                unit is constructed.
 
         Returns:
             Unit or None: The product of the two Unit objects, or None if both arguments
@@ -549,7 +550,8 @@ class Unit():
             return arg1
 
         result = arg1 * arg2
-        result.name = None
+        # XXX This is not well-specified. Why do we only do this for new units?
+        result.name = name
         return result
 
     @staticmethod
@@ -559,7 +561,8 @@ class Unit():
         Parameters:
             arg1 (Unit or None): The numerator Unit object.
             arg2 (Unit or None): The denominator Unit object.
-            name (str or dict, optional): The name for the resulting unit.
+            name (str or dict, optional): The name for the resulting unit if a new
+                unit is constructed.
 
         Returns:
             Unit or None: The quotient of the two Unit objects, or None if both arguments
@@ -575,7 +578,8 @@ class Unit():
             return arg1
 
         result = arg1 / arg2
-        result.name = None
+        # XXX This is not well-specified. Why do we only do this for new units?
+        result.name = name
         return result
 
     @staticmethod

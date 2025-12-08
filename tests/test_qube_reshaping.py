@@ -577,4 +577,96 @@ class Test_qube_reshaping(unittest.TestCase):
         self.assertEqual(bb.d_dt.shape, (2,3,4,3))
         self.assertTrue(bb.d_dt.readonly)
 
+        # Additional coverage tests for missing lines
+
+        # reshape with non-tuple shape
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.reshape([6, 2])
+        self.assertEqual(b.shape, (6, 2))
+        c = a.reshape(12)
+        self.assertEqual(c.shape, (12,))
+
+        # swap_axes when a1 == a2
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.swap_axes(0, 0)
+        self.assertEqual(a, b)
+        b = a.swap_axes(1, 1)
+        self.assertEqual(a, b)
+
+        # roll_axis ValueError for rank too small
+        a = Scalar(np.arange(12).reshape(3, 4))
+        with self.assertRaises(ValueError) as cm:
+            a.roll_axis(0, 0, rank=1)
+        self.assertIn('rank 1 is too small for shape', str(cm.exception))
+
+        # roll_axis when start != rank
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.roll_axis(1, 2)
+        self.assertEqual(b.shape, (3, 4))
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.roll_axis(1, 0)
+        self.assertEqual(b.shape, (4, 3))
+
+        # move_axis ValueError for rank too small
+        a = Scalar(np.arange(12).reshape(3, 4))
+        with self.assertRaises(ValueError) as cm:
+            a.move_axis(0, 1, rank=1)
+        self.assertIn('rank 1 is too small for shape', str(cm.exception))
+
+        # move_axis with scalar source/destination
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.move_axis(0, 1)
+        self.assertEqual(b.shape, (4, 3))
+        b = a.move_axis(1, 0)
+        self.assertEqual(b.shape, (4, 3))
+
+        # move_axis reshape when ndims < rank
+        # When rank=3 and object has shape (3, 4), it gets reshaped to (1, 3, 4)
+        # Then moving axis 0 to position 2 results in (3, 4, 1)
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.move_axis(0, 2, rank=3)
+        self.assertEqual(b.shape, (3, 4, 1))
+
+        # stack function various paths
+        a = Scalar([1., 2., 3.])
+        b = Scalar([4., 5., 6.])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+        self.assertTrue(np.allclose(c.values[0], [1., 2., 3.]))
+        self.assertTrue(np.allclose(c.values[1], [4., 5., 6.]))
+
+        # stack with None args
+        a = Scalar([1., 2., 3.])
+        b = None
+        c = Scalar([4., 5., 6.])
+        result = Qube.stack(a, b, c)
+        self.assertEqual(result.shape, (3, 3))
+        self.assertTrue(np.allclose(result.values[0], [1., 2., 3.]))
+        self.assertTrue(np.allclose(result.values[1], [0., 0., 0.]))
+        self.assertTrue(np.allclose(result.values[2], [4., 5., 6.]))
+
+        # stack with derivatives
+        a = Scalar([1., 2., 3.])
+        a.insert_deriv('t', Scalar([10., 20., 30.]))
+        b = Scalar([4., 5., 6.])
+        b.insert_deriv('t', Scalar([40., 50., 60.]))
+        c = Qube.stack(a, b, recursive=True)
+        self.assertTrue(hasattr(c, 'd_dt'))
+        self.assertEqual(c.d_dt.shape, (2, 3))
+        self.assertTrue(np.allclose(c.d_dt.values[0], [10., 20., 30.]))
+        self.assertTrue(np.allclose(c.d_dt.values[1], [40., 50., 60.]))
+
+        # stack with mixed types
+        a = Scalar([1., 2., 3.])
+        b = Scalar([4, 5, 6])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # stack with units
+        from polymath.unit import Unit
+        a = Scalar([1., 2., 3.], unit=Unit.KM)
+        b = Scalar([4., 5., 6.], unit=Unit.KM)
+        c = Qube.stack(a, b)
+        self.assertEqual(c._unit, Unit.KM)
+
 ##########################################################################################

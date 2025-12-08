@@ -213,7 +213,7 @@ class Test_Polynomial_Arithmetic(unittest.TestCase):
         # Check that values are correct instead
         self.assertEqual(len(p_iadd1.values), 3)  # Should have 3 coefficients
 
-        # Test __iadd__ with derivatives (lines 270-271)
+        # Test __iadd__ with derivatives
         p_iadd_deriv1 = Polynomial([1., 2.])
         p_iadd_deriv2 = Polynomial([3., 4.])
         p_iadd_deriv1.insert_deriv('t', Polynomial([0., 1.]))
@@ -221,7 +221,7 @@ class Test_Polynomial_Arithmetic(unittest.TestCase):
         p_iadd_deriv1 += p_iadd_deriv2
         self.assertTrue(hasattr(p_iadd_deriv1, 'd_dt'))
 
-        # Test __isub__ when self needs padding (lines 319-321)
+        # Test __isub__ when self needs padding
         p_isub1 = Polynomial([5., 6.])  # order 1
         p_isub2 = Polynomial([1., 2., 3.])  # order 2
         p_isub1 -= p_isub2
@@ -242,7 +242,7 @@ class Test_Polynomial_Arithmetic(unittest.TestCase):
         p_isub3 -= p_isub4
         self.assertEqual(len(p_isub3.values), 3)
 
-        # Test __isub__ with derivatives (lines 330-331)
+        # Test __isub__ with derivatives
         p_isub_deriv1 = Polynomial([5., 6.])
         p_isub_deriv2 = Polynomial([1., 2.])
         p_isub_deriv1.insert_deriv('t', Polynomial([0., 1.]))
@@ -260,14 +260,14 @@ class Test_Polynomial_Arithmetic(unittest.TestCase):
         # This should raise ValueError
         self.assertRaises(ValueError, p_mul_drank1.__mul__, p_mul_drank2)
 
-        # Test __itruediv__ with Vector item == (1,) (lines 456-459)
+        # Test __itruediv__ with Vector item == (1,)
         p_itdiv_vec = Polynomial([4., 8.])
         v_scalar = Vector([2.])
         p_itdiv_vec /= v_scalar
         self.assertAlmostEqual(p_itdiv_vec.values[0], 2., places=10)
         self.assertAlmostEqual(p_itdiv_vec.values[1], 4., places=10)
 
-        # Test __itruediv__ with Vector item == (1,) (lines 456-459)
+        # Test __itruediv__ with Vector item == (1,)
         # This tests the branch: isinstance(arg, Vector) and arg.item == (1,)
         # Verify that Vector([4.]) has item == (1,)
         v_scalar3 = Vector([4.])

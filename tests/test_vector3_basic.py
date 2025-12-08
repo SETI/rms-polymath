@@ -193,7 +193,7 @@ class Test_Vector3_Basic(unittest.TestCase):
         # Check the first array element, first denominator element: should be [x, 0, y] = [1., 0., 5.]
         self.assertTrue(np.allclose(v20_none_nd.vals[0, :, 0], [1., 0., 5.]))
 
-        # Test from_scalars with all None (lines 97-99: all three are None)
+        # Test from_scalars with all None
         v_all_none = Vector3.from_scalars(None, None, None)
         self.assertEqual(type(v_all_none), Vector3)
         self.assertEqual(v_all_none.shape, ())
@@ -218,7 +218,7 @@ class Test_Vector3_Basic(unittest.TestCase):
         self.assertEqual(v_one_arg.shape, ())
         self.assertTrue(np.allclose(v_one_arg.vals, [0., 2., 0.]))
 
-        # Test from_scalars with multiple scalars requiring broadcasting (lines 108-110)
+        # Test from_scalars with multiple scalars requiring broadcasting
         # Create scalars with different shapes that need broadcasting
         x_broad = Scalar([1., 2.])  # shape (2,)
         y_broad = Scalar([[3.], [4.]])  # shape (2, 1)
@@ -233,7 +233,7 @@ class Test_Vector3_Basic(unittest.TestCase):
         self.assertTrue(np.allclose(v_broad.vals[1, 0], [1., 4., 5.]))
         self.assertTrue(np.allclose(v_broad.vals[1, 1], [2., 4., 5.]))
 
-        # Test from_scalars with broadcasting and None (lines 108-110, 117)
+        # Test from_scalars with broadcasting and None
         # x is None, y and z need broadcasting - this ensures len(scalars) = 2, triggering line 108
         y_broad2 = Scalar([3., 4.])  # shape (2,)
         z_broad2 = Scalar([[5.], [6.]])  # shape (2, 1)
@@ -246,7 +246,7 @@ class Test_Vector3_Basic(unittest.TestCase):
         self.assertTrue(np.allclose(v_broad_none.vals[0, 0], [0., 3., 5.]))
         self.assertTrue(np.allclose(v_broad_none.vals[0, 1], [0., 4., 5.]))
 
-        # Test from_scalars with exactly 2 non-None args that need broadcasting (lines 108-110)
+        # Test from_scalars with exactly 2 non-None args that need broadcasting
         # This explicitly tests the case where len(scalars) = 2, ensuring the if block is entered
         # Case 1: x=None, y and z have different shapes requiring broadcast
         y_broad3 = Scalar([1., 2.])  # shape (2,)
@@ -260,7 +260,7 @@ class Test_Vector3_Basic(unittest.TestCase):
         self.assertTrue(np.allclose(v_broad2.vals[1, 0], [0., 1., 4.]))
         self.assertTrue(np.allclose(v_broad2.vals[1, 1], [0., 2., 4.]))
 
-        # Case 2: y=None, x and z have different shapes requiring broadcast (lines 108-110)
+        # Case 2: y=None, x and z have different shapes requiring broadcast
         x_broad4 = Scalar([1., 2.])  # shape (2,)
         z_broad4 = Scalar([[3.], [4.]])  # shape (2, 1)
         v_broad3 = Vector3.from_scalars(x_broad4, None, z_broad4)
@@ -272,7 +272,7 @@ class Test_Vector3_Basic(unittest.TestCase):
         self.assertTrue(np.allclose(v_broad3.vals[1, 0], [1., 0., 4.]))
         self.assertTrue(np.allclose(v_broad3.vals[1, 1], [2., 0., 4.]))
 
-        # Case 3: All three non-None, but with different shapes requiring broadcast (lines 108-110)
+        # Case 3: All three non-None, but with different shapes requiring broadcast
         # This ensures len(scalars) = 3, which is > 1, so should enter the if block
         x_broad5 = Scalar([1., 2.])  # shape (2,)
         y_broad5 = Scalar([[3.], [4.]])  # shape (2, 1)

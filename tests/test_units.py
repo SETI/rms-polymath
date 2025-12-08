@@ -581,7 +581,7 @@ class Test_Units(unittest.TestCase):
 
         # Test with name parameter
         result = Unit.mul_units(Unit.KM, Unit.S, name={'km': 1, 's': 1})
-        self.assertEqual(result.name, None)
+        self.assertEqual(result.name, {'km': 1, 's': 1})
         self.assertEqual(result.get_name(), 'km*s')
 
         ##################################################################################
@@ -604,7 +604,7 @@ class Test_Units(unittest.TestCase):
 
         # Test with name parameter
         result = Unit.div_units(Unit.KM, Unit.S, name={'km': 1, 's': -1})
-        self.assertEqual(result.name, None)
+        self.assertEqual(result.name, {'km': 1, 's': -1})
         self.assertEqual(result.get_name(), 'km/s')
 
         ##################################################################################
@@ -977,7 +977,6 @@ class Test_Units(unittest.TestCase):
         result = Unit.name_to_str({'km': -1, 's': -1})
         self.assertIsInstance(result, str)
 
-
         ##################################################################################
         # Additional tests for missing coverage
         ##################################################################################
@@ -1114,13 +1113,13 @@ class Test_Units(unittest.TestCase):
         result = Unit.name_to_dict('((km')
 
         ##################################################################################
-        # Test name_to_dict with '**' in invalid position (lines 877-878)
+        # Test name_to_dict with '**' in invalid position
         # This specifically tests: if right.startswith('**'): raise ValueError
         ##################################################################################
 
         # Test with '**' appearing after a '**' operator has already been processed
         # This happens when we have something like 'km**2**3' where:
-        # 1. First '**2' is processed (lines 858-869)
+        # 1. First '**2' is processed
         # 2. After processing, right becomes '**3'
         # 3. At line 877, right.startswith('**') is True, so line 878 raises ValueError
         self.assertRaises(ValueError, Unit.name_to_dict, 'km**2**3')
@@ -1184,7 +1183,7 @@ class Test_Units(unittest.TestCase):
             Unit._TUPLES_TO_UNIT[unitless_key].name = original_name
 
         ##################################################################################
-        # Test create_name when p * actual_power != target_power (line 1041 False)
+        # Test create_name when p * actual_power != target_power
         # This specifically tests when the condition is False
         ##################################################################################
 
