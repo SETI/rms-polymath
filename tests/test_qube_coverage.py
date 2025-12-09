@@ -4,6 +4,7 @@
 ##########################################################################################
 
 import numpy as np
+import numpy.ma as ma
 import unittest
 
 from polymath import Scalar, Vector, Boolean, Qube, Unit
@@ -19,10 +20,8 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Test __init__ error cases
         ##################################################################################
         # Test example not a Qube
-        try:
+        with self.assertRaises(TypeError):
             _ = Scalar(1., example="not a qube")
-        except TypeError:
-            pass  # Expected
 
         # Test derivatives disallowed
         # Need a class that disallows derivatives
@@ -34,40 +33,28 @@ class Test_Qube_Coverage(unittest.TestCase):
         # Most classes allow units, so this is hard to test directly
 
         # Test invalid numerator rank
-        try:
+        with self.assertRaises(ValueError):
             _ = Scalar([1., 2., 3.], nrank=1)  # Scalar should have nrank=0
-        except ValueError:
-            pass  # Expected
 
         # Test denominators disallowed
         # Need a class that disallows denominators
         # Most classes allow them, so this is hard to test directly
 
-        # Test invalid array shape
-        try:
-            _ = Scalar([])  # Empty array with insufficient rank
-        except ValueError:
-            pass  # May or may not raise
-
         # Test incompatible nrank
         # This is tricky because the object isn't fully initialized when the error is raised
         # So we test it differently - by trying to create incompatible objects
-        try:
+        with self.assertRaises((ValueError, TypeError)):
             a = Vector([1., 2., 3.])
             _ = Scalar(a)  # Vector to Scalar should work, but test other incompatible cases
-        except (ValueError, TypeError):
-            pass  # May or may not raise
 
         # Test incompatible drank
         # Similar issue - object not fully initialized
         # Test by creating objects with different drank values directly
-        try:
+        with self.assertRaises(ValueError):
             a = Vector(np.arange(6).reshape(2, 3), drank=1)
             b = Vector(np.arange(6, 12).reshape(2, 3), drank=0)
             # Operations between them may fail
             _ = a + b
-        except ValueError:
-            pass  # Expected
 
         # Test default with item shape
         a = Vector([1., 2., 3.])
@@ -1012,7 +999,6 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertIsNotNone(values)
 
         # Test _suitable_value with MaskedArray and mask
-        import numpy.ma as ma
         a = ma.array([1., 2., 3.], mask=[False, True, False])
         values = Scalar._suitable_value(a)
         self.assertIsNotNone(values)
@@ -1460,8 +1446,6 @@ class Test_Qube_Coverage(unittest.TestCase):
 
         # Test as_this_type with unit change
         # This tests the path where new_unit is set to None when _UNITS_OK is False
-        class NoUnitsQube(Qube):
-            _UNITS_OK = False
         a = Scalar([1., 2., 3.], unit=Unit.KM)
         b = NoUnitsQube([4., 5., 6.], example=a)
         # When converting a with unit to NoUnitsQube, the unit should be removed
@@ -1663,7 +1647,6 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertTrue(np.array_equal(b.mask, a.mask))
 
         # Test _as_mask with list containing MaskedArray (line 480)
-        import numpy.ma as ma
         arr1 = ma.array([1, 2, 3], mask=[False, True, False])
         arr2 = ma.array([4, 5, 6], mask=[True, False, False])
         # np.ma.stack requires arrays of same shape, so we test with compatible shapes

@@ -168,8 +168,6 @@ class Test_Matrix_Comprehensive(unittest.TestCase):
 
         # Test from_scalars with n-D scalars
         # For shape=(2, 2), we need 4 scalars total (2*2=4)
-        # But the code checks len(args) != shape, which seems wrong
-        # Let's test without specifying shape (auto square)
         s6 = Scalar(1.)
         s7 = Scalar(2.)
         s8 = Scalar(3.)
@@ -283,6 +281,7 @@ class Test_Matrix_Comprehensive(unittest.TestCase):
         m43 = m42.inverse()
         # Should mask singular matrix
         self.assertTrue(isinstance(m43, Matrix))
+        self.assertTrue(m43.mask)
 
         # Test inverse with recursive=False
         m44 = Matrix([[1., 2.], [3., 4.]])

@@ -788,8 +788,8 @@ class Qube(object):
             if kind == 'b':  # pragma: no cover
                 return cls._suitable_dtype('bool', opstr=opstr)
 
-        _in_opstr = ' in ' + opstr if opstr else ''  # noqa
-        raise ValueError('invalid dtype{_in_opstr}: "{dtype}"')
+        _in_opstr = ' in ' + opstr if opstr else ''
+        raise ValueError(f'invalid dtype{_in_opstr}: "{dtype}"')
 
     @classmethod
     def _suitable_numer(cls, numer=None, opstr=''):
@@ -823,7 +823,7 @@ class Qube(object):
 
         opstr = opstr or cls.__name__
         if ((cls._NUMER is not None and numer != cls._NUMER) or
-            (cls._NRANK is not None and len(numer) != cls._NRANK)):  # noqa
+                (cls._NRANK is not None and len(numer) != cls._NRANK)):
             raise ValueError(f'invalid {opstr} numerator shape {numer}; '
                              f'must be {cls._NUMER}')
 

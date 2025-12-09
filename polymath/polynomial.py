@@ -195,6 +195,7 @@ class Polynomial(Vector):
         result = Polynomial(Vector.from_scalars(a_inv, -b * a_inv))
 
         # Handle derivatives if recursive
+        # XXX Code Rabbit claims that this math is not correct - check it
         if recursive and self._derivs:
             for key, deriv in self._derivs.items():
                 result.insert_deriv(key, deriv.invert_line(recursive=False))
@@ -678,7 +679,7 @@ class Polynomial(Vector):
         x = Scalar.as_scalar(x, recursive=recursive)
         x_powers = [1., x]
         x_power = x
-        for k in range(1, self.order):
+        for _ in range(1, self.order):
             x_power = x_power * x  # Create new object, don't modify in place
             x_powers.append(x_power)
 

@@ -676,11 +676,15 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
 
         # Test with masks
         a = Scalar([1., 2., 3.])
-        b = Scalar([1., 2., 4.])
+        b = Scalar([1., 3., 4.])
         a = a.mask_where_eq(2.)
-        b = b.mask_where_eq(2.)
+        b = b.mask_where_eq(3.)
         c = a == b
         # Both masked at same location should be equal
+        print(a, b, c)
+        self.assertTrue(c.values[0])
+        self.assertTrue(c.values[1])   # both masked -> equal -> True
+        self.assertFalse(c.values[2])
 
         # Test scalar return
         a = Scalar(1.)
@@ -724,7 +728,7 @@ class Test_Math_Ops_Coverage(unittest.TestCase):
         a = a.mask_where_eq(2.)
         b = b.mask_where_eq(2.)
         c = a != b
-        # Both masked should be False
+        self.assertFalse(c.values[1])  # masked in both -> not unequal
 
         ##################################################################################
         # Test __bool__ edge cases

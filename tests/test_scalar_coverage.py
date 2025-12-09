@@ -1015,7 +1015,7 @@ class Test_Scalar_Coverage(unittest.TestCase):
         a = Scalar([1., 2., 3.])
         b = Scalar([-1., -2., -3.])
         c = Scalar([0., 0., 0.])
-        x0, x1, discr = Scalar.solve_quadratic(a, b, c, include_antimask=True)
+        _, _, discr = Scalar.solve_quadratic(a, b, c, include_antimask=True)
         self.assertIsNotNone(discr)
 
         # Test max() with empty size

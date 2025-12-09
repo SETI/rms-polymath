@@ -278,6 +278,7 @@ class Test_Scalar_Comprehensive(unittest.TestCase):
         s79 = s78.int(top=3, inclusive=False, remask=True)
         # Value 3 should be masked
         self.assertTrue(isinstance(s79, Scalar))
+        self.assertTrue(s79.mask[3])
 
         # Test int() with shift parameter
         s80 = Scalar([0, 1, 2, 3])

@@ -355,6 +355,7 @@ class Test_Qube_math_ops(unittest.TestCase):
         b = a ** 0
         self.assertEqual(b.shape, a.shape)
         # Should return identity
+        self.assertTrue(np.allclose(b.values, [1., 1., 1.]))
 
         # Test __pow__ raises ValueError for out of range
         # Note: Scalar may override __pow__ with different behavior

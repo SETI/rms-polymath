@@ -301,7 +301,7 @@ class Test_Qube_pickler(unittest.TestCase):
         a.set_pickle_digits(8, 'fpzip')
         # Check that derivatives have pickle_digits attribute (set by set_pickle_digits)
         # Actually, the code sets it only if not already set, so let's check after setting
-        self.assertTrue(hasattr(a.d_dt, '_pickle_digits') or hasattr(a.d_dt, 'pickle_digits'))
+        self.assertTrue(hasattr(a.d_dt, '_pickle_digits'))
 
         # Test _validate_pickle_digits with various edge cases
         # This is an internal function, but we can test through set_pickle_digits
@@ -768,10 +768,8 @@ class Test_Qube_pickler(unittest.TestCase):
         a.set_pickle_digits(8, 'mean')
         state = a.__getstate__()
         # Check that it uses 'constant' encoding
-        vals_encoding = state.get('VALS_ENCODING', [])
-        if vals_encoding:
-            # The encoding might be wrapped, but constant should be in there
-            pass
+        vals_encoding = state['VALS_ENCODING']
+        self.assertEqual(vals_encoding, [('FLOAT', 8.0, 'mean')])
         b = Scalar.__new__(Scalar)
         b.__setstate__(state)
         self.assertEqual(b.shape, a.shape)

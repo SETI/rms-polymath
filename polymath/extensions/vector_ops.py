@@ -61,7 +61,8 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
         else:  # pragma: no cover
             # This is unreachable because if arg._shape is (), then the mask is boolean
             # and either mask=False (line 50 hits) or mask=True (line 54 hits).
-            obj = arg
+            raise RuntimeError('This should be unreachable')
+            # obj = arg
 
     # At this point, we have handled the cases mask==True and mask==False, so the mask
     # must be an array. Also, there must be at least one unmasked value.

@@ -399,6 +399,7 @@ class Test_Qube_shrinker(unittest.TestCase):
 
         # Test unshrink with _IGNORE_UNSHRUNK_AS_CACHED
         original_ignore = Qube._IGNORE_UNSHRUNK_AS_CACHED
+        original_disable_cache = Qube._DISABLE_CACHE
         try:
             Qube._IGNORE_UNSHRUNK_AS_CACHED = True
             Qube._DISABLE_CACHE = False
