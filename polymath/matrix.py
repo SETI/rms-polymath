@@ -228,7 +228,7 @@ class Matrix(Qube):
                                  'with square shape')
             shape = (dim, dim)
 
-        return vector.reshape_numer(shape, list(classes) + [Matrix], recursive=True)
+        return vector.reshape_numer(shape, list(classes) + [Matrix], recursive=recursive)
 
     def is_diagonal(self, *, delta=0.):
         """A Boolean equal to True where the matrix is diagonal.

@@ -1102,6 +1102,72 @@ class Test_Scalar_Coverage(unittest.TestCase):
             b = a.argmin(builtins=True)
             self.assertIsInstance(b, int)
 
+        ##################################################################################
+        # Test argmax edge cases for coverage
+        ##################################################################################
+        # Test argmax with partially masked array and scalar mask result
+        a = Scalar([[1., 2., 3.], [4., 5., 6.]])
+        mask = np.array([[False, False, False], [True, True, True]])
+        a_masked = Scalar(a.values, mask=mask)
+        result = a_masked.argmax(axis=1)
+        # Row 0 should have argmax, row 1 should be masked
+        self.assertIsInstance(result, Scalar)
+        self.assertEqual(result.shape, (2,))
+        self.assertFalse(result.mask[0])
+        self.assertTrue(result.mask[1])
+
+        # Test argmax with partially masked array and array mask result
+        a = Scalar([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+        mask = np.array([[False, False, False], [True, True, True], [False, True, False]])
+        a_masked = Scalar(a.values, mask=mask)
+        result = a_masked.argmax(axis=1)
+        # Should handle array mask case
+        self.assertIsInstance(result, Scalar)
+        self.assertEqual(result.shape, (3,))
+
+        # Test argmax with scalar mask result
+        # Need case where np.all(self._mask, axis=axis) returns scalar True
+        # This happens when reducing to scalar shape
+        a = Scalar([1., 2., 3.], mask=[True, True, True])
+        result = a.argmax(axis=None)
+        # When all masked and axis=None, mask becomes scalar
+        self.assertIsInstance(result, Scalar)
+        # Verify the code path was executed
+        self.assertTrue(result.mask if isinstance(result.mask, (bool, np.bool_)) else np.all(result.mask))
+
+        ##################################################################################
+        # Test argmin edge cases for coverage
+        ##################################################################################
+        # Test argmin with partially masked array and scalar mask result
+        a = Scalar([[1., 2., 3.], [4., 5., 6.]])
+        mask = np.array([[False, False, False], [True, True, True]])
+        a_masked = Scalar(a.values, mask=mask)
+        result = a_masked.argmin(axis=1)
+        # Row 0 should have argmin, row 1 should be masked
+        self.assertIsInstance(result, Scalar)
+        self.assertEqual(result.shape, (2,))
+        self.assertFalse(result.mask[0])
+        self.assertTrue(result.mask[1])
+
+        # Test argmin with partially masked array and array mask result
+        a = Scalar([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+        mask = np.array([[False, False, False], [True, True, True], [False, True, False]])
+        a_masked = Scalar(a.values, mask=mask)
+        result = a_masked.argmin(axis=1)
+        # Should handle array mask case
+        self.assertIsInstance(result, Scalar)
+        self.assertEqual(result.shape, (3,))
+
+        # Test argmin with scalar mask result
+        # Need case where np.all(self._mask, axis=axis) returns scalar True
+        # This happens when reducing to scalar shape
+        a = Scalar([1., 2., 3.], mask=[True, True, True])
+        result = a.argmin(axis=None)
+        # When all masked and axis=None, mask becomes scalar
+        self.assertIsInstance(result, Scalar)
+        # Verify the code path was executed
+        self.assertTrue(result.mask if isinstance(result.mask, (bool, np.bool_)) else np.all(result.mask))
+
         # Test maximum() with denominators
         a = Scalar([[1.], [2.], [3.]], drank=1)
         b = Scalar([2., 3., 4.])

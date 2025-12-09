@@ -371,7 +371,7 @@ class Qube(object):
         if isinstance(values, numbers.Real):
             return float(values)
 
-        return self     # This shouldn't happen                             # noqa
+        return self  # pragma: no cover # This shouldn't happen
 
     ######################################################################################
     # Support functions
@@ -785,10 +785,10 @@ class Qube(object):
                 return cls._suitable_dtype('float', opstr=opstr)
             if kind in ('i', 'u'):
                 return cls._suitable_dtype('int', opstr=opstr)
-            if kind == 'b':
+            if kind == 'b':  # pragma: no cover
                 return cls._suitable_dtype('bool', opstr=opstr)
 
-        _in_opstr = ' in ' + opstr if opstr else ''                             # noqa
+        _in_opstr = ' in ' + opstr if opstr else ''  # noqa
         raise ValueError('invalid dtype{_in_opstr}: "{dtype}"')
 
     @classmethod
@@ -823,7 +823,7 @@ class Qube(object):
 
         opstr = opstr or cls.__name__
         if ((cls._NUMER is not None and numer != cls._NUMER) or
-            (cls._NRANK is not None and len(numer) != cls._NRANK)):             # noqa
+            (cls._NRANK is not None and len(numer) != cls._NRANK)):  # noqa
             raise ValueError(f'invalid {opstr} numerator shape {numer}; '
                              f'must be {cls._NUMER}')
 

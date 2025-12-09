@@ -96,6 +96,100 @@ class Test_Polynomial_Operations(unittest.TestCase):
         # For polynomial [1, 2] at x=2: 2 + 2 = 4
         self.assertAlmostEqual(result_array.values[0, 0], 4., places=10)
 
+        ##################################################################################
+        # Test roots() edge cases for coverage
+        ##################################################################################
+        # Test roots with scalar mask=True
+        p_masked = Polynomial([1., 2.], mask=True)
+        roots_masked = p_masked.roots()
+        self.assertTrue(np.all(roots_masked.mask))
+
+        # Test roots with scalar mask=False
+        p_unmasked = Polynomial([1., 2.], mask=False)
+        roots_unmasked = p_unmasked.roots()
+        self.assertFalse(np.any(roots_unmasked.mask))
+
+        # Test roots with array mask (for array of polynomials)
+        coeffs_mask = np.array([[[1., 2.]], [[3., 4.]]])  # Shape (2, 1, 2)
+        mask_array = np.array([[False], [True]])  # Match shape (2, 1)
+        p_array_mask = Polynomial(coeffs_mask, mask=mask_array)
+        roots_array_mask = p_array_mask.roots()
+        self.assertIsInstance(roots_array_mask, Scalar)
+
+        # Test roots with all coefficients zero
+        # This tests the all_zeros code path
+        p_all_zeros = Polynomial([0., 0., 0.])
+        roots_all_zeros = p_all_zeros.roots()
+        # Verify the code path was executed - roots should exist
+        self.assertIsInstance(roots_all_zeros, Scalar)
+        self.assertEqual(roots_all_zeros.shape, (2,))
+
+        # Test roots with leading coefficient zero (requires shifting)
+        p_leading_zero = Polynomial([0., 1., 2.])  # x + 2 = 0, root at -2
+        roots_leading_zero = p_leading_zero.roots()
+        self.assertEqual(roots_leading_zero.shape, (2,))
+        # The shifted root should be at -2
+        unmasked_roots = roots_leading_zero[~roots_leading_zero.mask]
+        self.assertAlmostEqual(unmasked_roots.values[0], -2., places=10)
+
+        # Test roots with multiple leading zeros (scalar case)
+        p_multi_zero = Polynomial([0., 0., 1., 2.])  # x + 2 = 0 after shifting
+        roots_multi_zero = p_multi_zero.roots()
+        # Verify the code path was executed - roots should exist
+        self.assertIsInstance(roots_multi_zero, Scalar)
+        self.assertEqual(roots_multi_zero.shape, (3,))
+
+        # Test roots with array of polynomials requiring shifts
+        # Use same order for both to avoid shape mismatch
+        coeffs_shift = np.array([
+            [[0., 0., 1., 2.]],  # x + 2 = 0 after double shift
+            [[0., 1., 2., 0.]]  # x + 2 = 0 after single shift (pad to same size)
+        ])
+        p_shift_array = Polynomial(coeffs_shift)
+        roots_shift_array = p_shift_array.roots()
+        # Should handle array case with shifts
+        self.assertIsInstance(roots_shift_array, Scalar)
+        self.assertEqual(roots_shift_array.shape[1:], (2, 1))
+
+        # Test roots with recursive derivatives
+        # Use a higher order polynomial to ensure we hit the recursive path
+        p_with_deriv = Polynomial([1., 0., -1., 0.])  # x^3 - x = 0, roots at -1, 0, 1
+        p_with_deriv.insert_deriv('t', Polynomial([0., 0., -1., 0.]))  # derivative: -x
+        roots_with_deriv = p_with_deriv.roots(recursive=True)
+        # Verify the recursive code path was executed
+        # Derivatives may not be inserted if evaluation fails, but code path should run
+        self.assertIsInstance(roots_with_deriv, Scalar)
+        self.assertEqual(roots_with_deriv.shape[0], 3)
+
+        # Test roots with array mask (not scalar) to hit array mask copy path
+        coeffs_array_mask = np.array([[[1., 2.]], [[3., 4.]]])
+        mask_array_not_scalar = np.array([[False], [True]])
+        p_array_mask_not_scalar = Polynomial(coeffs_array_mask, mask=mask_array_not_scalar)
+        roots_array_mask_not_scalar = p_array_mask_not_scalar.roots()
+        self.assertIsInstance(roots_array_mask_not_scalar, Scalar)
+
+        # Test roots with all coefficients zero in array case
+        coeffs_all_zeros_array = np.array([
+            [[0., 0., 0.]],  # All zeros
+            [[1., 2., 3.]]   # Normal polynomial
+        ])
+        p_all_zeros_array = Polynomial(coeffs_all_zeros_array)
+        roots_all_zeros_array = p_all_zeros_array.roots()
+        # Should handle the all_zeros case for the first polynomial
+        self.assertIsInstance(roots_all_zeros_array, Scalar)
+
+        # Test roots with array requiring shifts and mask_indices
+        # Create array where some polynomials need different numbers of shifts
+        coeffs_shift_array = np.array([
+            [[0., 0., 1., 2.]],  # Needs 2 shifts
+            [[0., 1., 2., 0.]]   # Needs 1 shift
+        ])
+        p_shift_array2 = Polynomial(coeffs_shift_array)
+        roots_shift_array2 = p_shift_array2.roots()
+        # Should handle array case with shifts and mask_indices
+        self.assertIsInstance(roots_shift_array2, Scalar)
+        self.assertEqual(roots_shift_array2.shape[1:], (2, 1))
+
         # Test roots on array of polynomials
         # Use simple linear polynomials: [1, 2] -> root at -2
         coeffs2 = np.array([
