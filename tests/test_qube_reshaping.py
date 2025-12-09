@@ -579,6 +579,37 @@ class Test_qube_reshaping(unittest.TestCase):
 
         # Additional coverage tests for missing lines
 
+        # Test broadcast_to with shape () for rank > 0
+        a = Vector([[1., 2., 3.]])  # shape (1,), rank 1
+        b = a.broadcast_to(())
+        self.assertEqual(b.shape, ())
+        self.assertTrue(np.allclose(b.values, [1., 2., 3.]))
+
+        # Test broadcast_to with shape () for rank 0 with non-ndarray values
+        # Create a Scalar with shape (1,) but manually set _values to Python float
+        a = Scalar([5.])  # shape (1,), _values is ndarray
+        # Manually manipulate to create edge case: shape != () but _values is Python scalar
+        # This tests the else branch at line 69
+        original_values = a._values
+        a._values = float(original_values[0])  # Convert to Python float
+        a._is_array = False
+        a._is_scalar = True
+        # Now a has shape (1,) but _values is a Python float
+        b = a.broadcast_to(())
+        self.assertEqual(b.shape, ())
+        self.assertEqual(b.values, 5.)
+        self.assertIsInstance(b.values, (float, int))
+
+        # Test broadcast_to with shape () and array mask
+        a = Scalar([1., 2., 3.])
+        # Ensure mask is an array
+        if not isinstance(a._mask, np.ndarray):
+            a._mask = np.array([False, True, False])
+        b = a.broadcast_to(())
+        self.assertEqual(b.shape, ())
+        self.assertEqual(b.values, 1.)  # First element
+        self.assertIsInstance(b.mask, bool)
+
         # reshape with non-tuple shape
         a = Scalar(np.arange(12).reshape(3, 4))
         b = a.reshape([6, 2])
