@@ -291,7 +291,6 @@ def __rsub__(self, /, arg, *, recursive=True):
     # Convert arg to the same subclass and try again
     if not isinstance(arg, Qube):
         arg = self.as_this_type(arg, coerce=False, op='-')
-        return arg.__sub__(self, recursive=recursive)
 
     # If arg is already a Qube, compute arg - self
     return arg.__sub__(self, recursive=recursive)
