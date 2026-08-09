@@ -53,6 +53,10 @@ def extract_numer(self, axis, index, classes=(), *, recursive=True):
 def extract_denom(self, axis, index, classes=()):
     """Extract an object from one denominator axis.
 
+    Extracting from a denominator axis reduces the shape by removing that axis dimension.
+    For example, extracting from a Vector with shape (3,), numer (3,), denom (3,) at
+    index 1 returns a Vector with shape (), numer (3,), denom ().
+
     Parameters:
         axis (int): The item axis from which to extract a slice.
         index (int): The index value at which to extract the slice.
@@ -61,7 +65,8 @@ def extract_denom(self, axis, index, classes=()):
             in the list. Otherwise, a generic Qube object will be returned.
 
     Returns:
-        Qube: An object extracted from the specified denominator axis.
+        Qube: An object extracted from the specified denominator axis. The shape is
+            reduced by removing the extracted axis dimension.
 
     Raises:
         ValueError: If the axis is out of range.
@@ -180,8 +185,8 @@ def transpose_numer(self, axis1=0, axis2=1, *, recursive=True):
         ValueError: If either axis is out of range.
     """
 
-    self._require_axis_in_range(axis1, self._nrank, 'slice_numer()', 'axis1')
-    self._require_axis_in_range(axis2, self._nrank, 'slice_numer()', 'axis2')
+    self._require_axis_in_range(axis1, self._nrank, 'transpose_numer()', 'axis1')
+    self._require_axis_in_range(axis2, self._nrank, 'transpose_numer()', 'axis2')
 
     # Position axis1 from left
     a1 = axis1 if axis1 >= 0 else axis1 + self._nrank
@@ -321,7 +326,7 @@ def reshape_denom(self, shape):
     # Validate the shape
     shape = tuple(shape)
     if self.dsize != int(np.prod(shape)):
-        opstr = self._opstr('reshape_numer()')
+        opstr = self._opstr('reshape_denom()')
         raise ValueError(f'{opstr} denominator size must be unchanged: {self._denom}, '
                          f'{shape}')
 

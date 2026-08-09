@@ -100,7 +100,9 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
     """Set the desired number of decimal digits of precision in the storage of this
     object's floating-point values and their derivatives.
 
-    This attribute is ignored for integer and boolean values.
+    This attribute is ignored for integer and boolean values. The method will still
+    set the attribute on the object, but it will not be used during pickling of
+    integer or boolean arrays.
 
     Parameters:
         digits (int, float, str or tuple, optional):
@@ -272,6 +274,8 @@ def _validate_pickle_digits(digits, reference):
         digits = (digits, digits)
 
     new_digits = []
+    # TODO This code raises a ValueError inside a try block that detects a ValueError
+    # and thus the original message is thrown away. This could be improved.
     try:
         for k, digit in enumerate(digits[:2]):
             if isinstance(digit, numbers.Real):
@@ -283,7 +287,7 @@ def _validate_pickle_digits(digits, reference):
             new_digits.append(digit)
 
     except (ValueError, IndexError, TypeError):
-        raise ValueError('invalid pickle digits: ' + repr(original_digits))
+        raise ValueError('invalid pickle digits: ' + repr(original_digits)) from None
 
     return tuple(new_digits)
 
@@ -291,7 +295,7 @@ def _validate_pickle_digits(digits, reference):
 def _validate_pickle_reference(references):
     """Validate and return the pickle reference values."""
 
-    original_references = references    # Flake8 thinks this variable is unused # noqa
+    original_references = references
 
     if references is None:
         references = 'fpzip'
@@ -309,10 +313,10 @@ def _validate_pickle_reference(references):
                 pass
             elif reference not in {'smallest', 'largest', 'mean', 'median', 'logmean',
                                    'fpzip'}:
-                raise ValueError('invalid pickle reference {reference!r}')
+                raise ValueError(f'invalid pickle reference {reference!r}')
 
     except (ValueError, IndexError, TypeError):
-        raise ValueError('invalid pickle reference {original_references!r}')
+        raise ValueError(f'invalid pickle reference {original_references!r}')
 
     return references
 
@@ -741,7 +745,7 @@ def _decode_bools(values, shape, size):
 def __getstate__(self):
     """The state is defined by a dictionary containing most of the Qube attributes.
 
-    "_cache" is removed.
+    "_cache" is removed or set to an empty dictionary.
 
     "_mask", and "_values" are replaced by encodings, as discussed below.
 
@@ -763,6 +767,12 @@ def __getstate__(self):
     * ('FLOAT', digits, reference) for any floating-point compression performed.
     * ('BOOL', shape, size) if packbits plus BZ2 compression was performed.
     * ('INT', shape) if BZ2 compression of integers was performed.
+
+    Note:
+        For floating-point arrays using lossy compression methods (e.g., when digits < 16
+        or reference != 'double'), the round-trip values may differ slightly from the
+        original due to compression precision limits. Use 'double' precision with 'fpzip'
+        reference for lossless compression.
     """
 
     # Start with a shallow clone; save derivatives for later
@@ -878,6 +888,20 @@ def __getstate__(self):
 
 
 def __setstate__(self, state):
+    """Restore the object state from a pickled dictionary.
+
+    This method decodes the mask and values from their encoded forms (as stored by
+    __getstate__), handles version compatibility, and restores the object to its
+    original state.
+
+    Note: For floating-point arrays using lossy compression methods (e.g., when digits <
+    16 or reference != 'double'), the restored values may differ slightly from the
+    original due to compression precision limits. Use 'double' precision with 'fpzip'
+    reference for lossless compression.
+
+    Parameters:
+        state (dict): The state dictionary as returned by __getstate__().
+    """
 
     # Handle renamed keys
     if '_units_' in state:

@@ -2,7 +2,6 @@
 # polymath/vector.py: Vector subclass of PolyMath base class
 ##########################################################################################
 
-from __future__ import division
 import numpy as np
 
 from polymath.qube   import Qube
@@ -32,7 +31,13 @@ class Vector(Qube):
             arg (ndarray, float, int, list, or tuple): The input data to construct
                 the Vector. A Python scalar will be converted to an array of shape (1,).
             *args: Additional arguments passed to the Qube constructor.
-            **kwargs: Additional "keyword=value" arguments passd to the Qube constructor.
+            **kwargs: Additional "keyword=value" arguments passd to the Qube
+                constructor. If `drank` is specified, the input array must have at least
+                `nrank + drank` dimensions. For example, with `drank=1`, the minimum shape
+                is (n, m) where n is the numerator size and m is the denominator size.
+
+        Raises:
+            ValueError: If the array shape is incompatible with the specified `drank`.
         """
 
         if isinstance(arg, (float, int)):
@@ -182,7 +187,8 @@ class Vector(Qube):
         """Convert this object to a form suitable for indexing a NumPy array.
 
         The returned object is a tuple of NumPy arrays, each containing indices along the
-        corresponding axis of the array being indexed.
+        corresponding axis of the array being indexed. For a Vector of length N, returns
+        a tuple of N arrays, one for each component dimension.
 
         Parameters:
             masked (scalar, list, tuple, or array, optional): The index or indices to
@@ -279,7 +285,9 @@ class Vector(Qube):
                 to match the value of inclusive.
 
         Returns:
-            Vector: An integer version of this Vector.
+            Vector: An integer version of this Vector. When remask=True, the mask may be
+            a scalar boolean (if all elements are masked or unmasked) or an array
+            (if some elements are masked).
 
         Raises:
             ValueError: If this object has a unit or a denominator.
@@ -795,7 +803,10 @@ class Vector(Qube):
         """Stretch this Vector along a direction defined by a scaling vector.
 
         Components of the vector perpendicular to the scaling vector are unchanged. The
-        scaling amount is determined by the magnitude of the scaling vector.
+        scaling amount is determined by the magnitude of the scaling vector. The vector
+        is scaled by adding (projected.norm() - 1) * projected where projected is the
+        projection of this vector onto the unit vector in the direction of the scaling
+        vector.
 
         Parameters:
             factor (Vector): A Vector defining the direction and magnitude of the scaling.
@@ -980,7 +991,8 @@ class Vector(Qube):
         """Return a copy with component values clipped to specified range.
 
         Creates a copy of this object where values of a specified component that are
-        outside a given range are shifted to the closest in-range value.
+        outside a given range are shifted to the closest in-range value. Clips only the
+        component at the specified axis index. Other components remain unchanged.
 
         Parameters:
             axis (int): The index of the component to use for comparison.
@@ -1056,7 +1068,7 @@ class Vector(Qube):
         """Raise an error as identity is not supported for Vectors.
 
         Raises:
-            ValueError: Always, as identity operation is not supported for Vectors.
+            TypeError: Always, as identity operation is not supported for Vectors.
         """
 
         Qube._raise_unsupported_op('identity()', self)

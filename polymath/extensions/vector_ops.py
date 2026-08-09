@@ -58,8 +58,10 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
     elif axis is None:
         if arg._shape:
             obj = Qube(func(arg._values[arg.antimask], axis=0), False, example=arg)
-        else:
-            obj = arg
+        else:  # pragma: no cover
+            # This is unreachable because if arg._shape is (), then the mask is boolean
+            # and either mask=False (line 50 hits) or mask=True (line 54 hits).
+            raise RuntimeError('This should be unreachable')
 
     # At this point, we have handled the cases mask==True and mask==False, so the mask
     # must be an array. Also, there must be at least one unmasked value.
@@ -133,9 +135,9 @@ def _check_axis(arg, axis, op):
     for i in axis:
         try:
             _ = selections[i]
-        except IndexError:
-            raise IndexError(f'axis is out of range ({-arg._rank},{arg._rank}) in '
-                             f'{type(arg)}.{op}: {i}')
+        except IndexError as e:
+            raise IndexError(f'axis is out of range ({-arg._ndims},{arg._ndims}) in '
+                             f'{type(arg)}.{op}: {i}') from e
 
         if selections[i]:
             raise IndexError(f'duplicated axis in {type(arg)}.{op}: {axis_for_show}')
@@ -161,8 +163,8 @@ def _zero_sized_result(self, axis):
     if isinstance(axis, (list, tuple)):
         for i in axis:
             indx[i] = 0
-        else:
-            indx[i] = 0
+    else:
+        indx[axis] = 0
 
     return self[tuple(indx)]
 
@@ -174,13 +176,17 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
     The axes must be in the numerator, and only one of the objects can have a denominator
     (which makes this suitable for first derivatives but not second derivatives).
 
+    Note: When one object has a denominator, the dot product is computed along numerator
+    axes. The denominator dimensions are preserved in the result.
+
+    Note: This is a static method. Call it as Qube.dot(arg1, arg2, ...) rather than
+    arg1.dot(arg2, ...).
+
     Parameters:
         arg1 (Qube): The first operand as a subclass of Qube.
         arg2 (Qube): The second operand as a subclass of Qube.
-        axis1 (int, optional): The item axis of this object for the dot product. Default
-            is -1.
-        axis2 (int, optional): The item axis of the arg2 object for the dot product.
-            Default is 0.
+        axis1 (int, optional): The item axis of arg1 for the dot product. Default is -1.
+        axis2 (int, optional): The item axis of arg2 for the dot product. Default is 0.
         classes (class, list, or tuple, optional): The class of the object returned. If
             a list is provided, the object will be an instance of the first suitable class
             in the list. Otherwise, a generic Qube object will be returned.
@@ -283,6 +289,9 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
 
     The axes must be in the numerator. The denominator must have zero rank.
 
+    Note: This is a static method. Call it as Qube.norm(arg, ...) rather than
+    arg.norm(...).
+
     Parameters:
         arg (Qube): The object for which to calculate the norm.
         axis (int, optional): The numerator axis for the norm. Defaults to -1.
@@ -297,6 +306,11 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
     Raises:
         ValueError: If the object has denominators or if the axis is out of
             range.
+
+    Examples:
+        For a Vector with shape (2, 3) and numer (2,):
+        - axis=-1 (default) → result shape (2, 3), numer ()
+        - axis=0 → result shape (2, 3), numer ()
     """
 
     arg._disallow_denom('norm()')
@@ -336,6 +350,9 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
 
     The axes must be in the numerator. The denominator must have zero rank.
 
+    Note: This is a static method. Call it as Qube.norm_sq(arg, ...) rather than
+    arg.norm_sq(...).
+
     Parameters:
         arg: The object for which to calculate the norm-squared.
         axis (int, optional): The item axis for the norm. Default is -1.
@@ -349,6 +366,11 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
 
     Raises:
         ValueError: If the object has denominators or if the axis is out of range.
+
+    Examples:
+        For a Vector with shape (2, 3) and numer (2,):
+        - axis=-1 (default) → result shape (2, 3), numer ()
+        - axis=0 → result shape (2, 3), numer ()
     """
 
     arg._disallow_denom('norm_sq()')
@@ -388,6 +410,9 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
 
     Axis lengths must be either two or three, and must be equal. At least one of the
     objects must be lacking a denominator.
+
+    Note: This is a static method. Call it as Qube.cross(arg1, arg2, ...) rather than
+    arg1.cross(arg2, ...).
 
     Parameters:
         arg1 (Qube): The first operand.
@@ -454,7 +479,7 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
 
     # Construct the cross product values
     if arg1._numer[a1] == 3:
-        new_values = cross_3x3(array1, array2)
+        new_values = _cross_3x3(array1, array2)
 
         # Roll the new axis back to its position in arg1
         new_nrank = arg1._nrank + arg2._nrank - 1
@@ -462,7 +487,7 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         new_values = np.rollaxis(new_values, -1, new_k1)
 
     else:
-        new_values = cross_2x2(array1, array2)
+        new_values = _cross_2x2(array1, array2)
         new_nrank = arg1._nrank + arg2._nrank - 2
 
     # Construct the object and cast
@@ -496,11 +521,11 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
     return obj
 
 
-def cross_3x3(a, b):
+def _cross_3x3(a, b):
     """Calculate the cross product of two 3-vectors.
 
-    Stand-alone method to return the cross product of two 3-vectors,
-    represented as NumPy arrays.
+    Internal helper function for computing cross products. The inputs are NumPy arrays
+    representing 3-vectors, and the result is returned as a NumPy array.
 
     Parameters:
         a (ndarray): First 3-vector array.
@@ -515,7 +540,7 @@ def cross_3x3(a, b):
 
     (a, b) = np.broadcast_arrays(a, b)
     if not (a.shape[-1] == b.shape[-1] == 3):
-        raise ValueError('cross_3x3 requires 3x3 arrays')
+        raise ValueError('_cross_3x3 requires 3-vectors')
 
     new_values = np.empty(a.shape)
     new_values[..., 0] = a[..., 1] * b[..., 2] - a[..., 2] * b[..., 1]
@@ -525,11 +550,11 @@ def cross_3x3(a, b):
     return new_values
 
 
-def cross_2x2(a, b):
+def _cross_2x2(a, b):
     """Calculate the cross product of two 2-vectors.
 
-    Stand-alone method to return the cross product of two 2-vectors,
-    represented as NumPy arrays.
+    Internal helper function for computing cross products. The inputs are NumPy arrays
+    representing 2-vectors, and the result is returned as a NumPy array.
 
     Parameters:
         a (ndarray): First 2-vector array.
@@ -544,7 +569,7 @@ def cross_2x2(a, b):
 
     (a, b) = np.broadcast_arrays(a, b)
     if not (a.shape[-1] == b.shape[-1] == 2):
-        raise ValueError('cross_2x2 requires 2x2 arrays')
+        raise ValueError('_cross_2x2 requires 2-vectors')
 
     return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0]
 
@@ -556,6 +581,9 @@ def outer(arg1, arg2, classes=(), recursive=True):
     The item shape of the returned object is obtained by concatenating the two
     numerators and then the two denominators, and each element is the product of
     the corresponding elements of the two objects.
+
+    Note: This is a static method. Call it as Qube.outer(arg1, arg2, ...) rather than
+    arg1.outer(arg2, ...).
 
     Parameters:
         arg1 (Qube): The first operand.
@@ -626,6 +654,9 @@ def outer(arg1, arg2, classes=(), recursive=True):
 def as_diagonal(arg, axis, classes=(), recursive=True):
     """Return a copy with one axis converted to a diagonal across two.
 
+    Note: This is a static method. Call it as Qube.as_diagonal(arg, axis, ...) rather than
+    arg.as_diagonal(axis, ...).
+
     Parameters:
         arg (Qube): The object to convert.
         axis (int): The item axis to convert to two.
@@ -679,6 +710,10 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
 
 def rms(self):
     """Calculate the root-mean-square values of all items as a Scalar.
+
+    The RMS is computed across all item dimensions (numerator dimensions) for each
+    array element. For a Vector with shape (n,) and numer (3,), this computes
+    sqrt(sum(vals^2) / 3) for each of the n elements.
 
     Useful for looking at the overall magnitude of the differences between two objects.
 

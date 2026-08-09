@@ -5,7 +5,7 @@
 import numpy as np
 import unittest
 
-from polymath import Pair, Unit, Vector, Vector3
+from polymath import Pair, Scalar, Unit, Vector, Vector3
 
 
 class Test_Vector_int(unittest.TestCase):
@@ -47,5 +47,30 @@ class Test_Vector_int(unittest.TestCase):
         b = a.int(top=(2,3))
 
         # TBD!
+
+        ##################################################################################
+        # Additional coverage tests
+        ##################################################################################
+
+        # Test int() with top=None and negative values, clip=True
+        a = Vector([-1., 2., 3.])
+        b = a.int(top=None, clip=True)
+        self.assertEqual(b.values[0], 0)
+        self.assertEqual(b.values[1], 2)
+        self.assertEqual(b.values[2], 3)
+
+        # Test vector_scale with recursive=False
+        v = Vector([1., 0., 0.])
+        factor = Vector([2., 0., 0.])
+        result = v.vector_scale(factor, recursive=False)
+        self.assertEqual(type(result), Vector)
+
+        # Test combos with all int scalars
+        s1 = Scalar([1, 2])
+        s2 = Scalar([3, 4])
+        v = Vector.combos(s1, s2)
+        self.assertEqual(v.shape, (2, 2))
+        self.assertEqual(v.numer, (2,))
+        self.assertTrue(v.is_int())
 
 ##########################################################################################

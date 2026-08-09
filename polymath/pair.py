@@ -2,7 +2,6 @@
 # polymath/pair.py: Pair subclass of PolyMath Vector
 ##########################################################################################
 
-from __future__ import division
 import numpy as np
 import numbers
 
@@ -90,6 +89,28 @@ class Pair(Vector):
             that matches the denominator shape of the other arguments.
         """
 
+        # Convert all non-None args to Scalars
+        non_none_args = [arg for arg in [x, y] if arg is not None]
+
+        if len(non_none_args) > 0:
+            # Convert to Scalars and broadcast to get common denominator/example
+            scalars = [Scalar.as_scalar(arg, recursive=recursive)
+                       for arg in non_none_args]
+            if len(scalars) > 1:
+                scalars = Qube.broadcast(*scalars, recursive=recursive)
+            example_scalar = scalars[0]
+            # Create a zero scalar from that example
+            zero_scalar = example_scalar.zero()
+        else:
+            # All are None: create scalar-valued zero (no denominator shape)
+            zero_scalar = Scalar(0.)
+
+        # Replace any None with the zero scalar
+        if x is None:
+            x = zero_scalar
+        if y is None:
+            y = zero_scalar
+
         return Qube.from_scalars(x, y, recursive=recursive, readonly=readonly,
                                  classes=[Pair])
 
@@ -153,7 +174,7 @@ class Pair(Vector):
         # Fill in the derivatives if necessary
         if recursive:
             for key, deriv in self._derivs.items():
-                obj.insert_deriv(key, deriv.rot90(False))
+                obj.insert_deriv(key, deriv.rot90(recursive=False))
 
         return obj
 
@@ -183,8 +204,8 @@ class Pair(Vector):
                 ignore.
             upper (Pair or None): Coordinates of the upper limit (inclusive). None or a
                 masked value to ignore.
-            remask (bool, optional): True to include the new mask into the object's mask;
-                False to replace the values but leave them unmasked.
+            remask (bool, optional): True to keep the mask; False to replace the
+                values but make them unmasked.
 
         Returns:
             Pair: A new Pair with values clipped to the specified limits.

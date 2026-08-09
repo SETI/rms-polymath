@@ -14,6 +14,11 @@ def shrink(self, antimask):
     means that is should be discarded. A scalar value of True or False applies to the
     entire object.
 
+    The antimask must be broadcastable to the rightmost dimensions of the object's shape.
+    For example, for an object with shape (4, 5), the antimask should have shape (4, 5)
+    or be broadcastable to (4, 5). A 1-D antimask of shape (4,) cannot be used directly
+    with a 2-D object of shape (4, 5).
+
     The purpose is to speed up calculations by first eliminating all the objects that are
     masked. Any calculation involving un-shrunken objects should produce the same result
     if the same objects are all shrunken by a common antimask first, the calculation is
@@ -111,8 +116,10 @@ def unshrink(self, antimask, shape=()):
     Parameters:
         antimask (array-like): The antimask to apply.
         shape (tuple, optional): In cases where the antimask is a literal False, this
-            defines the shape of the returned object. Normally, the rightmost axes of the
-            returned object match those of the antimask.
+            defines the shape of the returned object. When antimask is False, the result
+            will be entirely masked with default values (not the original values).
+            Normally, the rightmost axes of the returned object match those of the
+            antimask.
 
     Returns:
         Qube: The un-shrunken object, which will be read-only.

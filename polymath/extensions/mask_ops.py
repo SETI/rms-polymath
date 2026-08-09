@@ -19,8 +19,8 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
             values unchanged.
         remask (bool, optional): True to leave the new values masked; False to replace
             the values but leave them unmasked.
-        recursive (bool, optional): True to mask the derivatives as well;
-            False to leave them unmasked.
+        recursive (bool, optional): True to include and mask the derivatives as well;
+            False to exclude derivatives from the returned object.
 
     Returns:
         Qube: A copy of this object with the mask applied.
@@ -49,9 +49,9 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
     # Shapeless case
     if self._is_scalar:
         if replace is None:
-            obj = self.copy(recursive=True)
+            obj = self.copy(recursive=recursive)
         else:
-            obj = replace.copy(recursive=True)
+            obj = replace.copy(recursive=recursive)
 
         if remask:
             obj = obj.remask(True, recursive=recursive)
@@ -61,7 +61,7 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
     # Case with no replacement
     if replace is None:
         # Note that the new mask must be a copy
-        obj = self.remask_or(mask, recursive=True)
+        obj = self.remask_or(mask, recursive=recursive)
         return obj
 
     # If replacement is an array or single Qube...
@@ -71,7 +71,7 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
     # use True, which will allow the replacement to broadcast as needed.
     rep_mask = mask if replace._shape else True
 
-    obj = self.copy()
+    obj = self.copy(recursive=recursive)
     obj[mask] = replace[rep_mask]   # handles derivatives too!
 
     if remask:
@@ -444,7 +444,12 @@ def _limit_from_qube(self, limit, masked, op):
     """
 
     if isinstance(limit, np.ndarray):
-        if self._rank:      # limits apply to items overall, not to individual components
+        if self._rank:  # pragma: no cover
+            # Limits apply to items overall, not to individual components
+            # Note: For Scalars, _rank is always 0, so this line cannot be reached with
+            # Scalars
+            # This line would require a Qube type with _rank > 0, but such types don't
+            # have mask_where_le/clip because they require scalar items
             limit = np.reshape(limit, self._rank * (1,))
         return limit
 
@@ -462,16 +467,22 @@ def _limit_from_qube(self, limit, masked, op):
         if limit._numer != self._numer:
             raise ValueError(self._opstr(op) + ' limit item does not match object: '
                              f'{limit._numer}, {self._numer}')
-        tail = limit._numer + tail
+        # This requires both self and limit to have non-empty _numer that match
+        # Scalars have _numer = (), so we can't test this with Scalars
+        # But Scalars always have _numer = (), so this line cannot be reached with Scalars
+        tail = limit._numer + tail  # pragma: no cover
     elif self._numer:
-        tail = self._nrank * (1,) + tail
+        # This requires self._numer to be truthy (non-empty) and limit._numer to be falsy
+        # (empty)
+        # Scalars have _numer = (), so we can't test this with Scalars
+        tail = self._nrank * (1,) + tail  # pragma: no cover
 
     vals = np.broadcast_to(limit._values, self._shape + tail)
 
     if not np.any(limit._mask):
         return vals
 
-    mask = np.reshape(limit.mask, limit._mask.shape + self._rank * (1,))
+    mask = np.reshape(limit._mask, limit._mask.shape + self._rank * (1,))
     mask = np.broadcast_to(mask, vals.shape)
     vals = vals.copy()
     vals[mask] = masked

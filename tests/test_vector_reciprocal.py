@@ -30,7 +30,11 @@ class Test_Vector_reciprocal(unittest.TestCase):
         product = vec.vals @ inverse.vals
         diffs = product - [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
         # print(np.abs(diffs).max())
-        self.assertTrue(np.abs(diffs).max() < 1.e-13)
+        # The tolerance is set by float64 round-off, not by any property of reciprocal():
+        # np.linalg.inv() on this same seeded data gives a bit-identical error. The worst
+        # of these 100 random matrices has a condition number of ~3500, which puts the
+        # round-trip error at ~3.e-13, so 1.e-12 leaves a modest safety margin.
+        self.assertTrue(np.abs(diffs).max() < 1.e-12)
 
         # Determinant == 0
         vec = Pair(np.zeros((2,2)), drank=1)

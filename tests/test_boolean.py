@@ -800,4 +800,69 @@ class Test_Boolean(unittest.TestCase):
         mask = a.as_mask_where_zero_or_masked()
         self.assertTrue(not (a[mask] == True).any())
 
+        ##################################################################################
+        # Additional coverage tests
+        ##################################################################################
+
+        # Test identity() method
+        a = Boolean(True)
+        ident = a.identity()
+        self.assertEqual(ident, Boolean(True))
+        self.assertTrue(ident.readonly)
+
+        # Test __rtruediv__ with non-Qube arg
+        a = Boolean([True, False])
+        result = 2.0 / a
+        self.assertEqual(result[0], 2.0)
+        self.assertEqual(result[1], Scalar.MASKED)
+
+        # Test __rtruediv__ with Qube arg
+        a = Boolean([True, False])
+        result = a / a
+        self.assertEqual(result[0], 1.0)
+        self.assertEqual(result[1], Scalar.MASKED)
+
+        # Test __rfloordiv__ with non-Qube arg
+        result = 2 // a
+        self.assertEqual(result[0], 2)
+        self.assertEqual(result[1], Scalar.MASKED)
+
+        # Test __rfloordiv__ with Qube arg
+        b = Scalar([2, 1])
+        result = b // a
+        self.assertEqual(result[0], 2)
+        self.assertEqual(result[1], Scalar.MASKED)
+
+        # Test __rmod__ with non-Qube arg
+        result = 2 % a
+        self.assertEqual(result[0], 0)
+        self.assertEqual(result[1], Scalar.MASKED)
+
+        # Test __rmod__ with Qube arg
+        b = Scalar([2, 1])
+        result = b % a
+        self.assertEqual(result[0], 0)
+        self.assertEqual(result[1], Scalar.MASKED)
+
+        # Test __le__ method
+        a = Boolean([True, False])
+        result = a <= 1
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+        # Test __lt__ method
+        result = a < 1
+        self.assertFalse(result[0])
+        self.assertTrue(result[1])
+
+        # Test __ge__ method
+        result = a >= 0
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+        # Test __gt__ method
+        result = a > 0
+        self.assertTrue(result[0])
+        self.assertFalse(result[1])
+
 ##########################################################################################

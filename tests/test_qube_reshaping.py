@@ -577,4 +577,194 @@ class Test_qube_reshaping(unittest.TestCase):
         self.assertEqual(bb.d_dt.shape, (2,3,4,3))
         self.assertTrue(bb.d_dt.readonly)
 
+        # Additional coverage tests for missing lines
+
+        # Test broadcast_to with shape () for rank > 0
+        a = Vector([[1., 2., 3.]])  # shape (1,), rank 1
+        b = a.broadcast_to(())
+        self.assertEqual(b.shape, ())
+        self.assertTrue(np.allclose(b.values, [1., 2., 3.]))
+
+        # Test broadcast_to with shape () for rank 0 with non-ndarray values
+        # Create a Scalar with shape (1,) but manually set _values to Python float
+        a = Scalar([5.])  # shape (1,), _values is ndarray
+        # Manually manipulate to create edge case: shape != () but _values is Python scalar
+        # This tests the else branch at line 69
+        original_values = a._values
+        a._values = float(original_values[0])  # Convert to Python float
+        a._is_array = False
+        a._is_scalar = True
+        # Now a has shape (1,) but _values is a Python float
+        b = a.broadcast_to(())
+        self.assertEqual(b.shape, ())
+        self.assertEqual(b.values, 5.)
+        self.assertIsInstance(b.values, (float, int))
+
+        # Test broadcast_to with shape () and array mask
+        a = Scalar([1., 2., 3.])
+        # Ensure mask is an array
+        if not isinstance(a._mask, np.ndarray):
+            a._mask = np.array([False, True, False])
+        b = a.broadcast_to(())
+        self.assertEqual(b.shape, ())
+        self.assertEqual(b.values, 1.)  # First element
+        self.assertIsInstance(b.mask, bool)
+
+        # reshape with non-tuple shape
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.reshape([6, 2])
+        self.assertEqual(b.shape, (6, 2))
+        c = a.reshape(12)
+        self.assertEqual(c.shape, (12,))
+
+        # swap_axes when a1 == a2
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.swap_axes(0, 0)
+        self.assertEqual(a, b)
+        b = a.swap_axes(1, 1)
+        self.assertEqual(a, b)
+
+        # roll_axis ValueError for rank too small
+        a = Scalar(np.arange(12).reshape(3, 4))
+        with self.assertRaises(ValueError) as cm:
+            a.roll_axis(0, 0, rank=1)
+        self.assertIn('rank 1 is too small for shape', str(cm.exception))
+
+        # roll_axis when start != rank
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.roll_axis(1, 2)
+        self.assertEqual(b.shape, (3, 4))
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.roll_axis(1, 0)
+        self.assertEqual(b.shape, (4, 3))
+
+        # move_axis ValueError for rank too small
+        a = Scalar(np.arange(12).reshape(3, 4))
+        with self.assertRaises(ValueError) as cm:
+            a.move_axis(0, 1, rank=1)
+        self.assertIn('rank 1 is too small for shape', str(cm.exception))
+
+        # move_axis with scalar source/destination
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.move_axis(0, 1)
+        self.assertEqual(b.shape, (4, 3))
+        b = a.move_axis(1, 0)
+        self.assertEqual(b.shape, (4, 3))
+
+        # move_axis reshape when ndims < rank
+        # When rank=3 and object has shape (3, 4), it gets reshaped to (1, 3, 4)
+        # Then moving axis 0 to position 2 results in (3, 4, 1)
+        a = Scalar(np.arange(12).reshape(3, 4))
+        b = a.move_axis(0, 2, rank=3)
+        self.assertEqual(b.shape, (3, 4, 1))
+
+        # stack function various paths
+        a = Scalar([1., 2., 3.])
+        b = Scalar([4., 5., 6.])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+        self.assertTrue(np.allclose(c.values[0], [1., 2., 3.]))
+        self.assertTrue(np.allclose(c.values[1], [4., 5., 6.]))
+
+        # stack with None args
+        a = Scalar([1., 2., 3.])
+        b = None
+        c = Scalar([4., 5., 6.])
+        result = Qube.stack(a, b, c)
+        self.assertEqual(result.shape, (3, 3))
+        self.assertTrue(np.allclose(result.values[0], [1., 2., 3.]))
+        self.assertTrue(np.allclose(result.values[1], [0., 0., 0.]))
+        self.assertTrue(np.allclose(result.values[2], [4., 5., 6.]))
+
+        # stack with derivatives
+        a = Scalar([1., 2., 3.])
+        a.insert_deriv('t', Scalar([10., 20., 30.]))
+        b = Scalar([4., 5., 6.])
+        b.insert_deriv('t', Scalar([40., 50., 60.]))
+        c = Qube.stack(a, b, recursive=True)
+        self.assertTrue(hasattr(c, 'd_dt'))
+        self.assertEqual(c.d_dt.shape, (2, 3))
+        self.assertTrue(np.allclose(c.d_dt.values[0], [10., 20., 30.]))
+        self.assertTrue(np.allclose(c.d_dt.values[1], [40., 50., 60.]))
+
+        # stack with mixed types
+        a = Scalar([1., 2., 3.])
+        b = Scalar([4, 5, 6])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # stack with units
+        from polymath.unit import Unit
+        a = Scalar([1., 2., 3.], unit=Unit.KM)
+        b = Scalar([4., 5., 6.], unit=Unit.KM)
+        c = Qube.stack(a, b)
+        self.assertEqual(c._unit, Unit.KM)
+
+        # Test move_axis with recursive=True and derivatives
+        a = Scalar(np.arange(12).reshape(3, 4))
+        a.insert_deriv('t', Scalar(np.arange(12).reshape(3, 4)))
+        b = a.move_axis(0, 1, recursive=True)
+        self.assertTrue(hasattr(b, 'd_dt'))
+        self.assertEqual(b.d_dt.shape, (4, 3))
+
+        # Test stack with float_arg logic (float_arg is None or not qubed)
+        # Case: float_arg is None
+        a = Scalar([1., 2., 3.])
+        b = Scalar([4., 5., 6.])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Case: float_arg is not None but qubed is True (arg was converted)
+        a = np.array([1., 2., 3.])
+        b = Scalar([4., 5., 6.])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with int_arg logic (int_arg is None or not qubed)
+        # Case: int_arg is None, float_arg is None
+        a = Scalar([1, 2, 3])
+        b = Scalar([4, 5, 6])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Case: int_arg is not None but qubed is True
+        a = np.array([1, 2, 3])
+        b = Scalar([4, 5, 6])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with bool_arg logic (bool_arg is None or not qubed)
+        # Case: bool_arg is None, int_arg is None, float_arg is None
+        from polymath.boolean import Boolean
+        a = Boolean([True, False, True])
+        b = Boolean([False, True, False])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Case: bool_arg is not None but qubed is True
+        a = np.array([True, False, True])
+        b = Boolean([False, True, False])
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with float_arg is not None and qubed is True
+        # This tests the branch where float_arg is not None and qubed is True
+        # so the condition "float_arg is None or not qubed" is False
+        a = Scalar([1., 2., 3.])
+        b = np.array([4., 5., 6.])  # This will be converted (qubed=True)
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with int_arg is not None and qubed is True
+        a = Scalar([1, 2, 3])
+        b = np.array([4, 5, 6])  # This will be converted (qubed=True)
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
+        # Test stack with bool_arg is not None and qubed is True
+        a = Boolean([True, False, True])
+        b = np.array([False, True, False])  # This will be converted (qubed=True)
+        c = Qube.stack(a, b)
+        self.assertEqual(c.shape, (2, 3))
+
 ##########################################################################################

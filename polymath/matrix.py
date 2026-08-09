@@ -2,7 +2,6 @@
 # polymath/matrix.py: Matrix subclass ofse PolyMath base class
 ##########################################################################################
 
-from __future__ import division, print_function
 import numpy as np
 import warnings
 
@@ -188,6 +187,9 @@ class Matrix(Qube):
                 found amongst the scalars.
             shape (tuple, optional): The Matrix's item shape. If not specified but the
                 number of Scalars is a perfect square, a square matrix is returned.
+                If specified, the number of scalar arguments must equal
+                shape[0] * shape[1]. Each scalar argument can be a single value or an
+                array that will be broadcast to match the other arguments.
             classes (list, optional): An arbitrary list defining the preferred class of
                 the returned object. The first suitable class in the list will be used.
                 Default is [Matrix].
@@ -213,9 +215,9 @@ class Matrix(Qube):
                 raise ValueError(f'invalid Matrix item shape: {shape}')
 
             size = shape[0] * shape[1]
-            if len(args) != shape:
+            if len(args) != size:
                 raise ValueError('incorrect number of Scalars for Matrix.from_scalars() '
-                                 f'with shape {shape}')
+                                 f'with shape {shape}: expected {size}, got {len(args)}')
             shape = tuple(shape)
 
         else:
@@ -226,12 +228,14 @@ class Matrix(Qube):
                                  'with square shape')
             shape = (dim, dim)
 
-        return vector.reshape_numer(shape, list(classes) + [Matrix], recursive=True)
+        return vector.reshape_numer(shape, list(classes) + [Matrix], recursive=recursive)
 
     def is_diagonal(self, *, delta=0.):
         """A Boolean equal to True where the matrix is diagonal.
 
-        Masked matrices return True.
+        Masked matrices return True. For arrays of matrices, returns a Boolean array
+        with the same shape as the array, where each element indicates whether the
+        corresponding matrix is diagonal.
 
         Parameters:
             delta (float, optional): The fractional limit on what can be treated as
@@ -383,6 +387,9 @@ class Matrix(Qube):
 
     def unitary(self):
         """The nearest unitary matrix as a Matrix3.
+
+        This method only works for 3x3 matrices. For other matrix sizes, a ValueError
+        is raised.
 
         Uses the algorithm from
         https://wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix

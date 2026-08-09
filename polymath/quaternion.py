@@ -2,7 +2,6 @@
 # polymath/quaternion.py: Quaternion subclass of PolyMath base class
 ##########################################################################################
 
-from __future__ import division
 import numpy as np
 
 from polymath.qube    import Qube
@@ -64,13 +63,18 @@ class Quaternion(Vector):
 
         Parameters:
             scalar (Scalar or None): The scalar part of the quaternion. If None, the
-                associated component is filled with zeros.
+                associated component is filled with zeros. The scalar and vector are
+                automatically broadcast to compatible shapes.
             vector (Vector3 or None): The vector part of the quaternion. If None, the
-                associated components are filled with zeros.
-            recursive (bool, optional): True to include derivatives.
+                associated components are filled with zeros. The scalar and vector are
+                automatically broadcast to compatible shapes.
+            recursive (bool, optional): True to include derivatives. If True, derivatives
+                from both scalar and vector are combined in the resulting quaternion.
 
         Returns:
             Quaternion: A new Quaternion constructed from the scalar and vector parts.
+                The quaternion has shape [s, vx, vy, vz] where s is the scalar part and
+                (vx, vy, vz) are the vector components.
 
         Raises:
             ValueError: If scalar and vector denominators are incompatible.
@@ -225,13 +229,15 @@ class Quaternion(Vector):
                 derivatives of the Quaternion. These are represented as Matrix objects,
                 not Matrix3 objects, because they are not unitary.
             partials (bool, optional): If True, instead of returning just the
-                Matrix3, return a tuple containing the Matrix3 and its (3x3x4) partial
+                Matrix3, return a tuple containing the Matrix3 and its partial
                 derivatives with respect to the components of the quaternion.
 
         Returns:
             Matrix3 or tuple: If partials is False, returns a Matrix3 representing the
             rotation. If partials is True, returns a tuple of (Matrix3,
-            partial_derivatives).
+            partial_derivatives) where partial_derivatives is a Matrix with numerator
+            shape (3, 3) and denominator shape (4,), representing the derivative of each
+            matrix element with respect to each quaternion component.
 
         Raises:
             ValueError: If this Quaternion has denominator axes.
@@ -247,7 +253,7 @@ class Quaternion(Vector):
 
         zero_mask = (pnorm == 0.)
         if np.any(zero_mask):
-            if np.shape(pvals) == ():
+            if np.shape(pnorm) == ():
                 pnorm = 1.
                 pmask = True
             else:
@@ -255,7 +261,12 @@ class Quaternion(Vector):
                 pmask = pmask | zero_mask
 
         # Scale by sqrt(2) to eliminate need to keep multiplying by 2
-        qvals = np.sqrt(2) / pnorm[..., np.newaxis] * pvals
+        # Handle scalar pnorm case
+        if np.shape(pnorm) == ():
+            pnorm_array = np.array(pnorm)
+        else:
+            pnorm_array = pnorm
+        qvals = np.sqrt(2) / pnorm_array[..., np.newaxis] * pvals
         s = qvals[..., 0]
         x = qvals[..., 1]
         y = qvals[..., 2]
@@ -413,7 +424,7 @@ class Quaternion(Vector):
             f3 = (0.5 * sign10) / q3
 
             div_by_zero = (q0 == 0.) | (q1 == 0.) | (q2 == 0.) | (q3 == 0.)
-            if any(div_by_zero):
+            if np.any(div_by_zero):
                 new_mask = Qube.or_(matrix._mask, div_by_zero)
             else:
                 new_mask = matrix._mask
@@ -441,13 +452,17 @@ class Quaternion(Vector):
         """Convert a Matrix3 to a Quaternion.
 
         Parameters:
-            matrix (Matrix3): The rotation matrix to convert.
+            matrix (Matrix3): The rotation matrix to convert. The matrix should be a
+                proper rotation matrix (orthogonal with determinant +1), though the
+                method will work with any 3x3 matrix.
             recursive (bool, optional): If True, the returned Quaternion will include
                 derivatives. Note that this feature is not currently implemented and will
-                raise NotImplementedError.
+                raise NotImplementedError if the matrix has derivatives.
 
         Returns:
             Quaternion: A quaternion representing the same rotation as the input matrix.
+                The quaternion is normalized such that quaternions q and -q represent the
+                same rotation.
 
         Raises:
             NotImplementedError: If recursive is True and matrix has derivatives.
@@ -501,7 +516,11 @@ class Quaternion(Vector):
 
         zero_mask = (r == 0.)
         if np.any(zero_mask):
-            if np.shape(zero_mask) == ():
+            if np.shape(zero_mask) == ():  # pragma: no cover
+                # The np.newaxis at line 499 adds a dimension, so even for a scalar
+                # Matrix3, Q has shape (1, 3, 3), making r shape (1,) and zero_mask
+                # shape (1,), not (). As a result, np.shape(zero_mask) == () is False,
+                # so this line can't be hit.
                 s = 0.
             else:
                 r_nozeros = r.copy()
@@ -529,7 +548,7 @@ class Quaternion(Vector):
         # partial derivatives when the components of a Matrix3 are so closely coupled.
         # When derivatives are requested, a NotImplementedError is raised instead.
 
-        if recursive and matrix._derivs:
+        if recursive and matrix._derivs:  # pragma: no cover
 
             # Take derivatives using the symmetric (but possibly unstable)
             # algorithm
@@ -593,7 +612,10 @@ class Quaternion(Vector):
         """The product of this quaternion and another object.
 
         Parameters:
-            arg: The object to multiply with this quaternion.
+            arg: The object to multiply with this quaternion. If arg is a Vector3, it is
+                automatically converted to a Quaternion with zero scalar part before
+                multiplication. For other Qube subclasses, the default multiplication
+                operator is used.
             recursive (bool, optional): If True, the returned object will include
                 derivatives.
 
@@ -853,12 +875,12 @@ class Quaternion(Vector):
 
         (ai, aj, ak) = Qube.broadcast(ai, aj, ak)
 
-        axes = axes.lower()
-        try:
-            firstaxis, parity, repetition, frame = Quaternion._AXES2TUPLE[axes]
-        except (AttributeError, KeyError):
+        if isinstance(axes, (tuple, list)):
             Quaternion._TUPLE2AXES[axes]  # validation
             firstaxis, parity, repetition, frame = axes
+        else:
+            axes = axes.lower()
+            firstaxis, parity, repetition, frame = Quaternion._AXES2TUPLE[axes]
 
         i = firstaxis + 1
         j = Quaternion._NEXT_AXIS[i+parity-1] + 1

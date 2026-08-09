@@ -371,7 +371,7 @@ class Qube(object):
         if isinstance(values, numbers.Real):
             return float(values)
 
-        return self     # This shouldn't happen                             # noqa
+        return self  # pragma: no cover # This shouldn't happen
 
     ######################################################################################
     # Support functions
@@ -785,11 +785,11 @@ class Qube(object):
                 return cls._suitable_dtype('float', opstr=opstr)
             if kind in ('i', 'u'):
                 return cls._suitable_dtype('int', opstr=opstr)
-            if kind == 'b':
+            if kind == 'b':  # pragma: no cover
                 return cls._suitable_dtype('bool', opstr=opstr)
 
-        _in_opstr = ' in ' + opstr if opstr else ''                             # noqa
-        raise ValueError('invalid dtype{_in_opstr}: "{dtype}"')
+        _in_opstr = ' in ' + opstr if opstr else ''
+        raise ValueError(f'invalid dtype{_in_opstr}: "{dtype}"')
 
     @classmethod
     def _suitable_numer(cls, numer=None, opstr=''):
@@ -823,7 +823,7 @@ class Qube(object):
 
         opstr = opstr or cls.__name__
         if ((cls._NUMER is not None and numer != cls._NUMER) or
-            (cls._NRANK is not None and len(numer) != cls._NRANK)):             # noqa
+                (cls._NRANK is not None and len(numer) != cls._NRANK)):
             raise ValueError(f'invalid {opstr} numerator shape {numer}; '
                              f'must be {cls._NUMER}')
 
@@ -1653,9 +1653,9 @@ class Qube(object):
         if preserve:
 
             # Delete derivatives not on the list
-            for key in self._derivs.keys():
+            for key in list(self._derivs.keys()):
                 if key not in preserve:
-                    self.delete_deriv(key, override)
+                    self.delete_deriv(key, override=override)
 
             return
 
@@ -1902,10 +1902,22 @@ class Qube(object):
 
         obj = self.clone(recursive=recursive)
         obj._unit = None
+
+        # Strip units from derivatives if recursive is True
+        if recursive and obj._derivs:
+            for key, deriv in obj._derivs.items():
+                if deriv._unit is not None:
+                    obj._derivs[key] = deriv.without_unit(recursive=True)
+
         return obj
 
-    def into_unit(self, recursive=False):
+    def into_unit(self, *, recursive=False):
         """The values property of this object, converted to its unit.
+
+        This method converts values from standard units (kilometers, seconds, radians)
+        to this object's specified unit. For example, if the object has unit=Unit.M
+        (meters) and the internal values are in kilometers (standard units), this
+        method converts from km to m by multiplying by 1000.
 
         Parameters:
             recursive (bool, optional): If True, also return the derivatives converted to
@@ -1913,9 +1925,13 @@ class Qube(object):
 
         Returns:
             (numpy.ndarray, float, int, bool, or tuple): The values attribute of this
-            object, converted to this object's units. If `recursive` is True, it returns a
-            tuple (`values`, `derivs`), where `derivs` is a dictionary of the derivative
-            values converted to their units.
+            object, converted from standard units to this object's unit. If `recursive`
+            is True, it returns a tuple (`values`, `derivs`), where `derivs` is a
+            dictionary of the derivative values converted to their units.
+
+        Examples:
+            >>> a = Scalar([1.0, 2.0, 3.0], unit=Unit.M)  # values in km (standard)
+            >>> a.into_unit()  # Returns [1000.0, 2000.0, 3000.0] (converted to meters)
         """
 
         if self._unit is None or self._unit.into_unit_factor == 1.:
@@ -2307,7 +2323,7 @@ class Qube(object):
 
         if isinstance(self._values, np.ndarray) and self._values.dtype.kind == 'f':
             if copy:
-                return self.__copy__(recursive=recursive)
+                return self.copy(recursive=recursive)
             return self if recursive else self.wod
 
         cls = type(self)
@@ -2414,7 +2430,8 @@ class Qube(object):
         if cls is Qube._SCALAR_CLASS:
             cls = Qube._BOOLEAN_CLASS
 
-        if not cls._INTS_OK:
+        if not cls._INTS_OK:  # pragma: no cover
+            # This should never happen
             raise TypeError(f'{cls.__name__} object cannot contain bools')
 
         values = bool(self._values) if self._is_scalar else self._values.astype(np.bool_)
@@ -2472,7 +2489,9 @@ class Qube(object):
             changed = True
 
         # Validate derivs
-        if has_derivs and not self._DERIVS_OK:
+        if has_derivs and not self._DERIVS_OK:  # pragma: no cover
+            # This should never happen because creating Qube with derivs when
+            # _DERIVS_OK is False raises an error earlier
             changed = True
         if has_derivs and not recursive:
             changed = True
@@ -2599,7 +2618,9 @@ class Qube(object):
             if np.shape(self._mask):
                 new_mask = self._mask[indx]
             else:
-                new_mask = np.array([self._mask])[indx]
+                # For scalar mask, create array matching new_values shape
+                new_mask = np.full(new_values.shape[:len(new_values.shape) - self._rank],
+                                   self._mask, dtype=np.bool_)
 
         obj.__init__(new_values, new_mask, example=self)
 

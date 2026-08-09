@@ -1380,7 +1380,7 @@ class Scalar(Qube):
             result = Scalar(new_values, new_mask, unit=self._unit)
 
             # Replace the masked values by the max
-            new_values[new_mask] = result.max()
+            result[new_mask] = max_possible
 
         return result.wod
 

@@ -15,7 +15,12 @@ class Polynomial(Vector):
 
     This is a Vector subclass in which the elements are interpreted as the coefficients of
     a polynomial in a single variable x. Coefficients appear in order of decreasing
-    exponent. Mathematical operations, polynomial root-solving are supported. Coefficients
+    exponent. For example:
+    - [a, b, c] represents a*x^2 + b*x + c
+    - [a, b] represents a*x + b
+    - [a] represents the constant a
+
+    Mathematical operations, polynomial root-solving are supported. Coefficients
     can have derivatives and these can be used to determine derivatives of the values or
     roots.
     """
@@ -164,6 +169,9 @@ class Polynomial(Vector):
     def invert_line(self, *, recursive=True):
         """The inversion of this linear polynomial.
 
+        If this polynomial represents y = a*x + b, then the inverse polynomial
+        represents x = (y - b) / a = (1/a)*y - b/a.
+
         Parameters:
             recursive (bool, optional): True to include derivatives in the conversion.
 
@@ -184,7 +192,15 @@ class Polynomial(Vector):
         (a, b) = self.to_scalars(recursive=recursive)
 
         a_inv = 1. / a
-        return Polynomial(Vector.from_scalars(a_inv, -b * a_inv), recursive=recursive)
+        result = Polynomial(Vector.from_scalars(a_inv, -b * a_inv))
+
+        # Handle derivatives if recursive
+        # XXX Code Rabbit claims that this math is not correct - check it
+        if recursive and self._derivs:
+            for key, deriv in self._derivs.items():
+                result.insert_deriv(key, deriv.invert_line(recursive=False))
+
+        return result
 
     ######################################################################################
     # Math operations
@@ -235,8 +251,40 @@ class Polynomial(Vector):
             Polynomial: This polynomial modified in-place.
         """
 
-        arg = Polynomial.as_polynomial(arg).set_order(self.order)
-        self.super().__iadd__(arg.super())
+        self.require_writeable()
+        arg = Polynomial.as_polynomial(arg)
+        # Ensure both have compatible orders
+        max_order = max(self.order, arg.order)
+        if self.order < max_order:
+            # Pad self in-place by resizing _values
+            new_values = np.zeros(self._shape + (max_order+1,))
+            new_values[..., -self.order-1:] = self._values
+            # Use a temporary Polynomial to compute invariants from new_values
+            # This ensures we use the same logic as the constructor
+            temp = Polynomial(new_values, self._mask, example=self)
+            # Copy the shape metadata back into self
+            self._values = temp._values
+            self._shape = temp._shape
+            self._ndims = temp._ndims
+            self._item = temp._item
+            self._numer = temp._numer
+            self._denom = temp._denom
+            self._isize = temp._isize
+            self._nsize = temp._nsize
+            self._dsize = temp._dsize
+            self._is_array = temp._is_array
+            self._is_scalar = temp._is_scalar
+        if arg.order < max_order:
+            arg = arg.at_least_order(max_order)
+        # Perform addition in-place
+        self._values += arg._values
+        self._mask = Qube.or_(self._mask, arg._mask)
+        self._unit = self._unit or arg._unit
+        # Handle derivatives
+        if self._derivs or arg._derivs:
+            new_derivs = self._add_derivs(self, arg)
+            self.insert_derivs(new_derivs)
+        self._cache.clear()
         return self
 
     def __sub__(self, arg):
@@ -251,7 +299,7 @@ class Polynomial(Vector):
 
         arg = Polynomial.as_polynomial(arg).at_least_order(self.order)
         self = self.at_least_order(arg.order)
-        return Polynomial(self.super() - arg.super())
+        return Polynomial(self.as_vector() - arg.as_vector())
 
     def __rsub__(self, arg):
         """Subtract this polynomial from another polynomial or scalar.
@@ -265,7 +313,7 @@ class Polynomial(Vector):
 
         arg = Polynomial.as_polynomial(arg).at_least_order(self.order)
         self = self.at_least_order(arg.order)
-        return Polynomial(arg.super() - self.super())
+        return Polynomial(arg.as_vector() - self.as_vector())
 
     def __isub__(self, arg):
         """Subtract another polynomial from this polynomial in-place.
@@ -277,8 +325,40 @@ class Polynomial(Vector):
             Polynomial: This polynomial modified in-place.
         """
 
-        arg = Polynomial.as_polynomial(arg).set_order(self.order)
-        self.super().__isub__(arg.super())
+        self.require_writeable()
+        arg = Polynomial.as_polynomial(arg)
+        # Ensure both have compatible orders
+        max_order = max(self.order, arg.order)
+        if self.order < max_order:
+            # Pad self in-place by resizing _values
+            new_values = np.zeros(self._shape + (max_order+1,))
+            new_values[..., -self.order-1:] = self._values
+            # Use a temporary Polynomial to compute invariants from new_values
+            # This ensures we use the same logic as the constructor
+            temp = Polynomial(new_values, self._mask, example=self)
+            # Copy the shape metadata back into self
+            self._values = temp._values
+            self._shape = temp._shape
+            self._ndims = temp._ndims
+            self._item = temp._item
+            self._numer = temp._numer
+            self._denom = temp._denom
+            self._isize = temp._isize
+            self._nsize = temp._nsize
+            self._dsize = temp._dsize
+            self._is_array = temp._is_array
+            self._is_scalar = temp._is_scalar
+        if arg.order < max_order:
+            arg = arg.at_least_order(max_order)
+        # Perform subtraction in-place
+        self._values -= arg._values
+        self._mask = Qube.or_(self._mask, arg._mask)
+        self._unit = self._unit or arg._unit
+        # Handle derivatives
+        if self._derivs or arg._derivs:
+            new_derivs = self._sub_derivs(self, arg)
+            self.insert_derivs(new_derivs)
+        self._cache.clear()
         return self
 
     def __mul__(self, arg):
@@ -291,7 +371,10 @@ class Polynomial(Vector):
             Polynomial: The product of the polynomials.
 
         Raises:
-            ValueError: If the polynomials have incompatible denominators.
+            ValueError: If the polynomials have incompatible denominators. This
+                occurs when self._drank != arg._drank and both are non-zero. For example,
+                a polynomial with drank=1 cannot be multiplied by a polynomial with
+                drank=2.
         """
 
         # Support for Polynomial multiplication
@@ -304,22 +387,45 @@ class Polynomial(Vector):
             new_values = np.zeros(new_shape + (new_order + 1,))
             new_mask = Qube.or_(self._mask, arg._mask)
 
-            # It's simpler to work in order of increasing powers
-            tail_indx = self._drank * (slice(None),)
-            indx = (Ellipsis, slice(None, None, -1)) + tail_indx
-            self_values = self._values[indx]
-            arg_values  = arg._values[indx]
+            # Polynomial multiplication: work directly in decreasing order
+            # For coefficients in decreasing order [a_n, ..., a_0] representing
+            # a_n*x^n + ... + a_0, the product coefficient at position i+j (from left)
+            # gets contribution from self[i] * arg[j]
+            # Explicitly identify the coefficient axis position
+            coef_axis = -self._drank - 1
+            # Convert to positive index for shape access
+            if coef_axis >= 0:
+                coef_axis_pos = coef_axis
+            else:
+                coef_axis_pos = len(self._values.shape) + coef_axis
+            nself = self._values.shape[coef_axis_pos]
+            narg = arg._values.shape[coef_axis_pos]
 
-            # Perform the multiplication
-            kstop = arg._values.shape[-self._drank - 1]
-            dk    = self._values.shape[-self._drank - 1]
-            for k in range(kstop):
-                new_indx = (Ellipsis, slice(k, k+dk)) + tail_indx
-                arg_indx = (Ellipsis, slice(k, k+1))  + tail_indx
-                new_values[new_indx] += arg_values[arg_indx] * self_values
+            # Build suffix for denominator dimensions (if any)
+            if self._drank > 0:
+                suffix = self._drank * (slice(None),)
+            else:
+                suffix = ()
 
-            result = Polynomial(new_values[indx], new_mask, derivs={},
-                                unit=Unit._mul_units(self._unit, arg._unit))
+            # Standard convolution: result[k] = sum of self[i] * arg[j] where i+j = k
+            # But in decreasing order, position 0 is highest power
+            # So if self has coefficients [a_1, a_0] and arg has [b_1, b_0],
+            # result[0] = a_1*b_1, result[1] = a_1*b_0 + a_0*b_1, result[2] = a_0*b_0
+            for i in range(nself):
+                for j in range(narg):
+                    k = i + j
+                    # Build index tuples explicitly: (prefix, coefficient_index, suffix)
+                    # prefix = Ellipsis (all shape dimensions)
+                    # coefficient_index = i, j, or k
+                    # suffix = denominator dimensions (if any)
+                    self_indx = (Ellipsis, i) + suffix
+                    arg_indx = (Ellipsis, j) + suffix
+                    result_indx = (Ellipsis, k) + suffix
+                    new_values[result_indx] += (self._values[self_indx] *
+                                                arg._values[arg_indx])
+
+            result = Polynomial(new_values, new_mask, derivs={},
+                                unit=Unit.mul_units(self._unit, arg._unit))
 
             # Deal with derivatives
             derivs = {}
@@ -402,6 +508,8 @@ class Polynomial(Vector):
     def __pow__(self, arg):
         """Raise this polynomial to the specified power.
 
+        Uses repeated squaring algorithm for efficient computation.
+
         Parameters:
             arg: The exponent (must be a non-negative integer).
 
@@ -418,7 +526,21 @@ class Polynomial(Vector):
         if arg == 0:
             return Polynomial([1.])
 
-        return Polynomial(self.as_vector() ** arg)
+        # Use repeated squaring algorithm
+        result = None
+        base = self
+        power = int(arg)
+
+        while power > 0:
+            if power % 2 == 1:
+                if result is None:
+                    result = base
+                else:
+                    result = result * base
+            base = base * base
+            power //= 2
+
+        return result
 
     def __eq__(self, arg):
         """Check if this polynomial equals another polynomial.
@@ -487,26 +609,83 @@ class Polynomial(Vector):
                 Defaults to True.
 
         Returns:
-            Scalar: A Scalar of values. Note that the shapes of self and x are
-                broadcasted together.
+            Scalar: A Scalar of values. The shapes of self and x are broadcasted
+                together following NumPy broadcasting rules. If self has shape (m, n) and
+                x has shape (p,), the result will have the broadcasted shape.
         """
 
         if self.order == 0:
-            if recursive:
-                return Scalar(example=self)
+            # For zero-order polynomial, extract the constant value
+            # self._values has shape (..., 1) for the constant coefficient
+            # Extract the scalar value by indexing the last axis
+            tail_indx = self._drank * (slice(None),)
+            if tail_indx:
+                const_values = self._values[(Ellipsis, 0, *tail_indx)]
             else:
-                return Scalar(example=self.wod)
+                const_values = self._values[..., 0]
+
+            if recursive:
+                # Convert derivatives from Polynomial to Scalar
+                derivs = {}
+                for key, deriv in self._derivs.items():
+                    # Handle derivative: if order is 0, extract constant;
+                    # otherwise evaluate at 0
+                    if deriv.order == 0:
+                        deriv_tail = deriv._drank * (slice(None),)
+                        if deriv_tail:
+                            deriv_const = deriv._values[(Ellipsis, 0) + deriv_tail]
+                        else:
+                            deriv_const = deriv._values[..., 0]
+                    else:
+                        # Non-zero order derivative: evaluate at 0 to get a Scalar
+                        deriv_const_scalar = Scalar.as_scalar(
+                            deriv.eval(0., recursive=False))
+                        deriv_const = deriv_const_scalar._values
+                        # Use the mask and unit from the evaluated derivative
+                        deriv_mask = deriv_const_scalar._mask
+                        deriv_unit = deriv_const_scalar._unit
+                    # Recursively convert derivative's derivatives
+                    deriv_derivs = {}
+                    if deriv._derivs:
+                        for dkey, dvalue in deriv._derivs.items():
+                            if dvalue.order == 0:
+                                dvalue_tail = dvalue._drank * (slice(None),)
+                                if dvalue_tail:
+                                    dvalue_const = (dvalue._values[(Ellipsis, 0) +
+                                                                   dvalue_tail])
+                                else:
+                                    dvalue_const = dvalue._values[..., 0]
+                                deriv_derivs[dkey] = Scalar(dvalue_const, dvalue._mask,
+                                                            derivs={},
+                                                            unit=dvalue._unit)
+                            else:
+                                deriv_derivs[dkey] = Scalar.as_scalar(
+                                    dvalue.eval(0., recursive=False))
+                    if deriv.order == 0:
+                        derivs[key] = Scalar(deriv_const, deriv._mask,
+                                             derivs=deriv_derivs, unit=deriv._unit)
+                    else:
+                        derivs[key] = Scalar(deriv_const, deriv_mask,
+                                             derivs=deriv_derivs, unit=deriv_unit)
+
+                # Use example= to copy properties, but still need arg for the values
+                # Explicitly preserve the mask from self
+                return Scalar(const_values, mask=self._mask, derivs=derivs, example=self)
+            else:
+                # Use example=self.wod to copy properties without derivatives
+                # Explicitly preserve the mask from self
+                return Scalar(const_values, mask=self._mask, derivs={}, example=self.wod)
 
         x = Scalar.as_scalar(x, recursive=recursive)
         x_powers = [1., x]
         x_power = x
-        for k in range(1, self.order):
-            x_power *= x
+        for _ in range(1, self.order):
+            x_power = x_power * x  # Create new object, don't modify in place
             x_powers.append(x_power)
 
         x_powers = Vector.from_scalars(*(x_powers[::-1]))
 
-        return Qube.dot(self, x_powers, 0, 0, (Scalar,), recursive=recursive)
+        return Qube.dot(self, x_powers, 0, 0, classes=[Scalar], recursive=recursive)
 
     def roots(self, recursive=True):
         """Find the roots of the polynomial.
@@ -519,8 +698,8 @@ class Polynomial(Vector):
             Scalar: A Scalar of roots. This has the same shape as self but an extra
                 leading axis matching the order of the polynomial. The leading index
                 selects among the roots of the polynomial. Roots appear in increasing
-                order and without any duplicates. If fewer real roots exist, the set of
-                roots is padded at the end with masked values.
+                order and without any duplicates. Complex roots are masked. If fewer real
+                roots exist, the set of roots is padded at the end with masked values.
 
         Raises:
             ValueError: If the polynomial is of order zero.
@@ -586,12 +765,25 @@ class Polynomial(Vector):
 
         # Shift coefficients till the leading coefficient is nonzero
         shifts = (coefficients[..., 0] == 0.)
-        total_shifts = np.zeros(shifts._shape, dtype='int')
+        shift_shape = np.shape(shifts)
+        if shift_shape:
+            total_shifts = np.zeros(shift_shape, dtype='int')
+        else:
+            # Scalar case
+            total_shifts = 0
+
         while np.any(shifts):
-            coefficients[shifts, :-1] = coefficients[shifts, 1:]
-            coefficients[shifts, -1] = 0.
-            total_shifts += shifts
+            if shift_shape:
+                coefficients[shifts, :-1] = coefficients[shifts, 1:]
+                coefficients[shifts, -1] = 0.
+                total_shifts = total_shifts + shifts.astype('int')
+            else:
+                # Scalar case - shift until leading coefficient is nonzero
+                coefficients = coefficients[1:]
+                coefficients = np.append(coefficients, 0.)
+                total_shifts = total_shifts + 1
             shifts = (coefficients[..., 0] == 0.)
+            shift_shape = np.shape(shifts)
 
         # Implement the NumPy solution, array-based
         matrix = np.empty(self._shape + (self.order, self.order))
@@ -607,25 +799,35 @@ class Polynomial(Vector):
 
         # Mask extraneous zeros
         # Handily, they always show up first in the array of roots
-        max_shifts = total_shifts.max()
-        for k in range(max_shifts):
-            root_mask[total_shifts > k, k] = True
+        shift_shape = np.shape(total_shifts)
+        if shift_shape:
+            if total_shifts.size > 0:
+                max_shifts = int(np.max(total_shifts))
+                for k in range(max_shifts):
+                    # Use advanced indexing for array case
+                    mask_indices = np.where(total_shifts > k)
+                    if len(mask_indices) > 0:
+                        # root_mask has shape (order, ...shape...)
+                        # mask_indices gives indices into the shape dimensions
+                        # We need to prepend k for the first dimension
+                        root_mask[(k,) + mask_indices] = True
+        else:
+            # Scalar case
+            if total_shifts > 0:
+                for k in range(int(total_shifts)):
+                    root_mask[k, ...] = True
+
+        # Mask duplicated values before sorting (so we can detect them)
+        # Code here originally handled the case of root_mask being a scalar,
+        # but that's not actually possible given the above code.
+        for k in range(1, self.order):
+            mask = ((root_values[k, ...] == root_values[k - 1, ...])
+                    & ~root_mask[k, ...])
+            if np.any(mask):
+                root_mask[k, ...] |= mask
 
         roots = Scalar(root_values, Qube.as_one_bool(root_mask))
         roots = roots.sort(axis=0)
-
-        # Mask duplicated values
-        mask_changed = False
-        for k in range(1, self.order):
-            mask = ((roots._values[k, ...] == roots._values[k - 1, ...])
-                    & ~roots._mask[k, ...])
-            if np.any(mask):
-                root_mask[k, ...] |= mask
-                mask_changed = True
-
-        if mask_changed:
-            roots = Scalar(root_values, Qube.as_one_bool(root_mask))
-            roots = roots.sort(axis=0)
 
         # Deal with derivatives if necessary
         #
@@ -638,7 +840,7 @@ class Polynomial(Vector):
         if recursive:
             for key, value in self._derivs.items():
                 deriv = (-value.eval(roots, recursive=False) /
-                         self.deriv.eval(roots, recursive=False))
+                         self.deriv().eval(roots, recursive=False))
                 roots.insert_deriv(key, deriv)
 
         return roots

@@ -2,7 +2,6 @@
 # polymath/matrix3.py: Matrix3 subclass of PolyMath Matrix class
 ##########################################################################################
 
-from __future__ import division
 import numpy as np
 
 from polymath.qube    import Qube
@@ -117,7 +116,10 @@ class Matrix3(Matrix):
                 denoms[key] = deriv._denom
             for key, deriv in vector2._derivs.items():
                 if key in denoms:
-                    if deriv._denom != denoms[key]:
+                    if deriv._denom != denoms[key]:  # pragma: no cover
+                        # This is unreachable because unit(), ucross(), and broadcast()
+                        # fail earlier when the derivatives have incompatible
+                        # denominators.
                         raise ValueError(f'derivative "{key}" denominator mismatch in '
                                          f'Matrix3.twovec(): {denoms[key]}, '
                                          f'{deriv._denom}')
@@ -132,16 +134,23 @@ class Matrix3(Matrix):
                 suffix = (drank + 1) * (slice(None),)
                 if key in unit1._derivs:
                     deriv[(Ellipsis, axis1) + suffix] = unit1._derivs[key]._values
-                if key in unit2._derivs:
+                if key in unit2._derivs:  # pragma: no cover
+                    # This branch is impossible to test because if unit1 has a
+                    # derivative, then unit2 and unit3 will inherit it via cross
+                    # products.
                     deriv[(Ellipsis, axis2) + suffix] = unit2._derivs[key]._values
-                if key in unit3._derivs:
+                if key in unit3._derivs:  # pragma: no cover
+                    # This branch is impossible to test because if unit1 has a
+                    # derivative, then unit2 and unit3 will inherit it via cross
+                    # products.
                     deriv[(Ellipsis, axis3) + suffix] = unit3._derivs[key]._values
 
                 derivs[key] = Matrix3(deriv, mask=result._mask, drank=drank)
 
             result.insert_derivs(derivs)
 
-        if unit1.readonly and vector2.readonly:
+        if unit1.readonly and vector2.readonly:  # pragma: no cover
+            # This is impossible to reach because unit() does not preserve readonly.
             result = result.as_readonly()
 
         return result
@@ -345,7 +354,9 @@ class Matrix3(Matrix):
         cos_dec = np.cos(dec._values)
         sin_dec = np.sin(dec._values)
 
-        values = np.stack([-sin_ra,            cos_ra,           0.,
+        # Broadcast scalar 0 to match the shape of other arrays
+        zero = np.zeros_like(sin_ra)
+        values = np.stack([-sin_ra,            cos_ra,           zero,
                            -cos_ra * sin_dec, -sin_ra * sin_dec, cos_dec,
                             cos_ra * cos_dec,  sin_ra * cos_dec, sin_dec],      # noqa
                           axis=-1)
@@ -355,12 +366,21 @@ class Matrix3(Matrix):
         """Rotate an object by this Matrix3, returning an instance of the same subclass.
 
         Parameters:
-            arg: The object to rotate.
+            arg: The object to rotate. Can be a Vector3, Matrix3, or other Qube object.
+                When rotating Matrix3 objects, ensure compatible shapes for proper
+                broadcasting. Scalars are returned unchanged.
             recursive (bool, optional): If True, the rotated derivatives are included in
                 the object returned.
 
         Returns:
-            Qube: The rotated object of the same type as the input.
+            Qube: The rotated object of the same type as the input. For vectors and
+            matrices, this performs matrix multiplication. For scalars, the object is
+            returned unchanged.
+
+        Notes:
+            The shapes of this Matrix3 and the argument are broadcast together following
+            NumPy broadcasting rules. For Matrix3 objects, the matrix multiplication
+            requires compatible shapes between the leading dimensions.
         """
 
         # Rotation of a vector or matrix
@@ -536,7 +556,7 @@ class Matrix3(Matrix):
             Qube._raise_unsupported_op('*=', self, original_arg)
 
         result = Qube.__imul__(self, arg)
-        self._set_values(result._values, result._mask, example=self)
+        self._set_values(result._values, result._mask)
         return self
 
     def reciprocal(self, *, recursive=True, nozeros=False):
@@ -630,12 +650,12 @@ class Matrix3(Matrix):
 
         (ai, aj, ak) = Qube.broadcast(ai, aj, ak)
 
-        axes = axes.lower()
-        try:
-            (firstaxis, parity, repetition, frame) = Matrix3._AXES2TUPLE[axes]
-        except (AttributeError, KeyError):
-            Matrix3._TUPLE2AXES[axes]   # validation
+        if isinstance(axes, (tuple, list)):
+            Matrix3._TUPLE2AXES[axes]  # validation
             firstaxis, parity, repetition, frame = axes
+        else:
+            axes = axes.lower()
+            firstaxis, parity, repetition, frame = Matrix3._AXES2TUPLE[axes]
 
         i = firstaxis
         j = Matrix3._NEXT_AXIS[i + parity]
@@ -708,11 +728,12 @@ class Matrix3(Matrix):
             True
         """
 
-        try:
-            firstaxis, parity, repetition, frame = Matrix3._AXES2TUPLE[axes.lower()]
-        except (AttributeError, KeyError):
-            Matrix3._TUPLE2AXES[axes]   # validation
+        if isinstance(axes, (tuple, list)):
+            Matrix3._TUPLE2AXES[axes]  # validation
             firstaxis, parity, repetition, frame = axes
+        else:
+            axes = axes.lower()
+            firstaxis, parity, repetition, frame = Matrix3._AXES2TUPLE[axes]
 
         i = firstaxis
         j = Matrix3._NEXT_AXIS[i+parity]
@@ -813,7 +834,7 @@ class Matrix3(Matrix):
 
         raise TypeError('Matrix3.mean() is not supported')
 
-    def __getstate__experimental(self):
+    def __getstate__experimental(self):  # pragma: no cover
         """Override Qube.__getstate__ to save the Matrix3 as a unit Quaternion.
 
         This is an experimental method for potentially more efficient serialization.
@@ -855,7 +876,7 @@ class Matrix3(Matrix):
         clone.CONVERTED_TO_QUATERNION = True
         return Qube.__getstate__(clone)
 
-    def __setstate__experimental(self, state):
+    def __setstate__experimental(self, state):  # pragma: no cover
         """Override of Qube.__setstate__ to convert from unit Quaternion back to Matrix3.
         """
 

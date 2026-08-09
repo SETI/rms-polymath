@@ -31,6 +31,7 @@ Qube.join_items         = item_ops.join_items
 Qube.split_items        = item_ops.split_items
 Qube.swap_items         = item_ops.swap_items
 Qube.chain              = item_ops.chain
+Qube.__matmul__         = item_ops.__matmul__
 
 from polymath.extensions import iterator
 Qube.__iter__           = iterator.__iter__
