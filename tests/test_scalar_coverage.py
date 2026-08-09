@@ -32,17 +32,12 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test _minval and _maxval edge cases
         ##################################################################################
         # Test invalid dtype
-        try:
-            dtype = np.dtype('U')  # Unicode string dtype
+        dtype = np.dtype('U')  # Unicode string dtype
+        with self.assertRaises(ValueError):
             _ = Scalar._minval(dtype)
-        except ValueError:
-            pass  # Expected
 
-        try:
-            dtype = np.dtype('U')
+        with self.assertRaises(ValueError):
             _ = Scalar._maxval(dtype)
-        except ValueError:
-            pass  # Expected
 
         # Test all dtype kinds
         for kind in ['f', 'u', 'i']:
@@ -68,15 +63,10 @@ class Test_Scalar_Coverage(unittest.TestCase):
         self.assertEqual(s, 1)
 
         # Test with Qube that's not Scalar
-        # Vector has nrank=1, so converting to Scalar (nrank=0) will fail
-        # This tests the error path
-        try:
-            v = Vector([1., 2., 3.])
-            s = Scalar.as_scalar(v)
-            # If it succeeds, verify it's a Scalar
-            self.assertEqual(type(s), Scalar)
-        except ValueError:
-            pass  # Expected - Vector can't be converted to Scalar due to rank mismatch
+        # Vector has nrank=1, so converting to Scalar (nrank=0) fails on the rank mismatch
+        v = Vector([1., 2., 3.])
+        with self.assertRaises(ValueError):
+            _ = Scalar.as_scalar(v)
 
         # Test with Unit
         s = Scalar.as_scalar(Unit.KM)
@@ -109,11 +99,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
         self.assertRaises(IndexError, a.as_index_and_mask)
 
         # Test with denominator
-        try:
-            a = Vector(np.arange(6).reshape(2, 3), drank=1)
+        a = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError):
             _ = a.as_index_and_mask()
-        except ValueError:
-            pass  # Expected
 
         # Test purge=True with all masked
         a = Scalar([1, 2, 3], mask=True)
@@ -141,11 +129,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test int() error cases
         ##################################################################################
         # Test with denominator
-        try:
-            a = Vector(np.arange(6).reshape(2, 3), drank=1)
+        a = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError):
             _ = a.int()
-        except ValueError:
-            pass  # Expected
 
         # Test with top parameter and shift
         a = Scalar([1, 2, 3, 4, 5])
@@ -239,10 +225,8 @@ class Test_Scalar_Coverage(unittest.TestCase):
         a = Scalar(2.)  # Outside [-1, 1]
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
-            try:
+            with self.assertRaises(ValueError):
                 _ = a.arcsin(check=False)
-            except (ValueError, RuntimeWarning):
-                pass  # Expected
 
         # Test with check=True and invalid values
         a = Scalar([-2., 0., 2.])
@@ -263,10 +247,8 @@ class Test_Scalar_Coverage(unittest.TestCase):
         a = Scalar(2.)  # Outside [-1, 1]
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
-            try:
+            with self.assertRaises(ValueError):
                 _ = a.arccos(check=False)
-            except (ValueError, RuntimeWarning):
-                pass  # Expected
 
         # Test with check=True and invalid values
         a = Scalar([-2., 0., 2.])
@@ -308,10 +290,8 @@ class Test_Scalar_Coverage(unittest.TestCase):
         a = Scalar(-1.)
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
-            try:
+            with self.assertRaises(ValueError):
                 _ = a.sqrt(check=False)
-            except (ValueError, RuntimeWarning):
-                pass  # Expected
 
         ##################################################################################
         # Test log() error cases
@@ -327,10 +307,8 @@ class Test_Scalar_Coverage(unittest.TestCase):
         a = Scalar(0.)
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
-            try:
+            with self.assertRaises(ValueError):
                 _ = a.log(check=False)
-            except (ValueError, RuntimeWarning):
-                pass  # Expected
 
         ##################################################################################
         # Test exp() error cases
@@ -346,15 +324,15 @@ class Test_Scalar_Coverage(unittest.TestCase):
         a = Scalar(1000.)  # Very large value
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
-            try:
+            # The overflow surfaces as the RuntimeWarning raised by np.exp, unless it is
+            # first converted to a ValueError by Scalar.exp() itself
+            with self.assertRaises((ValueError, RuntimeWarning)):
                 _ = a.exp(check=False)
-            except (ValueError, TypeError, RuntimeWarning):
-                pass  # May overflow and raise RuntimeWarning
 
         # Test with check=True and overflow
         a = Scalar(1000.)
         b = a.exp(check=True)
-        # Should mask overflow values
+        self.assertTrue(b.mask)  # Overflow values are masked
 
         ##################################################################################
         # Test sign() edge cases
@@ -607,10 +585,8 @@ class Test_Scalar_Coverage(unittest.TestCase):
         a = Scalar([1., 0., 2.])
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
-            try:
+            with self.assertRaises(ValueError):
                 _ = a.reciprocal(nozeros=True)
-            except ValueError:
-                pass  # Expected
 
         # Test with nozeros=False and zero
         a = Scalar([1., 0., 2.])
@@ -631,65 +607,44 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test with array exponent
         a = Scalar([2., 3., 4.])
         b = Scalar([1., 2.])  # Different shape
-        try:
+        with self.assertRaises(ValueError):
             _ = a ** b
-        except ValueError:
-            pass  # Expected
 
         # Test with unit and array exponent
         a = Scalar([2., 3., 4.], unit=Unit.KM)
         b = Scalar([1., 2.])  # Array exponent
-        try:
+        with self.assertRaises(ValueError):
             _ = a ** b
-        except ValueError:
-            pass  # Expected
 
         # Test with masked result
         a = Scalar(0.)
         b = Scalar(-1.)
-        try:
-            c = a ** b  # 0 ** -1 is undefined
-        except (ValueError, ZeroDivisionError):
-            pass  # May raise or mask
+        c = a ** b  # 0 ** -1 is undefined, so the result is masked rather than raised
+        self.assertTrue(c.mask)
 
         # Test with non-Real exponent
         a = Scalar([2., 3., 4.])
-        try:
+        with self.assertRaises(TypeError):
             _ = a ** "invalid"
-        except (TypeError, ValueError):
-            pass  # Expected
 
         ##################################################################################
         # Test __le__, __lt__, __ge__, __gt__ with denominators
         ##################################################################################
         # Test with denominators
-        try:
-            a = Scalar(1.)
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        a = Scalar(1.)
+        b = Vector(np.arange(6).reshape(2, 3), drank=1)
+
+        with self.assertRaises(ValueError):
             _ = a <= b
-        except ValueError:
-            pass  # Expected
 
-        try:
-            a = Scalar(1.)
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError):
             _ = a < b
-        except ValueError:
-            pass  # Expected
 
-        try:
-            a = Scalar(1.)
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError):
             _ = a >= b
-        except ValueError:
-            pass  # Expected
 
-        try:
-            a = Scalar(1.)
-            b = Vector(np.arange(6).reshape(2, 3), drank=1)
+        with self.assertRaises(ValueError):
             _ = a > b
-        except ValueError:
-            pass  # Expected
 
         # Test builtins
         a = Scalar(1.)
@@ -824,11 +779,9 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test with invalid result
         a = Scalar([2., 3., 4.])
         b = Scalar([1000., 1000., 1000.])  # Very large exponent
-        try:
-            c = a ** b
-            # May mask invalid values
-        except (ValueError, OverflowError):
-            pass
+        c = a ** b
+        # 2**1000 is representable; 3**1000 and 4**1000 overflow and get masked
+        self.assertTrue(np.all(c.mask == [False, True, True]))
 
         # Test with derivatives
         a = Scalar([2., 3., 4.])
@@ -891,119 +844,80 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test frac() with denominators
         # Scalar with drank=1 needs values with shape (..., 1)
         a = Scalar([[1.5]], drank=1)  # shape (1,), item (1,)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.frac()
-            self.fail("Expected ValueError for frac() with denominators")
-        except ValueError:
-            pass
 
         # Test sin() with denominators
         a = Scalar([[1.0]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.sin()
-            self.fail("Expected ValueError for sin() with denominators")
-        except ValueError:
-            pass
 
         # Test cos() with denominators
         a = Scalar([[1.0]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.cos()
-            self.fail("Expected ValueError for cos() with denominators")
-        except ValueError:
-            pass
 
         # Test tan() with denominators
         a = Scalar([[1.0]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.tan()
-            self.fail("Expected ValueError for tan() with denominators")
-        except ValueError:
-            pass
 
         # Test arcsin() with denominators
         a = Scalar([[0.5]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.arcsin()
-            self.fail("Expected ValueError for arcsin() with denominators")
-        except ValueError:
-            pass
 
         # Test arcsin() with RuntimeWarning
         a = Scalar(1.5)  # Outside domain
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", RuntimeWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            with self.assertRaises(ValueError):
                 _ = a.arcsin(check=False)
-        except (ValueError, RuntimeWarning):
-            pass  # Expected
 
         # Test arccos() with denominators
         a = Scalar([[0.5]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.arccos()
-            self.fail("Expected ValueError for arccos() with denominators")
-        except ValueError:
-            pass
 
         # Test arccos() with RuntimeWarning
         a = Scalar(1.5)  # Outside domain
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", RuntimeWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            with self.assertRaises(ValueError):
                 _ = a.arccos(check=False)
-        except (ValueError, RuntimeWarning):
-            pass  # Expected
 
         # Test arctan() with denominators
         a = Scalar([[1.0]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.arctan()
-            self.fail("Expected ValueError for arctan() with denominators")
-        except ValueError:
-            pass
 
         # Test arctan2() with denominators
         a = Scalar([[1.0]], drank=1)
         b = Scalar(1.0)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.arctan2(b)
-            self.fail("Expected ValueError for arctan2() with denominators")
-        except ValueError:
-            pass
 
         # Test sqrt() with denominators
         a = Scalar([[4.0]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.sqrt()
-            self.fail("Expected ValueError for sqrt() with denominators")
-        except ValueError:
-            pass
 
         # Test log() with denominators
         a = Scalar([[2.0]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.log()
-            self.fail("Expected ValueError for log() with denominators")
-        except ValueError:
-            pass
 
         # Test exp() with denominators
         a = Scalar([[1.0]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.exp()
-            self.fail("Expected ValueError for exp() with denominators")
-        except ValueError:
-            pass
 
         # Test exp() with RuntimeWarning/ValueError
         a = Scalar(1000.)  # Very large value
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", RuntimeWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            with self.assertRaises((ValueError, RuntimeWarning)):
                 _ = a.exp(check=False)
-        except (ValueError, RuntimeWarning):
-            pass  # Expected
 
         # Test sign() with builtins
         a = Scalar(1.0)
@@ -1048,20 +962,13 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test argmax() with denominators
         # Scalar with drank=1 needs values with shape (n, 1) for array of size n
         a = Scalar([[1.], [2.], [3.]], drank=1)  # shape (3,), item (1,)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.argmax()
-            self.fail("Expected ValueError for argmax() with denominators")
-        except ValueError:
-            pass
 
         # Test argmax() with empty size
-        # This may raise IndexError due to _zero_sized_result trying to index empty array
         a = Scalar([])
-        try:
-            b = a.argmax()
-            self.assertEqual(b.shape, (0,))
-        except IndexError:
-            pass  # Expected for empty array
+        b = a.argmax()
+        self.assertEqual(b.shape, (0,))
 
         # Test argmax() with mask handling
         a = Scalar([1., 2., 3.], mask=[True, False, False])
@@ -1076,20 +983,13 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test argmin() with denominators
         a = Scalar([[1.], [2.], [3.]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.argmin()
-            self.fail("Expected ValueError for argmin() with denominators")
-        except ValueError:
-            pass
 
         # Test argmin() with empty size
-        # This may raise IndexError due to _zero_sized_result trying to index empty array
         a = Scalar([])
-        try:
-            b = a.argmin()
-            self.assertEqual(b.shape, (0,))
-        except IndexError:
-            pass  # Expected for empty array
+        b = a.argmin()
+        self.assertEqual(b.shape, (0,))
 
         # Test argmin() with mask handling
         a = Scalar([1., 2., 3.], mask=[True, False, False])
@@ -1171,37 +1071,24 @@ class Test_Scalar_Coverage(unittest.TestCase):
         # Test maximum() with denominators
         a = Scalar([[1.], [2.], [3.]], drank=1)
         b = Scalar([2., 3., 4.])
-        try:
+        with self.assertRaises(ValueError):
             _ = Scalar.maximum(a, b)
-            self.fail("Expected ValueError for maximum() with denominators")
-        except ValueError:
-            pass
 
         # Test minimum() with denominators
         a = Scalar([[1.], [2.], [3.]], drank=1)
         b = Scalar([2., 3., 4.])
-        try:
+        with self.assertRaises(ValueError):
             _ = Scalar.minimum(a, b)
-            self.fail("Expected ValueError for minimum() with denominators")
-        except ValueError:
-            pass
 
         # Test median() with denominators
         a = Scalar([[1.], [2.], [3.]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.median()
-            self.fail("Expected ValueError for median() with denominators")
-        except ValueError:
-            pass
 
         # Test median() with empty size
-        # This may raise IndexError due to _zero_sized_result trying to index empty array
         a = Scalar([])
-        try:
-            b = a.median()
-            self.assertEqual(b.shape, (0,))
-        except IndexError:
-            pass  # Expected for empty array
+        b = a.median()
+        self.assertEqual(b.shape, (0,))
 
         # Test median() with mask handling
         a = Scalar([1., 2., 3., 4., 5.], mask=[True, False, False, False, True])
@@ -1216,17 +1103,12 @@ class Test_Scalar_Coverage(unittest.TestCase):
 
         # Test sort() with denominators
         a = Scalar([[3.], [1.], [2.]], drank=1)
-        try:
+        with self.assertRaises(ValueError):
             _ = a.sort()
-            self.fail("Expected ValueError for sort() with denominators")
-        except ValueError:
-            pass
 
         # Test sort() with empty size
-        # This may raise IndexError due to _zero_sized_result trying to index empty array
+        # Unlike argmax()/argmin()/median(), sort() raises IndexError on an empty array,
+        # because _zero_sized_result() indexes the empty array with index 0
         a = Scalar([])
-        try:
-            b = a.sort()
-            self.assertEqual(b.shape, (0,))
-        except IndexError:
-            pass  # Expected for empty array
+        with self.assertRaises(IndexError):
+            _ = a.sort()

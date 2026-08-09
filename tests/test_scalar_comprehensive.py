@@ -49,10 +49,16 @@ class Test_Scalar_Comprehensive(unittest.TestCase):
         self.assertEqual(s8, 5)
         self.assertTrue(s8.is_int())
 
-        # Test with top parameter
+        # Test with top parameter; inclusive=True by default, so the top value itself is
+        # in range (and gets shifted down by one), whereas anything above it is masked.
         s9 = Scalar([1, 2, 3, 4, 5])
         s10 = s9.int(top=3, remask=True)
-        self.assertTrue(s10.mask[3] or s10.mask[4])
+        self.assertTrue(np.all(s10.mask == [False, False, False, True, True]))
+        self.assertTrue(np.all(s10.values == [1, 2, 2, 4, 5]))
+
+        # With inclusive=False, the top value is masked as well
+        s10 = s9.int(top=3, remask=True, inclusive=False)
+        self.assertTrue(np.all(s10.mask == [False, False, True, True, True]))
 
         # Test frac method
         s11 = Scalar(5.7)

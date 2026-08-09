@@ -10,6 +10,11 @@ import unittest
 from polymath import Scalar, Vector, Boolean, Qube, Unit
 
 
+class NoDerivsQube(Qube):
+    """A Qube subclass that disallows derivatives."""
+    _DERIVS_OK = False
+
+
 class Test_Qube_Coverage(unittest.TestCase):
 
     def runTest(self):
@@ -1124,13 +1129,8 @@ class Test_Qube_Coverage(unittest.TestCase):
         self.assertEqual(b.unit_, Unit.KM)
 
         # Test __init__ with derivatives disallowed
-        class NoDerivsQube(Qube):
-            _DERIVS_OK = False
-        try:
+        with self.assertRaises(ValueError):
             _ = NoDerivsQube(1., derivs={'t': Scalar(0.1)})
-            self.fail("Expected ValueError for disallowed derivatives")
-        except ValueError:
-            pass
 
         # Test and_ with mask0=True
         mask = Qube.and_(True, False)
@@ -1459,8 +1459,7 @@ class Test_Qube_Coverage(unittest.TestCase):
         # However, we can't easily test this because Qube.__init__ will fail if
         # we try to create a NoDerivsQube with derivs
         # This line is likely unreachable in practice, but we test the condition
-        class NoDerivsQube(Qube):
-            _DERIVS_OK = False
+        # (NoDerivsQube is defined once at module scope)
         a = Scalar([1., 2., 3.])
         a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
         # We can't directly test this path because as_this_type will fail
