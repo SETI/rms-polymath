@@ -22,6 +22,8 @@
 [![Number of GitHub stars](https://img.shields.io/github/stars/SETI/rms-polymath)](https://github.com/SETI/rms-polymath/stargazers)
 ![GitHub forks](https://img.shields.io/github/forks/SETI/rms-polymath)
 
+<!-- start-after-point -->
+
 # Introduction
 
 `PolyMath` expands on the NumPy module and introduces a variety of additional data types
