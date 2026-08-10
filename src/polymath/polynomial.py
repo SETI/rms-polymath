@@ -39,6 +39,9 @@ class Polynomial(Vector):
             If a single argument is a subclass of Vector, it is quickly converted to class
             Polynomial. Otherwise, the constructor takes the same inputs as the
             constructor for class Vector.
+
+            Any derivative that is not already a Polynomial is converted to one, so the
+            derivatives of a Polynomial are always Polynomials themselves.
         """
 
         # For a subclass of Vector, transfer all attributes
@@ -53,13 +56,16 @@ class Polynomial(Vector):
             # The cache can hold objects of the original class, e.g., "wod"
             self._cache = {}
 
-            # Convert derivatives to class Polynomial if necessary
-            if type(self) is not Polynomial:
-                derivs = {}
-                for key, value in args[0].derivs.items():
-                    derivs[key] = Polynomial(value)
+            # Convert derivatives to class Polynomial if necessary. The attribute must be
+            # updated alongside the dictionary, because the loop above copied the
+            # attribute of the original class.
+            derivs = {}
+            for key, value in args[0].derivs.items():
+                deriv = value if isinstance(value, Polynomial) else Polynomial(value)
+                derivs[key] = deriv
+                setattr(self, 'd_d' + key, deriv)
 
-                self._derivs = derivs
+            self._derivs = derivs
 
         # Otherwise use the Vector class constructor
         else:
@@ -193,10 +199,15 @@ class Polynomial(Vector):
             recursive (bool, optional): True to include derivatives in the conversion.
 
         Returns:
-            Polynomial: The inverted linear polynomial.
+            Polynomial: The inverted linear polynomial. Any element whose leading
+            coefficient a is zero is masked.
 
         Raises:
             ValueError: If the polynomial is not first-order.
+
+        Notes:
+            Derivatives are propagated by the chain rule, so the derivatives of the
+            returned coefficients are d(1/a) = -da/a**2 and d(-b/a) = -db/a + b*da/a**2.
         """
 
         if self.order != 1:
@@ -208,16 +219,10 @@ class Polynomial(Vector):
 
         (a, b) = self.to_scalars(recursive=recursive)
 
+        # The arithmetic below carries the derivatives via the chain rule
         a_inv = 1. / a
-        result = Polynomial(Vector.from_scalars(a_inv, -b * a_inv))
-
-        # Handle derivatives if recursive
-        # XXX Code Rabbit claims that this math is not correct - check it
-        if recursive and self._derivs:
-            for key, deriv in self._derivs.items():
-                result.insert_deriv(key, deriv.invert_line(recursive=False))
-
-        return result
+        return Qube.from_scalars(a_inv, -b * a_inv, recursive=recursive,
+                                 classes=[Polynomial])
 
     ######################################################################################
     # Math operations

@@ -273,4 +273,105 @@ def test_polynomial_basic_as_vector_leaves_this_polynomial_unchanged() -> None:
     assert type(v.derivs['t']) is Vector
 
 
+def test_polynomial_construction_converts_vector_derivs() -> None:
+    """A Polynomial built from a Vector converts the Vector's derivatives."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([0., 1.]))
+    p = Polynomial(v)
+    assert type(p.derivs['t']) is Polynomial
+    assert type(p.d_dt) is Polynomial
+
+
+def test_polynomial_construction_deriv_attribute_matches_dict() -> None:
+    """The derivative attribute and the derivative dictionary hold the same object."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([0., 1.]))
+
+    class PolySubclass(Polynomial):
+        pass
+
+    for p in (Polynomial(v), PolySubclass(v)):
+        assert p.d_dt is p.derivs['t']
+
+
+def test_polynomial_construction_leaves_polynomial_derivs_alone() -> None:
+    """A derivative that is already a Polynomial is carried over unchanged."""
+
+    p = Polynomial([1., 2.])
+    p.insert_deriv('t', Polynomial([0., 1.]))
+    assert Polynomial(p).d_dt is p.d_dt
+
+
+def test_polynomial_construction_does_not_alter_the_source_vector() -> None:
+    """Converting a Vector to a Polynomial leaves the Vector's derivatives as Vectors."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([0., 1.]))
+    Polynomial(v)
+    assert type(v.derivs['t']) is Vector
+    assert type(v.d_dt) is Vector
+
+
+def test_polynomial_invert_line_derivative_values() -> None:
+    """invert_line() propagates derivatives by the chain rule."""
+
+    p = Polynomial([2., 3.])                    # y = 2x + 3
+    p.insert_deriv('t', Polynomial([1., 4.]))   # da/dt = 1, db/dt = 4
+
+    inv = p.invert_line()
+    assert type(inv.d_dt) is Polynomial
+    assert inv.d_dt.values[0] == pytest.approx(-0.25)    # -da/a**2
+    assert inv.d_dt.values[1] == pytest.approx(-1.25)    # -db/a + b*da/a**2
+
+
+def test_polynomial_invert_line_derivative_matches_finite_difference() -> None:
+    """The derivatives from invert_line() match a finite-difference estimate."""
+
+    a, b, da, db = 2., 3., 1., 4.
+    eps = 1.e-7
+
+    p = Polynomial([a, b])
+    p.insert_deriv('t', Polynomial([da, db]))
+    inv = p.invert_line()
+
+    nudged = Polynomial([a + da*eps, b + db*eps]).invert_line()
+    expected = (nudged.values - inv.values) / eps
+    assert inv.d_dt.values[0] == pytest.approx(expected[0], abs=1.e-6)
+    assert inv.d_dt.values[1] == pytest.approx(expected[1], abs=1.e-6)
+
+
+def test_polynomial_invert_line_two_derivatives() -> None:
+    """invert_line() propagates every derivative independently."""
+
+    p = Polynomial([2., 3.])
+    p.insert_deriv('t', Polynomial([1., 4.]))
+    p.insert_deriv('u', Polynomial([0., 1.]))
+
+    inv = p.invert_line()
+    assert inv.d_du.values[0] == pytest.approx(0.)       # -0/a**2
+    assert inv.d_du.values[1] == pytest.approx(-0.5)     # -1/a
+
+
+def test_polynomial_invert_line_not_recursive() -> None:
+    """invert_line(recursive=False) returns a Polynomial without derivatives."""
+
+    p = Polynomial([2., 3.])
+    p.insert_deriv('t', Polynomial([1., 4.]))
+
+    inv = p.invert_line(recursive=False)
+    assert type(inv) is Polynomial
+    assert inv.derivs == {}
+
+
+def test_polynomial_invert_line_masks_zero_slope() -> None:
+    """invert_line() masks any element whose leading coefficient is zero."""
+
+    p = Polynomial(np.array([[2., 3.], [0., 5.]]))
+    inv = p.invert_line()
+    assert not inv.mask[0]
+    assert inv.mask[1]
+
+
 ##########################################################################################

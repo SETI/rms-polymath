@@ -437,6 +437,29 @@ These were not reproduced end-to-end but look wrong on reading.
 
 ## 4. Unresolved questions left in the code
 
+> **Status: `invert_line()` closed 2026-08-10; the rest still open.** The review bot was
+> right. `invert_line()` inverted the *derivative polynomial* — returning `(1/a', -b'/a')`
+> where the chain rule gives `(-a'/a**2, -b'/a + b*a'/a**2)`. On `a=2, a'=1, b=3, b'=4` it
+> returned `[1, -4]` for a true `[-0.25, -1.25]`, confirmed against a finite difference.
+> The fix deletes the propagation loop rather than correcting it: `to_scalars()` returns
+> Scalars carrying their derivatives, so the arithmetic that computes the coefficients
+> already applies the chain rule, and the loop was overwriting a correct answer with a
+> wrong one. Building the result through `Qube.from_scalars(..., classes=[Polynomial])`
+> keeps the derivatives in class `Polynomial`, which the discarded loop had been the only
+> thing supplying. The existing test asserted only that a `d_dt` existed and was a
+> `Polynomial`, never a value, which is why this shipped; five tests now cover the values,
+> a finite-difference check, multiple derivatives, the non-recursive branch, and the
+> zero-slope masking the fix inherits for free.
+>
+> Tracing why the discarded loop was load-bearing exposed a defect the review had not
+> found, in `Polynomial.__init__`. Its derivative conversion was guarded by
+> `if type(self) is not Polynomial`, so the common case — `Polynomial(some_vector)` —
+> skipped it and left the derivatives as `Vector`s, while only the subclass path
+> converted. That path was itself half-done: it rebuilt `_derivs` but not the `d_dt`
+> attribute copied from the original object, so the dictionary and the attribute
+> disagreed about the derivative's class. The guard now tests the derivative rather than
+> the object, and sets both.
+
 `grep` finds nine `TODO`/`XXX` markers in `src/`. Three of them record open *correctness*
 questions in shipped code, which is different from a style note:
 
@@ -833,11 +856,13 @@ axis-manipulation code is fresh, not as a drive-by.
    §3 items — decide `__ipow__`'s fate, add the `__floordiv__` fast path or delete its
    orphaned helper, and remove `Matrix.solve`'s commented-out body.
 
-4. **Resolve the correctness `XXX`s**, starting with `Polynomial.invert_line` (§4). An
+4. **Resolve the correctness `XXX`s**, ~~starting with `Polynomial.invert_line` (§4)~~. An
    unanswered "this math may be wrong" note in a released numerical library is a liability
-   regardless of whether it turns out to be right.
+   regardless of whether it turns out to be right — this one was right, and it took a
+   second defect in `Polynomial.__init__` down with it. The `quaternion.py` and `unit.py`
+   markers remain.
 
 5. ~~**Then consider the structural performance work** — the fast internal constructor
    (§5.3) and the `einsum` conversion in `dot` (§5.5).~~ Done 2026-08-09; see the status
-   notes in §5. What remains open is §4 — the unresolved TODO and XXX markers, most of all
-   the derivative propagation in `Polynomial.invert_line()`.
+   notes in §5. What remains open is the rest of §4 — the `quaternion.py` divide-by-zero
+   question and the two `unit.py` naming markers.
