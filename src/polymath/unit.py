@@ -61,8 +61,6 @@ class Unit:
         self.exponents = tuple(exponents)
 
         # Convert to coefficients to ints with lowest common denominator if possible
-        (numer, denom) = triple[:2]
-
         # Scale by 256 to compensate for possible floats that can be represented exactly
         numer = int(triple[0] * 256)
         denom = int(triple[1] * 256)

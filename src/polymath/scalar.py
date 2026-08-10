@@ -886,14 +886,12 @@ class Scalar(Qube):
             max_values = np.max(new_values, axis=axis)
 
             # Deal with completely masked items. Here, use the max of the
-            # unmasked values.
+            # unmasked values. This object is only partially masked, so a reduction over
+            # every axis cannot be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_values = np.max(self._values, axis=axis)
-                if np.shape(mask):
-                    max_values[mask] = alt_values[mask]
-                else:
-                    max_values = alt_values
+                max_values[mask] = alt_values[mask]
             else:
                 mask = False
 
@@ -958,15 +956,12 @@ class Scalar(Qube):
             min_values = np.min(new_values, axis=axis)
 
             # Deal with completely masked items. Here, use the min of the
-            # unmasked values.
+            # unmasked values. This object is only partially masked, so a reduction over
+            # every axis cannot be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_values = np.min(self._values, axis=axis)
-                if np.shape(mask):
-                    min_values[mask] = alt_values[mask]
-                else:
-                    min_values = alt_values
-                    mask = True
+                min_values[mask] = alt_values[mask]
             else:
                 mask = False
 
@@ -1036,15 +1031,12 @@ class Scalar(Qube):
             argmax = np.argmax(new_values, axis=axis)
 
             # Deal with completely masked items. Here, use the argmax of the unmasked
-            # values.
+            # values. This object is only partially masked, so a reduction over every
+            # axis cannot be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_argmax = np.argmax(self._values, axis=axis)
-                if np.shape(mask):
-                    argmax[mask] = alt_argmax[mask]
-                else:
-                    argmax = alt_argmax
-                    mask = True
+                argmax[mask] = alt_argmax[mask]
             else:
                 mask = False
 
@@ -1112,15 +1104,12 @@ class Scalar(Qube):
             argmin = np.argmin(new_values, axis=axis)
 
             # Deal with completely masked items. Here, use the argmin of the unmasked
-            # values.
+            # values. This object is only partially masked, so a reduction over every
+            # axis cannot be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_argmin = np.argmin(self._values, axis=axis)
-                if np.shape(mask):
-                    argmin[mask] = alt_argmin[mask]
-                else:
-                    argmin = alt_argmin
-                    mask = True
+                argmin[mask] = alt_argmin[mask]
             else:
                 mask = False
 

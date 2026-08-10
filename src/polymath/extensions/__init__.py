@@ -75,6 +75,7 @@ Qube.__imod__           = math_ops.__imod__
 Qube._mod_by_number     = math_ops._mod_by_number
 Qube._mod_by_scalar     = math_ops._mod_by_scalar
 Qube.__pow__            = math_ops.__pow__
+Qube.__ipow__           = math_ops.__ipow__
 Qube._compatible_arg    = math_ops._compatible_arg
 Qube.__eq__             = math_ops.__eq__
 Qube.__ne__             = math_ops.__ne__

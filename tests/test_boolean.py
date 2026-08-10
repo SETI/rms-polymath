@@ -1256,4 +1256,12 @@ def test_boolean_power_of_a_shapeless_boolean() -> None:
     assert (Boolean(False) ** -1).mask is True
 
 
+def test_boolean_in_place_power_is_not_supported() -> None:
+    """In-place exponentiation is rejected, as are the other in-place operators."""
+
+    a = Boolean([True, False])
+    with pytest.raises(TypeError, match='operation is not supported'):
+        a **= 2
+
+
 ##########################################################################################

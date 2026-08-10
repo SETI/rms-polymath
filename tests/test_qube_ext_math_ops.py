@@ -6,7 +6,7 @@
 import numpy as np
 import pytest
 
-from polymath import Scalar, Vector, Boolean
+from polymath import Scalar, Vector, Boolean, Unit
 
 
 def test_qube_ext_math_ops_test_pos_self_element_by_element() -> None:
@@ -700,3 +700,82 @@ def test_qube_ext_math_ops_test_mean_with_axis() -> None:
     assert b.shape == (3, 2)
 
 
+
+def test_qube_floordiv_by_a_number_matches_division_by_a_scalar() -> None:
+    """The fast path for a plain number agrees with the general Scalar path."""
+
+    a = Scalar([7.5, -3.5, 0.5])
+    assert a // 2 == a // Scalar(2)
+    assert list((a // 2).values) == [3., -2., 0.]
+
+
+def test_qube_floordiv_by_zero_masks_everything() -> None:
+    """Floor division by zero masks the result rather than raising."""
+
+    result = Scalar([7.5, -3.5]) // 0
+    assert result.mask is True
+
+
+def test_qube_floordiv_by_a_number_keeps_the_unit() -> None:
+    """Floor division by a plain number leaves the unit unchanged."""
+
+    a = Scalar([7.5, -3.5], unit=Unit.KM)
+    assert str((a // 2).unit_) == 'km'
+
+
+def test_qube_floordiv_by_a_number_drops_derivatives() -> None:
+    """Floor division ignores derivatives, as documented."""
+
+    a = Scalar([7.5, -3.5])
+    a.insert_deriv('t', Scalar([1., 1.]))
+    assert list((a // 2).derivs.keys()) == []
+
+
+def test_qube_ipow_raises_this_object_in_place() -> None:
+    """In-place exponentiation modifies this object and keeps the result's derivs."""
+
+    a = Scalar([1., 2., 3.])
+    a.insert_deriv('t', Scalar([1., 1., 1.]))
+    before = a
+
+    a **= 3
+    assert a is before
+    assert list(a.values) == [1., 8., 27.]
+    assert list(a.derivs['t'].values) == [3., 12., 27.]
+
+
+def test_qube_ipow_updates_the_unit() -> None:
+    """In-place exponentiation replaces the unit with that of the result."""
+
+    a = Scalar(2., unit=Unit.KM)
+    a **= 2
+    assert str(a.unit_) == 'km**2'
+    assert a.values == 4.
+
+
+def test_qube_ipow_of_an_exponent_of_one_keeps_the_derivatives() -> None:
+    """An exponent of one leaves this object, including its derivatives, unchanged."""
+
+    a = Scalar([1., 2.])
+    a.insert_deriv('t', Scalar([5., 6.]))
+    a **= 1
+    assert list(a.values) == [1., 2.]
+    assert list(a.derivs['t'].values) == [5., 6.]
+
+
+def test_qube_ipow_rejects_a_non_integer_result_for_an_integer_object() -> None:
+    """In-place exponentiation refuses a non-integer result for an integer object."""
+
+    a = Scalar([2, 3])
+    with pytest.raises(TypeError, match='non-integer result'):
+        a **= -1
+
+    assert list(a.values) == [2, 3]     # unchanged by the failed operation
+
+
+def test_qube_ipow_rejects_a_read_only_object() -> None:
+    """In-place exponentiation refuses to modify a read-only object."""
+
+    a = Scalar([1., 2.]).as_readonly()
+    with pytest.raises(ValueError, match='read-only'):
+        a **= 2

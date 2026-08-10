@@ -383,6 +383,13 @@ These were not reproduced end-to-end but look wrong on reading.
 
 ## 3. Dead and unreachable code
 
+> **Status: all of §3 was resolved on 2026-08-09.** `__ipow__` is bound and its unit bug
+> fixed; `__floordiv__` gained the fast path that reaches `_floordiv_by_number`;
+> `cross_product_as_matrix()` now supports denominators, which turned out to be a live
+> bug rather than dead code; `Matrix.solve()` was implemented and tested rather than
+> restored as written; and the unreachable branches in `Scalar.max`/`min`/`argmax`/`argmin`
+> and the dead assignment in `Unit.__init__` are gone.
+
 - **`math_ops.__ipow__` is never bound to `Qube`.** It is defined at `math_ops.py:1216`
   but absent from `extensions/__init__.py`, so `x **= 2` falls back to Python's default
   `x = x ** 2` rebinding rather than the in-place semantics every other augmented operator

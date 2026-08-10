@@ -809,6 +809,10 @@ def __floordiv__(self, /, arg):
         Qube: The result of the floor division.
     """
 
+    # Handle floor division by a number
+    if Qube._is_one_value(arg):
+        return self._floordiv_by_number(arg)
+
     # Convert arg to a Scalar if necessary
     original_arg = arg
     if not isinstance(arg, Qube):
@@ -1214,20 +1218,38 @@ def __pow__(self, /, arg):
 
 
 def __ipow__(self, /, arg):
-    """self **= arg, element-by-element in-place power.
+    """``self **= arg``, element-by-element in-place exponentiation.
+
+    The unit of the result is that of the exponentiation, so it generally differs from the
+    unit of this object beforehand.
 
     Parameters:
         arg (Qube, array-like, float, int, or bool): The exponent.
 
     Returns:
-        Qube: self after the modulus operation.
+        Qube: self after the exponentiation.
+
+    Raises:
+        ValueError: If this object is read-only.
+        TypeError: If this object holds integers but the result does not.
     """
 
     self.require_writeable()
 
-    result = self ** arg
+    result = self ** arg                # if this raises an exception, stop
+    if self.is_int() and not result.is_int():
+        raise TypeError(f'integer {type(self)} "**=" operation returns non-integer '
+                        'result')
+
+    # Capture the derivatives before modifying this object, because "**" returns this
+    # same object when the exponent is 1
+    new_derivs = dict(result._derivs)
+
     self._set_values(result._values, result._mask)
-    self.set_unit(self, result._unit)
+    self._unit = result._unit
+    self.delete_derivs()
+    self.insert_derivs(new_derivs)
+
     return self
 
 ##########################################################################################

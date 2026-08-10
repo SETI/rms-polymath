@@ -455,6 +455,21 @@ class Boolean(Scalar):
         invalid = (self._values == 0) & (arg._values < 0)
         return Scalar(vals, Qube.or_(self._mask, arg._mask, invalid))
 
+    def __ipow__(self, /, arg):
+        """``self **= arg``; in-place exponentiation is not supported for Boolean.
+
+        This is an override of :meth:`Qube.__ipow__`. Exponentiation returns a Scalar, so
+        the result cannot be stored back into a Boolean.
+
+        Parameters:
+            arg (Qube, np.ndarray, float, int, or bool): The exponent.
+
+        Raises:
+            ValueError: Always; in-place exponentiation is not supported for Boolean.
+        """
+
+        Qube._raise_unsupported_op('**=', self)
+
     ######################################################################################
     # Logical operators
     ######################################################################################
