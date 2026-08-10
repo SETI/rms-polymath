@@ -18,7 +18,10 @@ def test_vector_with_norm() -> None:
         u = x.with_norm(norm=norm)
 
         assert np.sum(u.values**2) == norm**2 or abs(np.sum(u.values**2) - norm**2) <= 1.e-15
-        assert x.dot(u) == x.norm() * norm or abs(x.dot(u) - x.norm() * norm) <= 1.e-15
+        # The tolerance is relative: this product is of order ten, and the
+        # summation order inside dot() is not the one used to build the operands
+        assert x.dot(u) == x.norm() * norm or (
+            abs(x.dot(u) - x.norm() * norm) <= 1.e-15 * abs(x.norm() * norm))
 
         x = Vector((1.,2.,4.,8.), mask=True)
         u = x.with_norm(norm=norm)

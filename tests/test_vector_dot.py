@@ -18,7 +18,9 @@ def test_vector_dot_test_units() -> None:
         a.dot(b)
     a = Vector(np.random.randn(10,5))
     b = Vector(np.random.randn(3,10,5))
-    assert a.dot(b) == np.sum(a.values * b.values, axis=-1)
+    # dot() contracts with einsum, which sums in a different order than
+    # np.sum(a * b), so the two agree only to within rounding
+    assert a.dot(b).values == pytest.approx(np.sum(a.values * b.values, axis=-1))
 
     omega = Vector(np.random.randn(3), unit=Unit.KM)
     omega_as_matrix = omega.cross_product_as_matrix()
@@ -39,7 +41,9 @@ def test_vector_dot_derivatives() -> None:
         a.dot(b)
     a = Vector(np.random.randn(10,5))
     b = Vector(np.random.randn(3,10,5))
-    assert a.dot(b) == np.sum(a.values * b.values, axis=-1)
+    # dot() contracts with einsum, which sums in a different order than
+    # np.sum(a * b), so the two agree only to within rounding
+    assert a.dot(b).values == pytest.approx(np.sum(a.values * b.values, axis=-1))
 
     N = 100
     x = Vector(np.random.randn(N,3))
@@ -120,7 +124,9 @@ def test_vector_dot_read_only_status_should_not_be_preserved() -> None:
         a.dot(b)
     a = Vector(np.random.randn(10,5))
     b = Vector(np.random.randn(3,10,5))
-    assert a.dot(b) == np.sum(a.values * b.values, axis=-1)
+    # dot() contracts with einsum, which sums in a different order than
+    # np.sum(a * b), so the two agree only to within rounding
+    assert a.dot(b).values == pytest.approx(np.sum(a.values * b.values, axis=-1))
 
     N = 10
     y = Vector(np.random.randn(N,7))

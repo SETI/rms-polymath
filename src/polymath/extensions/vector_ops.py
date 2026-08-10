@@ -250,15 +250,13 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
     k2 += arg1._nrank - 1
 
     # Roll both array axes to the right
-    array1 = np.rollaxis(array1, k1, array1.ndim)
-    array2 = np.rollaxis(array2, k2, array2.ndim)
+    array1 = np.moveaxis(array1, k1, -1)
+    array2 = np.moveaxis(array2, k2, -1)
 
-    # Make arrays contiguous so sum will run faster
-    array1 = np.ascontiguousarray(array1)
-    array2 = np.ascontiguousarray(array2)
-
-    # Construct the dot product
-    new_values = np.sum(array1 * array2, axis=-1)
+    # Construct the dot product. einsum contracts the last axis without materializing the
+    # elementwise product, which matters for the large arrays this is used on. It also
+    # reads strided input directly, so the operands need not be made contiguous first.
+    new_values = np.einsum('...i,...i->...', array1, array2)
 
     # Construct the object and cast
     new_nrank = arg1._nrank + arg2._nrank - 2
