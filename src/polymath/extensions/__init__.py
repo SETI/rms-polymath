@@ -112,6 +112,13 @@ Qube._raise_incompatible_numers = math_ops._raise_incompatible_numers
 Qube._raise_incompatible_denoms = math_ops._raise_incompatible_denoms
 Qube._raise_dual_denoms         = math_ops._raise_dual_denoms
 
+# Defining __eq__ inside a class body makes Python set __hash__ to None. These operators
+# are bound after the class is created, so that never happened, leaving Qube with the
+# default hash by identity even though it compares by value. Two equal objects then hashed
+# differently, so a Qube used as a dictionary key could not be looked up again. Qube is
+# also mutable, which rules out hashing by value. Say so explicitly.
+Qube.__hash__ = None
+
 from polymath.extensions import mask_ops
 Qube.mask_where         = mask_ops.mask_where
 Qube.mask_where_eq      = mask_ops.mask_where_eq

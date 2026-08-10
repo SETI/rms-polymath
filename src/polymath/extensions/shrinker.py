@@ -115,14 +115,22 @@ def unshrink(self, antimask, shape=()):
 
     Parameters:
         antimask (array-like): The antimask to apply.
-        shape (tuple, optional): In cases where the antimask is a literal False, this
-            defines the shape of the returned object. When antimask is False, the result
-            will be entirely masked with default values (not the original values).
-            Normally, the rightmost axes of the returned object match those of the
-            antimask.
+        shape (tuple, optional): The shape of the returned object in the cases where it
+            cannot be reconstructed, described below. The result is then entirely masked,
+            holding default values rather than the original ones. Normally, the rightmost
+            axes of the returned object match those of the antimask.
 
     Returns:
         Qube: The un-shrunken object, which will be read-only.
+
+    Notes:
+        The original shape cannot always be recovered. An object that was entirely masked,
+        or an antimask that is a single False, shrinks to one value, which leaves nothing
+        to say what the leading axes were; and this method is often reached through a
+        chain of calculations rather than directly from :meth:`~Qube.shrink`, so the
+        original is not necessarily still to hand. In those cases the result is shapeless
+        unless `shape` says otherwise. Supply `shape` whenever the un-shrunken shape
+        matters to the caller.
     """
 
     # For testing only...
@@ -143,7 +151,10 @@ def unshrink(self, antimask, shape=()):
     if Qube.is_one_true(antimask):
         return self
 
-    # If the new object is entirely masked, return a shapeless masked object
+    # If the new object is entirely masked, return a shapeless masked object. Its leading
+    # axes cannot be reconstructed: a fully masked object is shrunk to a single value, so
+    # the antimask describes only the axes it collapsed, and nothing about those ahead of
+    # them. Pass `shape` to say what they were.
     if not np.any(antimask) or np.all(self._mask):
         return self.masked_single().broadcast_to(shape)
 

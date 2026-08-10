@@ -183,6 +183,7 @@ class Qube:
         """
 
         opstr = Qube._opstr(self, op)
+        nrank_given = nrank is not None
 
         # Set defaults based on a Qube input
         if isinstance(arg, Qube):
@@ -229,9 +230,15 @@ class Qube:
             if default is None:
                 default = example._default
 
-        # Validate inputs
-        nrank = nrank or self._NRANK or 0
-        drank = drank or 0
+        # Validate inputs. An explicitly given numerator rank is honored as it stands,
+        # including an explicit zero, and is checked against the subclass below. A rank
+        # inherited from `arg` or `example` is only a starting point: the subclass default
+        # outranks an inherited zero, which is what lets Matrix(scalar) reinterpret the
+        # trailing axes of a rank-0 object as its items.
+        if not nrank_given:
+            nrank = nrank or self._NRANK or 0
+        if drank is None:
+            drank = 0
         rank = nrank + drank
 
         if derivs and not self._DERIVS_OK:
@@ -240,7 +247,7 @@ class Qube:
         if unit and not self._UNITS_OK:
             raise TypeError(f'{opstr} unit is disallowed: {unit}')
 
-        if self._NRANK is not None and nrank is not None and nrank != self._NRANK:
+        if self._NRANK is not None and nrank != self._NRANK:
             raise ValueError(f'invalid {opstr} numerator rank: {nrank}')
 
         if drank and not self._DERIVS_OK:
@@ -1487,7 +1494,8 @@ class Qube:
             return self._cache['antimask']
 
         if isinstance(self._mask, np.ndarray):
-            antimask = np.logical_not(self._mask)
+            # Read-only, because every caller receives this same array
+            antimask = Qube._array_to_readonly(np.logical_not(self._mask))
             self._cache['antimask'] = antimask
             return antimask
 
@@ -2273,7 +2281,9 @@ class Qube:
 
         # Update anything cached
         if not Qube._DISABLE_CACHE:
-            for key, value in self._cache.items():
+            # Snapshot: the loop replaces entries, and a cached object can reach back into
+            # this same dictionary
+            for key, value in list(self._cache.items()):
                 if isinstance(value, Qube):
                     self._cache[key] = value.as_readonly(recursive=recursive)
 

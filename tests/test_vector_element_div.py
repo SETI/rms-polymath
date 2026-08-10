@@ -261,4 +261,16 @@ def test_vector_element_div_vector_with_derivs_vector_without_derivs() -> None:
     assert type(ratio) is Vector3
 
 
+def test_vector_element_div_derivative_unit_is_the_inverse_square() -> None:
+    """The derivative of a quotient carries the divisor's unit to the inverse square."""
+
+    a = Vector(np.ones(3), unit=Unit.KM)
+    b = Vector(np.full(3, 2.), unit=Unit.S)
+    b.insert_deriv('t', Vector(np.ones(3)))
+
+    result = a.element_div(b)
+    assert str(result.unit_) == 'km/s'
+    assert str(result.derivs['t'].unit_) == 'km/s**2'
+
+
 ##########################################################################################

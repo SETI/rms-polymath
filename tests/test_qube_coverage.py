@@ -1583,3 +1583,42 @@ def test_qube_and_with_three_or_more_masks() -> None:
     assert Qube.and_(a, b, False) is False
     assert Qube.and_(True, True, True) is True
     assert list(Qube.and_(a, a, a)) == [True, True, False]
+
+
+def test_qube_an_explicit_numerator_rank_of_zero_is_honored() -> None:
+    """nrank=0 asks for scalar items, which a Vector cannot have."""
+
+    with pytest.raises(ValueError, match='numerator rank: 0'):
+        Vector(np.ones(3), nrank=0)
+
+
+def test_qube_an_inherited_numerator_rank_of_zero_defers_to_the_subclass() -> None:
+    """A rank-0 object reinterpreted as a Matrix takes the Matrix item shape."""
+
+    from polymath import Matrix
+    assert Matrix(Scalar(np.eye(3))).numer == (3, 3)
+    assert Vector(np.ones(3)).numer == (3,)
+
+
+def test_qube_is_not_hashable() -> None:
+    """Qube compares by value and is mutable, so it cannot be a dictionary key."""
+
+    with pytest.raises(TypeError, match='unhashable'):
+        hash(Scalar(1))
+
+    with pytest.raises(TypeError, match='unhashable'):
+        {Scalar(1): 'value'}
+
+
+def test_qube_cached_antimask_is_read_only() -> None:
+    """Every caller receives the same cached antimask, so it must not be writable."""
+
+    a = Scalar(np.arange(4.), mask=[0, 1, 0, 1])
+    antimask = a.antimask
+
+    assert not antimask.flags['WRITEABLE']
+    assert a.antimask is antimask
+
+    with pytest.raises(ValueError, match='read-only'):
+        antimask[0] = False
+

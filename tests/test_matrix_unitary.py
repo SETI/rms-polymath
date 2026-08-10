@@ -39,4 +39,15 @@ def test_matrix_unitary_matrices_30_perturbed_from_unitary() -> None:
     assert (b.count_masked() <= 30)
 
 
+def test_matrix_unitary_accepts_a_numpy_false_mask() -> None:
+    """A mask of np.False_ is recognized as unmasked, as a Python False is."""
+
+    m = Matrix3(np.eye(3))
+    m._mask = np.False_
+
+    result = m.unitary()
+    assert type(result) is Matrix3
+    assert not np.any(result.mask)
+
+
 ##########################################################################################

@@ -784,7 +784,7 @@ class Vector(Qube):
             if arg._derivs:
                 arg_inv_sq = Qube.__new__(type(self))
                 arg_inv_sq.__init__(divisor**(-2), divisor_mask,
-                                    unit=Unit.unit_power(arg._unit, -1))
+                                    unit=Unit.unit_power(arg._unit, -2))
                 factor = self.wod.element_mul(arg_inv_sq)
 
                 for key, arg_deriv in arg._derivs.items():
@@ -1038,7 +1038,7 @@ class Vector(Qube):
             elif vector._shape:
                 compt._values[clipping_mask] = upper._values
             elif clipping_mask:
-                vector._values[axis] = upper
+                vector._values[axis] = upper._values
 
             if remask:
                 mask = Qube.or_(mask, clipping_mask)

@@ -437,7 +437,7 @@ class Matrix(Qube):
         new_mask = (rms._values > Matrix._DELTA)
         if not np.any(new_mask):
             new_mask = self._mask
-        elif self._mask is not False:
+        elif not Qube.is_one_false(self._mask):
             new_mask |= self._mask
 
         return Qube._MATRIX3_CLASS(next_m._values, new_mask)
