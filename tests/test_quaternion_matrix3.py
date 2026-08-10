@@ -4,7 +4,32 @@
 
 import numpy as np
 
-from polymath import Quaternion, Matrix
+import pytest
+
+from polymath import Quaternion, Matrix, Matrix3
+
+
+def test_quaternion_matrix3_from_identity() -> None:
+    """The identity matrix converts to the identity quaternion."""
+
+    q = Quaternion.from_matrix3(Matrix3.IDENTITY)
+    assert q.values[0] == 1.
+    assert q.values[1] == 0.
+    assert q.values[2] == 0.
+    assert q.values[3] == 0.
+    assert not q.mask
+
+
+@pytest.mark.parametrize('angle', [1.e-2, 1.e-4, 1.e-6, 1.e-8, 0.])
+def test_quaternion_matrix3_from_near_identity(angle: float) -> None:
+    """Rotations near the identity convert without loss of precision."""
+
+    mat = Matrix3.from_euler(angle, 0., 0., 'rzxz')
+    q = Quaternion.from_matrix3(mat)
+
+    assert q.values[0] == pytest.approx(np.cos(0.5 * angle), abs=1.e-15)
+    assert q.values[3] == pytest.approx(np.sin(0.5 * angle), abs=1.e-15)
+    assert np.abs(q.to_matrix3().values - mat.values).max() <= 1.e-15
 
 
 def test_quaternion_matrix3_one_quaternion() -> None:

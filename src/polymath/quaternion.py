@@ -487,12 +487,21 @@ class Quaternion(Vector):
         #
         # Handle the same when Qyy and Qzz are the largest
         #
-        # Minor rewrite...
+        # Alternatively, when the trace is the largest of the four candidates,
+        # r = sqrt(1 + t)
+        # s = 0.5 / r
+        # w = 0.5*r
+        # x = (Qzy - Qyz)*s
+        # y = (Qxz - Qzx)*s
+        # z = (Qyx - Qxy)*s
+        #
+        # Minor rewrite, where "max" is the largest of the trace and the three diagonal
+        # elements...
         # trace = Qxx + Qyy + Qzz
-        # r_sq = 1 + Qxx - Qyy - Qzz = 1 + 2*Qxx - trace
+        # r_sq = 1 + 2*max - trace
         # r = sqrt(r_sq)
         # s = 0.5 / r
-        # w_over_s = Qzy - Qyz
+        # w_over_s = Qzy - Qyz    (or r_sq when the trace is the largest)
         # x_over_s = 0.5*r / s = 0.5*r / (0.5/r) = r_sq
         # y_over_s = Qxy + Qyx
         # z_over_s = Qzx + Qxz
@@ -507,30 +516,23 @@ class Quaternion(Vector):
         # Calculate the trace
         trace = np.sum(diags, axis=-1)
 
-        # Designate i as the index of the largest entry on the diagonal
+        # Designate the branch as the largest of the trace and the three diagonal
+        # elements. Including the trace among the candidates is what keeps the result
+        # accurate for rotations near the identity, where every diagonal element
+        # approaches one and r_sq would otherwise approach zero. The four candidates sum
+        # to twice the trace, so the largest is at least half the trace and therefore
+        # r_sq >= 1 for any 3x3 matrix; r can never be zero.
+        candidates = np.empty(Q.shape[:-2] + (4,))
+        candidates[..., :3] = diags
+        candidates[..., 3]  = trace
+
+        # Designate i as the index of the largest diagonal entry, or 3 for the trace
         # j and k follow in sequence
-        argmax = np.argmax(diags, axis=-1)
-        max_diags = np.max(diags, axis=-1)
+        argmax = np.argmax(candidates, axis=-1)
 
-        r_sq = 1 + 2*max_diags - trace      # valid regardless of which is max
+        r_sq = 1 + 2*np.max(candidates, axis=-1) - trace
 
-        r = np.sqrt(r_sq)
-
-        zero_mask = (r == 0.)
-        if np.any(zero_mask):
-            if np.shape(zero_mask) == ():  # pragma: no cover
-                # The np.newaxis at line 499 adds a dimension, so even for a scalar
-                # Matrix3, Q has shape (1, 3, 3), making r shape (1,) and zero_mask
-                # shape (1,), not (). As a result, np.shape(zero_mask) == () is False,
-                # so this line can't be hit.
-                s = 0.
-            else:
-                r_nozeros = r.copy()
-                r_nozeros[zero_mask] = 1.
-                s = 0.5 / r_nozeros
-        else:
-            r_nozeros = r
-            s = 0.5 / r
+        s = 0.5 / np.sqrt(r_sq)
 
         quat_over_s = np.empty(Q.shape[:-2] + (4,))
         for i in range(3):
@@ -543,6 +545,14 @@ class Quaternion(Vector):
             quat_over_s[mask, i + 1] = r_sq[mask]
             quat_over_s[mask, j + 1] = Q[mask, i, j] + Q[mask, j, i]
             quat_over_s[mask, k + 1] = Q[mask, i, k] + Q[mask, k, i]
+
+        mask = (argmax == 3)                # the trace is the largest candidate
+        quat_over_s[mask, 0] = r_sq[mask]
+        for i in range(3):
+            j = (i+1) % 3
+            k = (i+2) % 3
+
+            quat_over_s[mask, i + 1] = Q[mask, k, j] - Q[mask, j, k]
 
         obj = Quaternion((quat_over_s * s[..., np.newaxis])[0], matrix._mask)
 

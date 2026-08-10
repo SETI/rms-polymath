@@ -325,7 +325,6 @@ def test_quaternion_simple_1_d_case() -> None:
     q = Quaternion.from_matrix3(m)
     assert type(q) == Quaternion
     assert q.shape == ()
-    q = q.unit()  # ensure normalized to avoid zero norm issues
 
     m2 = q.to_matrix3()
     diff = Matrix(m) - Matrix(m2)
