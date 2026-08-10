@@ -454,24 +454,40 @@ mid-sentence.
 
 ## 5. Performance
 
-> **Status: §5.1 and §5.2's `np.prod` item were fixed on 2026-08-09.** Indexing is now
-> flat in the axis length (33,000 µs to 32 µs for the million-element case) and
-> construction-bound arithmetic is about 2x faster. The measurements in the table below
-> are the *pre-fix* baseline, kept as the record of what was wrong; see the "after"
-> column. The `numbers` ABC item in §5.2, and all of §5.3 through §5.6, are still open.
+> **Status: all of §5 was worked through on 2026-08-09.** Most items were applied; three
+> were rejected after measurement, and are marked below. Two things are worth carrying
+> forward:
+>
+> * **§5.5's einsum change to `Qube.dot` alters results in the last bits** (bounded at
+>   1.8e-15 absolute). It is the only change in §5 that is not bit-for-bit identical. It
+>   is isolated in its own commit so it can be dropped alone if downstream baselines
+>   depend on the previous summation order.
+> * **Three recommendations in this section were wrong**, and measurement is the only
+>   reason that surfaced: `np.broadcast_shapes` for `broadcasted_shape` (§5.5),
+>   `np.argwhere` for `_find_corners` (§5.4), and einsum for `as_diagonal` (§5.5). Each
+>   is slower than what it would have replaced, at the sizes this library actually uses.
+>   They are left as they were, with the measurements recorded in place.
 
 Measured on this machine (Python 3.12, NumPy 2.5.2, arrays of 1000 elements unless noted):
 
 | Operation | polymath | raw NumPy | ratio |
 |---|---|---|---|
-| Operation | before | after §5.1/§5.2 | raw NumPy |
+Operations are on 1000-element objects unless noted; each figure is the best of five
+runs. "original" is before any of §5 was applied, "final" is after all of it.
+
+| Operation | original | final | raw NumPy |
 |---|---|---|---|
-| `Scalar + Scalar` | 22.6 µs | 10.4 µs | 0.65 µs |
-| `Scalar() + float` (shapeless) | 10.1 µs | 9.9 µs | — |
-| `Scalar(ndarray)` construction | 18.9 µs | 7.0 µs | — |
-| `Vector3.cross` | 57.3 µs | 34.1 µs | 22.2 µs |
-| `Vector3.norm` | 57.9 µs | 33.7 µs | — |
-| `v + w` (Vector3) | 22.2 µs | 11.0 µs | — |
+| `Scalar + Scalar` | 22.6 µs | 3.9 µs | 0.65 µs |
+| `Scalar * Scalar` | 22.7 µs | 4.3 µs | — |
+| `Scalar(ndarray)` construction | 18.9 µs | 5.8 µs | — |
+| `v + w` (Vector3) | 22.2 µs | 4.2 µs | — |
+| `Vector3.dot` | 62.5 µs | 24.2 µs | — |
+| `Vector3.norm` | 57.9 µs | 26.6 µs | — |
+| `Vector3.cross` | 57.3 µs | 34.6 µs | 22.2 µs |
+| `Matrix * Matrix` (200) | 75.1 µs | 46.0 µs | — |
+| `Scalar.maximum` of three | 183.1 µs | 18.7 µs | — |
+| `Scalar.max`, 200x200, 30% masked | 100.1 µs | 41.5 µs | — |
+| `str(Unit)` with no name | 19.6 µs | 3.0 µs | — |
 | Index 100 elements of a 10³ Scalar | 81 µs | 33 µs | 0.3 µs |
 | Index 100 elements of a 10⁵ Scalar | 3,093 µs | 32 µs | 0.3 µs |
 | Index 100 elements of a 10⁶ Scalar | 34,418 µs | 32 µs | 0.3 µs |
@@ -482,6 +498,8 @@ rather than the number of indices. It is now flat for an unmasked index, and lin
 rather than in Python objects when the index is masked.
 
 ### 5.1 `_prep_index` is O(axis length) on every array index — **highest-value fix**
+
+> **Done.** Indexing is flat in the axis length: 34,418 µs to 32 µs at 1e6 elements.
 
 `src/polymath/extensions/indexer.py:429-444`
 
@@ -534,6 +552,9 @@ when all indices are already in range. Guard it with a cheap
 
 ### 5.2 `Qube.__init__` dominates arithmetic, and a third of it is `np.prod`
 
+> **Done,** both items. `math.prod` removed about 11 µs per construction; the ABC
+> substitution keeps the `numbers` fallback so `fractions.Fraction` still works.
+
 `cProfile` over 20,000 `Scalar + Scalar` operations:
 
 ```text
@@ -565,6 +586,9 @@ Two cheap, local wins:
 
 ### 5.3 A fast internal constructor would pay for itself
 
+> **Done.** `Qube._new_from_parts()` plus ten converted call sites. `Scalar + Scalar`
+> went from 10.6 µs to 3.9 µs. 1069 result states are byte-identical to before.
+
 Beyond the two micro-fixes, the structural issue is that every internal result goes through
 the full public constructor. `Qube.__init__` re-derives everything the caller already knows:
 `_as_values_and_mask` re-inspects the values, `_suitable_value` calls `_dtype_and_value`
@@ -579,6 +603,13 @@ the remaining 85%. `clone()` already demonstrates the pattern; this is the same 
 to results rather than copies. Keep the validating `__init__` as the public entry point.
 
 ### 5.4 Redundant passes over masks and values
+
+> **Partly done.** The copy-and-assign to `np.where` substitution was applied to
+> `_mean_or_sum` and to `Scalar.max`/`min`/`argmax`/`argmin`; masked `max()` went from
+> 100 µs to 42 µs. The `_find_corners` and `__str__` items were **rejected**: on a
+> 200x200 array `np.argwhere` is 15x *slower* than the per-axis reduction, because it
+> allocates a coordinate pair for every unmasked element, and the `__str__` temporary
+> is now a single cheap object on a path that is not hot.
 
 Several methods walk the mask two or three times where once would do:
 
@@ -596,6 +627,14 @@ Several methods walk the mask two or three times where once would do:
   is also used inside error paths.
 
 ### 5.5 Array-op level opportunities
+
+> **Mostly done.** `Qube.dot` (einsum, 1.7x, see the note above), `Matrix.identity`
+> (`np.eye`), `_cross_3x3` (dtype preserved), `Qube.or_`/`and_` (single pass),
+> `Unit.create_name` (memoized, 6.6x) and `Scalar.maximum`/`minimum` (`np.where`, 9x)
+> were all applied. **Rejected:** `np.broadcast_shapes` is about twice as slow as the
+> Python loop for two short shapes, which is how `broadcasted_shape` is always called;
+> and einsum only overtakes the `as_diagonal` loop past about five components, which
+> the item shapes here rarely reach.
 
 - **`Qube.dot`** (`vector_ops.py:250`) computes `np.sum(array1 * array2, axis=-1)`, which
   materializes the full elementwise product before reducing. `np.einsum('...i,...i->...',
@@ -629,6 +668,10 @@ Several methods walk the mask two or three times where once would do:
   NumPy.
 
 ### 5.6 A note on legacy NumPy APIs
+
+> **Done.** 24 of the 26 call sites became `np.moveaxis`. The two in
+> `shaper.roll_axis` stayed: that method's own contract is `np.rollaxis`'s, so
+> `np.moveaxis` would need its destination adjusted whenever `start > axis`.
 
 `np.rollaxis` appears 34 times across nine modules. NumPy has recommended `moveaxis` since
 1.11; `rollaxis` is not deprecated but its argument convention (`start` semantics) is the
@@ -766,7 +809,6 @@ axis-manipulation code is fresh, not as a drive-by.
    unanswered "this math may be wrong" note in a released numerical library is a liability
    regardless of whether it turns out to be right.
 
-5. **Then consider the structural performance work** — the fast internal constructor
-   (§5.3) and the `einsum` conversion in `dot` (§5.5). These are larger and want a
-   benchmark harness committed alongside them, so that the next person can tell whether a
-   change helped.
+5. ~~**Then consider the structural performance work** — the fast internal constructor
+   (§5.3) and the `einsum` conversion in `dot` (§5.5).~~ Done 2026-08-09; see the status
+   notes in §5. What remains open is §2, §4, §6 and §7.
