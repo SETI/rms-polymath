@@ -42,6 +42,11 @@ required to run exactly that set. Run it after any change.
 - The package ships a PEP 561 `py.typed` marker, so public type information goes in `.pyi` stubs
   alongside the modules. A stub replaces its module entirely for type checkers: whatever the stub
   omits becomes invisible downstream, so a new stub must cover the module's whole public surface.
+  `stubtest` enforces exactly that and runs in the check script and in CI, so adding, renaming or
+  re-signing any public member means updating its stub in the same change. Most of `Qube`'s methods
+  are bound on at import time from `extensions/`, and they all have to appear in `qube.pyi`.
+  Signature shapes in the stubs are exact; types come from the docstrings where those state one
+  and are `Any` where they do not, which is deliberate rather than an omission to fill in blindly.
 - **Never run `mypy` on `src/`.** `[tool.mypy] strict = true` is configured but `src/` is
   deliberately unannotated, so it would produce meaningless errors. Run mypy on `tests/` only.
 - Run `ruff check src tests` after changes. Do not disable the `A` (builtins) or `N` (naming) rule

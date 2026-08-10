@@ -4,9 +4,8 @@
 """Type stub for the PolyMath package namespace.
 
 The `src` tree carries no inline annotations, so type information for public
-symbols is published through stub files instead. This stub covers only the
-package namespace; the classes it re-exports are still inferred from their
-implementation modules until per-module stubs are added for them.
+symbols is published through stub files instead. Each class is described
+by the stub alongside its own module.
 
 Each import uses the redundant `X as X` form, which is how a stub marks a name
 as re-exported rather than merely imported for internal use.
@@ -26,6 +25,18 @@ from polymath.vector3 import Vector3 as Vector3
 
 __version__: str
 
-__all__: list[str]
+__all__ = [
+    'Boolean',
+    'Matrix',
+    'Matrix3',
+    'Pair',
+    'Polynomial',
+    'Quaternion',
+    'Qube',
+    'Scalar',
+    'Unit',
+    'Vector',
+    'Vector3',
+]
 
 ##########################################################################################

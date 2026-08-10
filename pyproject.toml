@@ -115,11 +115,17 @@ disallow_subclassing_any = false
 module = "polymath._version"
 ignore_missing_imports = true
 
-# An overrides table with no "module" key makes mypy warn on every run, so keep
-# this one commented out in full until it is needed.
-# [[tool.mypy.overrides]]
-# module = ["polymath.*"]
-# ignore_missing_imports = true
+# The .pyi stubs alongside each module carry the published type information; the modules
+# themselves are deliberately unannotated, so mypy must not be turned loose on them. These
+# overrides keep it to the stubs, which is what `mypy.stubtest` needs in order to run.
+[[tool.mypy.overrides]]
+module = "polymath.extensions.*"
+follow_imports = "skip"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "fpzip"
+ignore_missing_imports = true
 
 [tool.ruff]
 target-version = "py311"

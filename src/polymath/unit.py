@@ -1227,8 +1227,10 @@ Unit._STANDARD_LIST = ([Unit.UNITLESS] +
                        Unit._ANGLE_LIST)
 
 # Fill in the dictionaries
-for unit in Unit._STANDARD_LIST:
-    Unit._NAME_TO_UNIT[unit.name] = unit
-    Unit._TUPLES_TO_UNIT[(unit.exponents, unit.triple)] = unit
+for _unit in Unit._STANDARD_LIST:
+    Unit._NAME_TO_UNIT[_unit.name] = _unit
+    Unit._TUPLES_TO_UNIT[(_unit.exponents, _unit.triple)] = _unit
+
+del _unit
 
 ##########################################################################################

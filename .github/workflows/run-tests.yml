@@ -39,6 +39,12 @@ jobs:
         run: |
           pyroma .
 
+      # The published .pyi stubs must keep describing the runtime API, which is assembled
+      # dynamically: most of Qube's methods are bound on at import time.
+      - name: Stubtest
+        run: |
+          python -m mypy.stubtest polymath --mypy-config-file pyproject.toml
+
       - name: Sphinx
         run: |
           sphinx-build -W -b html docs docs/_build

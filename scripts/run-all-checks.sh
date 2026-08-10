@@ -21,6 +21,7 @@
 #   --mypy                 Run mypy only
 #   --pytest               Run pytest only
 #   --pyroma               Run pyroma only
+#   --stubtest             Run stubtest only (checks the .pyi stubs)
 #   --bandit               Run bandit only
 #   --vulture              Run vulture only
 #   --sphinx               Run Sphinx build only
@@ -37,8 +38,8 @@
 #   pyproject.toml [tool.coverage.report] or .coveragerc [report]).
 #
 #   RUN_* (set by this script from CLI or full-run defaults): RUN_RUFF_CHECK,
-#   RUN_RUFF_FORMAT, RUN_MYPY, RUN_PYTEST, RUN_PYROMA, RUN_BANDIT, RUN_VULTURE,
-#   RUN_SPHINX, RUN_PYMARKDOWN
+#   RUN_RUFF_FORMAT, RUN_MYPY, RUN_PYTEST, RUN_PYROMA, RUN_STUBTEST, RUN_BANDIT,
+#   RUN_VULTURE, RUN_SPHINX, RUN_PYMARKDOWN
 #
 #   Per-check toggles (true/false). Defaults favor a minimal CI set; export to
 #   enable more tools in a given repo. Each check runs only if both RUN_* and
@@ -48,6 +49,7 @@
 #     ENABLE_MYPY         (default: false)
 #     ENABLE_PYTEST       (default: true)
 #     ENABLE_PYROMA       (default: true)
+#     ENABLE_STUBTEST     .pyi stubs match the runtime API (default: true)
 #     ENABLE_BANDIT       (default: false)
 #     ENABLE_VULTURE      (default: false)
 #     ENABLE_SPHINX       (default: true)
@@ -55,7 +57,7 @@
 #
 # Checks (each run separately; -d runs both Sphinx and Markdown):
 #   Code:     optional: ruff check, ruff format --check, mypy, pytest, pyroma,
-#             bandit, vulture (see ENABLE_* above)
+#             stubtest, bandit, vulture (see ENABLE_* above)
 #   Sphinx:   make -C docs html SPHINXOPTS="-W"
 #   Markdown: pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
 #
@@ -82,6 +84,7 @@ RUN_RUFF_FORMAT=false
 RUN_MYPY=false
 RUN_PYTEST=false
 RUN_PYROMA=false
+RUN_STUBTEST=false
 RUN_BANDIT=false
 RUN_VULTURE=false
 RUN_SPHINX=false
@@ -95,6 +98,7 @@ SCOPE_SPECIFIED=false
 : "${ENABLE_MYPY:=false}"
 : "${ENABLE_PYTEST:=true}"
 : "${ENABLE_PYROMA:=true}"
+: "${ENABLE_STUBTEST:=true}"
 : "${ENABLE_BANDIT:=false}"
 : "${ENABLE_VULTURE:=false}"
 : "${ENABLE_SPHINX:=true}"
@@ -213,6 +217,7 @@ while [[ $# -gt 0 ]]; do
             RUN_MYPY=true
             RUN_PYTEST=true
             RUN_PYROMA=true
+            RUN_STUBTEST=true
             RUN_BANDIT=true
             RUN_VULTURE=true
             SCOPE_SPECIFIED=true
@@ -246,6 +251,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         --pytest)
             RUN_PYTEST=true
+            SCOPE_SPECIFIED=true
+            shift
+            ;;
+        --stubtest)
+            RUN_STUBTEST=true
             SCOPE_SPECIFIED=true
             shift
             ;;
@@ -293,6 +303,7 @@ if [ "$SCOPE_SPECIFIED" = false ]; then
     RUN_MYPY=true
     RUN_PYTEST=true
     RUN_PYROMA=true
+    RUN_STUBTEST=true
     RUN_BANDIT=true
     RUN_VULTURE=true
     RUN_SPHINX=true
@@ -319,6 +330,7 @@ _code_checks_any_scheduled() {
     [ "$RUN_MYPY" = true ] && [ "$ENABLE_MYPY" = true ] && return 0
     [ "$RUN_PYTEST" = true ] && [ "$ENABLE_PYTEST" = true ] && return 0
     [ "$RUN_PYROMA" = true ] && [ "$ENABLE_PYROMA" = true ] && return 0
+    [ "$RUN_STUBTEST" = true ] && [ "$ENABLE_STUBTEST" = true ] && return 0
     [ "$RUN_BANDIT" = true ] && [ "$ENABLE_BANDIT" = true ] && return 0
     [ "$RUN_VULTURE" = true ] && [ "$ENABLE_VULTURE" = true ] && return 0
     return 1
@@ -409,6 +421,17 @@ run_code_checks() {
             print_error "Pyroma failed"
             failed=true
             failed_checks="${failed_checks}Code - Pyroma"$'\n'
+        fi
+    fi
+
+    if [ "$RUN_STUBTEST" = true ] && [ "$ENABLE_STUBTEST" = true ]; then
+        print_info "Running stubtest (.pyi stubs vs the runtime API)..."
+        if python -m mypy.stubtest polymath --mypy-config-file pyproject.toml; then
+            print_success "Stubtest passed"
+        else
+            print_error "Stubtest failed"
+            failed=true
+            failed_checks="${failed_checks}Code - Stubtest"$'\n'
         fi
     fi
 
