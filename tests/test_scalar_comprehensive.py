@@ -788,6 +788,26 @@ def test_scalar_comprehensive_test_sort_with_axis() -> None:
     assert np.allclose(s139[0].vals, [1., 3., 4.])
 
 
+def test_scalar_comprehensive_test_sort_preserves_the_mask() -> None:
+    """Test that sort() keeps masked items masked and moves them to the end."""
+
+    s = Scalar([3., 9., 1.], mask=[False, False, True])
+    result = s.sort()
+    assert list(result.mask) == [False, False, True]
+    assert result.vals[0] == 3.
+    assert result.vals[1] == 9.
+
+
+def test_scalar_comprehensive_test_sort_mask_when_a_value_matches_the_fill() -> None:
+    """Test that sort() keeps each mask with its own item when a value equals the fill."""
+
+    s = Scalar([3., np.inf, 1.], mask=[False, False, True])
+    result = s.sort()
+    assert list(result.mask) == [False, False, True]
+    assert result.vals[0] == 3.
+    assert result.vals[1] == np.inf
+
+
 def test_scalar_comprehensive_test_solve_quadratic_with_complex_roots_should_mask() -> None:
     """Test solve_quadratic with complex roots (should mask)."""
 

@@ -644,4 +644,15 @@ def test_qube_setitem() -> None:
             assert (aa[:,i,:,j] == a[:,i,:,j])
 
 
+def test_qube_setitem_non_consecutive_array_indices_with_an_array_mask() -> None:
+    """Assign through non-consecutive array indices when this object's mask is an array."""
+
+    a = Scalar(np.zeros((4,5,6,7)), mask=np.zeros((4,5,6,7), dtype='bool'))
+    a[:, np.array([0,1]), :, np.array([0,1])] = Scalar(np.ones((4,2,6)))
+    assert a.values[0,0,0,0] == 1.
+    assert a.values[0,1,0,1] == 1.
+    assert a.values[0,2,0,2] == 0.
+    assert not np.any(a.mask)
+
+
 ##########################################################################################

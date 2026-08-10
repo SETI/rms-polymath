@@ -269,8 +269,9 @@ class Vector(Qube):
         Class Scalar has a similar method :meth:`Scalar.int`.
 
         Parameters:
-            top (tuple, optional): Tuple of maximum integer values for each component,
-                equivalent to the array shape.
+            top (int or tuple, optional): Maximum integer value for each component,
+                equivalent to the array shape. Use a tuple to handle the components
+                differently; a single value applies to every component.
             remask (bool, optional): If True, values less than zero or greater than the
                 specified top values (if provided) are masked.
             clip (bool or tuple of bool, optional): If True, values less than zero or
@@ -295,13 +296,13 @@ class Vector(Qube):
 
         def _as_tuple(item, name):
             # Quick internal method to make sure top, inclusive and shift are tuples or
-            # lists of the correct length.
+            # lists of the correct length. A single value applies to every component.
             if isinstance(item, (list, tuple)):
                 if len(item) != self._numer[0]:
                     raise ValueError(f'{type(self).__name__}.int() {name} does not match '
                                      f'item shape {self._numer}: ({len(item)},)')
             else:
-                item = len(top) * (item,)
+                item = self._numer[0] * (item,)
             return item
 
         self._require_unitless('int()')

@@ -1529,3 +1529,32 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
     assert a.mask[2]
 
 
+
+
+def test_qube_construction_from_a_list_of_masked_arrays() -> None:
+    """A Qube can be built from a list of MaskedArrays, stacking values and masks."""
+
+    a = Scalar([ma.MaskedArray([1., 2.], [False, True]),
+                ma.MaskedArray([3., 4.], [True, False])])
+    assert a.shape == (2, 2)
+    assert list(a.mask[0]) == [False, True]
+    assert list(a.mask[1]) == [True, False]
+    assert a.vals[0, 0] == 1.
+    assert a.vals[1, 1] == 4.
+
+
+def test_qube_as_size_zero_collapses_the_requested_axis() -> None:
+    """as_size_zero() zeroes the length of the given axis and leaves the others alone."""
+
+    a = Scalar(np.zeros((3, 4, 5)))
+    assert a.as_size_zero(axis=0).shape == (0, 4, 5)
+    assert a.as_size_zero(axis=1).shape == (3, 0, 5)
+    assert a.as_size_zero(axis=2).shape == (3, 4, 0)
+    assert a.as_size_zero(axis=-2).shape == (3, 0, 5)
+
+
+def test_qube_as_size_zero_rejects_an_axis_out_of_range() -> None:
+    """as_size_zero() raises a ValueError when the axis is out of range."""
+
+    with pytest.raises(ValueError, match='axis is out of range'):
+        Scalar(np.zeros((3, 4, 5))).as_size_zero(axis=3)

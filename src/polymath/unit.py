@@ -221,7 +221,7 @@ class Unit:
 
         if not Unit.is_angle(arg):
             info_ = info + ' ' if info else ''
-            raise ValueError(f'{info_}unit is not incompatible with an angle')
+            raise ValueError(f'{info_}unit is not compatible with an angle: {arg}')
 
     @staticmethod
     def is_unitless(arg):
@@ -779,10 +779,11 @@ class Unit:
         name = Unit.name_to_dict(name)
 
         if isinstance(power, str):
+            old_power = power
             power = Unit.name_to_dict(power)
 
             if not isinstance(power, int):
-                raise ValueError('fnon-integer power on unit "{old_power}"')
+                raise ValueError(f'non-integer power on unit: "{old_power}"')
 
         new_name = {}
 

@@ -1471,3 +1471,17 @@ def test_units_test_with_angle_exponent_9_odd_1() -> None:
 
 
 ##########################################################################################
+
+
+def test_units_require_angle_message_names_the_offending_unit() -> None:
+    """require_angle() rejects a non-angle unit with a message naming it."""
+
+    with pytest.raises(ValueError, match='unit is not compatible with an angle: km'):
+        Unit.require_angle(Unit.KM)
+
+
+def test_units_name_power_rejects_a_non_integer_power() -> None:
+    """name_power() reports the offending power when it is not an integer."""
+
+    with pytest.raises(ValueError, match='non-integer power on unit: "x"'):
+        Unit.name_power('km', 'x')

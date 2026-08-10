@@ -112,4 +112,27 @@ def test_qube_derivs_without_derivs() -> None:
     assert b.readonly
 
 
+def test_qube_derivs_wod_has_an_independent_cache() -> None:
+    """A cache entry made on the derivative-free view does not appear in the original."""
+
+    a = Scalar([1., 2., 3.])
+    a.insert_deriv('t', Scalar([1., 1., 1.]))
+    b = a.wod
+    assert b._cache is not a._cache
+
+    _ = b.antimask                          # populates the cache of b only
+    assert 'antimask' in b._cache
+    assert 'antimask' not in a._cache
+
+
+def test_qube_derivs_read_only_replacement_message_names_the_class() -> None:
+    """Refusing to replace a derivative on a read-only object names the class."""
+
+    a = Scalar([1., 2., 3.]).as_readonly()
+    a.insert_deriv('t', Scalar([1., 1., 1.]))
+
+    with pytest.raises(ValueError, match='cannot be replaced in Scalar object'):
+        a.insert_derivs({'t': Scalar([0., 0., 0.])}, override=False)
+
+
 ##########################################################################################

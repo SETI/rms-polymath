@@ -104,4 +104,11 @@ def test_scalar_exp_individual_values() -> None:
     assert (np.sum(x.exp(check=True).mask) > 0)
 
 
+def test_scalar_exp_overflow_without_check_raises_value_error() -> None:
+    """exp(check=False) reports an overflow as a ValueError, as documented."""
+
+    with pytest.raises(ValueError, match='overflow encountered'):
+        Scalar(1.e6).exp(check=False)
+
+
 ##########################################################################################

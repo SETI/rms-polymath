@@ -44,7 +44,14 @@ class Polynomial(Vector):
         # For a subclass of Vector, transfer all attributes
         if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Vector):
             for key, value in args[0].__dict__.items():
-                self.__dict__[key] = value
+                if isinstance(value, dict):
+                    # Copy, so the two objects do not share one dictionary
+                    self.__dict__[key] = value.copy()
+                else:
+                    self.__dict__[key] = value
+
+            # The cache can hold objects of the original class, e.g., "wod"
+            self._cache = {}
 
             # Convert derivatives to class Polynomial if necessary
             if type(self) is not Polynomial:
@@ -104,7 +111,17 @@ class Polynomial(Vector):
 
         obj = Qube.__new__(Vector)
         for key, value in self.__dict__.items():
-            obj.__dict__[key] = value
+            if key.startswith('d_d'):
+                continue                # re-created by insert_derivs() below
+            elif isinstance(value, dict):
+                # Copy, so the two objects do not share one dictionary
+                obj.__dict__[key] = value.copy()
+            else:
+                obj.__dict__[key] = value
+
+        # The cache can hold objects of class Polynomial, e.g., "wod"
+        obj._cache = {}
+        obj._derivs = {}
 
         derivs = {}
         if recursive:

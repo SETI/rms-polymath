@@ -1247,4 +1247,13 @@ def test_boolean_test_le_method() -> None:
     assert not result[1]
 
 
+def test_boolean_power_of_a_shapeless_boolean() -> None:
+    """A shapeless Boolean raised to an integer power behaves like the array case."""
+
+    assert (Boolean(True) ** 2).values == 1
+    assert (Boolean(False) ** 2).values == 0
+    assert (Boolean(False) ** 0).values == 1
+    assert (Boolean(False) ** -1).mask is True
+
+
 ##########################################################################################

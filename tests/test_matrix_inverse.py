@@ -199,4 +199,15 @@ def test_matrix_inverse_read_only_status_should_not_be_preserved() -> None:
     assert not a.as_readonly().inverse().readonly
 
 
+def test_matrix_inverse_leaves_a_singular_input_unmodified() -> None:
+    """inverse() masks a singular matrix without altering the object it was called on."""
+
+    a = Matrix([[[1., 0.], [0., 1.]], [[0., 0.], [0., 0.]]])
+    saved = a.values.copy()
+    result = a.inverse()
+    assert np.all(a.values == saved)
+    assert result.mask[1]
+    assert not result.mask[0]
+
+
 ##########################################################################################

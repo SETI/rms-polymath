@@ -353,20 +353,23 @@ class Matrix(Qube):
 
         # Check determinant if necessary
         new_mask = self._mask
+        old_values = self._values
         if not nozeros:
-            det = np.linalg.det(self._values)
+            det = np.linalg.det(old_values)
 
-            # Mask out un-invertible matrices and replace with identify matrices
+            # Mask out un-invertible matrices and replace with identify matrices.
+            # The substitution goes into a copy; this object must not be modified.
             mask = (det == 0.)
             if np.any(mask):
-                self._values[mask] = np.diag(np.ones(self._numer[0]))
+                old_values = old_values.copy()
+                old_values[mask] = np.diag(np.ones(self._numer[0]))
                 new_mask = Qube.or_(self._mask, mask)
 
         # Invert the array
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
             try:
-                new_values = np.linalg.inv(self._values)
+                new_values = np.linalg.inv(old_values)
             except (RuntimeWarning, np.linalg.LinAlgError) as err:
                 raise ValueError(f'{type(self).__name__}.inverse() input is singular'
                                  ) from err

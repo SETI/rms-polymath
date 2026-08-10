@@ -430,7 +430,7 @@ class Qube:
                 merged = Qube.stack(*arg)
                 return (merged._values, merged._mask)
             elif Qube._has_masked_array(arg):
-                merged = np.ma.stack(*arg)
+                merged = np.ma.stack(arg)
                 return (merged.data, merged.mask)
             else:
                 merged = np.array(arg)
@@ -477,7 +477,7 @@ class Qube:
             if Qube._has_qube(arg):
                 arg = Qube.stack(*arg)
             elif Qube._has_masked_array(arg):
-                arg = np.ma.stack(*arg)
+                arg = np.ma.stack(arg)
             else:
                 arg = np.array(arg)
                 return Qube._as_mask(arg, invert=invert,  masked_value=masked_value,
@@ -624,7 +624,7 @@ class Qube:
             if Qube._has_qube(arg):
                 arg = Qube.stack(*arg)
             elif Qube._has_masked_array(arg):
-                arg = np.ma.stack(*arg)
+                arg = np.ma.stack(arg)
             else:
                 arg = np.array(arg)
                 return Qube._dtype_and_value(arg, opstr=opstr)
@@ -1597,7 +1597,7 @@ class Qube:
             for key in derivs:
                 if key in self._derivs:
                     raise ValueError(f'derivative "{key}" cannot be replaced in '
-                                     '{type(self).__name__} object; object is read-only')
+                                     f'{type(self).__name__} object; object is read-only')
 
         # Insert derivatives
         for key, deriv in derivs.items():
@@ -1727,11 +1727,14 @@ class Qube:
                 pass
             elif isinstance(attr, Qube):
                 wod.__dict__[key] = attr.wod
+            elif isinstance(attr, dict):
+                # Copy, so that the two objects do not share one dictionary
+                wod.__dict__[key] = attr.copy()
             else:
                 wod.__dict__[key] = attr
 
         wod._derivs = {}
-        wod._cache['wod'] = wod
+        wod._cache = {}
         self._cache['wod'] = wod
         return wod
 
@@ -2596,6 +2599,9 @@ class Qube:
 
         Returns:
             Qube: A shallow copy of this object with size zero.
+
+        Raises:
+            ValueError: If `axis` is out of range.
         """
 
         obj = Qube.__new__(type(self))
@@ -2607,10 +2613,12 @@ class Qube:
             new_values = self._values.ravel()[:0]
             new_mask = np.asarray(self._mask).ravel()[:0]
         else:
-            if axis == 0:
-                indx = slice(0, 0)
-            else:
-                indx = (Ellipsis, slice(0, 0))
+            self._require_axis_in_range(axis, self._ndims, 'as_size_zero()')
+
+            # Leading axes are sliced in full; the trailing axes, including any item axes,
+            # are left implicit
+            a1 = axis % self._ndims
+            indx = a1 * (slice(None),) + (slice(0, 0),)
 
             new_values = self._values[indx]
 

@@ -250,4 +250,27 @@ def test_polynomial_basic_test_eval_with_zero_order_polynomial_non_zero_order_de
     assert result5.d_dt.values == 7.
 
 
+def test_polynomial_basic_construction_from_a_vector_copies_the_derivs() -> None:
+    """A Polynomial built from a Vector does not share the Vector's derivative dict."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([1., 0.]))
+    p = Polynomial(v)
+    assert p._derivs is not v._derivs
+
+    p.insert_deriv('x', Vector([0., 1.]))
+    assert 'x' in p.derivs
+    assert 'x' not in v.derivs
+
+
+def test_polynomial_basic_as_vector_leaves_this_polynomial_unchanged() -> None:
+    """as_vector() does not downgrade the derivatives held by the original Polynomial."""
+
+    p = Polynomial([1., 2.])
+    p.insert_deriv('t', Polynomial([1., 0.]))
+    v = p.as_vector()
+    assert type(p.derivs['t']) is Polynomial
+    assert type(v.derivs['t']) is Vector
+
+
 ##########################################################################################

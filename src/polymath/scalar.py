@@ -296,8 +296,9 @@ class Scalar(Qube):
         The returned object is an instance of the same subclass as this object.
 
         Parameters:
-            recursive (bool, optional): True to include the derivatives of the returned
-                object. frac() leaves the derivatives unchanged.
+            recursive (bool, optional): True to include the derivatives in the returned
+                object, where frac() leaves their values unchanged; False to return an
+                object without derivatives.
 
         Returns:
             Scalar: An object with fractional components.
@@ -319,7 +320,8 @@ class Scalar(Qube):
 
         # Construct a new copy
         obj = Qube.__new__(type(self))
-        obj.__init__(new_values, mask=self._mask, derivs=self._derivs)
+        obj.__init__(new_values, mask=self._mask,
+                     derivs=(self._derivs if recursive else {}))
 
         return obj
 
@@ -726,7 +728,7 @@ class Scalar(Qube):
                 warnings.filterwarnings('error')
                 try:
                     exp_values = np.exp(no_oflow._values)
-                except (ValueError, TypeError) as err:
+                except RuntimeWarning as err:
                     raise ValueError('Scalar.exp() overflow encountered') from err
 
         obj = Scalar(exp_values, mask=no_oflow._mask)
@@ -1369,20 +1371,21 @@ class Scalar(Qube):
             max_possible = Scalar._maxval(self._values.dtype)
             new_values = self._values.copy()
             new_values[self._mask] = max_possible
-            new_values = np.sort(new_values, axis=axis)
+
+            # Sort the values and the mask by one common permutation. Sorting them
+            # independently would separate a masked item from its mask whenever an
+            # unmasked value happens to equal the substituted maximum.
+            order = np.argsort(new_values, axis=axis, kind='stable')
+            new_values = np.take_along_axis(new_values, order, axis=axis)
 
             # Create the new mask
             if np.shape(self._mask) == ():
                 new_mask = self._mask
             else:
-                new_mask = self._mask.copy()
-                new_mask = np.sort(new_mask, axis=axis)
+                new_mask = np.take_along_axis(self._mask, order, axis=axis)
 
             # Construct the result
             result = Scalar(new_values, new_mask, unit=self._unit)
-
-            # Replace the masked values by the max
-            result[new_mask] = max_possible
 
         return result.wod
 

@@ -1152,7 +1152,7 @@ def __pow__(self, /, arg):
             _raise_unsupported_op('**', self, arg)
 
         if arg._mask:
-            return self.as_fully_masked(recursive=True)
+            return self.as_all_masked(recursive=True)
 
         arg = arg._values
 

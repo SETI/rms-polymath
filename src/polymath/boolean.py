@@ -447,8 +447,9 @@ class Boolean(Scalar):
 
         self = self.as_int()
 
-        # Result is 1 where self is True or arg == 0
-        vals = (self._values | (arg._values == 0)).view(np.int8)
+        # Result is 1 where self is True or arg == 0. The "|" of an integer with a boolean
+        # is already an integer, for arrays and for single values alike.
+        vals = self._values | (arg._values == 0)
 
         # Result is masked where self == 0 and arg < 0 or either item is masked
         invalid = (self._values == 0) & (arg._values < 0)

@@ -4,7 +4,7 @@
 
 import numpy as np
 
-from polymath import Matrix
+from polymath import Matrix, Scalar
 
 
 def test_qube_power() -> None:
@@ -77,6 +77,14 @@ def test_qube_power() -> None:
     assert (np.all(abs((a**-13).d_dt.vals - (b*b*b*b*b*b*b*b*b*b*b*b*b).d_dt.vals)) < 1.e-13)
     assert (np.all(abs((a**-14).d_dt.vals - (b*b*b*b*b*b*b*b*b*b*b*b*b*b).d_dt.vals)) < 1.e-13)
     assert (np.all(abs((a**-15).d_dt.vals - (b*b*b*b*b*b*b*b*b*b*b*b*b*b*b).d_dt.vals)) < 1.e-13)
+
+
+def test_qube_power_masked_exponent_gives_a_fully_masked_result() -> None:
+    """A non-Scalar Qube raised to a masked exponent is fully masked, same subclass."""
+
+    result = Matrix.IDENTITY3 ** Scalar.MASKED
+    assert result.mask is True
+    assert type(result) is Matrix
 
 
 ##########################################################################################

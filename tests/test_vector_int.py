@@ -88,4 +88,19 @@ def test_vector_int_test_combos_with_all_int_scalars() -> None:
     assert v.is_int()
 
 
+def test_vector_int_a_single_top_applies_to_every_component() -> None:
+    """int() accepts one `top` value and applies it to every component."""
+
+    v = Vector([[1., 7.]])
+    assert list(v.int(top=5, clip=True).values[0]) == [1, 4]
+    assert list(v.int(top=(5, 9), clip=True).values[0]) == [1, 7]
+
+
+def test_vector_int_a_top_of_the_wrong_length_is_rejected() -> None:
+    """int() rejects a `top` sequence whose length does not match the item shape."""
+
+    with pytest.raises(ValueError, match='top does not match item shape'):
+        Vector([[1., 7.]]).int(top=(5, 9, 11))
+
+
 ##########################################################################################

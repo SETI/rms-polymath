@@ -176,13 +176,13 @@ def __setitem__(self, indx, arg):
             after = tuple(before + first_array_loc)
             before = tuple(before)
 
+    arg_values = arg._values
+    arg_mask = arg._mask                    # a scalar mask needs no axis relocation
+
     if moved_to_front:
-        arg_values = np.moveaxis(arg._values, after, before)
-        if np.shape(arg._mask):
-            arg_mask = np.moveaxis(arg._mask, after, before)
-    else:
-        arg_values = arg._values
-        arg_mask = arg._mask
+        arg_values = np.moveaxis(arg_values, after, before)
+        if np.shape(arg_mask):
+            arg_mask = np.moveaxis(arg_mask, after, before)
 
     # Set the new values and mask
     if not np.any(post_mask):                           # post-mask is False

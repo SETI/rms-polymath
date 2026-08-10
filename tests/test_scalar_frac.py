@@ -103,4 +103,13 @@ def test_scalar_frac_read_only_status_should_not_be_preserved() -> None:
     assert not random.as_readonly().frac().readonly
 
 
+def test_scalar_frac_recursive_selects_the_derivatives() -> None:
+    """frac() returns derivatives only when recursive is True."""
+
+    a = Scalar([1.5, 2.5])
+    a.insert_deriv('t', Scalar([1., 1.]))
+    assert list(a.frac(recursive=True).derivs.keys()) == ['t']
+    assert list(a.frac(recursive=False).derivs.keys()) == []
+
+
 ##########################################################################################
