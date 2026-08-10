@@ -302,17 +302,11 @@ class Qube:
         self._truth_if_all = False
 
         # Fill in the default
-        if default is not None and np.shape(default) == item:
-            pass
-        elif hasattr(self, '_DEFAULT_VALUE') and drank == 0:
-            default = self._DEFAULT_VALUE
-        elif item:
-            default = np.ones(item)
-        else:
-            default = 1
-
         dtype = Qube._dtype(self._values)
-        self._default = Qube._casted_to_dtype(default, dtype)
+        if default is not None and np.shape(default) == item:
+            self._default = Qube._casted_to_dtype(default, dtype)
+        else:
+            self._default = type(self)._default_for(item, drank, dtype)
 
     ######################################################################################
     # Builtin type support
@@ -1060,6 +1054,122 @@ class Qube:
         obj.__init__(np.ones(shape + numer + denom, dtype=dtype),
                      mask=mask, drank=len(denom))
         return obj
+
+    @classmethod
+    def _new_from_parts(cls, values, mask=False, *, nrank, drank=0, unit=None,
+                        example=None):
+        """Fast construction of an object from parts that are already known to be valid.
+
+        This is the internal counterpart to the constructor. It performs none of the type
+        checking, dtype coercion or shape inference that `__init__` performs, so it is
+        only suitable for operations that have already computed the result themselves.
+        The caller guarantees that:
+
+        * `values` is a NumPy array, or a Python or NumPy scalar, whose dtype is already
+          one that `cls` permits;
+        * `mask` is a bool or a boolean array broadcastable to the leading shape of
+          `values`;
+        * `nrank` and `drank` correctly describe the trailing axes of `values`, and are
+          consistent with `cls`.
+
+        Derivatives are never carried over; insert them into the returned object instead.
+
+        Parameters:
+            values (numpy.ndarray, float, int, or bool): The values of the new object.
+            mask (numpy.ndarray or bool, optional): The mask of the new object.
+            nrank (int): The number of numerator axes at the end of `values`.
+            drank (int, optional): The number of denominator axes at the end of `values`.
+            unit (Unit, optional): The unit of the new object; None for unitless.
+            example (Qube, optional): An object from which to take the default value when
+                its item shape and dtype match those of the new object.
+
+        Returns:
+            Qube: The new object, without derivatives.
+        """
+
+        obj = Qube.__new__(cls)
+
+        is_array = isinstance(values, np.ndarray)
+        full_shape = values.shape if is_array else ()
+
+        if is_array and not full_shape:     # a shapeless array is stored as a scalar
+            values = values[()]
+            is_array = False
+
+        if not is_array and isinstance(values, np.generic):
+            values = values.item()          # the constructor reduces NumPy scalars too
+
+        ndims = len(full_shape) - nrank - drank
+        shape = full_shape[:ndims]
+        item = full_shape[ndims:]
+
+        # The values of two operands may broadcast against each other while their masks do
+        # not, so a mask can still be narrower than the values it describes
+        if isinstance(mask, np.ndarray) and mask.shape != shape:
+            mask = Qube._array_to_readonly(np.broadcast_to(mask, shape))
+
+        obj._values = values
+        obj._mask = mask
+        obj._is_array = is_array
+        obj._is_scalar = not is_array
+
+        obj._shape = shape
+        obj._ndims = ndims
+        obj._rank  = nrank + drank
+        obj._nrank = nrank
+        obj._drank = drank
+        obj._item  = item
+        obj._numer = full_shape[ndims:ndims + nrank]
+        obj._denom = full_shape[ndims + nrank:]
+        obj._size  = math.prod(shape)
+        obj._isize = math.prod(item)
+        obj._nsize = math.prod(obj._numer)
+        obj._dsize = math.prod(obj._denom)
+
+        obj._unit = unit
+        obj._readonly = is_array and not values.flags['WRITEABLE']
+        obj._cache = {}
+        obj._derivs = {}
+        obj._truth_if_any = False
+        obj._truth_if_all = False
+
+        if obj._readonly:
+            Qube._array_to_readonly(mask)
+
+        # The default depends only on the item shape and the dtype, so the example
+        # supplies it whenever both of those carried through the operation
+        if (example is not None and example._item == item
+                and is_array == example._is_array
+                and (values.dtype == example._values.dtype if is_array
+                     else type(values) is type(example._values))):
+            obj._default = example._default
+        else:
+            obj._default = cls._default_for(item, drank, Qube._dtype(values))
+
+        return obj
+
+    @classmethod
+    def _default_for(cls, item, drank, dtype):
+        """The default value for an object of this class, item shape and dtype.
+
+        Parameters:
+            cls (class): Qube subclass.
+            item (tuple): Shape of the items.
+            drank (int): The number of denominator axes.
+            dtype (str): One of "float", "int", or "bool".
+
+        Returns:
+            (numpy.ndarray, float, int, or bool): The value to use where masked.
+        """
+
+        if hasattr(cls, '_DEFAULT_VALUE') and drank == 0:
+            default = cls._DEFAULT_VALUE
+        elif item:
+            default = np.ones(item)
+        else:
+            default = 1
+
+        return Qube._casted_to_dtype(default, dtype)
 
     @classmethod
     def filled(cls, shape, fill=0, *, numer=None, denom=(), mask=False):

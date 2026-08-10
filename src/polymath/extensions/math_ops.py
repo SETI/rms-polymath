@@ -122,11 +122,10 @@ def __add__(self, /, arg, *, recursive=True):
         _raise_incompatible_denoms('+', self, arg)
 
     # Construct the result
-    obj = Qube.__new__(type(self))
-    obj.__init__(self._values + arg._values,
-                 Qube.or_(self._mask, arg._mask),
-                 unit=self._unit or arg._unit,
-                 example=self)
+    obj = type(self)._new_from_parts(self._values + arg._values,
+                                     Qube.or_(self._mask, arg._mask),
+                                     nrank=self._nrank, drank=self._drank,
+                                     unit=self._unit or arg._unit, example=self)
 
     if recursive:
         obj.insert_derivs(obj._add_derivs(self, arg))
@@ -264,11 +263,10 @@ def __sub__(self, /, arg, *, recursive=True):
         _raise_incompatible_denoms('-', self, arg)
 
     # Construct the result
-    obj = Qube.__new__(type(self))
-    obj.__init__(self._values - arg._values,
-                 Qube.or_(self._mask, arg._mask),
-                 unit=self._unit or arg._unit,
-                 example=self)
+    obj = type(self)._new_from_parts(self._values - arg._values,
+                                     Qube.or_(self._mask, arg._mask),
+                                     nrank=self._nrank, drank=self._drank,
+                                     unit=self._unit or arg._unit, example=self)
 
     if recursive:
         obj.insert_derivs(obj._sub_derivs(self, arg))
@@ -548,12 +546,12 @@ def _mul_by_scalar(self, /, arg, *, recursive=True):
         arg_values = arg_values.reshape(arg_shape)
 
     # Construct object
-    obj = Qube.__new__(type(self))
-    obj.__init__(self_values * arg_values,
-                 Qube.or_(self._mask, arg._mask),
-                 unit=Unit.mul_units(self._unit, arg._unit),
-                 drank=max(self._drank, arg._drank),
-                 example=self)
+    obj = type(self)._new_from_parts(self_values * arg_values,
+                                     Qube.or_(self._mask, arg._mask),
+                                     nrank=self._nrank,
+                                     drank=max(self._drank, arg._drank),
+                                     unit=Unit.mul_units(self._unit, arg._unit),
+                                     example=self)
 
     obj.insert_derivs(self._mul_derivs(arg))
     return obj
@@ -749,11 +747,11 @@ def _div_by_scalar(self, /, arg, *, recursive):
         arg_values = arg_values.reshape(arg.shape + self._rank * (1,))
 
     # Construct object
-    obj = Qube.__new__(type(self))
-    obj.__init__(self._values / arg_values,
-                 Qube.or_(self._mask, arg._mask),
-                 unit=Unit.div_units(self._unit, arg._unit),
-                 example=self)
+    obj = type(self)._new_from_parts(self._values / arg_values,
+                                     Qube.or_(self._mask, arg._mask),
+                                     nrank=self._nrank, drank=self._drank,
+                                     unit=Unit.div_units(self._unit, arg._unit),
+                                     example=self)
 
     if recursive:
         obj.insert_derivs(self._div_derivs(arg, nozeros=True))

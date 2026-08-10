@@ -253,9 +253,10 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
     new_nrank = arg1._nrank + arg2._nrank - 2
     new_drank = arg1._drank + arg2._drank
 
-    obj = Qube(new_values, Qube.or_(arg1._mask, arg2._mask),
-               unit=Unit.mul_units(arg1._unit, arg2._unit),
-               nrank=new_nrank, drank=new_drank, example=arg1)
+    obj = Qube._new_from_parts(new_values, Qube.or_(arg1._mask, arg2._mask),
+                               nrank=new_nrank, drank=new_drank,
+                               unit=Unit.mul_units(arg1._unit, arg2._unit),
+                               example=arg1)
     obj = obj.cast(classes)
 
     # Insert derivatives if necessary
@@ -329,9 +330,8 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
     new_values = np.sqrt(np.sum(arg._values**2, axis=k1))
 
     # Construct the object and cast
-    obj = Qube(new_values,
-               arg._mask,
-               nrank=arg._nrank-1, example=arg)
+    obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,
+                               drank=arg._drank, unit=arg._unit, example=arg)
     obj = obj.cast(classes)
 
     # Insert derivatives if necessary
@@ -389,9 +389,9 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
     new_values = np.sum(arg._values**2, axis=k1)
 
     # Construct the object and cast
-    obj = Qube(new_values, arg._mask,
-               unit=Unit.mul_units(arg._unit, arg._unit),
-               nrank=arg._nrank-1, example=arg)
+    obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,
+                               drank=arg._drank,
+                               unit=Unit.mul_units(arg._unit, arg._unit), example=arg)
     obj = obj.cast(classes)
 
     # Insert derivatives if necessary
@@ -491,9 +491,10 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         new_nrank = arg1._nrank + arg2._nrank - 2
 
     # Construct the object and cast
-    obj = Qube(new_values, Qube.or_(arg1._mask, arg2._mask),
-               unit=Unit.mul_units(arg1._unit, arg2._unit),
-               nrank=new_nrank, drank=new_drank, example=arg1)
+    obj = Qube._new_from_parts(new_values, Qube.or_(arg1._mask, arg2._mask),
+                               nrank=new_nrank, drank=new_drank,
+                               unit=Unit.mul_units(arg1._unit, arg2._unit),
+                               example=arg1)
     obj = obj.cast(classes)
 
     # Insert derivatives if necessary
@@ -621,9 +622,10 @@ def outer(arg1, arg2, classes=(), recursive=True):
     new_nrank = arg1._nrank + arg2._nrank
     new_drank = arg1._drank + arg2._drank
 
-    obj = Qube(new_values, Qube.or_(arg1._mask, arg2._mask),
-               unit=Unit.mul_units(arg1._unit, arg2._unit),
-               nrank=new_nrank, drank=new_drank, example=arg1)
+    obj = Qube._new_from_parts(new_values, Qube.or_(arg1._mask, arg2._mask),
+                               nrank=new_nrank, drank=new_drank,
+                               unit=Unit.mul_units(arg1._unit, arg2._unit),
+                               example=arg1)
     obj = obj.cast(classes)
 
     # Insert derivatives if necessary
@@ -693,11 +695,12 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
         new_values[..., i, i] = rolled[..., i]
 
     # Roll the new axes back
-    new_values = np.rollaxis(new_values, -1, k1)
-    new_values = np.rollaxis(new_values, -1, k1)
+    new_values = np.moveaxis(new_values, -1, k1)
+    new_values = np.moveaxis(new_values, -1, k1)
 
     # Construct and cast
-    obj = Qube(new_values, arg._mask, nrank=arg._nrank + 1, example=arg)
+    obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank + 1,
+                               drank=arg._drank, unit=arg._unit, example=arg)
     obj = obj.cast(classes)
 
     # Diagonalize the derivatives if necessary
