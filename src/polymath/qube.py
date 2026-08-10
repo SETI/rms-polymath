@@ -105,6 +105,17 @@ class Qube:
             The number of elements in the numerator of the items.
         dsize (int):
             The number of elements in the denominator of the items.
+
+    Notes:
+        PolyMath objects are not hashable. They compare by value and are mutable, so they
+        cannot be used as dictionary keys or placed in sets.
+
+        Nothing here is synchronized. Reading a shared object from several threads is
+        safe, but modifying one while another thread reads it is not, and neither is
+        changing any of the global settings, such as those of
+        :meth:`~Qube.prefer_builtins` and :meth:`~Qube.set_default_pickle_digits`, once
+        other threads are running. Confine each object to one thread, or serialize access
+        to it yourself.
     """
 
     # This prevents binary operations of the form:
@@ -174,8 +185,9 @@ class Qube:
             TypeError: If the data type of `arg` or `mask` is invalid.
             TypeError: If `example` is not an instance of Qube.
             ValueError: If the shape of `mask` is incompatible with object.
-            ValueError: If `derivs` or `unit` are specified but are disallowed by the
-                Qube subclass.
+            TypeError: If `unit` is specified but is disallowed by the Qube subclass.
+            ValueError: If `derivs` are specified but are disallowed by the Qube
+                subclass.
             ValueError: If `nrank` is incompatible with the Qube subclass.
             ValueError: If `drank` is specified but the Qube subclass disallows
                 derivatives.
@@ -541,8 +553,8 @@ class Qube:
             shape (tuple): Shape of the required mask.
             collapse (bool, optional): True to merge the extraneous axes of a mask if its
                 rank is greater than that of the given shape.
-            expand (bool, optional): True to broadcast this mask if its rank is less than
-                that of the given shape.
+            broadcast (bool, optional): True to broadcast this mask if its rank is less
+                than that of the given shape.
             invert (bool, optional): True to return the logical not of the mask.
             masked_value (bool, optional): The value to use where the input argument is
                nmasked. This value is used _after_ `invert` is applied.
@@ -1266,8 +1278,8 @@ class Qube:
 
         Parameters:
             shape (tuple): Shape of the object.
-            dtype (str, optional): One of "bool", "int", or "float", defining the data
-                type. Ignored if `cls` has a default dtype.
+            fill (array-like, float, int, or bool, optional): The constant value for each
+                item. It must be compatible with the item shape of `cls`.
             numer (tuple, optional): Numerator shape; None to use default for `cls`.
             denom (tuple, optional): Denominator shape.
             mask (array-like or bool, optional): Mask to apply.
@@ -2564,7 +2576,7 @@ class Qube:
             return False
         return isinstance(self._values, int)
 
-    def as_int(self, copy=False, builtins=False):
+    def as_int(self, *, copy=False, builtins=False):
         """An integer version of this object.
 
         Booleans are converted to Scalars.
@@ -2613,7 +2625,7 @@ class Qube:
             return self._values.dtype.kind == 'b'
         return isinstance(self._values, bool)
 
-    def as_bool(self, copy=False, builtins=False):
+    def as_bool(self, *, copy=False, builtins=False):
         """A boolean version of this object.
 
         Scalars are converted to Booleans.

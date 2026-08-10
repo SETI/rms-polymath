@@ -183,7 +183,7 @@ class Vector(Qube):
         return Qube.from_scalars(*args, classes=[Vector], recursive=recursive,
                                  readonly=readonly)
 
-    def as_index(self, masked=None):
+    def as_index(self, *, masked=None):
         """Convert this object to a form suitable for indexing a NumPy array.
 
         The returned object is a tuple of NumPy arrays, each containing indices along the
@@ -200,10 +200,10 @@ class Vector(Qube):
             tuple: A tuple of NumPy arrays suitable for indexing.
         """
 
-        (index, _mask) = self.as_index_and_mask((masked is None), masked)
+        (index, _mask) = self.as_index_and_mask(purge=(masked is None), masked=masked)
         return index
 
-    def as_index_and_mask(self, purge=False, masked=None):
+    def as_index_and_mask(self, *, purge=False, masked=None):
         """Convert this object to a form suitable for indexing and masking an array.
 
         Parameters:
@@ -259,7 +259,7 @@ class Vector(Qube):
 
         return (tuple(np.moveaxis(new_values, -1, 0)), self._mask)
 
-    def int(self, top=None, remask=False, clip=False, inclusive=True, shift=None):
+    def int(self, top=None, *, remask=False, clip=False, inclusive=True, shift=None):
         """Return an integer (floor) version of this Vector.
 
         If this object already contains integers, it is returned as is. Otherwise, a copy

@@ -104,3 +104,25 @@ def test_vector_int_a_top_of_the_wrong_length_is_rejected() -> None:
 
 
 ##########################################################################################
+
+
+def test_vector_int_options_are_keyword_only() -> None:
+    """int() takes remask, clip, inclusive and shift by keyword, as Scalar.int() does."""
+
+    v = Vector([[1.6, 2.4]])
+    assert v.int(remask=False).values.tolist() == [[1, 2]]
+
+    with pytest.raises(TypeError, match='positional argument'):
+        v.int(None, True)
+
+
+def test_vector_as_index_and_mask_options_are_keyword_only() -> None:
+    """as_index_and_mask() takes purge and masked by keyword, as Scalar's does."""
+
+    v = Vector([[1, 2]])
+    index, mask = v.as_index_and_mask(purge=False, masked=None)
+    assert len(index) == 2
+    assert mask is False
+
+    with pytest.raises(TypeError, match='positional argument'):
+        v.as_index_and_mask(True)

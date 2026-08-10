@@ -148,7 +148,9 @@ Qube.as_diagonal        = vector_ops.as_diagonal
 Qube.rms                = vector_ops.rms
 
 from polymath.extensions import pickler
-Qube.pickle             = pickler       # help(Qube.pickle) shows the docstring
+# The pickler module itself is documented through docs/module.rst, rather than bound
+# onto Qube, where a non-callable module attribute in every object's namespace surprised
+# anyone who reached for it expecting a method.
 Qube.__getstate__       = pickler.__getstate__
 Qube.__setstate__       = pickler.__setstate__
 Qube._encode_floats     = pickler._encode_floats

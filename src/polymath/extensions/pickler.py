@@ -6,8 +6,8 @@
 Because objects such as backplanes can be numerous and also quite large, we provide a
 variety of methods, both lossless and lossy, for compressing them during storage. As one
 example of optimization, only the un-masked elements of an object are stored; upon
-retrieval, all masked elements will have the value of the object's :attr:`~Qube._default
-attribute.
+retrieval, all masked elements will have the value of the object's
+:attr:`~polymath.Qube.default` attribute.
 
 Arrays with integer elements are losslessly compressed using BZ2 compression. The numeric
 range is checked and values are stored using the fewest number of bytes sufficient to
@@ -86,7 +86,9 @@ _DEFAULT_PICKLE_DIGITS = ('double', 'double')
 _DEFAULT_PICKLE_REFERENCE = ('fpzip', 'fpzip')
 
 # Useful constants relevant to IEEE floats
-assert sys.float_info.mant_dig == 53, 'Serious trouble: floats are not IEEE'
+if sys.float_info.mant_dig != 53:       # pragma: no cover
+    raise RuntimeError('polymath requires IEEE double-precision floats; this platform '
+                       f'has a {sys.float_info.mant_dig}-bit mantissa')
 _SINGLE_DIGITS = np.log10(2**23)    # 6.92
 _DOUBLE_DIGITS = np.log10(2**52)    # 15.65
 _LOG10_BIT = np.log10(2.)

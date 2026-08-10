@@ -54,9 +54,10 @@ def extract_numer(self, axis, index, classes=(), *, recursive=True):
 def extract_denom(self, axis, index, classes=()):
     """Extract an object from one denominator axis.
 
-    Extracting from a denominator axis reduces the shape by removing that axis dimension.
-    For example, extracting from a Vector with shape (3,), numer (3,), denom (3,) at
-    index 1 returns a Vector with shape (), numer (3,), denom ().
+    Extracting from a denominator axis removes that axis from the denominator and leaves
+    the leading shape and the numerator alone. For example, extracting from a Vector with
+    shape (3,), numer (3,) and denom (3,) returns a Vector with shape (3,), numer (3,) and
+    denom ().
 
     Parameters:
         axis (int): The item axis from which to extract a slice.

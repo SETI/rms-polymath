@@ -1622,3 +1622,34 @@ def test_qube_cached_antimask_is_read_only() -> None:
     with pytest.raises(ValueError, match='read-only'):
         antimask[0] = False
 
+
+def test_qube_conversion_options_are_keyword_only() -> None:
+    """as_int() and as_bool() take copy and builtins by keyword, as as_float() does."""
+
+    a = Scalar([1.6, 2.4])
+    assert a.as_int(builtins=False).values.tolist() == [1, 2]
+
+    with pytest.raises(TypeError, match='positional argument'):
+        a.as_int(True)
+
+    with pytest.raises(TypeError, match='positional argument'):
+        a.as_bool(True)
+
+
+def test_qube_does_not_carry_the_pickler_module() -> None:
+    """The pickler module is not an attribute of every object."""
+
+    assert not hasattr(Scalar(1.), 'pickle')
+    assert hasattr(Scalar(1.), 'pickle_digits')
+
+
+def test_qube_a_malformed_index_still_raises_index_error() -> None:
+    """Index errors are still reported as IndexError after narrowing the handler."""
+
+    a = Scalar(np.arange(6.))
+
+    with pytest.raises(IndexError, match='floating-point'):
+        a[Scalar(1.5)]
+
+    with pytest.raises(IndexError, match='tuple index out of range'):
+        a[0, 0, 0]

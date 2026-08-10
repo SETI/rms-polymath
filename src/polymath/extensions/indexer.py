@@ -8,6 +8,35 @@ from polymath.qube import Qube
 
 
 def __getitem__(self, indx):
+    """self[indx], returning the selected subset of this object.
+
+    Indexing follows NumPy's rules, applied to the leading shape only; the item axes are
+    never indexed. It is extended in two ways: a masked index value selects a masked
+    element rather than raising, and an out-of-bounds integer is treated as masked rather
+    than raising.
+
+    Parameters:
+        indx (object or tuple): The index, which may combine integers, slices, Ellipsis,
+            None, boolean arrays, integer arrays, and Scalar, Boolean or Vector objects.
+
+    Returns:
+        Qube: The selected subset, with the same subclass as this object. Derivatives are
+        indexed the same way.
+
+    Raises:
+        IndexError: If the index is malformed, has too many terms, or is
+            floating-point.
+
+    Notes:
+        Two behaviors differ from NumPy deliberately:
+
+        * Axes selected by array indices keep their position. NumPy moves them to the
+            front when the array indices are not consecutive, so ``a[:, [0,1], :, [0,1]]``
+            has shape (2,4,6) in NumPy where here it has shape (4,2,6).
+        * A single boolean does not add a leading axis. ``a[True]`` has the shape of `a`,
+            where NumPy gives it shape (1,) + a.shape; ``a[False]`` gives a zero-sized
+            object either way.
+    """
 
     # Handle indexing of a shapeless object
     if self._shape == ():
@@ -92,6 +121,25 @@ def __getitem__(self, indx):
 
 
 def __setitem__(self, indx, arg):
+    """self[indx] = arg, replacing the selected subset of this object.
+
+    The index is interpreted exactly as it is by :meth:`~Qube.__getitem__`, including the
+    two departures from NumPy described there. Locations where the index itself is masked
+    are left untouched. Both the values and the mask of `arg` are written, and any
+    derivative it carries is written into the matching derivative of this object; a
+    derivative that this object has and `arg` does not is set to zero at those locations.
+
+    Parameters:
+        indx (object or tuple): The index, interpreted as in __getitem__().
+        arg (Qube, array-like, float, int, or bool): The replacement value, broadcastable
+            to the shape that the index selects.
+
+    Raises:
+        IndexError: If the index is malformed, has too many terms, or is
+            floating-point.
+        ValueError: If this object is read-only, or if `arg` cannot be broadcast to the
+            selected shape.
+    """
 
     self.require_writeable()
 
@@ -264,7 +312,7 @@ def _prep_index(self, indx):
         integer index values are replaced by masked values.
     """
 
-    try:      # catch any error and convert it to an IndexError
+    try:      # convert the errors that a malformed index can raise into an IndexError
 
         # Convert a non-tuple index to a tuple
         if not isinstance(indx, (tuple, list)):
@@ -500,7 +548,11 @@ def _prep_index(self, indx):
         return (tuple(pre_index), post_mask, has_ellipsis, moved_to_front, array_shape,
                 first_array_loc)
 
-    except Exception as err:
+    except IndexError:
+        raise
+    except (ValueError, TypeError) as err:
+        # A shape, length or type that the index rules reject. Anything else is a bug in
+        # this module and is allowed through as itself.
         raise IndexError(err) from err
 
 
