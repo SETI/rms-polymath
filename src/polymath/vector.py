@@ -610,25 +610,23 @@ class Vector(Qube):
             recursive (bool, optional): If True, include derivatives in the result.
 
         Returns:
-            Matrix: A 3x3 matrix that represents the cross product operation.
+            Matrix: A 3x3 matrix that represents the cross product operation. A
+            denominator, if any, is preserved.
 
         Raises:
-            ValueError: If this Vector doesn't have exactly 3 components or if it
-                has denominators.
+            ValueError: If this Vector doesn't have exactly 3 components.
         """
 
         if self._numer != (3,):
             raise ValueError(f'{type(self).__name__}.cross_product_as_matrix() requires '
                              'item shape (3,)')
 
-        self._disallow_denom('cross_product_as_matrix()')
-
-        # Roll the numerator axis to the end if necessary
+        # Move the numerator axis to the end if necessary, so that the components can be
+        # addressed as [..., k] regardless of the denominator
         if self._drank == 0:
             old_values = self._values
         else:
-            old_values = np.rollaxis(self._values, -self._drank - 1,
-                                     len(self._values._shape))
+            old_values = np.moveaxis(self._values, self._ndims, -1)
 
         # Fill in the matrix elements
         new_values = np.zeros(self._shape + self._denom + (3, 3),
@@ -640,9 +638,10 @@ class Vector(Qube):
         new_values[..., 2, 0] = -old_values[..., 1]
         new_values[..., 2, 1] =  old_values[..., 0]
 
-        # Roll the denominator axes back to the end
-        for _i in range(self._drank):
-            new_values = np.rollaxis(new_values, -3, len(new_values._shape))
+        # Move the new matrix axes ahead of the denominator axes
+        if self._drank:
+            new_values = np.moveaxis(new_values, (-2, -1),
+                                     (self._ndims, self._ndims + 1))
 
         obj = Qube._MATRIX_CLASS(new_values, self._mask, derivs={}, example=self)
 

@@ -3,6 +3,7 @@
 ##########################################################################################
 
 import numpy as np
+import pytest
 
 from polymath import Vector, Unit
 
@@ -230,6 +231,51 @@ def test_vector_cross_3x3_read_only_status_should_be_preserved() -> None:
     assert not y.as_readonly().cross(x.as_readonly()).readonly
     assert not y.as_readonly().cross(x).readonly
     assert not y.cross(x.as_readonly()).readonly
+
+
+def test_vector_cross_product_as_matrix_reproduces_the_cross_product() -> None:
+    """The matrix multiplied by another vector equals the cross product."""
+
+    rng = np.random.default_rng(31)
+    v = Vector(rng.normal(size=(2, 3, 3)))
+    w = Vector(rng.normal(size=(2, 3, 3)))
+
+    assert np.allclose((v.cross_product_as_matrix() * w).values, v.cross(w).values)
+
+
+def test_vector_cross_product_as_matrix_supports_a_denominator() -> None:
+    """A Vector carrying a denominator keeps it, with the matrix axes ahead of it."""
+
+    v = Vector(np.arange(6.).reshape(3, 2), drank=1)
+    result = v.cross_product_as_matrix()
+
+    assert result.numer == (3, 3)
+    assert result.denom == (2,)
+
+    # Each denominator column is the cross-product matrix of that column of the input
+    for j in range(2):
+        column = Vector(v.values[:, j])
+        assert np.all(result.values[..., j] == column.cross_product_as_matrix().values)
+
+
+def test_vector_cross_product_as_matrix_carries_a_jacobian_derivative() -> None:
+    """A derivative with a denominator passes through instead of raising."""
+
+    v = Vector([1., 2., 3.])
+    v.insert_deriv('xy', Vector(np.arange(6.).reshape(3, 2), drank=1))
+    result = v.cross_product_as_matrix()
+
+    assert result.derivs['xy'].numer == (3, 3)
+    assert result.derivs['xy'].denom == (2,)
+    assert np.all(result.derivs['xy'].values
+                  == v.derivs['xy'].cross_product_as_matrix().values)
+
+
+def test_vector_cross_product_as_matrix_requires_three_components() -> None:
+    """A Vector of any length other than three is rejected."""
+
+    with pytest.raises(ValueError, match='requires item shape'):
+        Vector([1., 2.]).cross_product_as_matrix()
 
 
 ##########################################################################################
