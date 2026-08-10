@@ -5,6 +5,7 @@
 import numpy as np
 import pickle
 import os
+import pytest
 import sys
 
 from polymath import Qube, Boolean, Scalar, Pair, Vector, Vector3, Unit
@@ -13,6 +14,21 @@ from polymath.extensions.pickler import _FPZIP_ENCODING_CUTOFF as BIGDIM
 FILEPATH = 'unittest.pickle'
 EPSILON = sys.float_info.epsilon
 ITERATIONS = 3
+
+
+@pytest.fixture
+def pickle_debug() -> object:
+    """Turn on the pickler's debug attributes for one test, then restore the setting.
+
+    _pickle_debug() writes a module-level global. Owning it here keeps each test that
+    needs it independent of the order the tests happen to run in.
+    """
+
+    Qube._pickle_debug(True)
+    try:
+        yield
+    finally:
+        Qube._pickle_debug(False)
 
 
 def test_qube_getstate_scalar_tests_no_derivatives() -> None:
@@ -35,7 +51,7 @@ def test_qube_getstate_scalar_tests_no_derivatives() -> None:
             assert readonly == b.readonly
 
 
-def test_qube_getstate_scalar_tests_derivatives_units() -> None:
+def test_qube_getstate_scalar_tests_derivatives_units(pickle_debug: object) -> None:
     """Scalar tests, derivatives, units."""
 
     np.random.seed(4735)
@@ -245,8 +261,6 @@ def test_qube_getstate_scalar_tests_derivatives_units() -> None:
 
     # COMPRESSION
 
-    Qube._pickle_debug(True)
-
     references = (1., 'smallest', 'largest', 'mean', 'median', 'logmean')
     ref_values = [1.,
                   np.min(np.abs(a.values)),
@@ -283,7 +297,7 @@ def test_qube_getstate_scalar_tests_derivatives_units() -> None:
     assert nbytes_tested == {3,4,5,6}
 
 
-def test_qube_getstate_tests_of_offsets() -> None:
+def test_qube_getstate_tests_of_offsets(pickle_debug: object) -> None:
     """Tests of offsets."""
 
     np.random.seed(4735)
@@ -309,7 +323,7 @@ def test_qube_getstate_tests_of_offsets() -> None:
     assert nbytes_tested == {1,2,3,4,5,6}
 
 
-def test_qube_getstate_tests_of_offsets_items() -> None:
+def test_qube_getstate_tests_of_offsets_items(pickle_debug: object) -> None:
     """Tests of offsets + items."""
 
     np.random.seed(4735)
@@ -338,7 +352,7 @@ def test_qube_getstate_tests_of_offsets_items() -> None:
     assert nbytes_tested == {1,2,3,4,5,6}
 
 
-def test_qube_getstate_tests_of_fpzip() -> None:
+def test_qube_getstate_tests_of_fpzip(pickle_debug: object) -> None:
     """Tests of fpzip."""
 
     np.random.seed(4735)
@@ -362,7 +376,6 @@ def test_qube_getstate_tests_of_fpzip() -> None:
 
             rel_error = ((a - b)/a).abs().max(builtins=True)
             assert (rel_error <= error)
-    Qube._pickle_debug(False)
 
 
 ##########################################################################################
