@@ -2,22 +2,29 @@
 # polymath/unit.py
 ##########################################################################################
 
+from collections import defaultdict
 import functools
 import math
-import numpy as np
 import numbers
+import re
+
+import numpy as np
+
+__all__ = ['Unit']
+
+_TOKEN   = re.compile(r'\*\*|[-+]?\d+|[A-Za-z]+|\S')
+_INTEGER = re.compile(r'[-+]?\d+')
 
 
 class Unit:
     """Class to represent units and provide conversion methods.
 
     Attributes:
-
-        exponents (tuple): Three integers representing the exponents on dimensions of
-            length, time, and angle, respectively.
-        triple (tuple): Three integers representing the exact factor that one must
-            multiply a value in this unit by to a value in standard units involving (km,
-            seconds, and radians). This factor is represented by three numbers,
+        exponents (tuple[int, int, int]): The exponents on dimensions of length, time, and
+            angle, respectively.
+        triple (tuple[int, int, int]): Three integers representing the exact factor that
+            to multiply a value in this unit by to a value in standard units involving
+            (km, seconds, and radians). This factor is represented by three numbers,
             (**numer**, **denom**, and **expo**), where the exact factor equals
             (`numer/denom * pi**expo`).
         name (str, dict or None): An optional name for this unit. Alternatively, a name
@@ -27,8 +34,8 @@ class Unit:
     Examples:
         * `degree` unit is represented by exponents (0, 0, 1) and triple (1, 180, 1),
           because one multiplies degrees by pi/180 to obtain radians.
-        * `m/s` uni is represented by exponents (1, -1, 0) and triple (1, 1000, 0),
-          because one multiples meters per second by 1/1000 to obtain km per second.
+        * `m/s` unit is represented by exponents (1, -1, 0) and triple (1, 1000, 0),
+          because one multiplies meters per second by 1/1000 to obtain km per second.
 
     Notes:
         * Most common unit values are defined as class constants, e.g., **Unit.DEGREE**
@@ -41,9 +48,9 @@ class Unit:
         """Initialize a Unit object.
 
         Parameters:
-            exponents (tuple): A tuple of integers defining the exponents on distance,
-                time and angle that are used for this unit.
-            triple (tuple): A tuple containing:
+            exponents (tuple[int, int, int]): A tuple of integers defining the exponents
+                on distance, time and angle that are used for this unit.
+            triple (tuple[int, int, int]): A tuple containing:
 
                 * [0] The numerator of a factor that converts from a value in this unit to
                   a value using standard units of km, seconds, and radians.
@@ -117,7 +124,7 @@ class Unit:
         elif isinstance(arg, Unit):
             return arg
         else:
-            raise ValueError("not a recognized unit: " + str(arg))
+            raise ValueError('not a recognized unit: ' + str(arg))
 
     @staticmethod
     def can_match(first, second):
@@ -290,8 +297,9 @@ class Unit:
             value (scalar or ndarray): The value to convert.
 
         Returns:
-            scalar or ndarray: The converted value in standard unit of km, seconds and
-                radians.
+            scalar or ndarray: The `value` converted from the given `unit` to standard
+                units involving km, seconds and radians. If `unit` is None, `value` is
+                returned untouched.
         """
 
         if unit is None:
@@ -308,7 +316,9 @@ class Unit:
             value (scalar or ndarray): The value to convert.
 
         Returns:
-            scalar or ndarray: The converted value in the given unit.
+            scalar or ndarray: The `value` in standard units involving km, seconds and
+                radians converted to the given `unit`. If `unit` is None, `value` is
+                returned untouched.
         """
 
         if unit is None:
@@ -338,17 +348,17 @@ class Unit:
             unit = Unit.UNITLESS
 
         if self.exponents != unit.exponents:
-            _info = ' ' + info if info else ''
-            raise ValueError(f'cannot convert unit {self} to {unit} in {_info}')
+            _info = (' in ' + info) if info else ''
+            raise ValueError(f'cannot convert unit {self} to {unit}{_info}')
 
         # If the factor is unity, return the value without modification
         if (self.triple[2] == unit.triple[2] and
-            self.triple[0] * unit.triple[1] == self.triple[1] * unit.triple[0]):
+                self.triple[0] * unit.triple[1] == self.triple[1] * unit.triple[0]):
             return value
 
-        return ((self.triple[0] * unit.triple[1]) * value /
-                (self.triple[1] * unit.triple[0]) *
-                np.pi**(self.triple[2] - unit.triple[2]))
+        factor = (self.triple[0] * unit.triple[1] / (self.triple[1] * unit.triple[0]) *
+                  np.pi**(self.triple[2] - unit.triple[2]))
+        return factor * value
 
     ######################################################################################
     # Arithmetic operators
@@ -413,7 +423,7 @@ class Unit:
                         (self.triple[0] * arg.triple[1],
                          self.triple[1] * arg.triple[0],
                          self.triple[2] - arg.triple[2]),
-                        Unit.div_names(self.name, arg.name))
+                        Unit._div_names(self.name, arg.name))
 
         if arg is None:
             return self
@@ -474,7 +484,7 @@ class Unit:
                         (self.triple[0]**power,
                          self.triple[1]**power,
                          power * self.triple[2]),
-                        Unit.name_power(self.name, power))
+                        Unit._name_power(self.name, power))
         else:
             return Unit((power * self.exponents[0],
                          power * self.exponents[1],
@@ -482,13 +492,10 @@ class Unit:
                         (self.triple[1]**(-power),
                          self.triple[0]**(-power),
                          power * self.triple[2]),
-                        Unit.name_power(self.name, power))
+                        Unit._name_power(self.name, power))
 
-    def sqrt(self, name=None):
+    def sqrt(self):
         """Return the square root of this Unit object.
-
-        Parameters:
-            name (str or dict, optional): The name for the resulting unit.
 
         Returns:
             Unit: The square root of this Unit object.
@@ -497,9 +504,8 @@ class Unit:
             ValueError: If the exponents are not even numbers.
         """
 
-        if (self.exponents[0] % 2 != 0 or
-            self.exponents[1] % 2 != 0 or
-            self.exponents[2] % 2 != 0):
+        if (self.exponents[0] % 2 != 0 or self.exponents[1] % 2 != 0
+                or self.exponents[2] % 2 != 0):
             raise ValueError("illegal unit for sqrt(): " + self.get_name())
 
         exponents = (self.exponents[0]//2, self.exponents[1]//2, self.exponents[2]//2)
@@ -516,9 +522,7 @@ class Unit:
             numer *= np.pi**(self.triple[2] / 2.)
             pi_expo = 0
 
-        if name is None:
-            name = Unit.name_power(self.name, 0.5)
-
+        name = Unit._name_power(self.name, 0.5)
         return Unit(exponents, (numer, denom, pi_expo), name)
 
     #####################################################
@@ -526,14 +530,12 @@ class Unit:
     #####################################################
 
     @staticmethod
-    def mul_units(arg1, arg2, name=None):
+    def mul_units(arg1, arg2):
         """Multiply two Unit objects.
 
         Parameters:
             arg1 (Unit or None): The first Unit object.
             arg2 (Unit or None): The second Unit object.
-            name (str or dict, optional): The name for the resulting unit if a new
-                unit is constructed.
 
         Returns:
             Unit or None: The product of the two Unit objects, or None if both arguments
@@ -541,27 +543,19 @@ class Unit:
         """
 
         if arg1 is None:
-            if arg2 is not None:
-                return arg2
-            else:
-                return None
+            return arg2
         if arg2 is None:
             return arg1
 
-        result = arg1 * arg2
-        # XXX This is not well-specified. Why do we only do this for new units?
-        result.name = name
-        return result
+        return arg1 * arg2
 
     @staticmethod
-    def div_units(arg1, arg2, name=None):
+    def div_units(arg1, arg2):
         """Divide two Unit objects.
 
         Parameters:
             arg1 (Unit or None): The numerator Unit object.
             arg2 (Unit or None): The denominator Unit object.
-            name (str or dict, optional): The name for the resulting unit if a new
-                unit is constructed.
 
         Returns:
             Unit or None: The quotient of the two Unit objects, or None if both arguments
@@ -569,25 +563,19 @@ class Unit:
         """
 
         if arg1 is None:
-            if arg2 is not None:
-                return arg2**(-1)
-            else:
+            if arg2 is None:
                 return None
-        if arg2 is None:
-            return arg1
+            else:
+                return arg2**(-1)
 
-        result = arg1 / arg2
-        # XXX This is not well-specified. Why do we only do this for new units?
-        result.name = name
-        return result
+        return arg1 / arg2
 
     @staticmethod
-    def sqrt_unit(unit, name=None):
+    def sqrt_unit(unit):
         """Return the square root of a Unit object.
 
         Parameters:
             unit (Unit or None): The Unit object to take the square root of.
-            name (str or dict, optional): The name for the resulting unit.
 
         Returns:
             Unit or None: The square root of the Unit object, or None if unit is None.
@@ -599,16 +587,15 @@ class Unit:
         if unit is None:
             return None
 
-        return unit.sqrt(name)
+        return unit.sqrt()
 
     @staticmethod
-    def unit_power(unit, power, name=None):
+    def unit_power(unit, power):
         """Raise a Unit object to the specified power.
 
         Parameters:
             unit (Unit or None): The Unit object to raise to a power.
             power (int or float): The exponent. Must be an integer or half-integer.
-            name (str or dict, optional): The name for the resulting unit.
 
         Returns:
             Unit or None: The Unit object raised to the specified power, or None if unit
@@ -621,9 +608,7 @@ class Unit:
         if unit is None:
             return None
 
-        result = unit**power
-        result.set_name(name)
-        return result
+        return unit**power
 
     ######################################################################################
     # Comparison operators
@@ -721,15 +706,17 @@ class Unit:
             if key in new_name:
                 expo += new_name[key]
 
+            # pop() rather than del, because create_name() yields a zero exponent for
+            # every unused dimension, and those keys need not appear in name1 at all
             if expo == 0:
-                del new_name[key]
+                new_name.pop(key, None)
             else:
                 new_name[key] = expo
 
         return new_name
 
     @staticmethod
-    def div_names(name1, name2):
+    def _div_names(name1, name2):
         """Divide two unit names.
 
         Parameters:
@@ -752,15 +739,17 @@ class Unit:
             if key in new_name:
                 expo -= new_name[key]
 
+            # pop() rather than del, because create_name() yields a zero exponent for
+            # every unused dimension, and those keys need not appear in name1 at all
             if expo == 0:
-                del new_name[key]
+                new_name.pop(key, None)
             else:
                 new_name[key] = -expo
 
         return new_name
 
     @staticmethod
-    def name_power(name, power):
+    def _name_power(name, power):
         """Raise a unit name to the specified power.
 
         Parameters:
@@ -768,8 +757,13 @@ class Unit:
             power (int or float): The exponent.
 
         Returns:
-            str or dict or None: The unit name raised to the specified power, or None if
-            name is None.
+            dict or None: The unit name raised to the specified power. The result is None
+            if `name` is None, and also if the power would give any name a non-integer
+            exponent, because no name written in these units can express the result. A
+            unit left unnamed this way derives a name from its dimensions instead.
+
+        Raises:
+            ValueError: If the power is a string that does not denote an integer.
         """
 
         if name is None:
@@ -790,111 +784,87 @@ class Unit:
             new_power = expo * power
             int_power = int(new_power)
             if new_power != int_power:
-                raise ValueError(f'non-integer power {new_power} on unit "{key}"')
+                return None
 
             new_name[key] = int_power
 
         return new_name
 
     @staticmethod
-    def name_to_dict(name):
-        """Convert a unit name string to a dictionary.
+    def name_to_dict(expr):
+        """Convert a unit expression string to a dictionary.
 
         Parameters:
-            name (str or dict): The unit name to convert.
+            expr (str or dict): The unit expression string to convert. It can contain "**"
+                for exponentiation, "*" for multiply, and "/" for divide. It can contain
+                nested substrings inside parentheses.
 
         Returns:
-            dict: A dictionary representation of the unit name.
+            dict: A dictionary keyed by each name that appears, whose value is the net
+            number of times that name was multiplied, counting each division as -1. A
+            name that cancels out entirely is absent from the result.
 
         Raises:
-            ValueError: If the name format is invalid.
+            ValueError: If the expression is neither a string nor a dictionary, or if it
+                contains an unrecognized character, unbalanced parentheses, a missing
+                operand, or a "**" not followed by an integer.
         """
 
-        bignum = 99999
+        def parse_group():
+            """Parse tokens up to the end or the next ")" and return their exponents."""
 
-        if isinstance(name, dict):
-            return name
+            nonlocal pos
 
-        if not isinstance(name, str):
-            raise ValueError(f'unit is not a string: "{name}"')
+            result = defaultdict(int)
+            sign = 1
+            while pos < len(tokens) and tokens[pos] != ')':
+                token = tokens[pos]
+                pos += 1
 
-        name = name.strip()
-        if name == '':
-            return {}
+                if token == '(':
+                    item = parse_group()
+                    if pos >= len(tokens):
+                        raise ValueError(f'missing ")" in unit "{expr}"')
+                    pos += 1                        # step over the ")"
+                elif token.isalpha():
+                    item = {token: 1}
+                else:
+                    raise ValueError(f'unexpected "{token}" in unit "{expr}"')
 
-        # Return a named unit
-        if name.isalpha():
-            return {name: 1}
+                power = 1
+                if pos < len(tokens) and tokens[pos] == '**':
+                    pos += 1
+                    if pos >= len(tokens) or not _INTEGER.fullmatch(tokens[pos]):
+                        raise ValueError(f'"**" without an integer in unit "{expr}"')
+                    power = int(tokens[pos])
+                    pos += 1
 
-        # Return an integer exponent
-        try:
-            return int(name)
-        except ValueError:
-            pass
+                for name, count in item.items():
+                    result[name] += sign * power * count
 
-        # If the name starts with a left parenthensis, find the end of the
-        # expression and process the interior
-        if name[0] == '(':
-            depth = 0
-            for i, c in enumerate(name):  # noqa: B007  # i is used after the loop
-                if c == '(':
-                    depth += 1
-                if c == ')':
-                    depth -= 1
-                if depth == 0:
-                    break
+                if pos < len(tokens) and tokens[pos] in ('*', '/'):
+                    sign = 1 if tokens[pos] == '*' else -1
+                    pos += 1
+                    if pos >= len(tokens) or tokens[pos] == ')':
+                        raise ValueError(f'missing operand in unit "{expr}"')
 
-            left = name[1:i]
-            right = name[i+1:].lstrip()
+            return result
 
-        # Otherwise, jump to the first operator
-        else:
-            imul = name.find('*') % bignum
-            idiv = name.find('/') % bignum
-            first = min(imul, idiv)
-            if first >= bignum - 1:  # pragma: no cover
-                # TODO What is the purpose of this check?
-                raise ValueError(f'illegal unit syntax: "{name}"')
+        # A dictionary is already in the returned form, so it passes through untouched
+        if isinstance(expr, dict):
+            return expr
 
-            left = name[:first]
-            right = name[first:].lstrip()
+        if not isinstance(expr, str):
+            raise ValueError(f'unit is not a string: "{expr}"')
 
-        # Handle the operator if it is an exponent
-        if right.startswith('**'):
-            right = right[2:].lstrip()
+        tokens = _TOKEN.findall(expr)
+        pos = 0
 
-            imul = right.find('*') % bignum
-            idiv = right.find('/') % bignum
-            first = min(imul, idiv)
-            if first >= bignum - 1:  # pragma: no cover
-                # TODO What is the purpose of this check?
-                return Unit.name_power(left, right)
+        result = parse_group()
+        if pos < len(tokens):
+            raise ValueError(f'unbalanced ")" in unit "{expr}"')
 
-            power = right[:first].lstrip()
-            left = Unit.name_power(left, power)
-            right = right[first:].lstrip()
-
-        if right == '':
-            if left == name.strip():    # if no progress was made...  # pragma: no cover
-                # This condition appears to be unreachable in practice because:
-                # - If name starts with '(', we extract name[1:i], which removes the '(',
-                #   so left can never equal name.strip() if name.strip() starts with '('
-                # - If name doesn't start with '(', we extract name[:first] (a prefix),
-                #   so left can only equal name.strip() if first == len(name), meaning
-                #   no operators found, which causes a raise above before hitting here
-                raise ValueError(f'illegal unit syntax: "{name}"')
-
-            return Unit.name_to_dict(left)
-
-        if right.startswith('**'):
-            raise ValueError(f'illegal unit syntax: "{name}"')
-
-        op = right[0]
-        right = right[1:].lstrip()
-        if op == '*':
-            return Unit._mul_names(left, right)
-        else:
-            return Unit.div_names(left, right)
+        return {k: v for k, v in result.items() if v}
 
     @staticmethod
     def name_to_str(namedict):
@@ -1034,8 +1004,9 @@ class Unit:
         between callers and must not be modified.
 
         Parameters:
-            exponents (tuple): Three integer exponents on length, time, and angle.
-            triple (tuple): The (numerator, denominator, pi exponent) conversion factor.
+            exponents (tuple[int, int, int]): Three exponents on length, time, and angle.
+            triple (tuple[int, int, int]): The (numerator, denominator, pi exponent)
+                conversion factor.
 
         Returns:
             str or dict: The name, either a string or a dictionary of exponents keyed by
@@ -1142,7 +1113,6 @@ class Unit:
         """
 
         self.name = name
-
         return self
 
 ##########################################################################################

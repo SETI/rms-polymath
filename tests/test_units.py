@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from polymath import Unit
+from polymath import Scalar, Unit
 
 
 def test_units_test_basic_initialization() -> None:
@@ -461,7 +461,7 @@ def test_units_test_basic_initialization() -> None:
     assert result.exponents == (6, 0, 0)
 
     ##################################################################################
-    # sqrt(self, name=None)
+    # sqrt(self)
     ##################################################################################
 
     u_sq = Unit((2, 0, 0), (1, 1, 0), None)
@@ -472,15 +472,17 @@ def test_units_test_basic_initialization() -> None:
     with pytest.raises(ValueError):
         u_odd.sqrt()
 
-    result = u_sq.sqrt(name='km')
-    assert result.name == 'km'
+    result = Unit((2, 0, 0), (1, 1, 0), 'km**2').sqrt()
+    assert result.name == {'km': 1}
 
     ##################################################################################
-    # mul_units(arg1, arg2, name=None)
+    # mul_units(arg1, arg2)
     ##################################################################################
 
     result = Unit.mul_units(Unit.KM, Unit.S)
     assert result.exponents == (1, 1, 0)
+    assert result.name == {'km': 1, 's': 1}
+    assert result.get_name() == 'km*s'
 
     result = Unit.mul_units(None, Unit.KM)
     assert result == Unit.KM
@@ -489,16 +491,14 @@ def test_units_test_basic_initialization() -> None:
     result = Unit.mul_units(None, None)
     assert result == None
 
-    result = Unit.mul_units(Unit.KM, Unit.S, name={'km': 1, 's': 1})
-    assert result.name == {'km': 1, 's': 1}
-    assert result.get_name() == 'km*s'
-
     ##################################################################################
-    # div_units(arg1, arg2, name=None)
+    # div_units(arg1, arg2)
     ##################################################################################
 
     result = Unit.div_units(Unit.KM, Unit.S)
     assert result.exponents == (1, -1, 0)
+    assert result.name == {'km': 1, 's': -1}
+    assert result.get_name() == 'km/s'
 
     result = Unit.div_units(None, Unit.KM)
     assert result.exponents == (-1, 0, 0)
@@ -507,12 +507,8 @@ def test_units_test_basic_initialization() -> None:
     result = Unit.div_units(None, None)
     assert result == None
 
-    result = Unit.div_units(Unit.KM, Unit.S, name={'km': 1, 's': -1})
-    assert result.name == {'km': 1, 's': -1}
-    assert result.get_name() == 'km/s'
-
     ##################################################################################
-    # sqrt_unit(unit, name=None)
+    # sqrt_unit(unit)
     ##################################################################################
 
     u_sq = Unit((2, 0, 0), (1, 1, 0), None)
@@ -522,21 +518,19 @@ def test_units_test_basic_initialization() -> None:
     result = Unit.sqrt_unit(None)
     assert result == None
 
-    result = Unit.sqrt_unit(u_sq, name='km')
-    assert result.name == 'km'
+    result = Unit.sqrt_unit(Unit((2, 0, 0), (1, 1, 0), 'km**2'))
+    assert result.name == {'km': 1}
 
     ##################################################################################
-    # unit_power(unit, power, name=None)
+    # unit_power(unit, power)
     ##################################################################################
 
     result = Unit.unit_power(Unit.KM, 2)
     assert result.exponents == (2, 0, 0)
+    assert result.name == {'km': 2}
 
     result = Unit.unit_power(None, 2)
     assert result == None
-
-    result = Unit.unit_power(Unit.KM, 2, name={'km': 2})
-    assert result.name == {'km': 2}
 
     ##################################################################################
     # __eq__(self, arg)
@@ -633,17 +627,8 @@ def test_units_test_basic_initialization() -> None:
     result = u_sq ** 0.5
     assert result.exponents == (2, 0, 0)
 
-    u_pi = Unit.STER
-
-    result = u_pi.sqrt(name='rad')
-    assert result.exponents == (0, 0, 1)
-    assert result.name == 'rad'
-
-    result = u_pi.sqrt(name='rad')
-    assert result.name == 'rad'
-
     u_simple = Unit((2, 0, 0), (1, 1, 0), None)
-    result = u_simple.sqrt(name=None)
+    result = u_simple.sqrt()
 
     assert result.exponents == (1, 0, 0)
 
@@ -684,34 +669,30 @@ def test_units_test_basic_initialization() -> None:
     result = Unit._mul_names({'km': 2}, {'km': 3})
     assert result == {'km': 5}
 
-    result = Unit.div_names('km', 's')
+    result = Unit._div_names('km', 's')
     assert isinstance(result, dict)
-    result = Unit.div_names({'km': 1}, {'s': 1})
+    result = Unit._div_names({'km': 1}, {'s': 1})
     assert isinstance(result, dict)
-    result = Unit.div_names(None, 'km')
+    result = Unit._div_names(None, 'km')
     assert result == None
-    result = Unit.div_names('km', None)
+    result = Unit._div_names('km', None)
     assert result == None
 
-    result = Unit.div_names({'km': 1}, {'km': 1})
+    result = Unit._div_names({'km': 1}, {'km': 1})
 
     assert result == {}
 
-    result = Unit.div_names({'km': 5}, {'km': 2})
+    result = Unit._div_names({'km': 5}, {'km': 2})
     assert result == {'km': 3}
 
-    result = Unit.name_power('km', 2)
+    result = Unit._name_power('km', 2)
     assert isinstance(result, dict)
-    result = Unit.name_power({'km': 1}, 2)
+    result = Unit._name_power({'km': 1}, 2)
     assert isinstance(result, dict)
-    result = Unit.name_power(None, 2)
+    result = Unit._name_power(None, 2)
     assert result == None
 
-    with pytest.raises(ValueError):
-        Unit.name_power('km', 'invalid')
-
-    with pytest.raises(ValueError):
-        Unit.name_power({'km': 1}, 0.5)
+    assert Unit._name_power({'km': 1}, 0.5) is None
 
     result = Unit.name_to_dict('km')
     assert isinstance(result, dict)
@@ -723,8 +704,8 @@ def test_units_test_basic_initialization() -> None:
     with pytest.raises(ValueError):
         Unit.name_to_dict(123)
 
-    result = Unit.name_to_dict('5')
-    assert result == 5
+    with pytest.raises(ValueError, match='unexpected "5"'):
+        Unit.name_to_dict('5')
 
     result = Unit.name_to_dict('km*s')
     assert isinstance(result, dict)
@@ -892,13 +873,14 @@ def test_units_test_basic_initialization() -> None:
     assert isinstance(result, Unit)
     assert result == Unit.KM
 
-    assert isinstance(Unit.name_to_dict('(km'), dict)
+    with pytest.raises(ValueError, match='missing "\\)"'):
+        Unit.name_to_dict('(km')
 
-    assert isinstance(Unit.name_to_dict('((km'), dict)
+    with pytest.raises(ValueError, match='missing "\\)"'):
+        Unit.name_to_dict('((km')
 
     ##################################################################################
-    # Test name_to_dict with '**' in invalid position
-    # This specifically tests: if right.startswith('**'): raise ValueError
+    # Test name_to_dict with '**' in an invalid position
     ##################################################################################
 
     with pytest.raises(ValueError):
@@ -1480,8 +1462,152 @@ def test_units_require_angle_message_names_the_offending_unit() -> None:
         Unit.require_angle(Unit.KM)
 
 
-def test_units_name_power_rejects_a_non_integer_power() -> None:
-    """name_power() reports the offending power when it is not an integer."""
+@pytest.mark.parametrize(('expr', 'expected'), [
+    ('km', {'km': 1}),
+    ('km*s', {'km': 1, 's': 1}),
+    ('km/s', {'km': 1, 's': -1}),
+    ('km/s/s', {'km': 1, 's': -2}),
+    ('km/(s*s)', {'km': 1, 's': -2}),
+    ('km**2', {'km': 2}),
+    ('km**-1', {'km': -1}),
+    ('(km*s)**2', {'km': 2, 's': 2}),
+    ('((km))', {'km': 1}),
+    ('km*s/km', {'s': 1}),
+    ('  km / s  ', {'km': 1, 's': -1}),
+])
+def test_units_name_to_dict_parses_expressions(expr: str, expected: dict[str, int]) -> None:
+    """name_to_dict() resolves operators, exponents, grouping, and whitespace."""
 
-    with pytest.raises(ValueError, match='non-integer power on unit: "x"'):
-        Unit.name_power('km', 'x')
+    assert Unit.name_to_dict(expr) == expected
+
+
+def test_units_name_to_dict_divides_into_a_group() -> None:
+    """A "/" before a parenthesized group inverts every name inside it."""
+
+    assert Unit.name_to_dict('km/(s*rad)') == {'km': 1, 's': -1, 'rad': -1}
+
+
+def test_units_sqrt_of_a_name_with_an_odd_exponent_derives_a_name() -> None:
+    """A unit whose name cannot be halved is left unnamed and names itself instead.
+
+    Unit.STER has even dimension exponents (0, 0, 2), so the dimensions halve cleanly to
+    an angle, but its name "ster" has an exponent of 1, which does not.
+    """
+
+    result = Unit.STER.sqrt()
+    assert result.exponents == (0, 0, 1)
+    assert result.name is None
+    assert result.get_name() == 'rad'
+
+
+def test_units_sqrt_unit_of_steradians_is_radians() -> None:
+    """sqrt_unit() halves the dimensions of a unit whose name cannot be halved."""
+
+    assert Unit.sqrt_unit(Unit.STER).get_name() == 'rad'
+
+
+def test_units_scalar_sqrt_carries_a_derived_unit() -> None:
+    """A Scalar in steradians can be square-rooted, giving radians."""
+
+    result = Scalar(4., unit=Unit.STER).sqrt()
+    assert result.values == 2.
+    assert result._unit.get_name() == 'rad'
+
+
+def test_units_sqrt_keeps_a_name_that_halves_cleanly() -> None:
+    """A name with even exponents is halved rather than discarded."""
+
+    result = Unit((2, 0, 0), (1, 1, 0), 'km**2').sqrt()
+    assert result.name == {'km': 1}
+
+
+def test_units_sqrt_of_a_mixed_name_derives_from_the_dimensions() -> None:
+    """A name that is only partly halvable is discarded whole, not left half-converted."""
+
+    result = Unit((2, 0, 2), (1, 1, 0), 'km**2*ster').sqrt()
+    assert result.name is None
+    assert result.get_name() == 'km*rad'
+
+
+def test_units_name_to_dict_drops_a_cancelled_name() -> None:
+    """A name that cancels out entirely is absent from the result."""
+
+    assert Unit.name_to_dict('km/km') == {}
+
+
+def test_units_name_to_dict_passes_a_dict_through() -> None:
+    """A dictionary is already in the returned form and is handed back unchanged."""
+
+    namedict = {'km': 1, 's': -1}
+    assert Unit.name_to_dict(namedict) is namedict
+
+
+def test_units_name_to_dict_rejects_a_non_string() -> None:
+    """name_to_dict() reports an argument that is neither a string nor a dictionary."""
+
+    with pytest.raises(ValueError, match='unit is not a string: "123"'):
+        Unit.name_to_dict(123)
+
+
+def test_units_name_to_dict_rejects_a_missing_operand() -> None:
+    """An operator with nothing after it is an error."""
+
+    with pytest.raises(ValueError, match='missing operand in unit "km\\*"'):
+        Unit.name_to_dict('km*')
+
+
+def test_units_name_to_dict_rejects_a_missing_operand_before_a_parenthesis() -> None:
+    """An operator immediately before a closing parenthesis is an error."""
+
+    with pytest.raises(ValueError, match='missing operand in unit "\\(km/\\)"'):
+        Unit.name_to_dict('(km/)')
+
+
+def test_units_name_to_dict_rejects_an_unbalanced_close_parenthesis() -> None:
+    """A closing parenthesis with no opening one is an error."""
+
+    with pytest.raises(ValueError, match='unbalanced "\\)" in unit "km\\)"'):
+        Unit.name_to_dict('km)')
+
+
+def test_units_name_to_dict_rejects_an_exponent_without_an_integer() -> None:
+    """A "**" must be followed by an integer."""
+
+    with pytest.raises(ValueError, match='"\\*\\*" without an integer in unit "km\\*\\*"'):
+        Unit.name_to_dict('km**')
+
+
+def test_units_name_to_dict_of_an_empty_string_is_empty() -> None:
+    """An empty expression names no units."""
+
+    assert Unit.name_to_dict('') == {}
+
+
+def test_units_multiply_by_a_unit_named_from_create_name() -> None:
+    """A generated name, which carries a zero per unused dimension, survives a product."""
+
+    generated = Unit((6, 0, 0), (1, 1, 0), None).create_name()
+    assert generated == {'km': 6, 's': 0, 'rad': 0}
+
+    result = Unit((0, 1, 0), (1, 1, 0), 's') * Unit((6, 0, 0), (1, 1, 0), generated)
+    assert result.name == {'s': 1, 'km': 6}
+
+
+def test_units_divide_by_a_unit_named_from_create_name() -> None:
+    """A generated name, which carries a zero per unused dimension, survives a quotient."""
+
+    generated = Unit((6, 0, 0), (1, 1, 0), None).create_name()
+    result = Unit((0, 1, 0), (1, 1, 0), 's') / Unit((6, 0, 0), (1, 1, 0), generated)
+    assert result.name == {'s': 1, 'km': -6}
+
+
+def test_units_mul_names_drops_a_zero_absent_from_the_first_name() -> None:
+    """A zero exponent in the second name is dropped, not looked up in the first."""
+
+    assert Unit._mul_names({'s': 1}, {'km': 0}) == {'s': 1}
+
+
+def test_units_div_names_drops_a_zero_absent_from_the_first_name() -> None:
+    """A zero exponent in the second name is dropped, not looked up in the first."""
+
+    assert Unit._div_names({'s': 1}, {'km': 0}) == {'s': 1}
