@@ -332,6 +332,13 @@ content (as `.claude/rules/python_testing.md` §7 requires) would.
 
 ## 2. Correctness risks found by inspection
 
+> **Status: closed 2026-08-10.** Seven were fixed. The eighth, `unshrink()`, was not
+> fixable as proposed: a fully masked object shrinks to a single value, so its leading
+> axes are genuinely gone and cannot be derived from the antimask. Deriving them anyway
+> produced a shape that looked right and was not — `(1, 100)` for an object that had
+> been `(3, 1, 100)` — which the suite caught. The limitation is documented on the
+> method instead, together with the `shape` argument that works around it.
+
 These were not reproduced end-to-end but look wrong on reading.
 
 - **`Vector.element_div()` derivative unit** (`vector.py:786`). `arg_inv_sq` holds
@@ -684,6 +691,14 @@ axis-manipulation code is fresh, not as a drive-by.
 
 ## 6. Consistency and API shape
 
+> **Status: closed 2026-08-10.** Sibling classes now agree on which arguments are
+> keyword-only; the pickler module is documented through `docs/module.rst` rather than
+> bound onto every object; `__getitem__` and `__setitem__` gained the docstrings they
+> never had, including the two deliberate departures from NumPy indexing; the four
+> wrong docstrings are corrected; `_prep_index` no longer converts every exception into
+> an `IndexError`; the bare `assert` raises; and the class docstring now states that
+> objects are unhashable and that nothing is synchronized.
+
 - **`Scalar.as_index_and_mask` is keyword-only; `Vector.as_index_and_mask` is not**
   (`scalar.py:142` vs `vector.py:206`), and `Vector.as_index` calls it positionally. Same
   method name, same conceptual signature, two different calling conventions. Likewise
@@ -740,6 +755,13 @@ axis-manipulation code is fresh, not as a drive-by.
 
 ## 7. Configuration and tooling
 
+> **Status: closed 2026-08-10.** Minimum versions declared, the self-referential dev
+> extra dropped, one coverage target, `filterwarnings = ["error"]` (the suite passes
+> with no exemptions), the check script's mypy pointed at `tests` only, and a scheduled
+> `pip-audit` workflow deliberately kept out of the merge gate so that the gate still
+> matches the check script exactly. PEP 561 is addressed with per-module stubs; see
+> below.
+
 - **No minimum version constraints on runtime dependencies.** `pyproject.toml` declares
   `dependencies = ["numpy", "rms-fpzip"]`. `.claude/rules/dependency_management.md` §3
   requires minimum versions ("e.g., `numpy>=2.2.0`"), and the code targets NumPy 2 behavior.
@@ -776,7 +798,13 @@ axis-manipulation code is fresh, not as a drive-by.
   `dependency_management.md` §5 both call for. With only two runtime dependencies this is
   low-risk but cheap to add.
 
-- **The PEP 561 story is incomplete.** `py.typed` is shipped and `src/polymath/__init__.pyi`
+- **The PEP 561 story is incomplete.** *(Addressed: eleven per-module stubs now cover the
+  public surface, and `stubtest` gates them in the check script and in CI, so a stub that
+  drifts from the runtime API fails the build. Signature shapes are exact; types come from
+  the docstrings where those state one and are `Any` where they do not. Writing them
+  surfaced two further defects: `polymath.unit.unit`, a loop variable left in the module
+  namespace, and a test-isolation bug where four tests depended on a global that a fifth
+  set.)* `py.typed` is shipped and `src/polymath/__init__.pyi`
   exists, but it is 31 lines of re-exports and the stub's own docstring admits the classes
   "are still inferred from their implementation modules". Since `src/` carries no
   annotations by policy, downstream type checkers see a typed package whose entire public
@@ -811,4 +839,5 @@ axis-manipulation code is fresh, not as a drive-by.
 
 5. ~~**Then consider the structural performance work** — the fast internal constructor
    (§5.3) and the `einsum` conversion in `dot` (§5.5).~~ Done 2026-08-09; see the status
-   notes in §5. What remains open is §2, §4, §6 and §7.
+   notes in §5. What remains open is §4 — the unresolved TODO and XXX markers, most of all
+   the derivative propagation in `Polynomial.invert_line()`.
