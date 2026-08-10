@@ -9,8 +9,9 @@ description = "Wrapper for NumPy that adds easy masks and vector computation"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "numpy",
-  "rms-fpzip"
+  # The code is written against NumPy 2 semantics throughout.
+  "numpy>=2.0",
+  "rms-fpzip>=1.0"
 ]
 license = {text = "Apache-2.0"}
 authors = [
@@ -48,8 +49,9 @@ pythonpath = [
   "src"
 ]
 testpaths = ["tests"]
-addopts = ["-n", "auto", "--cov=src", "--strict-markers", "--strict-config"]
+addopts = ["-n", "auto", "--cov=src/polymath", "--strict-markers", "--strict-config"]
 markers = []
+filterwarnings = ["error"]
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
@@ -66,10 +68,11 @@ write_to = "src/polymath/_version.py"
 
 [project.optional-dependencies]
 dev = [
-  "rms-polymath",
   "coverage>=7.0",
   "flake8",
-  # "mypy>=1.0",
+  # mypy is not run against src (see CLAUDE.md), but stubtest ships with it
+  "mypy>=1.0",
+  "pip-audit>=2.7",
   "pymarkdownlnt>=0.9.35",
   "pytest>=7.0",
   "pytest-cov>=4.0",
@@ -92,7 +95,8 @@ docs = [
 [tool.coverage.run]
 branch = true
 parallel = true
-source = ["polymath"]
+# Must match --cov in the pytest addopts above, or fail_under measures something else
+source = ["src/polymath"]
 omit = ["tests/*", "_version.py"]
 
 [tool.coverage.report]

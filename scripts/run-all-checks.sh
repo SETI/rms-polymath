@@ -378,7 +378,7 @@ run_code_checks() {
 
     if [ "$RUN_MYPY" = true ] && [ "$ENABLE_MYPY" = true ]; then
         print_info "Running mypy..."
-        if MYPYPATH=src python -m mypy src tests; then
+        if MYPYPATH=src python -m mypy tests; then
             print_success "Mypy passed"
         else
             print_error "Mypy failed"

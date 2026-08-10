@@ -68,11 +68,16 @@ history, user requests, or issue numbers in a docstring.
   it needs, so it passes when run alone. Don't rely on a value another test left behind.
 - Prefer one behavior per test function so a failure names what broke. Where a file's setup is
   genuinely sequential, a longer function is fine — correctness before granularity.
-- `pytest` addopts already apply `-n auto --cov=src --strict-markers --strict-config`, so every
-  run is parallel with coverage. Tests must be order-independent.
+- `pytest` addopts already apply `-n auto --cov=src/polymath --strict-markers
+  --strict-config`, so every run is parallel with coverage. Tests must be order-independent.
 - `markers` is an empty list plus `--strict-markers`: any unregistered `@pytest.mark.<custom>`
   fails the run. Register it in `pyproject.toml` first.
-- Coverage must stay at or above 90% (`fail_under = 90`, branch coverage on).
+- Coverage must stay at or above 90% (`fail_under = 90`, branch coverage on). The pytest
+  `--cov` target and `[tool.coverage.run] source` must name the same path, or the floor
+  measures something other than what the run covered.
+- `filterwarnings = ["error"]`: any warning a test triggers fails it. The suite passes
+  with no exemptions, so add a narrowly-scoped `ignore::` entry only for a warning from
+  third-party code you cannot fix, with a comment saying why.
 - Assert one condition per `assert` (no `and`), on exact expected values; `pytest.approx` for
   floats.
 - There is no `conftest.py` yet, and `tests/` is flat — it does not mirror `src/polymath/extensions/`.
@@ -88,8 +93,8 @@ via MyST. Every API symbol named in prose must use a Sphinx role (`:class:`, `:m
 `:mod:`, `:attr:`, `:data:`) — a bare CamelCase name or inline literal is a violation. American
 spelling, one space after a sentence-ending period, no time-anchored words ("new", "legacy", "now").
 
-The local check script runs pymarkdown over `README.md` and `CONTRIBUTING.md` while CI does not, so
-the local run is stricter than CI here.
+The check script and CI scan the same Markdown set — `docs/`, `.claude/`, `README.md` and
+`CONTRIBUTING.md`. Keep the two in step if either changes.
 
 ## Repo etiquette
 
