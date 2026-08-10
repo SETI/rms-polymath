@@ -12,6 +12,11 @@ stated as such.
 
 ## Summary
 
+> **Status: this review is closed as of 2026-08-10.** Every section carries its own status
+> note recording what was fixed, what was fixed differently than proposed, and what was
+> reviewed and deliberately left alone. The text below describes the library as it stood on
+> 2026-08-09 and is kept unedited as the record of that reading.
+
 The library is in good shape structurally: the class hierarchy is coherent, the
 `Qube`/extension split keeps individual files navigable, docstrings are thorough, and the
 mask/derivative/unit machinery is carefully thought through. The problems are concentrated
@@ -41,7 +46,7 @@ produce a mystifying downstream failure.
 ## 1. Confirmed defects
 
 > **Status: all of §1 was fixed on 2026-08-09**, each item with a regression test that
-> fails against the previous code. Everything from §2 onward is unchanged and still open.
+> fails against the previous code. Sections 2 through 7 carry their own status notes.
 
 ### 1.1 `Qube.__pow__` calls a method that does not exist — **critical** [confirmed]
 
@@ -437,7 +442,9 @@ These were not reproduced end-to-end but look wrong on reading.
 
 ## 4. Unresolved questions left in the code
 
-> **Status: `invert_line()` closed 2026-08-10; the rest still open.** The review bot was
+> **Status: closed 2026-08-10.** Two of the three correctness questions were real and are
+> fixed; the third, and the feature-gap markers alongside it, were reviewed and left as
+> they stand. The review bot was
 > right. `invert_line()` inverted the *derivative polynomial* — returning `(1/a', -b'/a')`
 > where the chain rule gives `(-a'/a**2, -b'/a + b*a'/a**2)`. On `a=2, a'=1, b=3, b'=4` it
 > returned `[1, -4]` for a true `[-0.25, -1.25]`, confirmed against a finite difference.
@@ -459,6 +466,38 @@ These were not reproduced end-to-end but look wrong on reading.
 > attribute copied from the original object, so the dictionary and the attribute
 > disagreed about the derivative's class. The guard now tests the derivative rather than
 > the object, and sets both.
+>
+> Both `unit.py` questions are answered rather than merely unmarked. `mul_units` and
+> `div_units` overwrote `result.name` with a `name` argument that no caller in `src/` ever
+> passed, so the answer to "why do we only do this for new units?" was that there was no
+> reason to do it at all: the parameter is gone from `mul_units`, `div_units`, `sqrt_unit`,
+> `unit_power` and `sqrt`, and the name computed by the operator now stands. `Unit.KM *
+> Unit.S` and `Unit.mul_units(Unit.KM, Unit.S)` agree for the first time.
+>
+> The two `# TODO What is the purpose of this check?` raises went with the code that held
+> them: `name_to_dict` is now a tokenizer and a recursive-descent parser, so the two
+> unreachable syntax checks and their `# pragma: no cover` markers no longer exist. The
+> rewrite also removed the lax parses the old splitting had allowed — `'(km'` returned a
+> dictionary and now reports the missing parenthesis.
+>
+> That rewrite cost three defects on the way in, each caught by the suite and fixed: it
+> dropped the `isinstance(expr, dict)` passthrough its own docstring still promised, which
+> broke fourteen tests across `Matrix.inverse`, `Scalar.sqrt` and four `Vector` products;
+> it made a latent `KeyError` in `_mul_names`/`_div_names` reachable by emitting
+> zero-valued exponents where the old parser never had; and it left the docstring
+> describing zero retention after the code had moved to dropping those keys. A fourth
+> defect surfaced underneath it, older than this review: `Unit.STER.sqrt()` — and
+> therefore `Scalar(x, unit=Unit.STER).sqrt()` — raised `ValueError` because the name
+> `ster` has an odd exponent even though the dimensions halve cleanly. `_name_power` now
+> yields None when a power cannot be applied to a name, leaving the unit to name itself
+> from its dimensions, and steradians square-root to radians.
+>
+> The remaining markers stay. The `quaternion.py` divide-by-zero note records a genuine
+> open question about what a degenerate rotation should produce, and a marker that states
+> an unresolved design question is doing its job; inventing an answer to clear a checklist
+> would be worse than leaving the question visible. The two `NotImplementedError` feature
+> gaps are honest about what is not built. This section is therefore closed with those
+> markers in place rather than removed.
 
 `grep` finds nine `TODO`/`XXX` markers in `src/`. Three of them record open *correctness*
 questions in shipped code, which is different from a style note:
@@ -840,11 +879,12 @@ axis-manipulation code is fresh, not as a drive-by.
 
 ## Recommended priorities
 
-1. **Fix the six confirmed defects that produce wrong answers or exceptions**: §1.1
+1. ~~**Fix the six confirmed defects that produce wrong answers or exceptions**: §1.1
    (`as_fully_masked`), §1.2 (`Matrix.inverse` mutating input), §1.3 (`sort()` losing the
    mask), §1.4 (`__setitem__` `UnboundLocalError`), §1.6 (`np.ma.stack`), §1.5 (the three
-   aliased-dict cases). Each is a few lines. Each needs a regression test — all six live in
-   paths the current suite does not reach, which is the more important signal.
+   aliased-dict cases).~~ Done 2026-08-09; see the status note in §1. Each is a few lines.
+   Each needed a regression test — all six lived in paths the suite did not reach, which
+   was the more important signal.
 
 2. ~~**Make the two performance changes**: guard the `unused_set` computation in
    `_prep_index` (§5.1) and swap `np.prod` for `math.prod` in `Qube.__init__` (§5.2).~~
@@ -852,17 +892,20 @@ axis-manipulation code is fresh, not as a drive-by.
    is roughly 2x faster; 420 randomized index cases confirm the semantics are byte-identical
    to the previous implementation.
 
-3. **Clean up the remaining confirmed defects and the dead code**: §1.7-§1.12, then the
+3. ~~**Clean up the remaining confirmed defects and the dead code**: §1.7-§1.12, then the
    §3 items — decide `__ipow__`'s fate, add the `__floordiv__` fast path or delete its
-   orphaned helper, and remove `Matrix.solve`'s commented-out body.
+   orphaned helper, and remove `Matrix.solve`'s commented-out body.~~ Done 2026-08-09; see
+   the status notes in §1 and §3. Two of the §3 items turned out to be live bugs rather
+   than dead code.
 
-4. **Resolve the correctness `XXX`s**, ~~starting with `Polynomial.invert_line` (§4)~~. An
-   unanswered "this math may be wrong" note in a released numerical library is a liability
-   regardless of whether it turns out to be right — this one was right, and it took a
-   second defect in `Polynomial.__init__` down with it. The `quaternion.py` and `unit.py`
-   markers remain.
+4. ~~**Resolve the correctness `XXX`s**, starting with `Polynomial.invert_line` (§4).~~
+   Done 2026-08-10. An unanswered "this math may be wrong" note in a released numerical
+   library is a liability regardless of whether it turns out to be right — this one was
+   right, and it took a second defect in `Polynomial.__init__` down with it. The `unit.py`
+   markers are answered too. The `quaternion.py` divide-by-zero marker stays deliberately;
+   see the status note in §4.
 
 5. ~~**Then consider the structural performance work** — the fast internal constructor
    (§5.3) and the `einsum` conversion in `dot` (§5.5).~~ Done 2026-08-09; see the status
-   notes in §5. What remains open is the rest of §4 — the `quaternion.py` divide-by-zero
-   question and the two `unit.py` naming markers.
+   notes in §5. Every section of this review now carries a status note, and nothing in it
+   remains open.
