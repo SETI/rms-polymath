@@ -8,6 +8,13 @@ import numbers
 
 from polymath.unit import Unit
 
+# Concrete numeric types, tested ahead of the numbers ABCs. An isinstance() check against
+# an ABC dispatches through __instancecheck__, several times slower than a check against a
+# tuple of classes, and these run on every arithmetic operation. Where the answer must be
+# exact, the ABC still has the last word, so that a type registered with it but not listed
+# here, such as fractions.Fraction, is still recognized.
+_NUMERIC_TYPES = (int, float, np.integer, np.floating)
+
 
 class Qube:
     """The base class for all PolyMath subclasses.
@@ -408,7 +415,14 @@ class Qube:
             TypeError: If the data type of `arg` is invalid.
         """
 
-        if isinstance(arg, numbers.Real):
+        # Ordered by how often each case arises, with the concrete types ahead of the ABC
+        if type(arg) is np.ndarray:         # exact type, not a subclass
+            return (arg, False)
+
+        if isinstance(arg, Qube):
+            return (arg._values, arg._mask)
+
+        if isinstance(arg, _NUMERIC_TYPES):
             return (arg, False)
 
         if isinstance(arg, np.ma.MaskedArray):
@@ -433,6 +447,9 @@ class Qube:
 
         if isinstance(arg, np.bool_):
             return (bool(arg), False)
+
+        if isinstance(arg, numbers.Real):   # a numeric type registered with the ABC
+            return (arg, False)
 
         _opstr = ' ' + opstr if opstr else ''
         raise TypeError(f'invalid{_opstr} data type: {type(arg)}')
@@ -587,32 +604,32 @@ class Qube:
             TypeError: If the type of `arg` is invalid.
         """
 
-        # Handle the easy and common cases first
+        # Handle the easy and common cases first. A plain array is the most frequent
+        # input by far, so it is recognized by its exact type before anything else.
+        if type(arg) is np.ndarray:
+            return Qube._array_dtype_and_value(arg, opstr=opstr)
+
+        # Concrete scalar types, tested ahead of the ABCs
         if isinstance(arg, (bool, np.bool_)):
             return ('bool', bool(arg))
 
+        if isinstance(arg, (int, np.integer)):
+            return ('int', int(arg))
+
+        if isinstance(arg, (float, np.floating)):
+            return ('float', float(arg))
+
+        # Any other ndarray subclass. Note that a MaskedArray is caught here and returned
+        # with its mask intact, rather than by the masked-object handling further down.
+        if isinstance(arg, np.ndarray):
+            return Qube._array_dtype_and_value(arg, opstr=opstr)
+
+        # A numeric type registered with an ABC but not listed above
         if isinstance(arg, numbers.Integral):
             return ('int', int(arg))
 
         if isinstance(arg, numbers.Real):
             return ('float', float(arg))
-
-        if isinstance(arg, np.ndarray):
-            if arg.shape == ():         # shapeless array
-                return Qube._dtype_and_value(arg[()], opstr=opstr)
-
-            kind = arg.dtype.kind
-            if kind == 'f':
-                return ('float', arg)
-
-            if kind in ('i', 'u'):
-                return ('int', arg)
-
-            if kind == 'b':
-                return ('bool', arg)
-
-            _opstr = ' ' + opstr if opstr else ''
-            raise ValueError(f'unsupported{_opstr} dtype: {arg.dtype}')
 
         # Convert a list or tuple to something else
         if isinstance(arg, (list, tuple)):
@@ -649,6 +666,39 @@ class Qube:
         arg = arg.copy()
         arg[mask] = masked_value
         return (dtype, arg)
+
+    @staticmethod
+    def _array_dtype_and_value(arg, opstr=''):
+        """Tuple (dtype, value) for a NumPy array, where dtype is "float", "int", or
+        "bool".
+
+        Parameters:
+            arg (numpy.ndarray): Array to interpret. It must not be a MaskedArray.
+            opstr (str, optional): Name of operation to include in any error message.
+
+        Returns:
+            tuple: (`dtype`, `value`), where `dtype` is one of "float", "int", or "bool".
+            A shapeless array is returned as a Python scalar.
+
+        Raises:
+            ValueError: If the dtype of `arg` is unsupported.
+        """
+
+        if arg.shape == ():             # shapeless array
+            return Qube._dtype_and_value(arg[()], opstr=opstr)
+
+        kind = arg.dtype.kind
+        if kind == 'f':
+            return ('float', arg)
+
+        if kind in ('i', 'u'):
+            return ('int', arg)
+
+        if kind == 'b':
+            return ('bool', arg)
+
+        _opstr = ' ' + opstr if opstr else ''
+        raise ValueError(f'unsupported{_opstr} dtype: {arg.dtype}')
 
     @staticmethod
     def _dtype(arg):
@@ -2363,6 +2413,13 @@ class Qube:
     @staticmethod
     def _is_one_value(value):
         """True if the value is a Python numeric or a NumPy numeric scalar."""
+
+        if isinstance(value, _NUMERIC_TYPES):
+            return True
+
+        # The types that dominate the negative answer, kept off the ABC as well
+        if isinstance(value, (Qube, np.ndarray, list, tuple)):
+            return False
 
         return isinstance(value, numbers.Real)
 

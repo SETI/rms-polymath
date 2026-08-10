@@ -4,7 +4,7 @@
 
 import numpy as np
 import numbers
-from polymath.qube import Qube
+from polymath.qube import Qube, _NUMERIC_TYPES
 from polymath.unit import Unit
 
 ##########################################################################################
@@ -96,7 +96,7 @@ def __add__(self, /, arg, *, recursive=True):
     """
 
     # Handle a simple right-hand value...
-    if self._rank == 0 and isinstance(arg, numbers.Real):
+    if self._rank == 0 and isinstance(arg, _NUMERIC_TYPES):
         obj = self.clone(recursive=recursive, retain_cache=True)
         obj._set_values(self._values + arg, retain_cache=True)
         return obj
@@ -160,7 +160,7 @@ def __iadd__(self, /, arg):
     self.require_writeable()
 
     # Handle a simple right-hand value...
-    if self._rank == 0 and isinstance(arg, (numbers.Real, np.ndarray)):
+    if self._rank == 0 and isinstance(arg, (*_NUMERIC_TYPES, np.ndarray)):
         self._values += arg
         self._new_values()
         return self
@@ -237,7 +237,7 @@ def __sub__(self, /, arg, *, recursive=True):
     """
 
     # Handle a simple right-hand value...
-    if self._rank == 0 and isinstance(arg, numbers.Real):
+    if self._rank == 0 and isinstance(arg, _NUMERIC_TYPES):
         obj = self.clone(recursive=recursive, retain_cache=True)
         obj._set_values(self._values - arg, retain_cache=True)
         return obj
@@ -308,7 +308,7 @@ def __isub__(self, /, arg):
     self.require_writeable()
 
     # Handle a simple right-hand value...
-    if self._rank == 0 and isinstance(arg, (numbers.Real, np.ndarray)):
+    if self._rank == 0 and isinstance(arg, (*_NUMERIC_TYPES, np.ndarray)):
         self._values -= arg
         self._new_values()
         return self
@@ -467,7 +467,7 @@ def __imul__(self, /, arg):
     self.require_writeable()
 
     # If a number...
-    if isinstance(arg, numbers.Real):
+    if isinstance(arg, _NUMERIC_TYPES):
         self._values *= arg
         self._new_values()
         for _key, deriv in self._derivs.items():
@@ -688,7 +688,7 @@ def __itruediv__(self, /, arg):
     self.require_writeable()
 
     # If a number...
-    if isinstance(arg, numbers.Real) and arg != 0:
+    if isinstance(arg, _NUMERIC_TYPES) and arg != 0:
         self._values /= arg
         self._new_values()
         for _key, deriv in self._derivs.items():
@@ -882,7 +882,7 @@ def __ifloordiv__(self, /, arg):
     self.require_writeable()
 
     # If a number...
-    if isinstance(arg, numbers.Real) and arg != 0:
+    if isinstance(arg, _NUMERIC_TYPES) and arg != 0:
         self._values //= arg
         self._new_values()
         self.delete_derivs()
@@ -1047,7 +1047,7 @@ def __imod__(self, /, arg):
     self.require_writeable()
 
     # If a number...
-    if isinstance(arg, numbers.Real) and arg != 0:
+    if isinstance(arg, _NUMERIC_TYPES) and arg != 0:
         self._values %= arg
         self._new_values()
         return self
