@@ -12,6 +12,8 @@ from polymath.matrix  import Matrix
 from polymath.matrix3 import Matrix3
 from polymath.unit    import Unit
 
+__all__ = ['Quaternion']
+
 
 class Quaternion(Vector):
     """Represent quaternions and support conversions between rotation representations.

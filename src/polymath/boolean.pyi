@@ -17,6 +17,8 @@ from numpy.typing import NDArray
 from polymath.qube import _Arraylike
 from polymath.scalar import Scalar
 
+__all__ = ['Boolean']
+
 class Boolean(Scalar):
     FALSE: Boolean
     MASKED: Boolean

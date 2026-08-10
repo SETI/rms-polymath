@@ -25,18 +25,7 @@ from polymath.vector3 import Vector3 as Vector3
 
 __version__: str
 
-__all__ = [
-    'Boolean',
-    'Matrix',
-    'Matrix3',
-    'Pair',
-    'Polynomial',
-    'Quaternion',
-    'Qube',
-    'Scalar',
-    'Unit',
-    'Vector',
-    'Vector3',
-]
+__all__ = ['Boolean', 'Matrix', 'Matrix3', 'Pair', 'Polynomial', 'Quaternion', 'Qube',
+           'Scalar', 'Unit', 'Vector', 'Vector3']
 
 ##########################################################################################

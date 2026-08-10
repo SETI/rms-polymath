@@ -5,6 +5,8 @@
 import itertools
 import numpy as np
 
+__all__ = ['QubeIterator', 'QubeNDIterator', 'ndenumerate']
+
 
 class QubeIterator:
     """Provide iteration across the first axis of a Qube object.

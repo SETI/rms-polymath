@@ -17,6 +17,8 @@ from numpy.typing import NDArray
 
 from polymath.qube import Qube, _Arraylike, _ShapeOrTuple
 
+__all__ = ['Scalar']
+
 class Scalar(Qube):
     HALFPI: Scalar
     INF: Scalar

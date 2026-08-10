@@ -5,6 +5,9 @@
 import numpy as np
 from polymath.qube import Qube
 
+__all__ = ['tvl_all', 'tvl_and', 'tvl_any', 'tvl_eq', 'tvl_ge', 'tvl_gt', 'tvl_le',
+           'tvl_lt', 'tvl_ne', 'tvl_or']
+
 
 def tvl_and(self, arg, builtins=None, masked=None):
     """Return the three-valued logic "and" operator result.

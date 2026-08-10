@@ -9,6 +9,8 @@ from polymath.scalar import Scalar
 from polymath.vector import Vector
 from polymath.unit   import Unit
 
+__all__ = ['Polynomial']
+
 
 class Polynomial(Vector):
     """Represent polynomials in the PolyMath framework.

@@ -8,6 +8,8 @@ import numbers
 
 from polymath.unit import Unit
 
+__all__ = ['Qube']
+
 # Concrete numeric types, tested ahead of the numbers ABCs. An isinstance() check against
 # an ABC dispatches through __instancecheck__, several times slower than a check against a
 # tuple of classes, and these run on every arithmetic operation. Where the answer must be

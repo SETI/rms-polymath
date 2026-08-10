@@ -191,4 +191,7 @@ Qube.tvl_le             = tvl.tvl_le
 Qube.tvl_ge             = tvl.tvl_ge
 Qube._tvl_op            = tvl._tvl_op
 
+# This module exports no names of its own; it binds the extension methods onto Qube.
+__all__ = []
+
 ################################################################################

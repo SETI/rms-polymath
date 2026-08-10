@@ -6,6 +6,10 @@ import numpy as np
 import numbers
 from polymath.qube import Qube
 
+# This module exports no names of its own; __getitem__ and __setitem__ are bound onto
+# Qube as special methods.
+__all__ = []
+
 
 def __getitem__(self, indx):
     """self[indx], returning the selected subset of this object.

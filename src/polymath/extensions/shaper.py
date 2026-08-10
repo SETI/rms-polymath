@@ -6,6 +6,8 @@ import math
 import numpy as np
 from polymath.qube import Qube
 
+__all__ = ['flatten', 'move_axis', 'reshape', 'roll_axis', 'stack', 'swap_axes']
+
 
 def reshape(self, shape, *, recursive=True):
     """Return a shallow copy of the object with a new leading shape.

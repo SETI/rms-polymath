@@ -9,6 +9,8 @@ from polymath.qube   import Qube
 from polymath.scalar import Scalar
 from polymath.vector import Vector
 
+__all__ = ['Pair']
+
 
 class Pair(Vector):
     """Represent coordinate pairs or 2-vectors in the PolyMath framework.

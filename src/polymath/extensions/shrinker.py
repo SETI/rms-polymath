@@ -6,6 +6,8 @@ import numpy as np
 from polymath.qube import Qube
 from polymath.scalar import Scalar
 
+__all__ = ['shrink', 'unshrink']
+
 
 def shrink(self, antimask):
     """A 1-D version of this object, containing only the samples in the antimask provided.

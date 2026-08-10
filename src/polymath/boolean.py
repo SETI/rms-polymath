@@ -7,6 +7,8 @@ import numpy as np
 from polymath.qube import Qube
 from polymath.scalar import Scalar
 
+__all__ = ['Boolean']
+
 
 class Boolean(Scalar):
     """Represent boolean values in the PolyMath framework.

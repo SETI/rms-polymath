@@ -15,6 +15,8 @@ from typing import Any
 from polymath.qube import _Arraylike
 from polymath.vector import Vector
 
+__all__ = ['Pair']
+
 class Pair(Vector):
     HALF: Pair
     IDENTITY: Pair

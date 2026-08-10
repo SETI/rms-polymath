@@ -8,6 +8,8 @@ from polymath.qube   import Qube
 from polymath.scalar import Scalar
 from polymath.unit   import Unit
 
+__all__ = ['Vector']
+
 
 class Vector(Qube):
     """Representation of 1-D vectors of arbitrary length in the PolyMath framework.

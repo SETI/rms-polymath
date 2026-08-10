@@ -5,6 +5,8 @@
 import numpy as np
 from polymath.qube import Qube
 
+__all__ = ['broadcast', 'broadcast_into_shape', 'broadcast_to', 'broadcasted_shape']
+
 
 def broadcast_into_shape(self, shape, *, recursive=True, _protected=True):
     """This object broadcasted to the specified shape. DEPRECATED name; use broadcast_to.

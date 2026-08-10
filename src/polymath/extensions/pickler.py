@@ -76,6 +76,9 @@ import warnings
 
 from polymath.qube import Qube
 
+__all__ = ['PICKLE_VERSION', 'fpzip_compress', 'fpzip_decompress', 'pickle_digits',
+           'pickle_reference', 'set_default_pickle_digits', 'set_pickle_digits']
+
 PICKLE_VERSION = (1, 0)
 
 # How many elements in an array before lossy compression might be used.

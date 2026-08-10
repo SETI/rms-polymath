@@ -9,6 +9,8 @@ from polymath.qube   import Qube
 from polymath.scalar import Scalar
 from polymath.vector import Vector
 
+__all__ = ['Vector3']
+
 
 class Vector3(Vector):
     """Represent 3-dimensional vectors in the PolyMath framework.

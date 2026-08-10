@@ -11,6 +11,8 @@ import warnings
 from polymath.qube import Qube
 from polymath.unit import Unit
 
+__all__ = ['Scalar']
+
 # Maximum argument to exp()
 _EXP_CUTOFF = np.log(sys.float_info.max)
 _TWOPI = np.pi * 2.

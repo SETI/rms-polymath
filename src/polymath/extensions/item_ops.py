@@ -6,6 +6,10 @@ import math
 import numpy as np
 from polymath.qube import Qube
 
+__all__ = ['chain', 'extract_denom', 'extract_denoms', 'extract_numer', 'flatten_denom',
+           'flatten_numer', 'join_items', 'reshape_denom', 'reshape_numer', 'slice_numer',
+           'split_items', 'swap_items', 'transpose_denom', 'transpose_numer']
+
 
 def extract_numer(self, axis, index, classes=(), *, recursive=True):
     """Extract an object from one numerator axis.

@@ -16,6 +16,8 @@ from typing import Any
 from polymath.qube import _Arraylike
 from polymath.vector import Vector
 
+__all__ = ['Polynomial']
+
 class Polynomial(Vector):
     def __add__(self, arg: Any) -> _Arraylike: ...  # type: ignore[override]
     def __eq__(self, arg: object) -> Any: ...

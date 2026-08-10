@@ -8,6 +8,8 @@ import numbers
 from polymath.qube import Qube
 from polymath.unit import Unit
 
+__all__ = ['as_diagonal', 'cross', 'dot', 'norm', 'norm_sq', 'outer', 'rms']
+
 
 def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
     """Calculate the mean or sum of the unmasked values.

@@ -511,18 +511,7 @@ try:
 except ImportError:                         # pragma nocover
     __version__ = 'Version unspecified'
 
-__all__ = [
-    'Boolean',
-    'Matrix',
-    'Matrix3',
-    'Pair',
-    'Polynomial',
-    'Quaternion',
-    'Qube',
-    'Scalar',
-    'Unit',
-    'Vector',
-    'Vector3',
-]
+__all__ = ['Boolean', 'Matrix', 'Matrix3', 'Pair', 'Polynomial', 'Quaternion', 'Qube',
+           'Scalar', 'Unit', 'Vector', 'Vector3']
 
 ##########################################################################################

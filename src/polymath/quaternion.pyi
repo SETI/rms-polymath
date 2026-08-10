@@ -17,6 +17,8 @@ from numpy.typing import NDArray
 from polymath.qube import _Arraylike, _ShapeOrTuple
 from polymath.vector import Vector
 
+__all__ = ['Quaternion']
+
 class Quaternion(Vector):
     IDENTITY: Quaternion
     MASKED: Quaternion

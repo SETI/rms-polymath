@@ -5,6 +5,10 @@
 import numpy as np
 from polymath.qube import Qube
 
+__all__ = ['clip', 'is_above', 'is_below', 'is_inside', 'is_outside', 'mask_where',
+           'mask_where_between', 'mask_where_eq', 'mask_where_ge', 'mask_where_gt',
+           'mask_where_le', 'mask_where_lt', 'mask_where_ne', 'mask_where_outside']
+
 
 def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
     """Return a copy of this object after a mask has been applied.

@@ -10,6 +10,8 @@ from polymath.vector3 import Vector3
 from polymath.matrix  import Matrix
 from polymath.unit    import Unit
 
+__all__ = ['Matrix3']
+
 
 class Matrix3(Matrix):
     """Represent 3x3 rotation matrices in the PolyMath framework.

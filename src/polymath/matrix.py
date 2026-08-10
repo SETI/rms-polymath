@@ -13,6 +13,8 @@ from polymath.vector  import Vector
 from polymath.vector3 import Vector3
 from polymath.unit    import Unit
 
+__all__ = ['Matrix']
+
 
 class Matrix(Qube):
     """A Qube of arbitrary 2-D matrices.

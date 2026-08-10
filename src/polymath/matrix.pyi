@@ -15,6 +15,8 @@ from typing import Any
 
 from polymath.qube import Qube, _Arraylike, _ShapeOrTuple
 
+__all__ = ['Matrix']
+
 class Matrix(Qube):
     IDENTITY2: Matrix
     IDENTITY3: Matrix

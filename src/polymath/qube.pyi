@@ -19,6 +19,8 @@ from numpy.typing import NDArray
 
 from polymath.unit import Unit
 
+__all__ = ['Qube']
+
 # Anything the constructors accept in place of a value: a PolyMath object, a NumPy array,
 # a nested sequence, or a single number.
 _Arraylike: TypeAlias = (Qube | NDArray[Any] | np.ma.MaskedArray[Any, Any] |
