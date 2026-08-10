@@ -650,4 +650,32 @@ def test_indices_an_unmasked_scalar() -> None:
     assert 'invalid index type' in str(cm.value)
 
 
+def test_indices_masked_index_when_every_element_of_the_axis_is_used() -> None:
+    """A masked index value still yields a masked result when no axis element is spare."""
+
+    a = Scalar([10., 11., 12.])
+    index = Scalar([0, 1, 2, 0], [False, False, False, True])
+    result = a[index]
+
+    assert list(result.mask) == [False, False, False, True]
+    assert result.values[0] == 10.
+    assert result.values[1] == 11.
+    assert result.values[2] == 12.
+
+
+def test_indices_masked_index_avoids_the_elements_the_index_selects() -> None:
+    """A masked index value is redirected away from the elements the index selects."""
+
+    a = Scalar([10., 11., 12., 13.])
+    index = Scalar([1, 2, 1], [False, False, True])
+    result = a[index]
+
+    assert list(result.mask) == [False, False, True]
+    assert result.values[0] == 11.
+    assert result.values[1] == 12.
+    # The value under the mask is unspecified, but it must not alias an element that the
+    # index genuinely selects
+    assert result.values[2] not in (11., 12.)
+
+
 ##########################################################################################

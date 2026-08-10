@@ -2,6 +2,7 @@
 # polymath/qube.py: Base class for all PolyMath subclasses.
 ##########################################################################################
 
+import math
 import numpy as np
 import numbers
 
@@ -273,10 +274,10 @@ class Qube:
         self._item  = item
         self._numer = numer
         self._denom = denom
-        self._size  = int(np.prod(shape))
-        self._isize = int(np.prod(item))
-        self._nsize = int(np.prod(numer))
-        self._dsize = int(np.prod(denom))
+        self._size  = math.prod(shape)
+        self._isize = math.prod(item)
+        self._nsize = math.prod(numer)
+        self._dsize = math.prod(denom)
 
         # Fill in the unit
         self._unit = None if Qube.is_one_false(unit) else unit

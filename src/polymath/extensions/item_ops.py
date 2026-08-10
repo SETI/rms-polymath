@@ -2,6 +2,7 @@
 # polymath/extensions/item_ops.py: item restructuring operations
 ##########################################################################################
 
+import math
 import numpy as np
 from polymath.qube import Qube
 
@@ -231,7 +232,7 @@ def reshape_numer(self, shape, classes=(), recursive=True):
 
     # Validate the shape
     shape = tuple(shape)
-    if self.nsize != int(np.prod(shape)):
+    if self.nsize != math.prod(shape):
         opstr = self._opstr('reshape_numer()')
         raise ValueError(f'{opstr} item size must be unchanged: {self._numer}, {shape}')
 
@@ -325,7 +326,7 @@ def reshape_denom(self, shape):
 
     # Validate the shape
     shape = tuple(shape)
-    if self.dsize != int(np.prod(shape)):
+    if self.dsize != math.prod(shape):
         opstr = self._opstr('reshape_denom()')
         raise ValueError(f'{opstr} denominator size must be unchanged: {self._denom}, '
                          f'{shape}')

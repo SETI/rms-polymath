@@ -426,27 +426,14 @@ def _prep_index(self, indx):
                         else:
                             any_masked = np.any(mask_vals)
 
-                        # Find an unused index value, if any
-                        index_vals = index_vals % axis_length
-                        if np.shape(mask_vals):
-                            antimask = np.logical_not(mask_vals)
-                            unused_set = (set(range(axis_length))
-                                          - set(index_vals[antimask]))
-                        elif mask_vals:
-                            unused_set = ()
-                        else:
-                            unused_set = (set(range(axis_length))
-                                          - set(index_vals.ravel()))
-
-                        if unused_set:
-                            unused_index_value = unused_set.pop()
-                        else:
-                            unused_index_value = -1             # -1 = no unused element
-
-                        # Apply mask to index; update masked values
+                        # Point every masked index at an element that the unmasked part
+                        # of the index does not already use. This is only needed if
+                        # something is masked; NumPy interprets negative index values
+                        # itself, so an unmasked index needs no adjustment at all.
                         if any_masked:
-                            index_vals = index_vals.copy()
-                            index_vals[mask_vals] = unused_index_value
+                            index_vals = index_vals % axis_length   # also copies
+                            index_vals[mask_vals] = _unused_index(index_vals, mask_vals,
+                                                                  axis_length)
 
                         pre_index += [index_vals.astype(np.intp)]
 
@@ -587,5 +574,36 @@ def _prep_scalar_index(self, indx):
             raise IndexError('invalid index type: ' + type(item).__name__)
 
     return (masked, size_zero, tuple(shapes[False]), tuple(shapes[True]))
+
+
+def _unused_index(index_vals, mask_vals, axis_length):
+    """An index value along one axis that the unmasked part of an index does not use.
+
+    Masked index values are redirected to this element, so that they do not alias an
+    element that the index also selects for real.
+
+    Parameters:
+        index_vals (numpy.ndarray): Index values, already reduced to the range
+            [0, `axis_length`).
+        mask_vals (numpy.ndarray or bool): The mask on `index_vals`. At least one value
+            must be masked.
+        axis_length (int): The length of the axis being indexed.
+
+    Returns:
+        int: The smallest unused index value, or -1 if every element of the axis is
+        already in use.
+    """
+
+    if not np.shape(mask_vals):         # every index value is masked
+        return -1
+
+    used = np.zeros(axis_length, dtype=np.bool_)
+    used[index_vals[np.logical_not(mask_vals)]] = True
+
+    unused = np.flatnonzero(np.logical_not(used))
+    if unused.size:
+        return int(unused[0])
+
+    return -1                           # -1 = no unused element
 
 ##########################################################################################

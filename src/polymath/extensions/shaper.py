@@ -2,6 +2,7 @@
 # polymath/extensions/shaper.py: re-shaping operations
 ##########################################################################################
 
+import math
 import numpy as np
 from polymath.qube import Qube
 
@@ -60,7 +61,7 @@ def flatten(self, *, recursive=True):
     if self._ndims <= 1:
         return self
 
-    count = np.prod(self._shape)
+    count = math.prod(self._shape)
     return self.reshape((count,), recursive=recursive)
 
 

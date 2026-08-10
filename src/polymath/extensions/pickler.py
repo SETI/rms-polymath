@@ -68,6 +68,7 @@ number to be generated automatically.
 
 import bz2
 import fpzip
+import math
 import numpy as np
 import numbers
 import sys
@@ -605,7 +606,7 @@ def _encode_floats(values, rank, digits, reference):
 
     shape = values.shape
     item = shape[-rank:] if rank else ()
-    item_size = int(np.prod(item))
+    item_size = math.prod(item)
 
     # Deal with a small object quickly
     if values.size <= _FPZIP_ENCODING_CUTOFF:
