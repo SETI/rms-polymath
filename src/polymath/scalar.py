@@ -881,9 +881,8 @@ class Scalar(Qube):
         else:
             # In this case, the values and mask are both arrays
             min_possible = Scalar._minval(self._values.dtype)   # smallest possible value
-            new_values = self._values.copy()
-            new_values[self._mask] = min_possible
-            max_values = np.max(new_values, axis=axis)
+            max_values = np.max(np.where(self._mask, min_possible, self._values),
+                                  axis=axis)
 
             # Deal with completely masked items. Here, use the max of the
             # unmasked values. This object is only partially masked, so a reduction over
@@ -951,9 +950,8 @@ class Scalar(Qube):
         else:
             # In this case, the values and mask are both arrays
             max_possible = Scalar._maxval(self._values.dtype)   # largest possible value
-            new_values = self._values.copy()
-            new_values[self._mask] = max_possible
-            min_values = np.min(new_values, axis=axis)
+            min_values = np.min(np.where(self._mask, max_possible, self._values),
+                                  axis=axis)
 
             # Deal with completely masked items. Here, use the min of the
             # unmasked values. This object is only partially masked, so a reduction over
@@ -1026,9 +1024,8 @@ class Scalar(Qube):
         # In this case, the values and mask are both arrays
         else:
             min_possible = Scalar._minval(self._values.dtype)   # smallest possible value
-            new_values = self._values.copy()
-            new_values[self._mask] = min_possible
-            argmax = np.argmax(new_values, axis=axis)
+            argmax = np.argmax(np.where(self._mask, min_possible, self._values),
+                              axis=axis)
 
             # Deal with completely masked items. Here, use the argmax of the unmasked
             # values. This object is only partially masked, so a reduction over every
@@ -1099,9 +1096,8 @@ class Scalar(Qube):
 
         else:
             max_possible = Scalar._maxval(self._values.dtype)   # largest possible value
-            new_values = self._values.copy()
-            new_values[self._mask] = max_possible
-            argmin = np.argmin(new_values, axis=axis)
+            argmin = np.argmin(np.where(self._mask, max_possible, self._values),
+                              axis=axis)
 
             # Deal with completely masked items. Here, use the argmin of the unmasked
             # values. This object is only partially masked, so a reduction over every
@@ -1163,13 +1159,36 @@ class Scalar(Qube):
         if floats_found and ints_found:
             scalars = [s.as_float() for s in scalars]
 
-        # Create the scalar containing maxima
-        result = scalars[0].copy()
+        # Create the scalar containing maxima. Selecting with np.where() keeps the
+        # reduction in NumPy; indexed assignment would make a full __getitem__ and
+        # __setitem__ round trip for every argument.
+        values = scalars[0]._values
+        mask = scalars[0]._mask
+
         for scalar in scalars[1:]:
-            antimask = Qube.and_(scalar._values > result._values,
-                                 scalar.antimask)
-            antimask = Qube.or_(antimask, result._mask)
-            result[antimask] = scalar[antimask]
+            # Take the new item where it is larger and unmasked, and wherever the
+            # running result is masked
+            take = Qube.or_(Qube.and_(scalar._values > values, scalar.antimask), mask)
+
+            if Qube.is_one_false(take):
+                continue
+
+            if Qube.is_one_true(take):
+                values = scalar._values
+                mask = scalar._mask
+                continue
+
+            values = np.where(take, scalar._values, values)
+
+            # A pair of equal scalar masks stays a scalar, as indexed assignment leaves it
+            if (not isinstance(mask, np.ndarray)
+                    and not isinstance(scalar._mask, np.ndarray)
+                    and mask == scalar._mask):
+                pass
+            else:
+                mask = np.where(take, scalar._mask, mask)
+
+        result = Scalar(values, mask, unit=scalars[0]._unit)
 
         result._clear_cache()
         return result
@@ -1211,13 +1230,36 @@ class Scalar(Qube):
         if floats_found and ints_found:
             scalars = [s.as_float() for s in scalars]
 
-        # Create the scalar containing minima
-        result = scalars[0].copy()
+        # Create the scalar containing minima. Selecting with np.where() keeps the
+        # reduction in NumPy; indexed assignment would make a full __getitem__ and
+        # __setitem__ round trip for every argument.
+        values = scalars[0]._values
+        mask = scalars[0]._mask
+
         for scalar in scalars[1:]:
-            antimask = Qube.and_(scalar._values < result._values,
-                                 scalar.antimask)
-            antimask = Qube.or_(antimask, result._mask)
-            result[antimask] = scalar[antimask]
+            # Take the new item where it is smaller and unmasked, and wherever the
+            # running result is masked
+            take = Qube.or_(Qube.and_(scalar._values < values, scalar.antimask), mask)
+
+            if Qube.is_one_false(take):
+                continue
+
+            if Qube.is_one_true(take):
+                values = scalar._values
+                mask = scalar._mask
+                continue
+
+            values = np.where(take, scalar._values, values)
+
+            # A pair of equal scalar masks stays a scalar, as indexed assignment leaves it
+            if (not isinstance(mask, np.ndarray)
+                    and not isinstance(scalar._mask, np.ndarray)
+                    and mask == scalar._mask):
+                pass
+            else:
+                mask = np.where(take, scalar._mask, mask)
+
+        result = Scalar(values, mask, unit=scalars[0]._unit)
 
         return result
 

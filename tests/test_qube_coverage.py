@@ -1558,3 +1558,28 @@ def test_qube_as_size_zero_rejects_an_axis_out_of_range() -> None:
 
     with pytest.raises(ValueError, match='axis is out of range'):
         Scalar(np.zeros((3, 4, 5))).as_size_zero(axis=3)
+
+
+def test_qube_or_with_three_or_more_masks() -> None:
+    """or_() short-circuits on a single True and combines the arrays in one pass."""
+
+    a = np.array([True, False, False])
+    b = np.array([False, True, False])
+
+    assert Qube.or_(a, b, False) is not True
+    assert list(Qube.or_(a, b, False)) == [True, True, False]
+    assert Qube.or_(a, b, True) is True
+    assert Qube.or_(False, False, False) is False
+    assert list(Qube.or_(a, a, a)) == [True, False, False]
+
+
+def test_qube_and_with_three_or_more_masks() -> None:
+    """and_() short-circuits on a single False and combines the arrays in one pass."""
+
+    a = np.array([True, True, False])
+    b = np.array([True, False, True])
+
+    assert list(Qube.and_(a, b, True)) == [True, False, False]
+    assert Qube.and_(a, b, False) is False
+    assert Qube.and_(True, True, True) is True
+    assert list(Qube.and_(a, a, a)) == [True, True, False]

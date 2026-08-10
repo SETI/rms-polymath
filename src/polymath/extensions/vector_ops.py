@@ -2,6 +2,7 @@
 # polymath/extensions/vector_ops.py: vector operations
 ##########################################################################################
 
+import math
 import numpy as np
 import numbers
 from polymath.qube import Qube
@@ -66,13 +67,23 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
     # At this point, we have handled the cases mask==True and mask==False, so the mask
     # must be an array. Also, there must be at least one unmasked value.
     else:
-        # Set masked items to zero, then sum across axes
-        new_values = arg._values.copy()
-        new_values[arg._mask] = 0
-        new_values = np.sum(new_values, axis=new_axis)
+        # Set masked items to zero, then sum across axes. np.where() does this in one
+        # pass, where a copy followed by an indexed assignment takes several.
+        if arg._rank:
+            mask = arg._mask.reshape(arg._shape + arg._rank * (1,))
+        else:
+            mask = arg._mask
 
-        # Count the numbers of unmasked items, summed across axes
-        count = np.sum(arg.antimask, axis=new_axis)
+        new_values = np.sum(np.where(mask, 0, arg._values), axis=new_axis)
+
+        # Count the unmasked items, summed across axes. Counting the masked ones and
+        # subtracting avoids materializing the antimask.
+        if isinstance(new_axis, tuple):
+            length = math.prod([arg._shape[a] for a in new_axis])
+        else:
+            length = arg._shape[new_axis]
+
+        count = length - np.count_nonzero(arg._mask, axis=new_axis)
 
         # Convert to a mask and a mean
         new_mask = (count == 0)
@@ -543,7 +554,7 @@ def _cross_3x3(a, b):
     if not (a.shape[-1] == b.shape[-1] == 3):
         raise ValueError('_cross_3x3 requires 3-vectors')
 
-    new_values = np.empty(a.shape)
+    new_values = np.empty(a.shape, dtype=np.result_type(a, b))
     new_values[..., 0] = a[..., 1] * b[..., 2] - a[..., 2] * b[..., 1]
     new_values[..., 1] = a[..., 2] * b[..., 0] - a[..., 0] * b[..., 2]
     new_values[..., 2] = a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0]
@@ -691,6 +702,9 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
     # Create the diagonal array
     new_values = np.zeros(rolled.shape + rolled.shape[-1:], dtype=rolled.dtype)
 
+    # np.einsum('...ii->...i', new_values)[...] = rolled writes the diagonal in one call,
+    # but it only overtakes this loop past about five components, and the item shapes here
+    # are almost always shorter than that
     for i in range(rolled.shape[-1]):
         new_values[..., i, i] = rolled[..., i]
 

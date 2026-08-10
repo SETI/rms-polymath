@@ -148,7 +148,9 @@ def broadcasted_shape(*objects, item=()):
 
         shapes.append(shape)
 
-    # Initialize the shape
+    # These are NumPy's broadcasting rules, and np.broadcast_shapes implements them in C.
+    # It is nonetheless slower here: this function is called with two or three short
+    # shapes, and at that size the fixed cost of the C call exceeds the whole loop below.
     new_shape = []
     len_broadcast = 0
 

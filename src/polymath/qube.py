@@ -954,8 +954,24 @@ class Qube:
         if len(masks) == 1:
             return masks[0]
 
-        # Handle three or more by recursion
-        return Qube.or_(masks[0], Qube.or_(*masks[1:]))
+        # Three or more: a single True settles it, and the rest combine in one pass
+        arrays = []
+        for mask in masks:
+            if isinstance(mask, (bool, np.bool_)):
+                if mask:
+                    return True
+            else:
+                arrays.append(mask)
+
+        if not arrays:
+            return False
+
+        result = arrays[0]
+        for mask in arrays[1:]:
+            if mask is not result:      # can happen when objects share masks
+                result = result | mask
+
+        return result
 
     @staticmethod
     def and_(*masks):
@@ -994,8 +1010,24 @@ class Qube:
         if len(masks) == 1:
             return masks[0]
 
-        # Handle three or more by recursion
-        return Qube.and_(masks[0], Qube.and_(*masks[1:]))
+        # Three or more: a single False settles it, and the rest combine in one pass
+        arrays = []
+        for mask in masks:
+            if isinstance(mask, (bool, np.bool_)):
+                if not mask:
+                    return False
+            else:
+                arrays.append(mask)
+
+        if not arrays:
+            return True
+
+        result = arrays[0]
+        for mask in arrays[1:]:
+            if mask is not result:      # can happen when objects share masks
+                result = result & mask
+
+        return result
 
     ######################################################################################
     # Alternative constructors

@@ -2,6 +2,7 @@
 # polymath/unit.py
 ##########################################################################################
 
+import functools
 import math
 import numpy as np
 import numbers
@@ -1014,27 +1015,47 @@ class Unit:
         """Create a name for this Unit object based on its exponents.
 
         Returns:
-            str: A name for this Unit object.
+            str or dict: A name for this Unit object.
         """
 
         # Return the internal name, if defined
         if self.name is not None:
             return self.name
 
+        return Unit._name_for_tuples(self.exponents, self.triple)
+
+    @staticmethod
+    @functools.lru_cache(maxsize=256)
+    def _name_for_tuples(exponents, triple):
+        """The name to use for an unnamed unit with these exponents and triple.
+
+        The search over combinations of standard units is costly relative to how often a
+        given unit recurs, so results are cached. The returned dictionary is shared
+        between callers and must not be modified.
+
+        Parameters:
+            exponents (tuple): Three integer exponents on length, time, and angle.
+            triple (tuple): The (numerator, denominator, pi exponent) conversion factor.
+
+        Returns:
+            str or dict: The name, either a string or a dictionary of exponents keyed by
+            unit name.
+        """
+
         # Return the name from the dictionary, if found
         try:
-            name = Unit._TUPLES_TO_UNIT[(self.exponents, self.triple)].name
+            name = Unit._TUPLES_TO_UNIT[(exponents, triple)].name
             if name is not None:
                 return name
         except KeyError:
             pass
 
-        expo = self.exponents
+        expo = exponents
 
         # Search for combinations that might work
         options = [[], [], []]
         for i in range(3):
-            target_power = self.exponents[i]
+            target_power = exponents[i]
             if target_power:
                 for unit in Unit._UNITS_BY_EXPO[i]:
                     actual_power = unit.exponents[i]
@@ -1076,7 +1097,7 @@ class Unit:
                     numer //= gcd_value
                     denom //= gcd_value
 
-                    if (numer, denom, expo) == self.triple:
+                    if (numer, denom, expo) == triple:
                         successes.append({d_unit.name: d_power,
                                           t_unit.name: t_power,
                                           a_unit.name: a_power})
@@ -1090,16 +1111,16 @@ class Unit:
                     return successes[k]
 
         # Failing that, use a standard unit and define the coefficient too
-        (numer, denom, pi_expo) = self.triple
+        (numer, denom, pi_expo) = triple
         if denom == 1 and pi_expo == 0:
             coefft = numer
         else:
             coefft = numer / denom * np.pi**pi_expo
 
         new_dict = {''   : coefft,
-                    'km' : self.exponents[0],
-                    's'  : self.exponents[1],
-                    'rad': self.exponents[2]}
+                    'km' : exponents[0],
+                    's'  : exponents[1],
+                    'rad': exponents[2]}
 
         return new_dict
 

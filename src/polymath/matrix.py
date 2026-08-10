@@ -622,9 +622,7 @@ class Matrix(Qube):
             raise ValueError(f'{type(self).__name__}.identity() requires a square '
                              f'matrix; shape is {self._numer}')
 
-        values = np.zeros((size, size))
-        for i in range(size):
-            values[i, i] = 1.
+        values = np.eye(size)
 
         obj = Qube.__new__(type(self))
         obj.__init__(values)
