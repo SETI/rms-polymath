@@ -3,74 +3,89 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
+import pytest
 
 from polymath import Pair, Scalar, Unit, Vector, Vector3
 
 
-class Test_Vector_int(unittest.TestCase):
+def test_vector_int_int_input() -> None:
+    """int input."""
 
-    def runTest(self):
+    np.random.seed(5394)
 
-        np.random.seed(5394)
-
-        # int input
-        a = Vector(np.arange(30).reshape(10,3))
+    a = Vector(np.arange(30).reshape(10,3))
+    b = a.int()
+    assert a is b
+    a = Vector3(np.arange(30).reshape(10,3), unit=Unit.KM)
+    with pytest.raises(ValueError) as cm:
         b = a.int()
-        self.assertIs(a, b)
-
-        a = Vector3(np.arange(30).reshape(10,3), unit=Unit.KM)
-        with self.assertRaises(ValueError) as cm:
-            b = a.int()
-        self.assertEqual(str(cm.exception), 'Vector3.int() unit is not permitted: km')
-
-        a = Pair(np.arange(60).reshape(10,2,3), drank=1)
-        with self.assertRaises(ValueError) as cm:
-            b = a.int()
-        self.assertEqual(str(cm.exception), 'Pair.int() does not support denominators')
-
-        a = Pair(np.arange(-40.,40.).reshape(-1,2)/10.)
+    assert str(cm.value) == 'Vector3.int() unit is not permitted: km'
+    a = Pair(np.arange(60).reshape(10,2,3), drank=1)
+    with pytest.raises(ValueError) as cm:
         b = a.int()
-        self.assertTrue(np.all(b.vals == np.floor(a.vals)))
-        self.assertTrue(b.is_int())
-        self.assertFalse(b.mask)
+    assert str(cm.value) == 'Pair.int() does not support denominators'
+    a = Pair(np.arange(-40.,40.).reshape(-1,2)/10.)
+    b = a.int()
+    assert np.all(b.vals == np.floor(a.vals))
+    assert b.is_int()
+    assert not b.mask
+    a = Pair(np.arange(-40.,40.).reshape(-1,2)/10.)
+    b = a.int(remask=True)
+    assert np.all(b.vals == np.floor(a.vals))
+    assert b.is_int()
+    assert np.all(b.vals[b.mask] < 0)
+    assert np.all(b.vals[~b.mask] >= 0)
 
-        a = Pair(np.arange(-40.,40.).reshape(-1,2)/10.)
-        b = a.int(remask=True)
-        self.assertTrue(np.all(b.vals == np.floor(a.vals)))
-        self.assertTrue(b.is_int())
-        self.assertTrue(np.all(b.vals[b.mask] < 0))
-        self.assertTrue(np.all(b.vals[~b.mask] >= 0))
 
-        # top = 2
-        a = Pair(np.arange(-40.,40.).reshape(-1,2)/10.)
-        b = a.int(top=(2,3))
+def test_vector_int_top_2() -> None:
+    """top = 2."""
 
-        # TBD!
+    np.random.seed(5394)
 
-        ##################################################################################
-        # Additional coverage tests
-        ##################################################################################
+    a = Pair(np.arange(-40.,40.).reshape(-1,2)/10.)
+    a.int(top=(2,3))
 
-        # Test int() with top=None and negative values, clip=True
-        a = Vector([-1., 2., 3.])
-        b = a.int(top=None, clip=True)
-        self.assertEqual(b.values[0], 0)
-        self.assertEqual(b.values[1], 2)
-        self.assertEqual(b.values[2], 3)
+    # TBD!
 
-        # Test vector_scale with recursive=False
-        v = Vector([1., 0., 0.])
-        factor = Vector([2., 0., 0.])
-        result = v.vector_scale(factor, recursive=False)
-        self.assertEqual(type(result), Vector)
+    ##################################################################################
+    # Additional coverage tests
+    ##################################################################################
 
-        # Test combos with all int scalars
-        s1 = Scalar([1, 2])
-        s2 = Scalar([3, 4])
-        v = Vector.combos(s1, s2)
-        self.assertEqual(v.shape, (2, 2))
-        self.assertEqual(v.numer, (2,))
-        self.assertTrue(v.is_int())
+
+def test_vector_int_test_int_with_top_none_and_negative_values_clip_true() -> None:
+    """Test int() with top=None and negative values, clip=True."""
+
+    np.random.seed(5394)
+
+    a = Vector([-1., 2., 3.])
+    b = a.int(top=None, clip=True)
+    assert b.values[0] == 0
+    assert b.values[1] == 2
+    assert b.values[2] == 3
+
+
+def test_vector_int_test_vector_scale_with_recursive_false() -> None:
+    """Test vector_scale with recursive=False."""
+
+    np.random.seed(5394)
+
+    v = Vector([1., 0., 0.])
+    factor = Vector([2., 0., 0.])
+    result = v.vector_scale(factor, recursive=False)
+    assert type(result) == Vector
+
+
+def test_vector_int_test_combos_with_all_int_scalars() -> None:
+    """Test combos with all int scalars."""
+
+    np.random.seed(5394)
+
+    s1 = Scalar([1, 2])
+    s2 = Scalar([3, 4])
+    v = Vector.combos(s1, s2)
+    assert v.shape == (2, 2)
+    assert v.numer == (2,)
+    assert v.is_int()
+
 
 ##########################################################################################

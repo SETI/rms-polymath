@@ -3,122 +3,129 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
 
 from polymath import Quaternion, Matrix
 
 
-class Test_Quaternion_matrix3(unittest.TestCase):
+def test_quaternion_matrix3_one_quaternion() -> None:
+    """One quaternion."""
 
-    def runTest(self):
+    np.random.seed(2496)
 
-        np.random.seed(2496)
+    # Quaternion to Matrix3 and back
 
-        # Quaternion to Matrix3 and back
+    a = Quaternion(np.random.rand(4)).unit()
+    mat = a.to_matrix3()
+    b = Quaternion.from_matrix3(mat)
+    DEL = 1.e-14
+    for j in range(4):
+        assert a.values[j] == b.values[j] or abs(a.values[j] - b.values[j]) <= DEL
+    assert not a.readonly
+    assert not b.readonly
+    a = a.as_readonly()
+    mat = a.to_matrix3()
+    b = Quaternion.from_matrix3(mat)
+    assert not b.readonly
 
-        # One quaternion
-        a = Quaternion(np.random.rand(4)).unit()
-        mat = a.to_matrix3()
-        b = Quaternion.from_matrix3(mat)
 
-        DEL = 1.e-14
+def test_quaternion_matrix3_n_quaternions() -> None:
+    """N Quaternions."""
+
+    np.random.seed(2496)
+
+    # Quaternion to Matrix3 and back
+
+    N = 100
+    a = Quaternion(np.random.rand(N,4)).unit()
+    mat = a.to_matrix3()
+    b = Quaternion.from_matrix3(mat)
+    DEL = 1.e-14
+    for i in range(N):
         for j in range(4):
-            self.assertAlmostEqual(a.values[j], b.values[j], delta=DEL)
+            assert a.values[i,j] == b.values[i,j] or abs(a.values[i,j] - b.values[i,j]) <= DEL
+    assert not a.readonly
+    assert not b.readonly
+    a = a.as_readonly()
+    mat = a.to_matrix3()
+    b = Quaternion.from_matrix3(mat)
+    assert not b.readonly
 
-        self.assertFalse(a.readonly)
-        self.assertFalse(b.readonly)
+    # Quaternion to Euler angles and back
 
-        a = a.as_readonly()
-        mat = a.to_matrix3()
-        b = Quaternion.from_matrix3(mat)
 
-        self.assertFalse(b.readonly)
+def test_quaternion_matrix3_n_quaternions_without_unit() -> None:
+    """N Quaternions, without unit()."""
 
-        # N Quaternions
-        N = 100
-        a = Quaternion(np.random.rand(N,4)).unit()
-        mat = a.to_matrix3()
-        b = Quaternion.from_matrix3(mat)
+    np.random.seed(2496)
 
-        DEL = 1.e-14
-        for i in range(N):
-            for j in range(4):
-                self.assertAlmostEqual(a.values[i,j], b.values[i,j], delta=DEL)
+    # Quaternion to Matrix3 and back
 
-        self.assertFalse(a.readonly)
-        self.assertFalse(b.readonly)
+    N = 100
+    a = Quaternion(np.random.rand(N,4))
+    mat = a.to_matrix3()
+    b = Quaternion.from_matrix3(mat)
+    aa = a.unit()
+    DEL = 1.e-14
+    for i in range(N):
+        for j in range(4):
+            assert aa.values[i,j] == b.values[i,j] or abs(aa.values[i,j] - b.values[i,j]) <= DEL
+    assert not aa.readonly
+    assert not b.readonly
 
-        a = a.as_readonly()
-        mat = a.to_matrix3()
-        b = Quaternion.from_matrix3(mat)
 
-        self.assertFalse(b.readonly)
+def test_quaternion_matrix3_n_quaternions_with_unit() -> None:
+    """N Quaternions, with unit()."""
 
-        # Quaternion to Euler angles and back
+    np.random.seed(2496)
 
-        # N Quaternions, without unit()
-        N = 100
-        a = Quaternion(np.random.rand(N,4))
-        mat = a.to_matrix3()
-        b = Quaternion.from_matrix3(mat)
+    # Quaternion to Matrix3 and back
 
-        aa = a.unit()
-        DEL = 1.e-14
-        for i in range(N):
-            for j in range(4):
-                self.assertAlmostEqual(aa.values[i,j], b.values[i,j], delta=DEL)
+    N = 100
+    a = Quaternion(np.random.rand(N,4)).unit()
+    mat = a.to_matrix3()
+    b = Quaternion.from_matrix3(mat)
+    aa = a.unit()
+    DEL = 5.e-14
+    for i in range(N):
+        for j in range(4):
+            assert a.values[i,j] == b.values[i,j] or abs(a.values[i,j] - b.values[i,j]) <= DEL
+    assert not aa.readonly
+    assert not b.readonly
 
-        self.assertFalse(aa.readonly)
-        self.assertFalse(b.readonly)
 
-        # N Quaternions, with unit()
-        N = 100
-        a = Quaternion(np.random.rand(N,4)).unit()
-        mat = a.to_matrix3()
-        b = Quaternion.from_matrix3(mat)
+def test_quaternion_matrix3_quaternion_to_matrix3_with_derivatives() -> None:
+    """Quaternion to Matrix3, with derivatives."""
 
-        aa = a.unit()
-        DEL = 5.e-14
-        for i in range(N):
-            for j in range(4):
-                self.assertAlmostEqual(a.values[i,j], b.values[i,j], delta=DEL)
+    np.random.seed(2496)
 
-        self.assertFalse(aa.readonly)
-        self.assertFalse(b.readonly)
+    # Quaternion to Matrix3 and back
 
-        # Quaternion to Matrix3, with derivatives
-        N = 100
-        x = Quaternion(np.random.rand(N,4))
-        x.insert_deriv('t', Quaternion(np.random.rand(N,4)))
-        y = x.to_matrix3(recursive=True)
+    N = 100
+    x = Quaternion(np.random.rand(N,4))
+    x.insert_deriv('t', Quaternion(np.random.rand(N,4)))
+    y = x.to_matrix3(recursive=True)
+    EPS = 1.e-6
+    y1 = Matrix.as_matrix((x + (EPS,0,0,0)).to_matrix3(recursive=False))
+    y0 = Matrix.as_matrix((x - (EPS,0,0,0)).to_matrix3(recursive=False))
+    dy_dx0 = 0.5 * (y1 - y0) / EPS
+    y1 = Matrix.as_matrix((x + (0,EPS,0,0)).to_matrix3(recursive=False))
+    y0 = Matrix.as_matrix((x - (0,EPS,0,0)).to_matrix3(recursive=False))
+    dy_dx1 = 0.5 * (y1 - y0) / EPS
+    y1 = Matrix.as_matrix((x + (0,0,EPS,0)).to_matrix3(recursive=False))
+    y0 = Matrix.as_matrix((x - (0,0,EPS,0)).to_matrix3(recursive=False))
+    dy_dx2 = 0.5 * (y1 - y0) / EPS
+    y1 = Matrix.as_matrix((x + (0,0,0,EPS)).to_matrix3(recursive=False))
+    y0 = Matrix.as_matrix((x - (0,0,0,EPS)).to_matrix3(recursive=False))
+    dy_dx3 = 0.5 * (y1 - y0) / EPS
+    dy_dt = (dy_dx0 * x.d_dt.values[...,0] +
+             dy_dx1 * x.d_dt.values[...,1] +
+             dy_dx2 * x.d_dt.values[...,2] +
+             dy_dx3 * x.d_dt.values[...,3])
+    DEL = 1.e-5
+    for i in range(N):
+        for j in range(3):
+            for k in range(3):
+                assert dy_dt.values[i,j,k] == y.d_dt.values[i,j,k] or abs(dy_dt.values[i,j,k] - y.d_dt.values[i,j,k]) <= DEL
 
-        EPS = 1.e-6
-        y1 = Matrix.as_matrix((x + (EPS,0,0,0)).to_matrix3(recursive=False))
-        y0 = Matrix.as_matrix((x - (EPS,0,0,0)).to_matrix3(recursive=False))
-        dy_dx0 = 0.5 * (y1 - y0) / EPS
-
-        y1 = Matrix.as_matrix((x + (0,EPS,0,0)).to_matrix3(recursive=False))
-        y0 = Matrix.as_matrix((x - (0,EPS,0,0)).to_matrix3(recursive=False))
-        dy_dx1 = 0.5 * (y1 - y0) / EPS
-
-        y1 = Matrix.as_matrix((x + (0,0,EPS,0)).to_matrix3(recursive=False))
-        y0 = Matrix.as_matrix((x - (0,0,EPS,0)).to_matrix3(recursive=False))
-        dy_dx2 = 0.5 * (y1 - y0) / EPS
-
-        y1 = Matrix.as_matrix((x + (0,0,0,EPS)).to_matrix3(recursive=False))
-        y0 = Matrix.as_matrix((x - (0,0,0,EPS)).to_matrix3(recursive=False))
-        dy_dx3 = 0.5 * (y1 - y0) / EPS
-
-        dy_dt = (dy_dx0 * x.d_dt.values[...,0] +
-                 dy_dx1 * x.d_dt.values[...,1] +
-                 dy_dx2 * x.d_dt.values[...,2] +
-                 dy_dx3 * x.d_dt.values[...,3])
-
-        DEL = 1.e-5
-        for i in range(N):
-            for j in range(3):
-                for k in range(3):
-                    self.assertAlmostEqual(dy_dt.values[i,j,k], y.d_dt.values[i,j,k],
-                                           delta=DEL)
 
 ##########################################################################################

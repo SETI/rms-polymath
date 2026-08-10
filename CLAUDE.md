@@ -61,9 +61,13 @@ history, user requests, or issue numbers in a docstring.
 
 ## Testing
 
-- **Write new tests as pytest** (functions, fixtures, `pytest.raises(..., match=...)`,
-  `@pytest.mark.parametrize`). About 115 of the ~117 existing files are `unittest.TestCase`
-  subclasses; leave them as they are unless converting them is the task.
+- The suite is **pytest throughout** — module-level `test_*` functions, no `unittest.TestCase`.
+  Write new tests the same way: plain `assert`, fixtures, `pytest.raises(..., match=...)`,
+  `@pytest.mark.parametrize`.
+- Keep tests **independent**: each function reseeds `np.random` itself and defines the values
+  it needs, so it passes when run alone. Don't rely on a value another test left behind.
+- Prefer one behavior per test function so a failure names what broke. Where a file's setup is
+  genuinely sequential, a longer function is fine — correctness before granularity.
 - `pytest` addopts already apply `-n auto --cov=src --strict-markers --strict-config`, so every
   run is parallel with coverage. Tests must be order-independent.
 - `markers` is an empty list plus `--strict-markers`: any unregistered `@pytest.mark.<custom>`
@@ -72,6 +76,9 @@ history, user requests, or issue numbers in a docstring.
 - Assert one condition per `assert` (no `and`), on exact expected values; `pytest.approx` for
   floats.
 - There is no `conftest.py` yet, and `tests/` is flat — it does not mirror `src/polymath/extensions/`.
+- `assertAlmostEqual` was translated as `a == b or abs(a - b) <= tol`, not `pytest.approx`.
+  `approx` does not understand `Qube` operands, and the `==` arm reproduces unittest's
+  short-circuit, which is what let masked values compare equal.
 
 ## Documentation
 

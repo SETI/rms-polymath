@@ -3,142 +3,161 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
+import pytest
 
 from polymath import Qube, Scalar, Unit
 
 
-class Test_Scalar_sum(unittest.TestCase):
+@pytest.fixture(autouse=True)
+def _setup_teardown():
+    """Replaces the original setUp and tearDown methods."""
+    Qube.prefer_builtins(True)
+    yield
+    Qube.prefer_builtins(False)
 
-    def setUp(self):
-        Qube.prefer_builtins(True)
 
-    def tearDown(self):
-        Qube.prefer_builtins(False)
+def test_scalar_sum_individual_values() -> None:
+    """Individual values."""
 
-    def runTest(self):
+    np.random.seed(3918)
 
-        np.random.seed(3918)
+    assert Scalar(0.3).sum() == 0.3
+    assert type(Scalar(0.3).sum()) == float
+    assert Scalar(4).sum() == 4
+    assert type(Scalar(4).sum()) == int
+    assert Scalar(4, mask=True).sum().mask
+    assert type(Scalar(4, mask=True).sum()) == Scalar
 
-        # Individual values
-        self.assertEqual(Scalar(0.3).sum(), 0.3)
-        self.assertEqual(type(Scalar(0.3).sum()), float)
 
-        self.assertEqual(Scalar(4).sum(), 4)
-        self.assertEqual(type(Scalar(4).sum()), int)
+def test_scalar_sum_multiple_values() -> None:
+    """Multiple values."""
 
-        self.assertTrue(Scalar(4, mask=True).sum().mask)
-        self.assertEqual(type(Scalar(4, mask=True).sum()), Scalar)
+    np.random.seed(3918)
 
-        # Multiple values
-        self.assertTrue(Scalar((1,2,3)).sum() == 6)
-        self.assertEqual(type(Scalar((1,2,3)).sum()), int)
+    assert (Scalar((1,2,3)).sum() == 6)
+    assert type(Scalar((1,2,3)).sum()) == int
+    assert (Scalar((1.,2.,3.)).sum() == 6.)
+    assert type(Scalar((1.,2,3)).sum()) == float
 
-        self.assertTrue(Scalar((1.,2.,3.)).sum() == 6.)
-        self.assertEqual(type(Scalar((1.,2,3)).sum()), float)
 
-        # Arrays
-        N = 400
-        x = Scalar(np.random.randn(N).reshape((2,4,5,10)))
-        self.assertEqual(x.sum(), np.sum(x.values))
+def test_scalar_sum_arrays() -> None:
+    """Arrays."""
 
-        # Test unit
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.KM)
-        self.assertEqual(random.sum().unit_, Unit.KM)
+    np.random.seed(3918)
 
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.DEG)
-        self.assertEqual(random.sum().unit_, Unit.DEG)
+    N = 400
+    x = Scalar(np.random.randn(N).reshape((2,4,5,10)))
+    assert x.sum() == np.sum(x.values)
 
-        values = np.random.randn(10)
-        random = Scalar(values, unit=None)
-        self.assertEqual(type(random.sum()), float)
 
-        # Masks
-        N = 1000
-        x = Scalar(np.random.randn(N), mask=(np.random.randn(N) < -1.))
+def test_scalar_sum_test_unit() -> None:
+    """Test unit."""
 
-        sumval = 0.
-        for i in range(N):
-            if not x.mask[i]:
-                sumval += x.values[i]
+    np.random.seed(3918)
 
-        self.assertTrue(abs((sumval - x.sum()) / sumval) < 1.e-13)
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.KM)
+    assert random.sum().unit_ == Unit.KM
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.DEG)
+    assert random.sum().unit_ == Unit.DEG
+    values = np.random.randn(10)
+    random = Scalar(values, unit=None)
+    assert type(random.sum()) == float
 
-        masked = Scalar(x, mask=True)
-        self.assertTrue(masked.sum().mask)
-        self.assertTrue(type(masked.sum()), Scalar)
 
-        # Denominators
-        a = Scalar(np.arange(24.).reshape(4,3,2), drank=1)
-        b = a.sum(axis=1)
-        self.assertEqual(b.shape, (4,))
-        self.assertEqual(b, Scalar([[6,9],[24,27],[42,45],[60,63]], drank=1))
+def test_scalar_sum_masks() -> None:
+    """Masks."""
 
-        # Sums over axes
-        x = Scalar(np.arange(30).reshape(2,3,5))
-        m0 = x.sum(axis=0)
-        m01 = x.sum(axis=(0,1))
-        m012 = x.sum(axis=(-1,1,0))
+    np.random.seed(3918)
 
-        self.assertEqual(m0.shape, (3,5))
-        for j in range(3):
-            for k in range(5):
-                self.assertEqual(m0[j,k], np.sum(x.values[:,j,k]))
+    N = 1000
+    x = Scalar(np.random.randn(N), mask=(np.random.randn(N) < -1.))
+    sumval = 0.
+    for i in range(N):
+        if not x.mask[i]:
+            sumval += x.values[i]
+    assert (abs((sumval - x.sum()) / sumval) < 1.e-13)
+    masked = Scalar(x, mask=True)
+    assert masked.sum().mask
+    assert type(masked.sum())
 
-        self.assertEqual(m01.shape, (5,))
+
+def test_scalar_sum_denominators() -> None:
+    """Denominators."""
+
+    np.random.seed(3918)
+
+    a = Scalar(np.arange(24.).reshape(4,3,2), drank=1)
+    b = a.sum(axis=1)
+    assert b.shape == (4,)
+    assert b == Scalar([[6,9],[24,27],[42,45],[60,63]], drank=1)
+
+
+def test_scalar_sum_sums_over_axes() -> None:
+    """Sums over axes."""
+
+    np.random.seed(3918)
+
+    x = Scalar(np.arange(30).reshape(2,3,5))
+    m0 = x.sum(axis=0)
+    m01 = x.sum(axis=(0,1))
+    m012 = x.sum(axis=(-1,1,0))
+    assert m0.shape == (3,5)
+    for j in range(3):
         for k in range(5):
-            self.assertEqual(m01[k], np.sum(x.values[:,:,k]))
+            assert m0[j,k] == np.sum(x.values[:,j,k])
+    assert m01.shape == (5,)
+    for k in range(5):
+        assert m01[k] == np.sum(x.values[:,:,k])
+    assert np.shape(m012) == ()
+    assert type(m012) == int
+    assert m012 == np.sum(np.arange(30))
 
-        self.assertEqual(np.shape(m012), ())
-        self.assertEqual(type(m012), int)
-        self.assertEqual(m012, np.sum(np.arange(30)))
 
-        # Sums with masks
-        mask = np.zeros((2,3,5), dtype='bool')
-        mask[0,0,0] = True
-        mask[1,1,1] = True
-        x = Scalar(np.arange(30).reshape(2,3,5), mask)
-        m0 = x.sum(axis=0)
-        m01 = x.sum(axis=(0,1))
-        m012 = x.sum(axis=(-1,1,0))
+def test_scalar_sum_sums_with_masks() -> None:
+    """Sums with masks."""
 
-        self.assertEqual(m0.shape, (3,5))
-        self.assertEqual(m0[0,0], x.values[1,0,0])
-        self.assertEqual(m0[1,1], x.values[0,1,1])
-        for j in range(3):
-            for k in range(5):
-                if (j,k) in [(0,0), (1,1)]:
-                    continue
-                self.assertEqual(m0[j,k], np.sum(x.values[:,j,k]))
+    np.random.seed(3918)
 
-        self.assertEqual(m01.shape, (5,))
-        self.assertEqual(m01[0], (np.sum(x.values[:,:,0]) - x.values[0,0,0]))
-        self.assertEqual(m01[1], (np.sum(x.values[:,:,1]) - x.values[1,1,1]))
-        self.assertEqual(m01[2],  np.sum(x.values[:,:,2]))
-        self.assertEqual(m01[3],  np.sum(x.values[:,:,3]))
-        self.assertEqual(m01[4],  np.sum(x.values[:,:,4]))
-
-        self.assertEqual(m012, np.sum(x.values) - x.values[0,0,0] - x.values[1,1,1])
-
-        values = np.arange(30).reshape(2,3,5)
-        mask[0,0,0] = True
-        mask[1,1,1] = True
-        mask[:,1] = True
-        x = Scalar(values, mask)
-        m0 = x.sum(axis=0)
-
-        self.assertEqual(m0[0,0], x.values[1,0,0])
-        for j in (0,2):
-            for k in range(5):
-                if (j,k) in [(0,0), (1,1)]:
-                    continue
-                self.assertEqual(m0[j,k], np.sum(x.values[:,j,k]))
-
-        j = 1
+    mask = np.zeros((2,3,5), dtype='bool')
+    mask[0,0,0] = True
+    mask[1,1,1] = True
+    x = Scalar(np.arange(30).reshape(2,3,5), mask)
+    m0 = x.sum(axis=0)
+    m01 = x.sum(axis=(0,1))
+    m012 = x.sum(axis=(-1,1,0))
+    assert m0.shape == (3,5)
+    assert m0[0,0] == x.values[1,0,0]
+    assert m0[1,1] == x.values[0,1,1]
+    for j in range(3):
         for k in range(5):
-            self.assertEqual(m0[j,k], Scalar.MASKED)
-            self.assertTrue(np.all(m0[j,k].values == m0.default))
+            if (j,k) in [(0,0), (1,1)]:
+                continue
+            assert m0[j,k] == np.sum(x.values[:,j,k])
+    assert m01.shape == (5,)
+    assert m01[0] == np.sum(x.values[:,:,0]) - x.values[0,0,0]
+    assert m01[1] == np.sum(x.values[:,:,1]) - x.values[1,1,1]
+    assert m01[2] == np.sum(x.values[:,:,2])
+    assert m01[3] == np.sum(x.values[:,:,3])
+    assert m01[4] == np.sum(x.values[:,:,4])
+    assert m012 == np.sum(x.values) - x.values[0,0,0] - x.values[1,1,1]
+    values = np.arange(30).reshape(2,3,5)
+    mask[0,0,0] = True
+    mask[1,1,1] = True
+    mask[:,1] = True
+    x = Scalar(values, mask)
+    m0 = x.sum(axis=0)
+    assert m0[0,0] == x.values[1,0,0]
+    for j in (0,2):
+        for k in range(5):
+            if (j,k) in [(0,0), (1,1)]:
+                continue
+            assert m0[j,k] == np.sum(x.values[:,j,k])
+    j = 1
+    for k in range(5):
+        assert m0[j,k] == Scalar.MASKED
+        assert np.all(m0[j,k].values == m0.default)
+
 
 ##########################################################################################

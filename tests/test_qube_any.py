@@ -3,176 +3,185 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
+import pytest
 
 from polymath import Qube, Scalar, Boolean, Unit
 
 
-class Test_Qube_any(unittest.TestCase):
+@pytest.fixture(autouse=True)
+def _setup_teardown():
+    """Replaces the original setUp and tearDown methods."""
+    Qube.prefer_builtins(True)
+    yield
+    Qube.prefer_builtins(False)
 
-    def setUp(self):
-        Qube.prefer_builtins(True)
 
-    def tearDown(self):
-        Qube.prefer_builtins(False)
+def test_qube_any_individual_values() -> None:
+    """Individual values."""
 
-    def runTest(self):
+    np.random.seed(3337)
 
-        np.random.seed(3337)
+    assert Scalar(0.3).any() == True
+    assert type(Scalar(0.3).any()) == bool
+    assert Scalar(0.).any() == False
+    assert type(Scalar(0.).any()) == bool
+    assert Scalar(4, mask=True).any() == Boolean.MASKED
+    assert type(Scalar(4, mask=True).any()) == Boolean
 
-        # Individual values
-        self.assertEqual(Scalar(0.3).any(), True)
-        self.assertEqual(type(Scalar(0.3).any()), bool)
 
-        self.assertEqual(Scalar(0.).any(), False)
-        self.assertEqual(type(Scalar(0.).any()), bool)
+def test_qube_any_multiple_values() -> None:
+    """Multiple values."""
 
-        self.assertEqual(Scalar(4, mask=True).any(), Boolean.MASKED)
-        self.assertEqual(type(Scalar(4, mask=True).any()), Boolean)
+    np.random.seed(3337)
 
-        # Multiple values
-        self.assertTrue(Scalar((0,0,1)).any() == True)
-        self.assertEqual(type(Scalar((0,0,1)).any()), bool)
+    assert (Scalar((0,0,1)).any() == True)
+    assert type(Scalar((0,0,1)).any()) == bool
+    assert Scalar((1.,2.,3.), True).any() == Boolean.MASKED
+    assert type(Scalar((1.,2.,3.), True).any()) == Boolean
 
-        self.assertEqual(Scalar((1.,2.,3.), True).any(), Boolean.MASKED)
-        self.assertEqual(type(Scalar((1.,2.,3.), True).any()), Boolean)
 
-        # Arrays
-        N = 400
-        x = Scalar(np.random.randn(N).reshape((2,4,5,10)))
-        self.assertEqual(x.any(), np.any(x.values))
+def test_qube_any_arrays() -> None:
+    """Arrays."""
 
-        # Test unit
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.KM)
-        self.assertEqual(type(random.any()), bool)
+    np.random.seed(3337)
 
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.DEG)
-        self.assertEqual(type(random.any()), bool)
+    N = 400
+    x = Scalar(np.random.randn(N).reshape((2,4,5,10)))
+    assert x.any() == np.any(x.values)
 
-        values = np.random.randn(10)
-        random = Scalar(values, mask=True, unit=None)
-        self.assertEqual(random.any(), Boolean.MASKED)
-        self.assertEqual(random.any().units, None)
-        self.assertEqual(type(random.any()), Boolean)
 
-        # Test derivs
-        values = np.random.randn(10)
-        d_dt = Scalar(np.random.randn(10))
-        random = Scalar(values)
-        random.insert_deriv('t', d_dt)
-        self.assertEqual(type(random.any()), bool)
+def test_qube_any_test_unit() -> None:
+    """Test unit."""
 
-        # Masks
-        x = Scalar([0,1,2,3])
-        self.assertTrue(x.any())
+    np.random.seed(3337)
 
-        x = Scalar(x.values, mask=[False,True,True,True])
-        self.assertFalse(x.any())
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.KM)
+    assert type(random.any()) == bool
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.DEG)
+    assert type(random.any()) == bool
+    values = np.random.randn(10)
+    random = Scalar(values, mask=True, unit=None)
+    assert random.any() == Boolean.MASKED
+    assert random.any().units == None
+    assert type(random.any()) == Boolean
 
-        x = Scalar(x.values, mask=[True,True,True,True])
-        self.assertEqual(x.any(), Boolean.MASKED)
 
-        # Any() over axes
-        values = np.zeros(30).reshape(2,3,5) % 16
-        values[0,0,0] = 1
-        values[1,1,1] = 1
-        x = Scalar(values)
-        m0 = x.any(axis=0)
-        m01 = x.any(axis=(0,1))
-        m012 = x.any(axis=(-1,1,0))
+def test_qube_any_test_derivs() -> None:
+    """Test derivs."""
 
-        self.assertEqual(m0.shape, (3,5))
-        for j in range(3):
-            for k in range(5):
-                self.assertEqual(m0[j,k], np.any(x.values[:,j,k]))
+    np.random.seed(3337)
 
-        self.assertEqual(m01.shape, (5,))
+    values = np.random.randn(10)
+    d_dt = Scalar(np.random.randn(10))
+    random = Scalar(values)
+    random.insert_deriv('t', d_dt)
+    assert type(random.any()) == bool
+
+
+def test_qube_any_masks() -> None:
+    """Masks."""
+
+    np.random.seed(3337)
+
+    x = Scalar([0,1,2,3])
+    assert x.any()
+    x = Scalar(x.values, mask=[False,True,True,True])
+    assert not x.any()
+    x = Scalar(x.values, mask=[True,True,True,True])
+    assert x.any() == Boolean.MASKED
+
+
+def test_qube_any_any_over_axes() -> None:
+    """Any() over axes."""
+
+    np.random.seed(3337)
+
+    values = np.zeros(30).reshape(2,3,5) % 16
+    values[0,0,0] = 1
+    values[1,1,1] = 1
+    x = Scalar(values)
+    m0 = x.any(axis=0)
+    m01 = x.any(axis=(0,1))
+    m012 = x.any(axis=(-1,1,0))
+    assert m0.shape == (3,5)
+    for j in range(3):
         for k in range(5):
-            self.assertEqual(m01[k], np.any(x.values[:,:,k]))
+            assert m0[j,k] == np.any(x.values[:,j,k])
+    assert m01.shape == (5,)
+    for k in range(5):
+        assert m01[k] == np.any(x.values[:,:,k])
+    assert np.shape(m012) == ()
+    assert type(m012) == bool
+    assert m012 == True
 
-        self.assertEqual(np.shape(m012), ())
-        self.assertEqual(type(m012), bool)
-        self.assertEqual(m012, True)
-
-        # Any() with masks
-        mask = np.zeros((2,3,5), dtype='bool')
-        mask[0,0,0] = True
-
-        x = Scalar(values, mask)
-        m0 = x.any(axis=0)
-        m01 = x.any(axis=(0,1))
-        m012 = x.any(axis=(-1,1,0))
-
-        self.assertEqual(m0.shape, (3,5))
-        xx = x.values.copy()
-        xx[mask] = False
-        for j in range(3):
-            for k in range(5):
-                self.assertEqual(m0[j,k], np.any(xx[:,j,k]))
-
-        self.assertEqual(m01.shape, (5,))
-        self.assertEqual(m01, [False, True, False, False, False])
-        self.assertEqual(m012, True)
-
-        mask[:,0] = True
-        x = Scalar(values, mask)
-        m0 = x.any(axis=0)
-        m01 = x.any(axis=(0,1))
-        m012 = x.any(axis=(-1,1,0))
-
-        for j in (1,2):
-            for k in range(5):
-                self.assertEqual(m0[j,k], np.any(x.values[:,j,k]))
-
-        j = 0
+    mask = np.zeros((2,3,5), dtype='bool')
+    mask[0,0,0] = True
+    x = Scalar(values, mask)
+    m0 = x.any(axis=0)
+    m01 = x.any(axis=(0,1))
+    m012 = x.any(axis=(-1,1,0))
+    assert m0.shape == (3,5)
+    xx = x.values.copy()
+    xx[mask] = False
+    for j in range(3):
         for k in range(5):
-            self.assertEqual(m0[j,k], Scalar.MASKED)
-    #         self.assertTrue(np.any(m0[j,k].values == np.any(x.values[:,j,k])))
-    # Changed 3/14. No need to set values where masked
-
-        x = Scalar(values, True)
-        m0 = x.any(axis=0)
-        m01 = x.any(axis=(0,1))
-        m012 = x.any(axis=(-1,1,0))
-
-        for j in range(3):
-            for k in range(5):
-                self.assertEqual(m0[j,k], Boolean.MASKED)
-
+            assert m0[j,k] == np.any(xx[:,j,k])
+    assert m01.shape == (5,)
+    assert m01 == [False, True, False, False, False]
+    assert m012 == True
+    mask[:,0] = True
+    x = Scalar(values, mask)
+    m0 = x.any(axis=0)
+    m01 = x.any(axis=(0,1))
+    m012 = x.any(axis=(-1,1,0))
+    for j in (1,2):
         for k in range(5):
-            self.assertEqual(m01[k], Boolean.MASKED)
+            assert m0[j,k] == np.any(x.values[:,j,k])
+    j = 0
+    for k in range(5):
+        assert m0[j,k] == Scalar.MASKED
+#         self.assertTrue(np.any(m0[j,k].values == np.any(x.values[:,j,k])))
+# Changed 3/14. No need to set values where masked
+    x = Scalar(values, True)
+    m0 = x.any(axis=0)
+    m01 = x.any(axis=(0,1))
+    m012 = x.any(axis=(-1,1,0))
+    for j in range(3):
+        for k in range(5):
+            assert m0[j,k] == Boolean.MASKED
+    for k in range(5):
+        assert m01[k] == Boolean.MASKED
+    assert m012 == Boolean.MASKED
 
-        self.assertEqual(m012, Boolean.MASKED)
 
-        # tests/test_qube_tvl_any.py
-        x = Boolean([True, True, True, True])
-        self.assertEqual(x.any(), True)
-        self.assertEqual(x.tvl_any(), True)
+def test_qube_any_tests_test_qube_tvl_any_py() -> None:
+    """tests/test_qube_tvl_any.py."""
 
-        x = Boolean([False, False, False, False], [False, False, False, False])
-        self.assertEqual(x.any(), False)
-        self.assertEqual(x.tvl_any(), False)
+    np.random.seed(3337)
 
-        x = Boolean([False, False, False, True], [False, False, False, False])
-        self.assertEqual(x.any(), True)
-        self.assertEqual(x.tvl_any(), True)
+    x = Boolean([True, True, True, True])
+    assert x.any() == True
+    assert x.tvl_any() == True
+    x = Boolean([False, False, False, False], [False, False, False, False])
+    assert x.any() == False
+    assert x.tvl_any() == False
+    x = Boolean([False, False, False, True], [False, False, False, False])
+    assert x.any() == True
+    assert x.tvl_any() == True
+    x = Boolean([False, False, False, True], [False, False, False, True])
+    assert x.any() == False
+    assert x.tvl_any() == Boolean.MASKED
+    x = Boolean([True, False, False, True], [False, False, False, True])
+    assert x.any() == True
+    assert x.tvl_any() == True
+    x = Boolean([False, True, True], True)
+    assert x.any() == Boolean.MASKED
+    assert x.tvl_any() == Boolean.MASKED
+    x = Boolean([False, True, True], [True, True, True])
+    assert x.any() == Boolean.MASKED
+    assert x.tvl_any() == Boolean.MASKED
 
-        x = Boolean([False, False, False, True], [False, False, False, True])
-        self.assertEqual(x.any(), False)
-        self.assertEqual(x.tvl_any(), Boolean.MASKED)
-
-        x = Boolean([True, False, False, True], [False, False, False, True])
-        self.assertEqual(x.any(), True)
-        self.assertEqual(x.tvl_any(), True)
-
-        x = Boolean([False, True, True], True)
-        self.assertEqual(x.any(), Boolean.MASKED)
-        self.assertEqual(x.tvl_any(), Boolean.MASKED)
-
-        x = Boolean([False, True, True], [True, True, True])
-        self.assertEqual(x.any(), Boolean.MASKED)
-        self.assertEqual(x.tvl_any(), Boolean.MASKED)
 
 ##########################################################################################

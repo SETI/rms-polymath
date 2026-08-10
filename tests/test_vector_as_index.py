@@ -6,120 +6,98 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
+import pytest
 
 from polymath import Vector, Qube
 
 
-class Test_Vector_as_index(unittest.TestCase):
+def test_vector_as_index_array_to_test_for_indexing() -> None:
+    """Array to test for indexing."""
 
-    def runTest(self):
+    array = np.arange(1000).reshape(10,10,10)
 
-        # Array to test for indexing
-        array = np.arange(1000).reshape(10,10,10)
+    index1 = np.where(array % 13 == 0)
 
-        # Use NumPy to create an index for every multiple of 13
-        index1 = np.where(array % 13 == 0)
+    index2 = (index1[0].reshape((7,11)),
+              index1[1].reshape((7,11)),
+              index1[2].reshape((7,11)))
 
-        # There are 77 elements. Reshape into a 7x11 array
-        index2 = (index1[0].reshape((7,11)),
-                  index1[1].reshape((7,11)),
-                  index1[2].reshape((7,11)))
+    values = np.empty((7,11,3), dtype='int')
+    values[...,0] = index2[0]
+    values[...,1] = index2[1]
+    values[...,2] = index2[2]
+    vec = Vector(values)
 
-        # Convert to a 3-vector of indices
-        values = np.empty((7,11,3), dtype='int')
-        values[...,0] = index2[0]
-        values[...,1] = index2[1]
-        values[...,2] = index2[2]
+    index13 = vec.as_index()
 
-        vec = Vector(values)
+    indexed = array[index13]
+    assert indexed.shape == (7,11)
+    assert indexed.shape == vec.shape
+    assert (np.all(indexed % 13) == 0)
+    assert np.all(indexed.ravel() // 13 == np.arange(77))
 
-        # Index into array
-        index13 = vec.as_index()
+    qube = Qube(array)
+    assert qube[index13].shape == (7,11)
+    assert qube[index13] % 13 == 0
+    assert qube[index13].flatten() // 13 == np.arange(77)
 
-        # Show that the index has been recovered
-        indexed = array[index13]
-        self.assertEqual(indexed.shape, (7,11))
-        self.assertEqual(indexed.shape, vec.shape)
-        self.assertTrue(np.all(indexed % 13) == 0)
-        self.assertTrue(np.all(indexed.ravel() // 13 == np.arange(77)))
+    qube = Qube(array)
+    assert qube[index13].shape == (7,11)
+    assert qube[index13] % 13 == 0
+    assert qube[index13].flatten() // 13 == np.arange(77)
 
-        # Try indexing a Qube instead of a NumPy array
-        qube = Qube(array)
-        self.assertEqual(qube[index13].shape, (7,11))
-        self.assertEqual(qube[index13] % 13, 0)
-        self.assertEqual(qube[index13].flatten() // 13, np.arange(77))
+    mask = np.zeros(vec.shape, dtype='bool')
+    mask[0,0] = True
+    mask[0,1] = True
+    vec_one_masked = Vector(vec, mask)
 
-        # Try indexing a Qube instead of a NumPy array
-        qube = Qube(array)
-        self.assertEqual(qube[index13].shape, (7,11))
-        self.assertEqual(qube[index13] % 13, 0)
-        self.assertEqual(qube[index13].flatten() // 13, np.arange(77))
+    new_index = vec_one_masked.as_index(masked=None)
+    assert qube[new_index].shape == (7*11-2,)
+    assert qube[new_index] // 13 == np.arange(2,77)
 
-        # Mask the first two items in the vector
-        mask = np.zeros(vec.shape, dtype='bool')
-        mask[0,0] = True
-        mask[0,1] = True
-        vec_one_masked = Vector(vec, mask)
+    new_index = vec_one_masked.as_index(masked=(9,9,9))
+    assert qube[new_index].shape == (7,11)
+    assert qube[new_index][0,0] == 999
+    assert qube[new_index][0,1] == 999
+    flattened = qube[new_index].flatten()
+    assert flattened[2:] == 13 * np.arange(2,77)
 
-        # This will create a flattened array with the first two items missing
-        new_index = vec_one_masked.as_index(masked=None)
-        self.assertEqual(qube[new_index].shape, (7*11-2,))
-        self.assertEqual(qube[new_index] // 13, np.arange(2,77))
+    vec = Vector([1.,2.,3.])
+    with pytest.raises(TypeError) as cm:
+        vec.as_index_and_mask()
+    assert str(cm.value) == 'floating-point indexing is not permitted'
+    vec = Vector(np.arange(12).reshape(6,2), drank=1)
+    with pytest.raises(ValueError) as cm:
+        vec.as_index_and_mask()
+    assert str(cm.value) == ('Vector.as_index_and_mask() does not support '
+                                        'denominators')
+    vec = Vector([1,2,3], True)
+    assert vec.as_index_and_mask(purge=True) == ((), False)
+    indx, mask = vec.as_index_and_mask(purge=False)
+    assert indx == (1,2,3)
+    assert mask == True
+    indx, mask = vec.as_index_and_mask(purge=False, masked=0)
+    assert indx == (0,0,0)
+    assert mask == True
+    vals = np.arange(9).reshape(3,3)
+    vec = Vector(vals, [False, False, True])
+    indx, mask = vec.as_index_and_mask(purge=True)
+    assert np.all(indx[0] == (0,3))
+    assert np.all(indx[1] == (1,4))
+    assert np.all(indx[2] == (2,5))
+    assert mask == False
+    vec = Vector(vals, [False, False, True])
+    indx, mask = vec.as_index_and_mask(purge=False)
+    assert np.all(indx[0] == (0,3,6))
+    assert np.all(indx[1] == (1,4,7))
+    assert np.all(indx[2] == (2,5,8))
+    assert np.all(mask == [False, False, True])
+    vec = Vector(vals, [False, False, True])
+    indx, mask = vec.as_index_and_mask(purge=False, masked=0)
+    assert np.all(indx[0] == (0,3,0))
+    assert np.all(indx[1] == (1,4,0))
+    assert np.all(indx[2] == (2,5,0))
+    assert np.all(mask == [False, False, True])
 
-        # This will fill in the last item of the array in place of the first two
-        # items
-        new_index = vec_one_masked.as_index(masked=(9,9,9))
-        self.assertEqual(qube[new_index].shape, (7,11))
-        self.assertEqual(qube[new_index][0,0], 999)
-        self.assertEqual(qube[new_index][0,1], 999)
-
-        flattened = qube[new_index].flatten()
-        self.assertEqual(flattened[2:], 13 * np.arange(2,77))
-
-        # as_index_and_mask()
-        vec = Vector([1.,2.,3.])
-        with self.assertRaises(TypeError) as cm:
-            vec.as_index_and_mask()
-        self.assertEqual(str(cm.exception), 'floating-point indexing is not permitted')
-
-        vec = Vector(np.arange(12).reshape(6,2), drank=1)
-        with self.assertRaises(ValueError) as cm:
-            vec.as_index_and_mask()
-        self.assertEqual(str(cm.exception), 'Vector.as_index_and_mask() does not support '
-                                            'denominators')
-
-        vec = Vector([1,2,3], True)
-        self.assertEqual(vec.as_index_and_mask(purge=True), ((), False))
-
-        indx, mask = vec.as_index_and_mask(purge=False)
-        self.assertEqual(indx, (1,2,3))
-        self.assertEqual(mask, True)
-
-        indx, mask = vec.as_index_and_mask(purge=False, masked=0)
-        self.assertEqual(indx, (0,0,0))
-        self.assertEqual(mask, True)
-
-        vals = np.arange(9).reshape(3,3)
-        vec = Vector(vals, [False, False, True])
-        indx, mask = vec.as_index_and_mask(purge=True)
-        self.assertTrue(np.all(indx[0] == (0,3)))
-        self.assertTrue(np.all(indx[1] == (1,4)))
-        self.assertTrue(np.all(indx[2] == (2,5)))
-        self.assertEqual(mask, False)
-
-        vec = Vector(vals, [False, False, True])
-        indx, mask = vec.as_index_and_mask(purge=False)
-        self.assertTrue(np.all(indx[0] == (0,3,6)))
-        self.assertTrue(np.all(indx[1] == (1,4,7)))
-        self.assertTrue(np.all(indx[2] == (2,5,8)))
-        self.assertTrue(np.all(mask == [False, False, True]))
-
-        vec = Vector(vals, [False, False, True])
-        indx, mask = vec.as_index_and_mask(purge=False, masked=0)
-        self.assertTrue(np.all(indx[0] == (0,3,0)))
-        self.assertTrue(np.all(indx[1] == (1,4,0)))
-        self.assertTrue(np.all(indx[2] == (2,5,0)))
-        self.assertTrue(np.all(mask == [False, False, True]))
 
 ##########################################################################################

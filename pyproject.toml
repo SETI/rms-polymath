@@ -148,14 +148,16 @@ extend-ignore = ["PT011", "SIM105", "SIM108", "RUF005", "I001"]
 [tool.ruff.lint.per-file-ignores]
 # E501: test files are exempt from the line length limit so that expected-value
 #   tables can stay aligned and readable.
-# PT009/PT027: the existing suite is built on unittest.TestCase and stays that
-#   way; only new tests are written in pytest style.
-# N801/N802/N806: unittest naming (Test_Qube_xxx classes, runTest methods) and
-#   the object names the tests mirror from the API.
+# N806: variable names mirrored from the API under test.
 # E712: comparisons against True/False are deliberate in mask assertions.
+# E721: `assert type(x) == float` checks the exact type on purpose. Qube
+#   subclasses each other, so isinstance() would accept the wrong class and
+#   silently weaken these assertions.
+# E711: `== None` is deliberate. Qube and Unit overload __eq__, so `is None`
+#   asks a different question than the assertion was written to ask.
 # SIM113: test_qube_iterate.py keeps a manual counter precisely to check it
 #   against the index that enumerate() and ndenumerate() produce.
-"tests/*" = ["E501", "PT009", "PT027", "N801", "N802", "N806", "E712", "SIM113"]
+"tests/*" = ["E501", "N806", "E712", "E721", "E711", "SIM113"]
 
 # The extensions modules define free functions that are bound onto Qube as
 # methods, which makes several rules structurally unavoidable there.
