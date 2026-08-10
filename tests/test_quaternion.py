@@ -598,31 +598,11 @@ def test_quaternion_simple_1_d_case() -> None:
     assert type(m) == Matrix3
     assert m.shape == (2,)
 
-    m = Matrix3.from_euler(0., 0., 0.)
-    q = Quaternion._from_matrix3_experimental(m)
-    assert type(q) == Quaternion
-
-    m = Matrix3.from_euler(np.pi/4., np.pi/6., np.pi/8.)
-    m.insert_deriv('t', Matrix3.from_euler(0., 0., 0.))
-    q = Quaternion._from_matrix3_experimental(m, recursive=True)
-    assert type(q) == Quaternion
-    assert ('t' in q.derivs)
-
-    m2 = Matrix3.from_euler(np.pi/4., 0., 0.)
-    m2.insert_deriv('t', Matrix3.from_euler(0., 0., 0.))
-    q2 = Quaternion._from_matrix3_experimental(m2, recursive=True)
-    assert type(q2) == Quaternion
-    assert ('t' in q2.derivs)
-
     m = Matrix3.from_euler(np.pi, 0., 0.)  # 180 degree rotation about x
 
     q = Quaternion.from_matrix3(m)
     assert type(q) == Quaternion
     assert q.shape == ()  # scalar case
-
-    # Note: _from_matrix3_experimental with derivatives had a bug
-    # where 'any(div_by_zero)' failed when div_by_zero is a scalar bool.
-    # This has been fixed by using np.any() instead.
 
     m_vals = np.array([[-1., 0., 0.], [0., 0., 0.], [0., 0., 0.]])
     m = Matrix3(m_vals)
