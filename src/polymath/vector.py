@@ -231,7 +231,7 @@ class Vector(Qube):
 
         # If nothing is masked, this is easy
         if not np.any(self._mask):
-            return (tuple(np.rollaxis(self._values.astype(np.intp), -1, 0)), False)
+            return (tuple(np.moveaxis(self._values.astype(np.intp), -1, 0)), False)
 
         # If purging...
         if purge:
@@ -241,7 +241,7 @@ class Vector(Qube):
 
             # If partially masked...
             new_values = self._values[self.antimask]
-            return (tuple(np.rollaxis(new_values.astype(np.intp), -1, 0)), False)
+            return (tuple(np.moveaxis(new_values.astype(np.intp), -1, 0)), False)
 
         # Without a replacement...
         if masked is None:
@@ -257,7 +257,7 @@ class Vector(Qube):
             new_values = self._values.copy().astype(np.intp)
             new_values[self._mask] = masked
 
-        return (tuple(np.rollaxis(new_values, -1, 0)), self._mask)
+        return (tuple(np.moveaxis(new_values, -1, 0)), self._mask)
 
     def int(self, top=None, remask=False, clip=False, inclusive=True, shift=None):
         """Return an integer (floor) version of this Vector.

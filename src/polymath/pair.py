@@ -129,13 +129,13 @@ class Pair(Vector):
 
         # Roll the array axis to the end
         lshape = self._values.ndim
-        new_values = np.rollaxis(self._values, lshape - self._drank - 1, lshape)
+        new_values = np.moveaxis(self._values, lshape - self._drank - 1, lshape - 1)
 
         # Swap the axes
         new_values = new_values[..., ::-1]
 
         # Roll the axis back
-        new_values = np.rollaxis(new_values, -1, lshape - self._drank - 1)
+        new_values = np.moveaxis(new_values, -1, lshape - self._drank - 1)
 
         # Construct the object
         obj = Pair(new_values, self._mask, example=self)
@@ -159,13 +159,13 @@ class Pair(Vector):
 
         # Roll the array axis to the end
         lshape = self._values.ndim
-        new_values = np.rollaxis(self._values, lshape - self._drank - 1, lshape)
+        new_values = np.moveaxis(self._values, lshape - self._drank - 1, lshape - 1)
 
         # Swap the axes and negate the new y
         new_values = new_values[..., ::-1]
 
         # Roll the axis back
-        new_values = np.rollaxis(new_values, -1, lshape - self._drank - 1)
+        new_values = np.moveaxis(new_values, -1, lshape - self._drank - 1)
 
         # Construct the object
         new_values[..., 1] = -new_values[..., 1]    # negate the new y-axis

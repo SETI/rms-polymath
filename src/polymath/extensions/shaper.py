@@ -147,7 +147,9 @@ def roll_axis(self, axis, start=0, *, recursive=True, rank=None):
         self = self.reshape((rank - self._ndims) * (1,) + self._shape,
                             recursive=recursive)
 
-    # Roll the values and mask of the object
+    # Roll the values and mask of the object. This method's contract is np.rollaxis's
+    # own, "roll the axis until it lies in front of `start`", so np.rollaxis states it
+    # directly; np.moveaxis would need its destination adjusted whenever a2 > a1.
     new_values = np.rollaxis(self._values, a1, a2)
     if isinstance(self._mask, np.ndarray):
         new_mask = np.rollaxis(self._mask, a1, a2)

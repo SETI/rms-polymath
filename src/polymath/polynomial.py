@@ -807,7 +807,7 @@ class Polynomial(Vector):
         matrix[..., :, :] = np.diag(np.ones((self.order - 1,)), -1)
         matrix[..., 0, :] = -coefficients[..., 1:] / coefficients[..., 0:1]
         roots = np.linalg.eigvals(matrix)
-        roots = np.rollaxis(roots, -1, 0)
+        roots = np.moveaxis(roots, -1, 0)
 
         # Convert the roots to a real Scalar
         is_complex = np.imag(roots) != 0.

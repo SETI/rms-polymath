@@ -206,12 +206,12 @@ class Quaternion(Vector):
         new_values = self._values.copy()
 
         if self._drank > 0:
-            new_values = np.rollaxis(new_values, -self._drank-1, new_values.ndim)
+            new_values = np.moveaxis(new_values, -self._drank-1, -1)
 
         new_values[..., 1:4] *= -1
 
         if self._drank > 0:
-            new_values = np.rollaxis(new_values, -1, -self._drank-1)
+            new_values = np.moveaxis(new_values, -1, -self._drank-1)
 
         obj = Quaternion(new_values, self._mask, example=self)
 
@@ -649,17 +649,17 @@ class Quaternion(Vector):
         b_values = b._values
 
         if a._drank:
-            a_values = np.rollaxis(a_values, -a._drank - 1, a_values.ndim)
+            a_values = np.moveaxis(a_values, -a._drank - 1, -1)
             b_values = b_values.reshape(b._shape + a._drank * (1,) + (4,))
 
         if b._drank:
             a_values = a_values.reshape(a._shape + b._drank * (1,) + (4,))
-            b_values = np.rollaxis(b_values, -b._drank - 1, b_values.ndim)
+            b_values = np.moveaxis(b_values, -b._drank - 1, -1)
 
         new_values = Quaternion.mul_values(a_values, b_values)
 
         if a._drank or b._drank:
-            new_values = np.rollaxis(new_values, -1, -(a._drank + b._drank + 1))
+            new_values = np.moveaxis(new_values, -1, -(a._drank + b._drank + 1))
 
         # Construct object
         obj = Qube.__new__(type(self))

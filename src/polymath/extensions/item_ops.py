@@ -34,7 +34,7 @@ def extract_numer(self, axis, index, classes=(), *, recursive=True):
     k1 = self._ndims + a1
 
     # Roll this axis to the beginning and slice it out
-    new_values = np.rollaxis(self._values, k1, 0)
+    new_values = np.moveaxis(self._values, k1, 0)
     new_values = new_values[index]
 
     # Construct and cast
@@ -80,7 +80,7 @@ def extract_denom(self, axis, index, classes=()):
     k1 = self._ndims + self._nrank + a1
 
     # Roll this axis to the beginning and slice it out
-    new_values = np.rollaxis(self._values, k1, 0)
+    new_values = np.moveaxis(self._values, k1, 0)
     new_values = new_values[index]
 
     # Construct and cast
@@ -148,9 +148,9 @@ def slice_numer(self, axis, index1, index2, classes=(), *, recursive=True):
     k1 = self._ndims + a1
 
     # Roll this axis to the beginning and slice it out
-    new_values = np.rollaxis(self._values, k1, 0)
+    new_values = np.moveaxis(self._values, k1, 0)
     new_values = new_values[index1:index2]
-    new_values = np.rollaxis(new_values, 0, k1+1)
+    new_values = np.moveaxis(new_values, 0, k1)
 
     # Construct and cast
     obj = Qube(new_values, self._mask, example=self)
@@ -416,10 +416,9 @@ def swap_items(self, classes):
     """
 
     new_values = self._values
-    len_shape = new_values.ndim
 
     for _r in range(self._nrank):
-        new_values = np.rollaxis(new_values, -self._drank-1, len_shape)
+        new_values = np.moveaxis(new_values, -self._drank-1, -1)
 
     obj = Qube(new_values, self._mask, nrank=self._drank, drank=self._nrank, example=self)
     obj = obj.cast(classes)

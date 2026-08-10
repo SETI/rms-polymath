@@ -3332,7 +3332,7 @@ class Qube:
         # Construct the values array
         new_drank = len(new_denom)
         new_values = np.array(arrays, dtype=dtype)
-        new_values = np.rollaxis(new_values, 0, new_values.ndim - new_drank)
+        new_values = np.moveaxis(new_values, 0, new_values.ndim - new_drank - 1)
 
         # Construct the mask (scalar or array)
         masks = Qube.broadcast(*masks)

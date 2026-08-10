@@ -481,8 +481,8 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
     k2 += arg1._nrank - 1
 
     # Roll both array axes to the right
-    array1 = np.rollaxis(array1, k1, array1.ndim)
-    array2 = np.rollaxis(array2, k2, array2.ndim)
+    array1 = np.moveaxis(array1, k1, -1)
+    array2 = np.moveaxis(array2, k2, -1)
 
     new_drank = arg1._drank + arg2._drank
 
@@ -493,7 +493,7 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         # Roll the new axis back to its position in arg1
         new_nrank = arg1._nrank + arg2._nrank - 1
         new_k1 = new_values.ndim - new_drank - new_nrank + a1
-        new_values = np.rollaxis(new_values, -1, new_k1)
+        new_values = np.moveaxis(new_values, -1, new_k1)
 
     else:
         new_values = _cross_2x2(array1, array2)
@@ -695,7 +695,7 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
     k1 = a1 + arg._ndims
 
     # Roll this axis to the end
-    rolled = np.rollaxis(arg._values, k1, arg._values.ndim)
+    rolled = np.moveaxis(arg._values, k1, -1)
 
     # Create the diagonal array
     new_values = np.zeros(rolled.shape + rolled.shape[-1:], dtype=rolled.dtype)
