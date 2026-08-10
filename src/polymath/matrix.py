@@ -141,7 +141,7 @@ class Matrix(Qube):
 
         return tuple(vectors)
 
-    def to_vector(self, axis, indx, *, recursive=True, classes=[]):
+    def to_vector(self, axis, indx, *, recursive=True, classes=()):
         """One of the components of a Matrix as a Vector.
 
         Parameters:
@@ -174,7 +174,7 @@ class Matrix(Qube):
         return vector.extract_numer(0, indx1, Scalar, recursive=recursive)
 
     @staticmethod
-    def from_scalars(*args, recursive=True, shape=None, classes=[]):
+    def from_scalars(*args, recursive=True, shape=None, classes=()):
         """Construct a Matrix or subclass by combining scalars.
 
         Parameters:
@@ -312,7 +312,7 @@ class Matrix(Qube):
         return self.transpose_numer(0, 1, recursive=recursive)
 
     @property
-    def T(self):
+    def T(self):  # noqa: N802  # mirrors the NumPy .T attribute
         """The transpose of this matrix.
 
         Returns:
@@ -367,8 +367,9 @@ class Matrix(Qube):
             warnings.filterwarnings('error')
             try:
                 new_values = np.linalg.inv(self._values)
-            except (RuntimeWarning, np.linalg.LinAlgError):
-                raise ValueError(f'{type(self).__name__}.inverse() input is singular')
+            except (RuntimeWarning, np.linalg.LinAlgError) as err:
+                raise ValueError(f'{type(self).__name__}.inverse() input is singular'
+                                 ) from err
 
         # Construct the result
         obj = Matrix(new_values, new_mask, unit=Unit.unit_power(self._unit, -1))
@@ -403,7 +404,7 @@ class Matrix(Qube):
 
         # Algorithm from
         #    https://wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
-        MAX_ITERS = 10      # Adequate iterations unless convergence is failing
+        max_iters = 10      # Adequate iterations unless convergence is failing
 
         m0 = self.wod
         if m0._drank:
@@ -417,14 +418,14 @@ class Matrix(Qube):
         # Iterate...
         m0 = Matrix(m0)     # can't do certain math operations on Matrix3 subclass
         next_m = m0
-        for i in range(MAX_ITERS):
+        for i in range(max_iters):
             m = next_m
             next_m = 2. * m0 * (m.inverse() * m0 + m0.T * m).inverse()
             rms = Qube.rms(next_m * next_m.T - Matrix.IDENTITY3)
 
             if Matrix._DEBUG:
-                sorted = np.sort(rms._values.ravel())
-                print(i, sorted[-4:])
+                sorted_ = np.sort(rms._values.ravel())
+                print(i, sorted_[-4:])
 
             if rms.max() <= Matrix._DELTA:
                 break

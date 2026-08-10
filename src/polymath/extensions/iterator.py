@@ -6,7 +6,7 @@ import itertools
 import numpy as np
 
 
-class QubeIterator(object):
+class QubeIterator:
     """Provide iteration across the first axis of a Qube object.
 
     This iterator allows iteration over elements along the first axis of a Qube object,
@@ -61,7 +61,7 @@ class QubeIterator(object):
         return self.obj[self.index]
 
 
-class QubeNDIterator(object):
+class QubeNDIterator:
     """Provide iteration across all axes of a Qube object.
 
     This iterator allows iteration over all elements in a multi-dimensional Qube object,

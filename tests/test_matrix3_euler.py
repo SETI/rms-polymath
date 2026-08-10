@@ -31,7 +31,7 @@ class Test_Matrix3_euler(unittest.TestCase):
                     self.assertAlmostEqual(test.values[i,j,k], int(j==k), delta=DEL)
 
         # Conversion to Euler angles and back always returns the same matrix
-        for code in Matrix3._AXES2TUPLE.keys():
+        for code in Matrix3._AXES2TUPLE:
             angles = a.to_euler(axes=code)
             b = Matrix3.from_euler(*angles, axes=code)
 

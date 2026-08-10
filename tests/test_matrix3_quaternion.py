@@ -21,7 +21,7 @@ class Test_Matrix3_quaternion(unittest.TestCase):
         q2 = mats.to_quaternion()
 
         DEL = 3.e-14
-        for i in range(N):
+        for _i in range(N):
             # The sign of the whole quaternion might be reversed.
             t  = q.vals  * np.sign( q.vals[...,0])[:,np.newaxis]
             t2 = q2.vals * np.sign(q2.vals[...,0])[:,np.newaxis]
@@ -40,7 +40,7 @@ class Test_Matrix3_quaternion(unittest.TestCase):
         q2 = Matrix3.to_quaternion(m, recursive=False)
 
         DEL = 1.e-14
-        for i in range(N):
+        for _i in range(N):
             # The sign of the whole quaternion might be reversed.
             t  = q.vals  * np.sign( q.vals[...,0])[:,np.newaxis]
             t2 = q2.vals * np.sign(q2.vals[...,0])[:,np.newaxis]

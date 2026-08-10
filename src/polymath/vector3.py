@@ -349,7 +349,7 @@ class Vector3(Vector):
 
         (self, vector) = Vector3.broadcast(self, vector, recursive=recursive)
         (x0, y0, z0) = self.unit().to_scalars()
-        (x , y , z ) = vector.unit().to_scalars()
+        (x , y , _z ) = vector.unit().to_scalars()
 
         # Start with this vector. The first rotation is about the Y-axis, where a
         # positive rotation angle increases x if the vector is near the Z-axis. We need

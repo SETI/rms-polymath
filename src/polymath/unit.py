@@ -7,7 +7,7 @@ import numpy as np
 import numbers
 
 
-class Unit():
+class Unit:
     """Class to represent units and provide conversion methods.
 
     Attributes:
@@ -344,7 +344,7 @@ class Unit():
 
         # If the factor is unity, return the value without modification
         if (self.triple[2] == unit.triple[2] and
-            self.triple[0] * unit.triple[1] == self.triple[1] * unit.triple[0]):  # noqa
+            self.triple[0] * unit.triple[1] == self.triple[1] * unit.triple[0]):
             return value
 
         return ((self.triple[0] * unit.triple[1]) * value /
@@ -500,7 +500,7 @@ class Unit():
 
         if (self.exponents[0] % 2 != 0 or
             self.exponents[1] % 2 != 0 or
-            self.exponents[2] % 2 != 0):                                            # noqa
+            self.exponents[2] % 2 != 0):
             raise ValueError("illegal unit for sqrt(): " + self.get_name())
 
         exponents = (self.exponents[0]//2, self.exponents[1]//2, self.exponents[2]//2)
@@ -810,7 +810,7 @@ class Unit():
             ValueError: If the name format is invalid.
         """
 
-        BIGNUM = 99999
+        bignum = 99999
 
         if isinstance(name, dict):
             return name
@@ -836,7 +836,7 @@ class Unit():
         # expression and process the interior
         if name[0] == '(':
             depth = 0
-            for i, c in enumerate(name):
+            for i, c in enumerate(name):  # noqa: B007  # i is used after the loop
                 if c == '(':
                     depth += 1
                 if c == ')':
@@ -849,10 +849,10 @@ class Unit():
 
         # Otherwise, jump to the first operator
         else:
-            imul = name.find('*') % BIGNUM
-            idiv = name.find('/') % BIGNUM
+            imul = name.find('*') % bignum
+            idiv = name.find('/') % bignum
             first = min(imul, idiv)
-            if first >= BIGNUM - 1:  # pragma: no cover
+            if first >= bignum - 1:  # pragma: no cover
                 # TODO What is the purpose of this check?
                 raise ValueError(f'illegal unit syntax: "{name}"')
 
@@ -863,10 +863,10 @@ class Unit():
         if right.startswith('**'):
             right = right[2:].lstrip()
 
-            imul = right.find('*') % BIGNUM
-            idiv = right.find('/') % BIGNUM
+            imul = right.find('*') % bignum
+            idiv = right.find('/') % bignum
             first = min(imul, idiv)
-            if first >= BIGNUM - 1:  # pragma: no cover
+            if first >= bignum - 1:  # pragma: no cover
                 # TODO What is the purpose of this check?
                 return Unit.name_power(left, right)
 
@@ -915,11 +915,11 @@ class Unit():
         def order_keys(namelist):
             """Internal method to order the units sensibly."""
 
-            sorted = []
+            sorted_ = []
 
             # Coefficient first
             if '' in namelist:
-                sorted.append('')
+                sorted_.append('')
 
             # Distances first
             templist = []
@@ -929,37 +929,37 @@ class Unit():
                     if expo[0]:
                         templist.append(key)
             templist.sort()
-            sorted += templist
+            sorted_ += templist
 
             # Angles second
             templist = []
             for key in namelist:
                 if key in Unit._NAME_TO_UNIT:
                     expo = Unit._NAME_TO_UNIT[key].exponents
-                    if expo[2] and key not in sorted:
+                    if expo[2] and key not in sorted_:
                         templist.append(key)
             templist.sort()
-            sorted += templist
+            sorted_ += templist
 
             # Time units next
             templist = []
             for key in namelist:
                 if key in Unit._NAME_TO_UNIT:
                     expo = Unit._NAME_TO_UNIT[key].exponents
-                    if expo[1] and key not in sorted:
+                    if expo[1] and key not in sorted_:
                         templist.append(key)
             templist.sort()
-            sorted += templist
+            sorted_ += templist
 
             # Unrecognized units last
             templist = []
             for key in namelist:
-                if key not in sorted:
+                if key not in sorted_:
                     templist.append(key)
             templist.sort()
-            sorted += templist
+            sorted_ += templist
 
-            return sorted
+            return sorted_
 
         def cat_units(namelist, negate=False):
             """A string of names and exponents."""
@@ -991,9 +991,7 @@ class Unit():
         numers = []
         denoms = []
         for key, expo in namedict.items():
-            if key == '':
-                numers.append(key)
-            elif expo > 0:
+            if key == '' or expo > 0:
                 numers.append(key)
             elif expo < 0:
                 denoms.append(key)
@@ -1059,15 +1057,15 @@ class Unit():
         # Check every possible combination for the one that yields the correct
         # coefficient
         successes = []
-        for d, d_option in enumerate(options[0]):
+        for _d, d_option in enumerate(options[0]):
             d_unit, d_power, d_triple = d_option
             d_numer, d_denom, d_expo = d_triple
 
-            for t, t_option in enumerate(options[1]):
+            for _t, t_option in enumerate(options[1]):
                 t_unit, t_power, t_triple = t_option
                 t_numer, t_denom, t_expo = t_triple
 
-                for a, a_option in enumerate(options[2]):
+                for _a, a_option in enumerate(options[2]):
                     a_unit, a_power, a_triple = a_option
                     a_numer, a_denom, a_expo = a_triple
 

@@ -30,7 +30,7 @@ class Test_Vector3_misc(unittest.TestCase):
         self.assertEqual(vecs, test)
 
         self.assertTrue(vecs == test)
-        self.assertTrue(not (vecs != test))
+        self.assertTrue(vecs == test)
 
         self.assertEqual((vecs == test), True)
         self.assertEqual((vecs != test), False)

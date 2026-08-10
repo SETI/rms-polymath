@@ -43,7 +43,7 @@ class Vector(Qube):
         if isinstance(arg, (float, int)):
             arg = np.array([arg])
 
-        super(Vector, self).__init__(arg, *args, **kwargs)
+        super().__init__(arg, *args, **kwargs)
 
     @staticmethod
     def as_vector(arg, *, recursive=True):
@@ -200,7 +200,7 @@ class Vector(Qube):
             tuple: A tuple of NumPy arrays suitable for indexing.
         """
 
-        (index, mask) = self.as_index_and_mask((masked is None), masked)
+        (index, _mask) = self.as_index_and_mask((masked is None), masked)
         return index
 
     def as_index_and_mask(self, purge=False, masked=None):
@@ -601,7 +601,7 @@ class Vector(Qube):
     def cross_product_as_matrix(self, *, recursive=True):
         """Convert to a Matrix whose multiply equals a cross product with this vector.
 
-        This method creates a 3×3 antisymmetric matrix that, when multiplied with another
+        This method creates a 3x3 antisymmetric matrix that, when multiplied with another
         vector, produces the same result as the cross product of this vector with that
         vector.
 
@@ -609,7 +609,7 @@ class Vector(Qube):
             recursive (bool, optional): If True, include derivatives in the result.
 
         Returns:
-            Matrix: A 3×3 matrix that represents the cross product operation.
+            Matrix: A 3x3 matrix that represents the cross product operation.
 
         Raises:
             ValueError: If this Vector doesn't have exactly 3 components or if it
@@ -640,7 +640,7 @@ class Vector(Qube):
         new_values[..., 2, 1] =  old_values[..., 0]
 
         # Roll the denominator axes back to the end
-        for i in range(self._drank):
+        for _i in range(self._drank):
             new_values = np.rollaxis(new_values, -3, len(new_values._shape))
 
         obj = Qube._MATRIX_CLASS(new_values, self._mask, derivs={}, example=self)

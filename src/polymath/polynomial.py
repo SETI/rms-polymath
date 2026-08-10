@@ -56,7 +56,7 @@ class Polynomial(Vector):
 
         # Otherwise use the Vector class constructor
         else:
-            super(Polynomial, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
     @property
     def order(self):
@@ -109,7 +109,7 @@ class Polynomial(Vector):
         derivs = {}
         if recursive:
             for key, value in self._derivs.items():
-                derivs[key] = self.as_vector(recursive=False)
+                derivs[key] = value.as_vector(recursive=False)
 
         obj.insert_derivs(derivs)
         return obj
@@ -469,7 +469,7 @@ class Polynomial(Vector):
         if isinstance(arg, Vector) and arg.item == (1,):
             arg = arg.to_scalar(0)
 
-        super(Polynomial, self).__imul__(arg)
+        super().__imul__(arg)
         return Polynomial(self)
 
     def __truediv__(self, arg):
@@ -502,7 +502,7 @@ class Polynomial(Vector):
         if isinstance(arg, Vector) and arg.item == (1,):
             arg = arg.to_scalar(0)
 
-        super(Polynomial, self).__itruediv__(arg)
+        super().__itruediv__(arg)
         return Polynomial(self)
 
     def __pow__(self, arg):

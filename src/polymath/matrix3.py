@@ -358,7 +358,7 @@ class Matrix3(Matrix):
         zero = np.zeros_like(sin_ra)
         values = np.stack([-sin_ra,            cos_ra,           zero,
                            -cos_ra * sin_dec, -sin_ra * sin_dec, cos_dec,
-                            cos_ra * cos_dec,  sin_ra * cos_dec, sin_dec],      # noqa
+                            cos_ra * cos_dec,  sin_ra * cos_dec, sin_dec],
                           axis=-1)
         return Matrix3(values.reshape(values.shape[:-1] + (3, 3)))
 
@@ -610,7 +610,7 @@ class Matrix3(Matrix):
         'rzxy': (1, 1, 0, 1), 'ryxy': (1, 1, 1, 1), 'ryxz': (2, 0, 0, 1),
         'rzxz': (2, 0, 1, 1), 'rxyz': (2, 1, 0, 1), 'rzyz': (2, 1, 1, 1)}
 
-    _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
+    _TUPLE2AXES = {v: k for k, v in _AXES2TUPLE.items()}
 
     _EPSILON = 1.e-15
     _TWOPI = 2. * np.pi

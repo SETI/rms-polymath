@@ -99,7 +99,7 @@ def __setitem__(self, indx, arg):
     # shapeless indexing
     try:
         (masked, size_zero,
-         shape_before, shape_after) = self._prep_scalar_index(indx)
+         _shape_before, shape_after) = self._prep_scalar_index(indx)
     except IndexError:
         if self._shape == ():
             raise
@@ -513,8 +513,8 @@ def _prep_index(self, indx):
         return (tuple(pre_index), post_mask, has_ellipsis, moved_to_front, array_shape,
                 first_array_loc)
 
-    except Exception as e:
-        raise IndexError(e)
+    except Exception as err:
+        raise IndexError(err) from err
 
 
 def _prep_scalar_index(self, indx):

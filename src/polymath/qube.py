@@ -8,7 +8,7 @@ import numbers
 from polymath.unit import Unit
 
 
-class Qube(object):
+class Qube:
     """The base class for all PolyMath subclasses.
 
     The PolyMath subclasses, e.g., Scalar, Vector3, Matrix3, etc., define one or more
@@ -130,7 +130,8 @@ class Qube(object):
 
         return object.__new__(subtype)
 
-    def __init__(self, arg, mask=False, *, derivs={}, unit=None, nrank=None, drank=None,
+    def __init__(self, arg, mask=False, *, derivs={},  # noqa: B006  # {} and None
+                 unit=None, nrank=None, drank=None,    # are distinct, documented values
                  example=None, default=None, op=''):
         """Default constructor.
 
@@ -231,9 +232,8 @@ class Qube(object):
         if unit and not self._UNITS_OK:
             raise TypeError(f'{opstr} unit is disallowed: {unit}')
 
-        if self._NRANK is not None:
-            if nrank is not None and nrank != self._NRANK:
-                raise ValueError(f'invalid {opstr} numerator rank: {nrank}')
+        if self._NRANK is not None and nrank is not None and nrank != self._NRANK:
+            raise ValueError(f'invalid {opstr} numerator rank: {nrank}')
 
         if drank and not self._DERIVS_OK:
             raise ValueError(f'{opstr} denominators are disallowed')
@@ -956,7 +956,7 @@ class Qube(object):
     # Alternative constructors
     ######################################################################################
 
-    def clone(self, *, recursive=True, preserve=[], retain_cache=False):
+    def clone(self, *, recursive=True, preserve=(), retain_cache=False):
         """Fast construction of a shallow copy.
 
         Parameters:
@@ -1624,7 +1624,7 @@ class Qube(object):
         if not override:
             self.require_writeable()
 
-        if key in self._derivs.keys():
+        if key in self._derivs:
             del self._derivs[key]
             del self.__dict__['d_d' + key]
 
@@ -1660,7 +1660,7 @@ class Qube(object):
             return
 
         # Delete all derivatives
-        for key in self._derivs.keys():
+        for key in self._derivs:
             delattr(self, 'd_d' + key)
 
         self._derivs = {}
@@ -1687,7 +1687,7 @@ class Qube(object):
             if isinstance(preserve, str):
                 preserve = [preserve]
 
-            if not any([p for p in preserve if p in self._derivs]):
+            if not any(p for p in preserve if p in self._derivs):
                 return self.wod
 
             # Create a fast copy with derivatives
@@ -2266,9 +2266,8 @@ class Qube(object):
 
         if isinstance(self._values, (bool, np.bool_)):
             return False
-        if isinstance(self._values, np.ndarray) and self._values.dtype.kind == 'b':
-            return False
-        return True
+        return not (isinstance(self._values, np.ndarray)
+                    and self._values.dtype.kind == 'b')
 
     def as_numeric(self, *, recursive=True):
         """A numeric version of this object.
@@ -2544,9 +2543,9 @@ class Qube(object):
                 return self
 
             # Exclude the class if it is incompatible
-            if cls._NUMER is not None and cls._NUMER != self._numer:
+            if cls._NUMER is not None and self._numer != cls._NUMER:
                 continue
-            if cls._NRANK is not None and cls._NRANK != self._nrank:
+            if cls._NRANK is not None and self._nrank != cls._NRANK:
                 continue
 
             # Construct the new object
@@ -3056,7 +3055,7 @@ class Qube(object):
     ######################################################################################
 
     @classmethod
-    def from_scalars(cls, *scalars, recursive=True, readonly=False, classes=[]):
+    def from_scalars(cls, *scalars, recursive=True, readonly=False, classes=()):
         """A new instance constructed from Scalars or arrays given as arguments.
 
         Defined as a class method so it can also be used to generate instances of any 1-D

@@ -66,7 +66,7 @@ class Test_Scalar_quadratic(unittest.TestCase):
         self.assertTrue(np.all(x1[:2].mask))
 
         # Single values
-        for k in range(100):
+        for _k in range(100):
             a = np.random.randn()
             b = np.random.randn()
             c = np.random.randn()

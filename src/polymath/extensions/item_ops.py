@@ -417,7 +417,7 @@ def swap_items(self, classes):
     new_values = self._values
     len_shape = new_values.ndim
 
-    for r in range(self._nrank):
+    for _r in range(self._nrank):
         new_values = np.rollaxis(new_values, -self._drank-1, len_shape)
 
     obj = Qube(new_values, self._mask, nrank=self._drank, drank=self._nrank, example=self)

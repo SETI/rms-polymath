@@ -27,6 +27,8 @@
 #   --pymarkdown           Run PyMarkdown scan only
 #   -h, --help             Show this help message
 #
+# Requires the virtualenv created by ./scripts/setup-venv.sh.
+#
 # Environment:
 #   VENV or VENV_PATH        Path to virtualenv (default: $PROJECT_ROOT/venv)
 #   CLEANUP_GRACE_PERIOD     Seconds to wait for graceful shutdown (default: 5)
@@ -55,7 +57,7 @@
 #   Code:     optional: ruff check, ruff format --check, mypy, pytest, pyroma,
 #             bandit, vulture (see ENABLE_* above)
 #   Sphinx:   make -C docs html SPHINXOPTS="-W"
-#   Markdown: pymarkdown scan docs/ .cursor/ README.md CONTRIBUTING.md
+#   Markdown: pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
 #
 # Exit codes:
 #   0 - All requested checks passed
@@ -341,7 +343,7 @@ run_code_checks() {
     fi
 
     if [ ! -f "$VENV/bin/activate" ]; then
-        print_error "Virtual environment not found at $VENV"
+        print_error "Virtual environment not found at $VENV; run ./scripts/setup-venv.sh"
         [ -n "$status_file" ] && echo "Code - Virtual environment not found" >> "$status_file"
         return 1
     fi
@@ -387,7 +389,7 @@ run_code_checks() {
 
     # -n controls parallelism; --dist loadscope keeps each test module on one
     # worker to avoid time-mocking and fixture-isolation interference.
-    # Coverage (--cov=psfmodel) and strict options come from pyproject.toml addopts.
+    # Coverage (--cov=src) and strict options come from pyproject.toml addopts.
     if [ "$RUN_PYTEST" = true ] && [ "$ENABLE_PYTEST" = true ]; then
         print_info "Running pytest (-n ${PYTEST_WORKERS})..."
         if python -m pytest -q -n "$PYTEST_WORKERS" --dist loadscope tests; then
@@ -455,7 +457,7 @@ run_sphinx_build() {
     cd "$PROJECT_ROOT" || exit 1
 
     if [ ! -f "$VENV/bin/activate" ]; then
-        print_error "Virtual environment not found at $VENV"
+        print_error "Virtual environment not found at $VENV; run ./scripts/setup-venv.sh"
         [ -n "$status_file" ] && echo "Sphinx - Virtual environment not found" >> "$status_file"
         return 1
     fi
@@ -490,7 +492,7 @@ run_markdown_checks() {
     cd "$PROJECT_ROOT" || exit 1
 
     if [ ! -f "$VENV/bin/activate" ]; then
-        print_error "Virtual environment not found at $VENV"
+        print_error "Virtual environment not found at $VENV; run ./scripts/setup-venv.sh"
         [ -n "$status_file" ] && echo "Markdown - Virtual environment not found" >> "$status_file"
         return 1
     fi
@@ -498,10 +500,10 @@ run_markdown_checks() {
     # shellcheck source=/dev/null
     source "$VENV/bin/activate"
 
-    print_info "Running PyMarkdown scan (docs/, .cursor/, root *.md)..."
+    print_info "Running PyMarkdown scan (docs/, .claude/, root *.md)..."
     local scan_paths=()
     [ -d "docs/" ] && scan_paths+=("docs/")
-    [ -d ".cursor/" ] && scan_paths+=(".cursor/")
+    [ -d ".claude/" ] && scan_paths+=(".claude/")
     [ -f "README.md" ] && scan_paths+=("README.md")
     [ -f "CONTRIBUTING.md" ] && scan_paths+=("CONTRIBUTING.md")
     if [ ${#scan_paths[@]} -eq 0 ]; then

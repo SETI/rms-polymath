@@ -504,7 +504,7 @@ from polymath.unit       import Unit
 from polymath.vector     import Vector
 from polymath.vector3    import Vector3
 
-import polymath.extensions
+import polymath.extensions  # noqa: F401  # binds the extension methods onto Qube
 
 try:
     from ._version import __version__

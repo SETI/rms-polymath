@@ -34,7 +34,7 @@ class Test_Qube_iterate(unittest.TestCase):
             self.assertTrue(isinstance(a, Scalar))
             count += 1
 
-        array = Pair(list(zip(np.arange(10), -3 * np.arange(10))))
+        array = Pair(list(zip(np.arange(10), -3 * np.arange(10), strict=False)))
         count = 0
         for a in array:
             self.assertEqual(a, (count, -3 * count))

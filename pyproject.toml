@@ -7,7 +7,7 @@ name = "rms-polymath"
 dynamic = ["version"]
 description = "Wrapper for NumPy that adds easy masks and vector computation"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "numpy",
   "rms-fpzip"
@@ -28,7 +28,6 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Topic :: Utilities",
   "License :: OSI Approved :: Apache Software License",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -55,6 +54,11 @@ markers = []
 [tool.setuptools]
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+# PEP 561 marker and type stubs must be shipped in the wheel, or downstream type
+# checkers ignore them.
+polymath = ["py.typed", "*.pyi"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
@@ -107,13 +111,16 @@ disallow_subclassing_any = false
 module = "polymath._version"
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
+# An overrides table with no "module" key makes mypy warn on every run, so keep
+# this one commented out in full until it is needed.
+# [[tool.mypy.overrides]]
 # module = ["polymath.*"]
 # ignore_missing_imports = true
 
 [tool.ruff]
-target-version = "py310"
-line-length = 100
+target-version = "py311"
+# Must match max-line-length in .flake8, which CI currently enforces.
+line-length = 90
 exclude = [
 ]
 
@@ -129,9 +136,38 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "A", "N", "PT", "RUF"]
 # PT011 - pytest.raises is too broad.
 # SIM105 - Use contextlib.suppress for suppressions.
 # SIM108 - Use ternary operator for simple if/else.
-extend-ignore = ["PT011", "SIM105", "SIM108"]
+# RUF005 - Collection literal concatenation. Qube overloads `+`, so the rule
+#   cannot tell vector addition from list concatenation. Its fix silently
+#   rewrites `vector + (EPS, 0, 0)` into `(*vector, EPS, 0, 0)`, which changes
+#   the result rather than the style.
+# I001 - Import sorting. The fix collapses the column-aligned `import` keywords
+#   this codebase uses throughout (the same alignment .flake8 preserves by
+#   ignoring E221 and friends). Drop this ignore to let ruff normalize imports.
+extend-ignore = ["PT011", "SIM105", "SIM108", "RUF005", "I001"]
 
 [tool.ruff.lint.per-file-ignores]
+# E501: test files are exempt from the line length limit so that expected-value
+#   tables can stay aligned and readable.
+# PT009/PT027: the existing suite is built on unittest.TestCase and stays that
+#   way; only new tests are written in pytest style.
+# N801/N802/N806: unittest naming (Test_Qube_xxx classes, runTest methods) and
+#   the object names the tests mirror from the API.
+# E712: comparisons against True/False are deliberate in mask assertions.
+# SIM113: test_qube_iterate.py keeps a manual counter precisely to check it
+#   against the index that enumerate() and ndenumerate() produce.
+"tests/*" = ["E501", "PT009", "PT027", "N801", "N802", "N806", "E712", "SIM113"]
+
+# The extensions modules define free functions that are bound onto Qube as
+# methods, which makes several rules structurally unavoidable there.
+# N807: functions named __getitem__, __abs__, and so on, bound as dunders.
+# E402: __init__.py interleaves imports with the assignments that bind them.
+# A001: methods deliberately named after builtins (Qube.abs, Qube.any, ...),
+#   mirroring the NumPy API.
+"src/polymath/extensions/*" = ["N807", "E402", "A001"]
+
+# RUF012 wants ClassVar annotations, but annotations are not permitted anywhere
+# under src (see .claude/rules/python.md), so the rule cannot be satisfied.
+"src/*" = ["RUF012"]
 
 [tool.pymarkdown.plugins.md013]
 # Line length (disable so README/CONTRIBUTING can use longer lines).
@@ -139,6 +175,17 @@ enabled = false
 
 [tool.pymarkdown.plugins.md033]
 # Inline HTML (e.g. <br>) allowed in Markdown.
+enabled = false
+
+[tool.pymarkdown.plugins.md025]
+# Multiple top-level headings. The README uses a level-one heading per major
+# section, and those levels feed the Sphinx TOC through the include in
+# docs/index.rst, so they are deliberate.
+enabled = false
+
+[tool.pymarkdown.plugins.md041]
+# First line must be a top-level heading. The README opens with badges; the
+# Sphinx include starts after the <!-- start-after-point --> marker instead.
 enabled = false
 
 # Uncomment when enabling bandit in [project.optional-dependencies].dev.

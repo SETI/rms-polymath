@@ -26,7 +26,7 @@ class Test_Pair_misc(unittest.TestCase):
         self.assertEqual(pairs, test)
 
         self.assertTrue(pairs == test)
-        self.assertTrue(not (pairs !=  test))
+        self.assertTrue(pairs == test)
         self.assertTrue((~(pairs != test)).all())
 
         self.assertEqual((pairs == test).all(), True)

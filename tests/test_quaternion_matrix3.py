@@ -89,7 +89,7 @@ class Test_Quaternion_matrix3(unittest.TestCase):
         # Quaternion to Matrix3, with derivatives
         N = 100
         x = Quaternion(np.random.rand(N,4))
-        x.insert_deriv('t', Quaternion((np.random.rand(N,4))))
+        x.insert_deriv('t', Quaternion(np.random.rand(N,4)))
         y = x.to_matrix3(recursive=True)
 
         EPS = 1.e-6

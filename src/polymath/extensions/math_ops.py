@@ -472,7 +472,7 @@ def __imul__(self, /, arg):
     if isinstance(arg, numbers.Real):
         self._values *= arg
         self._new_values()
-        for key, deriv in self._derivs.items():
+        for _key, deriv in self._derivs.items():
             deriv._values *= arg
             deriv._new_values()
         return self
@@ -693,7 +693,7 @@ def __itruediv__(self, /, arg):
     if isinstance(arg, numbers.Real) and arg != 0:
         self._values /= arg
         self._new_values()
-        for key, deriv in self._derivs.items():
+        for _key, deriv in self._derivs.items():
             deriv._values /= arg
             deriv._new_values()
         return self
@@ -1946,7 +1946,7 @@ def _raise_unsupported_op(op, /, obj1, obj2=None):
         raise TypeError(f'{opstr} operation is not supported')
 
     if (isinstance(obj1, (list, tuple, np.ndarray)) or
-        isinstance(obj2, (list, tuple, np.ndarray))):                           # noqa
+        isinstance(obj2, (list, tuple, np.ndarray))):
 
         if isinstance(obj1, Qube):
             shape1 = obj1._numer

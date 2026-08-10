@@ -27,24 +27,25 @@ jobs:
         run: |
           python -m pip install -e ".[dev]"
 
-      # TODO Replace flake8 with the template's ruff/mypy checks once the
-      # source has been cleaned up:
-      #   ruff check src tests
-      #   ruff format --check src tests
-      #   mypy src tests
-      - name: Flake8
+      # Ruff is the linter of record. .flake8 is retained for anyone who still
+      # runs flake8 by hand, but nothing in CI reads it.
+      # TODO Add `ruff format --check src tests` once the source has been
+      # reformatted; mypy stays off while src is deliberately unannotated.
+      - name: Ruff
         run: |
-          flake8 src tests
+          ruff check src tests
+
+      - name: Pyroma
+        run: |
+          pyroma .
 
       - name: Sphinx
         run: |
           sphinx-build -W -b html docs docs/_build
 
-      # TODO Add README.md and CONTRIBUTING.md to the scan once their existing
-      # Markdown-lint violations have been cleaned up.
       - name: PyMarkdown
         run: |
-          pymarkdown scan docs/ .cursor/
+          pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
 
   test:
     name: Test rms-polymath
@@ -52,7 +53,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
       fail-fast: false
     permissions:
       contents: read

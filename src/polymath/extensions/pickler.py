@@ -252,7 +252,7 @@ def _check_pickle_digits(self):
 
     self._pickle_digits = _validate_pickle_digits(digits, reference)
 
-    for key, deriv in self._derivs.items():
+    for _key, deriv in self._derivs.items():
         if not hasattr(deriv, '_pickle_digits'):
             deriv._pickle_digits = 2 * self._pickle_digits[1:]
         if not hasattr(deriv, '_pickle_reference'):
@@ -315,8 +315,8 @@ def _validate_pickle_reference(references):
                                    'fpzip'}:
                 raise ValueError(f'invalid pickle reference {reference!r}')
 
-    except (ValueError, IndexError, TypeError):
-        raise ValueError(f'invalid pickle reference {original_references!r}')
+    except (ValueError, IndexError, TypeError) as err:
+        raise ValueError(f'invalid pickle reference {original_references!r}') from err
 
     return references
 
@@ -392,13 +392,13 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
             # "Compression failed. precision not supported"
             if 'precision not supported' in str(e):
                 if precision == 0:
-                    raise first_exception
+                    raise first_exception from e
                 precision += (dtype.itemsize//4)    # add 2 if double, 1 if single
 
             # "Compression failed. memory buffer overflow"
             elif 'memory buffer overflow' in str(e):
                 if len(shape) == 1:
-                    raise first_exception
+                    raise first_exception from e
                 shape = (-1,) + shape[2:]           # reduce the number of axes
                 array = array.reshape(shape)
 
@@ -411,10 +411,10 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
             if _PICKLE_WARNINGS and first_exception is not None:
                 if precision != initial_precision:
                     warnings.warn('fpzip.compress increased precision from '
-                                  f'{initial_precision} to {precision}')
+                                  f'{initial_precision} to {precision}', stacklevel=2)
                 if shape != initial_shape:
                     warnings.warn('fpzip.compress reduced shape from '
-                                  f'{initial_shape} to {shape}')
+                                  f'{initial_shape} to {shape}', stacklevel=2)
 
             return (fpzip_bytes, zeroed_bits)
 
@@ -447,12 +447,12 @@ def fpzip_decompress(fpzip_bytes, shape, bits):
     # is an unlikely case.
 
     # This is a randomly generated sequence of 7 items, either (0, 1) or (1, 0).
-    BIT_SEQUENCE = np.array([0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1])
+    bit_sequence = np.array([0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1])
 
     # bits is the number of trailing bits that have been zeroed
     # Create an alternating pattern of integer offsets as discussed above.
     offset = 2**(bits-1)
-    pattern = np.array([offset-1, offset])[BIT_SEQUENCE]
+    pattern = np.array([offset-1, offset])[bit_sequence]
     repeats = (floats.size + len(pattern) - 1) // len(pattern)
     pattern = np.broadcast_to(pattern, (repeats, len(pattern)))
     pattern = pattern.ravel()[:floats.size]
@@ -524,7 +524,7 @@ def _encode_one_float_array(values, digits, reference):
         elif reference == 'logmean':
             ref_value = np.exp(np.mean(np.log(abs_values)))
         else:
-            raise ValueError('invalid reference %s' % repr(reference))
+            raise ValueError(f'invalid reference {reference!r}')
 
     precision = ref_value * 10.**(-digits)
     unique_values_needed = span / precision + 1
@@ -688,7 +688,7 @@ def _decode_floats(encoded):
 
     # Must be 'items'
     if method != 'items':
-        raise ValueError('unrecognized method for decoding: %s' % method)
+        raise ValueError(f'unrecognized method for decoding: {method}')
 
     (_, shape, item_rank, items) = encoded
     if len(items) == 1:

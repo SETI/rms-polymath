@@ -390,12 +390,12 @@ class Test_Vector_Comprehensive(unittest.TestCase):
         # Test as_index_and_mask with masked values
         v81 = Vector([0, 1, 2])
         v81 = v81.mask_where_component_le(0, 1)
-        idx3, mask3 = v81.as_index_and_mask()
+        idx3, _mask3 = v81.as_index_and_mask()
         self.assertEqual(type(idx3), tuple)
 
         # Test as_index_and_mask with masked parameter
         v82 = Vector([0, 1, 2])
-        idx4, mask4 = v82.as_index_and_mask(masked=99)
+        idx4, _mask4 = v82.as_index_and_mask(masked=99)
         self.assertEqual(type(idx4), tuple)
 
         # Test unit() with recursive=False

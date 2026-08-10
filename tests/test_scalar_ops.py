@@ -1468,16 +1468,16 @@ class Test_Scalar_ops(unittest.TestCase):
         b = a**0.5
         self.assertEqual(b[2:], (0,1,2,3,4,5))
         self.assertEqual(type(b), Scalar)
-        self.assertTrue((np.all(b.mask == 2*[True] + 6*[False])))
+        self.assertTrue(np.all(b.mask == 2*[True] + 6*[False]))
 
         a = Scalar((-4,-1,0,1,4,9,16,25))
         b = a**(-0.5)
         self.assertEqual(type(b), Scalar)
-        self.assertTrue((np.all(b.mask == 3*[True] + 5*[False])))
+        self.assertTrue(np.all(b.mask == 3*[True] + 5*[False]))
 
         a = Scalar((-2,-1,0,1,2,3,4,5))
         b = a**(-1)
-        self.assertTrue((np.all(b.mask == 2*[False] + [True] + 5*[False])))
+        self.assertTrue(np.all(b.mask == 2*[False] + [True] + 5*[False]))
 
         for i in range(len(a)):
             if a[i] != 0:

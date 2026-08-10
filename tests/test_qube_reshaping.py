@@ -571,7 +571,7 @@ class Test_qube_reshaping(unittest.TestCase):
         self.assertTrue(bb.readonly)
         self.assertTrue(cc.readonly)
 
-        self.assertFalse((hasattr(bb, 'd_dt')))
+        self.assertFalse(hasattr(bb, 'd_dt'))
 
         (aa,bb,cc,ee,ff) = Qube.broadcast(a,b,c,e,f,recursive=True)
         self.assertEqual(bb.d_dt.shape, (2,3,4,3))

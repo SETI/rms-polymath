@@ -136,7 +136,7 @@ class Scalar(Qube):
             ndarray: An array suitable for indexing.
         """
 
-        (index, mask) = self.as_index_and_mask(purge=(masked is None), masked=masked)
+        (index, _mask) = self.as_index_and_mask(purge=(masked is None), masked=masked)
         return index
 
     def as_index_and_mask(self, *, purge=False, masked=None):
@@ -453,8 +453,9 @@ class Scalar(Qube):
                 warnings.filterwarnings('error')
                 try:
                     func_values = np.arcsin(self._values)
-                except RuntimeWarning:
-                    raise ValueError('Scalar.arcsin() of value outside domain (-1,1)')
+                except RuntimeWarning as err:
+                    raise ValueError('Scalar.arcsin() of value outside domain (-1,1)'
+                                     ) from err
 
             obj = Scalar(func_values, mask=self._mask)
 
@@ -511,8 +512,9 @@ class Scalar(Qube):
                 warnings.filterwarnings('error')
                 try:
                     func_values = np.arccos(self._values)
-                except RuntimeWarning:
-                    raise ValueError('Scalar.arccos() of value outside domain (-1,1)')
+                except RuntimeWarning as err:
+                    raise ValueError('Scalar.arccos() of value outside domain (-1,1)'
+                                     ) from err
 
             obj = Scalar(func_values, mask=self._mask)
 
@@ -631,8 +633,8 @@ class Scalar(Qube):
                 warnings.filterwarnings('error')
                 try:
                     sqrt_vals = np.sqrt(no_negs._values)
-                except RuntimeWarning:
-                    raise ValueError('Scalar.sqrt() of negative value')
+                except RuntimeWarning as err:
+                    raise ValueError('Scalar.sqrt() of negative value') from err
 
         obj = Scalar(sqrt_vals, mask=no_negs._mask,
                      unit=Unit.sqrt_unit(no_negs._unit))
@@ -677,8 +679,8 @@ class Scalar(Qube):
                 warnings.filterwarnings('error')
                 try:
                     log_values = np.log(no_negs._values)
-                except RuntimeWarning:
-                    raise ValueError('Scalar.log() of non-positive value')
+                except RuntimeWarning as err:
+                    raise ValueError('Scalar.log() of non-positive value') from err
 
         obj = Scalar(log_values, mask=no_negs._mask)
 
@@ -724,8 +726,8 @@ class Scalar(Qube):
                 warnings.filterwarnings('error')
                 try:
                     exp_values = np.exp(no_oflow._values)
-                except (ValueError, TypeError):
-                    raise ValueError('Scalar.exp() overflow encountered')
+                except (ValueError, TypeError) as err:
+                    raise ValueError('Scalar.exp() overflow encountered') from err
 
         obj = Scalar(exp_values, mask=no_oflow._mask)
 
@@ -1419,8 +1421,8 @@ class Scalar(Qube):
                 try:
                     denom_inv_values = 1. / denom._values
                     denom_inv_mask = denom._mask
-                except (ZeroDivisionError, RuntimeWarning):
-                    raise ValueError('divide by zero in Scalar.reciprocal()')
+                except (ZeroDivisionError, RuntimeWarning) as err:
+                    raise ValueError('divide by zero in Scalar.reciprocal()') from err
 
         else:
             denom = self.mask_where_eq(0, replace=1)
@@ -1800,12 +1802,12 @@ class Scalar(Qube):
          2: _power_2,
          3: _power_3,
          4: _power_4,
-        -1: _power_neg_1,               # noqa
+        -1: _power_neg_1,
     }
 
     _EASY_FLOAT_POWERS = {
          0.5: _power_half,
-        -0.5: _power_neg_half,          # noqa
+        -0.5: _power_neg_half,
     }
 
     # Generic exponentiation, PolyMath scalar to a single scalar power

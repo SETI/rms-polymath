@@ -24,8 +24,8 @@ class Test_Scalar_as_index(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 if mask[i,j]:
-                    test[i,j] == -7
+                    self.assertEqual(test[i,j], -7)
                 else:
-                    test[i,j] == a.values[i,j]
+                    self.assertEqual(test[i,j], a.values[i,j])
 
 ##########################################################################################

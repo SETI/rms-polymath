@@ -40,7 +40,7 @@ class Test_Vector_element_div(unittest.TestCase):
 
         DEL = 3.e-12
         for i in range(N):
-            for k in range(5):
+            for _k in range(5):
                 self.assertAlmostEqual(z[i], y.values[i]/x.values[i], delta=DEL)
 
         N = 100
@@ -55,7 +55,7 @@ class Test_Vector_element_div(unittest.TestCase):
         xx = x[~z.mask]
         yy = y[~z.mask]
         for i in range(len(zz)):
-            for k in range(4):
+            for _k in range(4):
                 self.assertAlmostEqual(zz[i], yy.values[i]/xx.values[i], delta=DEL)
 
         N = 100
@@ -75,7 +75,7 @@ class Test_Vector_element_div(unittest.TestCase):
         self.assertTrue(np.all(z.mask == (x.mask | y.mask | zero_mask)))
 
         for i in range(N):
-            for k in range(4):
+            for _k in range(4):
                 if not z[i].mask:
                     self.assertAlmostEqual(z[i], y.values[i]/x.values[i], delta=DEL)
 

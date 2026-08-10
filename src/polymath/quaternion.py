@@ -496,7 +496,7 @@ class Quaternion(Vector):
         # z_over_s = Qzx + Qxz
 
         matrix = Matrix3.as_matrix3(matrix)
-        Q = matrix._values[np.newaxis]     # add front axis so indexing works
+        Q = matrix._values[np.newaxis]     # noqa: N806  # Q is the rotation matrix
 
         # Select the diagonals
         diags = Q.reshape(Q.shape[:-2] + (9,))
@@ -597,7 +597,7 @@ class Quaternion(Vector):
 
             new_values[..., 2, 2] = new_values[..., 1, 1] = new_values[..., 0, 0]
 
-            dq_dQ = Quaternion(new_values, matrix._mask, drank=2)
+            dq_dQ = Quaternion(new_values, matrix._mask, drank=2)  # noqa: N806
 
             for key, deriv in matrix._derivs.items():
                 obj.insert_deriv(key, dq_dQ.chain(deriv))
@@ -831,7 +831,7 @@ class Quaternion(Vector):
         'rzxy': (1, 1, 0, 1), 'ryxy': (1, 1, 1, 1), 'ryxz': (2, 0, 0, 1),
         'rzxz': (2, 0, 1, 1), 'rxyz': (2, 1, 0, 1), 'rzyz': (2, 1, 1, 1)}
 
-    _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
+    _TUPLE2AXES = {v: k for k, v in _AXES2TUPLE.items()}
 
     @staticmethod
     def from_euler(ai, aj, ak, axes='rzxz'):

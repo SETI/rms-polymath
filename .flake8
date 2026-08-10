@@ -1,3 +1,6 @@
+# Ruff is the linter of record; see [tool.ruff] in pyproject.toml. This file is
+# kept for anyone who still runs flake8 by hand, but neither CI nor
+# scripts/run-all-checks.sh reads it, so it is not authoritative.
 [flake8]
 max-line-length: 90
 extend-ignore =
@@ -51,6 +54,10 @@ per-file-ignores =
     # E501 Line too long (82 > 79 characters)
     # E712 Comparison to true should be 'if cond is true:' or 'if cond:'
     tests/*: E127, E128, E225, E228, E231, E251, E261, F403, E501, E712
+
+    # F401 Imported but unused. Stub files re-export names using the redundant
+    # "X as X" form, which flake8 does not recognize as a re-export.
+    *.pyi: F401
 
 # E111 Indentation is not a multiple of four
 # E114 Indentation is not a multiple of four (comment)

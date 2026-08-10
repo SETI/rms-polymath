@@ -15,7 +15,7 @@ class Test_Quaternion_euler(unittest.TestCase):
         np.random.seed(7599)
 
         # Quaternion to Euler and back, one Quaternion
-        for code in Quaternion._AXES2TUPLE.keys():
+        for code in Quaternion._AXES2TUPLE:
             a = Quaternion(np.random.rand(4)).unit()
             euler = a.to_euler(code)
             b = Quaternion.from_euler(*euler, axes=code)
@@ -26,7 +26,7 @@ class Test_Quaternion_euler(unittest.TestCase):
 
         # Quaternion to Euler and back, N Quaternions
         N = 100
-        for code in Quaternion._AXES2TUPLE.keys():
+        for code in Quaternion._AXES2TUPLE:
             a = Quaternion(np.random.rand(N,4)).unit()
             euler = a.to_euler(code)
             b = Quaternion.from_euler(*euler, axes=code)
@@ -38,7 +38,7 @@ class Test_Quaternion_euler(unittest.TestCase):
 
         # Quaternion to Matrix3 to Euler and back
         N = 100
-        for code in Quaternion._AXES2TUPLE.keys():
+        for code in Quaternion._AXES2TUPLE:
             a = Quaternion(np.random.rand(N,4)).unit()
             mats = a.to_matrix3()
             euler = mats.to_euler(code)

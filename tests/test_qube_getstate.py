@@ -269,7 +269,7 @@ class Test_Qube_getstate(unittest.TestCase):
         nbytes_tested = set()
         for digits in np.arange(6.5, 17.5, 0.5):
             error = 10.**(-digits)
-            for reference, ref_value in zip(references, ref_values):
+            for reference, ref_value in zip(references, ref_values, strict=False):
                 a = Scalar(np.random.randn(10000))
                 a.set_pickle_digits(digits, reference)
 
