@@ -12,6 +12,17 @@ from polymath.unit    import Unit
 
 __all__ = ['Matrix3']
 
+# Below this number of matrices, the quaternion encoding used by Matrix3.__getstate__()
+# does not save enough space to pay for the cost of the conversion.
+_QUATERNION_PICKLE_CUTOFF = 30
+
+# The largest departure from a proper rotation that Matrix3.__getstate__() will encode as
+# a quaternion, applied absolutely to the matrices and relative to the magnitude of each
+# derivative. Above this, the default encoding is used instead, because a quaternion
+# cannot represent a matrix that is not a rotation or a derivative that leaves the space
+# of rotations.
+_UNITARY_PICKLE_TOLERANCE = 1.e-13
+
 
 class Matrix3(Matrix):
     """Represent 3x3 rotation matrices in the PolyMath framework.
@@ -836,72 +847,159 @@ class Matrix3(Matrix):
 
         raise TypeError('Matrix3.mean() is not supported')
 
-    def __getstate__experimental(self):  # pragma: no cover
-        """Override Qube.__getstate__ to save the Matrix3 as a unit Quaternion.
+    def _convertible_to_quaternion(self):
+        """True if this object and its derivatives are fully described by a Quaternion.
 
-        This is an experimental method for potentially more efficient serialization.
+        Every unmasked matrix must be orthogonal to within a tolerance of 1.e-13, with a
+        positive determinant. In addition, every derivative must be tangent to the space
+        of rotation matrices, meaning that the product of the derivative and the
+        transpose of the matrix is antisymmetric. This is true of the derivative of any
+        proper rotation matrix. A derivative that fails this test carries the matrix off
+        the space of rotations and cannot be recovered from the derivative of the
+        equivalent quaternion.
+
+        Returns:
+            bool: True if the conversion to a Quaternion preserves this object and all
+            of its derivatives; False otherwise.
+        """
+
+        values = self._values
+        if np.shape(self._mask):
+            values = values[self.antimask]
+
+        products = np.matmul(values, np.swapaxes(values, -1, -2))
+        if np.abs(products - np.identity(3)).max() > _UNITARY_PICKLE_TOLERANCE:
+            return False
+
+        if not np.all(np.linalg.det(values) > 0.):
+            return False
+
+        for deriv in self._derivs.values():
+            dvals = deriv._values
+            if np.shape(self._mask):
+                dvals = dvals[self.antimask]
+
+            mvals = values
+            if deriv._drank:
+                # Move the matrix axes last so they broadcast against the matrices
+                axis = -2 - deriv._drank
+                dvals = np.moveaxis(dvals, (axis, axis + 1), (-2, -1))
+                mvals = values.reshape(values.shape[:-2] + deriv._drank * (1,) + (3, 3))
+
+            products = np.matmul(dvals, np.swapaxes(mvals, -1, -2))
+            residual = np.abs(products + np.swapaxes(products, -1, -2)).max()
+            if residual > _UNITARY_PICKLE_TOLERANCE * np.abs(products).max():
+                return False
+
+        return True
+
+    def __getstate__(self):
+        """The state of this object, encoded as a unit Quaternion where possible.
+
+        A rotation matrix has nine elements but only three degrees of freedom, so the
+        equivalent unit Quaternion provides a far more compact encoding, roughly one
+        third the size of the default encoding.
+
+        The largest component of the quaternion is dropped, because it can be recovered
+        from the other three and the requirement that the quaternion have unit length.
+        Because a quaternion and its negative describe the same rotation, that component
+        is first made positive; because it is the largest, it is at least 0.5, so
+        recovering it involves no loss of precision. It is swapped into index zero before
+        it is dropped, so that the dropped component always occupies the same slot and
+        the remaining values compress well. A separate array of indices records the slot
+        each one came from.
+
+        These objects fall back on the default encoding of Qube.__getstate__(), because
+        the quaternion encoding cannot represent them:
+
+        * objects with denominators;
+        * objects smaller than 30 elements, for which the conversion does not pay for
+          itself;
+        * fully masked objects, which have no values to save;
+        * matrices that are not proper rotations;
+        * objects with a derivative that is not tangent to the space of rotations.
 
         Returns:
             dict: The state dictionary for pickling.
 
         Notes:
-            This method needs more testing, especially regarding derivatives.
+            The quaternion encoding is reversible to within the precision of the
+            conversion between a Matrix3 and a Quaternion, roughly one part in 1.e15. It
+            is not bit-for-bit lossless, whereas the default encoding is when the pickle
+            digits are "double".
         """
 
-        # TODO: Seems like a good idea, but needs more testing, especially regarding
-        # derivatives.
-
-        # Prepare the clone
-        clone = self.clone(recursive=True)
-        clone._check_pickle_digits()
-        clone._mask = Qube.as_one_bool(clone._mask)   # collapse mask
-
-        # Don't bother using special processing on small objects
-        if self._size < 30 or clone._mask is True:
+        if (self._drank
+                or self._size < _QUATERNION_PICKLE_CUTOFF
+                or np.all(self._mask)
+                or not self._convertible_to_quaternion()):
             return Qube.__getstate__(self)
 
-        # Because a Matrix3 can be represented by a unit Quaternion, we can obtain
-        # excellent compression by converting it.
-        quaternion = clone.to_quaternion(recursive=True)
+        quaternion = self.to_quaternion(recursive=True)
 
-        # Also, because a quaternion and its negative define the same rotation, we can
-        # force the first element to be positive and then we don't need to save it,
-        # because the rotation can be derived from the remaining components.
+        # Identify the largest component and make it positive. For a unit quaternion it
+        # is at least 0.5, so its sign is never zero.
+        index = np.argmax(np.abs(quaternion._values), axis=-1)
+        largest = np.take_along_axis(quaternion._values, index[..., np.newaxis],
+                                     axis=-1)
+        quaternion = quaternion * Scalar(np.where(largest[..., 0] < 0., -1., 1.))
 
-        sign = np.sign(quaternion._values[..., 0])
-        quaternion *= sign
-        clone._values = quaternion._values[..., 1:]
+        # Swap the largest component into index zero, then drop it
+        qvals = quaternion._values.copy()
+        np.put_along_axis(qvals, index[..., np.newaxis], qvals[..., :1], axis=-1)
+        qvals[..., 0] = 0.
 
-        # Replace the Matrix3 derivatives with the Quaternion derivatives
-        clone._derivs = quaternion._derivs
+        # The derivatives are those of the quaternion, in their original order
+        carrier = Qube._QUATERNION_CLASS(qvals, self._mask,
+                                         derivs=quaternion._derivs)
+        carrier._pickle_digits = self.pickle_digits()
+        carrier._pickle_reference = self.pickle_reference()
 
-        clone.CONVERTED_TO_QUATERNION = True
-        return Qube.__getstate__(clone)
+        return {'QUATERNION_ENCODING': True,
+                'QUATERNION': carrier.__getstate__(),
+                'INDEX': Scalar(index).__getstate__(),
+                'READONLY': self._readonly,
+                'PICKLE_DIGITS': self.pickle_digits(),
+                'PICKLE_REFERENCE': self.pickle_reference()}
 
-    def __setstate__experimental(self, state):  # pragma: no cover
-        """Override of Qube.__setstate__ to convert from unit Quaternion back to Matrix3.
+    def __setstate__(self, state):
+        """Restore this object from a state dictionary.
+
+        Both the quaternion encoding of Matrix3.__getstate__() and the default encoding
+        of Qube.__getstate__() are recognized.
+
+        Parameters:
+            state (dict): The state dictionary as returned by __getstate__().
         """
 
-        # Apply default _setstate_
-        Qube.__setstate__(self, state)
-
-        if not hasattr(self, 'CONVERTED_TO_QUATERNION'):
+        if 'QUATERNION_ENCODING' not in state:
+            Qube.__setstate__(self, state)
             return
 
-        # Expand the Quaternion values and fill in missing scalar
-        qvals = np.empty(self._shape + (4,))
-        qvals[..., 1:] = self._values
-        qvals[..., 0] = np.sqrt(1. - np.sum(self._values**2, axis=-1))
+        carrier = Qube.__new__(Qube._QUATERNION_CLASS)
+        carrier.__setstate__(state['QUATERNION'])
 
-        # Convert the quaternion and derivatives to Matrix3
-        q = Qube._QUATERNION_CLASS(qvals, derivs=state['_derivs'])
-        matrix3 = q.to_matrix3()
+        index = Qube.__new__(Scalar)
+        index.__setstate__(state['INDEX'])
+        indices = index._values[..., np.newaxis]
 
-        self._values = matrix3._values
-        self._derivs = matrix3._derivs
-        delattr(self, 'CONVERTED_TO_QUATERNION')
+        # Recover the dropped component from the unit length of the quaternion, then
+        # swap it back into the slot it came from. The value at index zero must be read
+        # before the recovered component overwrites it.
+        qvals = carrier._values.copy()
+        largest = np.sqrt(np.maximum(0., 1. - np.sum(qvals[..., 1:]**2, axis=-1)))
+        qvals[..., 0] = np.take_along_axis(qvals, indices, axis=-1)[..., 0]
+        np.put_along_axis(qvals, indices, largest[..., np.newaxis], axis=-1)
 
-        return
+        quaternion = Qube._QUATERNION_CLASS(qvals, carrier._mask,
+                                            derivs=carrier._derivs)
+
+        self.__dict__ = quaternion.to_matrix3(recursive=True).__dict__
+        self._pickle_digits = state['PICKLE_DIGITS']
+        self._pickle_reference = state['PICKLE_REFERENCE']
+
+        if state['READONLY']:
+            self.as_readonly()
 
 ##########################################################################################
 # Useful class constants

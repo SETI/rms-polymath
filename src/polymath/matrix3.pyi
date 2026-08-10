@@ -22,6 +22,7 @@ class Matrix3(Matrix):
     IDENTITY: Matrix3
     MASKED: Matrix3
     def __add__(self, arg: Any) -> Any: ...  # type: ignore[override]
+    def __getstate__(self) -> dict[str, Any]: ...
     def __iadd__(self, arg: Any) -> Any: ...  # type: ignore[override]
     def __imul__(self, arg: Any) -> _Arraylike: ...  # type: ignore[misc, override]
     def __isub__(self, arg: Any) -> Any: ...  # type: ignore[override]
@@ -30,6 +31,7 @@ class Matrix3(Matrix):
     def __radd__(self, arg: Any) -> Any: ...  # type: ignore[override]
     def __rmul__(self, arg: Any, *, recursive: bool = ...) -> Qube: ...  # type: ignore[override]
     def __rsub__(self, arg: Any) -> Any: ...  # type: ignore[override]
+    def __setstate__(self, state: dict[str, Any]) -> None: ...
     def __sub__(self, arg: Any) -> Any: ...  # type: ignore[override]
     @staticmethod
     def as_matrix3(arg: Any, *, recursive: bool = ...) -> _Arraylike: ...
