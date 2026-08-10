@@ -347,8 +347,12 @@ def test_quaternion_simple_1_d_case() -> None:
 
     m = Matrix3.from_euler(0., 0., 0.)
     m.insert_deriv('t', Matrix3.from_euler(0., 0., 0.))
-    with pytest.raises(NotImplementedError):
-        Quaternion.from_matrix3(m, recursive=True)
+    q = Quaternion.from_matrix3(m, recursive=True)
+    assert ('t' in q.derivs)
+    assert type(q.d_dt) == Quaternion
+
+    q = Quaternion.from_matrix3(m, recursive=False)
+    assert not q.derivs
 
     ##################################################################################
     # __mul__(arg, recursive=True) - quaternion multiplication
@@ -616,10 +620,6 @@ def test_quaternion_simple_1_d_case() -> None:
     assert type(q) == Quaternion
     assert q.shape == ()  # scalar case
 
-    # Note: Derivatives in from_matrix3 are UNREACHABLE CODE
-    # because NotImplementedError is raised when recursive=True and
-    # matrix has derivatives. The derivative code can never be executed.
-
     # Note: _from_matrix3_experimental with derivatives had a bug
     # where 'any(div_by_zero)' failed when div_by_zero is a scalar bool.
     # This has been fixed by using np.any() instead.
@@ -629,11 +629,6 @@ def test_quaternion_simple_1_d_case() -> None:
     q = Quaternion.from_matrix3(m)
     assert type(q) == Quaternion
     assert q.shape == ()  # scalar case
-
-    # Note: Scalar zero_mask in from_matrix3 requires a matrix where
-    # r == 0 for a scalar case. This is difficult to achieve with proper rotation
-    # matrices. The code handles this case, but it may only occur with
-    # non-rotation matrices or due to numerical precision issues.
 
     # Note: Vector3 doesn't have its own __mul__, so v * q should work via Qube.__mul__
     # which should delegate to Quaternion.__rmul__ when appropriate.

@@ -378,8 +378,7 @@ class Quaternion(Vector):
 
         Notes:
             This appears to work, but is notably less accurate than the other method.
-            Nevertheless, it might be worth exploring further, in part because it might
-            provide a pathway to supporting derivatives.
+            Nevertheless, it might be worth exploring further.
 
         Parameters:
             matrix (Matrix3): The rotation matrix to convert.
@@ -458,21 +457,20 @@ class Quaternion(Vector):
                 proper rotation matrix (orthogonal with determinant +1), though the
                 method will work with any 3x3 matrix.
             recursive (bool, optional): If True, the returned Quaternion will include
-                derivatives. Note that this feature is not currently implemented and will
-                raise NotImplementedError if the matrix has derivatives.
+                derivatives.
 
         Returns:
             Quaternion: A quaternion representing the same rotation as the input matrix.
                 The quaternion is normalized such that quaternions q and -q represent the
                 same rotation.
 
-        Raises:
-            NotImplementedError: If recursive is True and matrix has derivatives.
+        Notes:
+            The derivatives are exact for any matrix derivative that is tangent to the
+            space of rotation matrices, which is the case for the derivative of any
+            proper rotation matrix. For a matrix derivative that carries the matrix off
+            that space, the returned derivative is that of this particular extension of
+            the quaternion function to arbitrary 3x3 matrices.
         """
-
-        if recursive and matrix._derivs:
-            raise NotImplementedError('Quaternion.from_matrix3() does not  '    # TODO
-                                      'implement derivatives')
 
         # From http://en.wikipedia.org/wiki/Rotation_matrix#Quaternion
         #
@@ -556,60 +554,66 @@ class Quaternion(Vector):
 
         obj = Quaternion((quat_over_s * s[..., np.newaxis])[0], matrix._mask)
 
-        # The following code does not work, perhaps because of the vague meaning of
-        # partial derivatives when the components of a Matrix3 are so closely coupled.
-        # When derivatives are requested, a NotImplementedError is raised instead.
+        if recursive and matrix._derivs:
 
-        if recursive and matrix._derivs:  # pragma: no cover
+            # Every branch above writes each quaternion component as
+            #   quat = quat_over_s * s
+            # where
+            #   r_sq = 1 + 2*max - trace
+            #   s    = 0.5 / sqrt(r_sq)
+            # so, writing u for r_sq,
+            #   ds/dQ = -0.25 * u**(-1.5) * du/dQ = -2*s**3 * du/dQ
+            # and therefore
+            #   dquat/dQ = s * d(quat_over_s)/dQ - 2*s**3 * quat_over_s * du/dQ
+            #
+            # Only du/dQ and d(quat_over_s)/dQ depend on the branch. With [I] the
+            # 3x3 identity and [Eab] the matrix that is one at (a,b) and zero
+            # elsewhere,
+            #   du/dQ = [I]                      when the trace is the largest
+            #   du/dQ = 2*[Eii] - [I]            when Qii is the largest
+            #
+            # and d(quat_over_s)/dQ is the constant pattern of +/-1 values that the
+            # branch used to fill quat_over_s: du/dQ for the r_sq component,
+            # [Ekj] - [Ejk] for a difference, and [Eij] + [Eji] for a sum.
 
-            # Take derivatives using the symmetric (but possibly unstable)
-            # algorithm
-            # t = Qxx + Qyy + Qzz
-            # r = sqrt(1+t)
-            # s = 0.5 / r
-            # w = 0.5 * r
-            # x = (Qzy - Qyz) * s
-            # y = (Qxz - Qzx) * s
-            # z = (Qyx - Qxy) * s
-            #
-            # Minor rewrite...
-            # t = Qxx + Qyy + Qzz
-            # r = sqrt(1+t)
-            # s = 0.5 / r
-            # w = 0.5 * r
-            # x_over_s = (Qzy - Qyz)
-            # y_over_s = (Qxz - Qzx)
-            # z_over_s = (Qyx - Qxy)
-            #
-            # dt/dQ = [I]
-            # dr/dQ = 0.5/r * dt/dQ = s * [I]
-            # ds/dQ = -0.5 / r**2 * dr/dQ = -2s**2 * s * [I] = -2*s**3 * [I]
-            #
-            # dw/dQ = 0.5 * dr/dQ = s/2 * [I]
-            #
-            # d(x_over_s)/dQ = [Mzy] == [[ 0, 0, 0],[ 0, 0,-1],[ 0, 1, 0]]
-            # d(y_over_s)/dQ = [Mxz] == [[ 0, 0, 1],[ 0, 0, 0],[-1, 0, 0]]
-            # d(z_over_s)/dQ = [Myx] == [[ 0,-1, 0],[ 1, 0, 0],[ 0, 0, 0]]
-            #
-            # dx/dQ = d(x_over_s * s)/dQ = s * [Mzy] + x_over_s * ds/dQ
-            #       = s * [Mzy] - 2*s**3 * (Qzy - Qyz) [I]
-            # dy/dQ = s * [Mxz] - 2*s**3 * (Qxz - Qzx) [I]
-            # dz/dQ = s * [Myx] - 2*s**3 * (Qyx - Qxy) [I]
+            eye = np.eye(3)
+            du_dQ = np.zeros(Q.shape[:-2] + (3, 3))         # noqa: N806
+            dquat_over_s_dQ = np.zeros(Q.shape[:-2] + (4, 3, 3))    # noqa: N806
 
-            neg2_s3 = -2 * s * s * s
+            for i in range(3):
+                mask = (argmax == i)
 
-            new_values = np.zeros(matrix.shape + (4, 3, 3))
-            new_values[..., 0, 0, 0] = 0.5 * s
+                j = (i+1) % 3
+                k = (i+2) % 3
+
+                du_dQ[mask] = -eye
+                du_dQ[mask, i, i] = 1.                      # = 2 - 1
+
+                dquat_over_s_dQ[mask, 0, k, j] =  1.
+                dquat_over_s_dQ[mask, 0, j, k] = -1.
+                dquat_over_s_dQ[mask, i + 1] = du_dQ[mask]
+                dquat_over_s_dQ[mask, j + 1, i, j] = 1.
+                dquat_over_s_dQ[mask, j + 1, j, i] = 1.
+                dquat_over_s_dQ[mask, k + 1, i, k] = 1.
+                dquat_over_s_dQ[mask, k + 1, k, i] = 1.
+
+            mask = (argmax == 3)                # the trace is the largest candidate
+            du_dQ[mask] = eye
+            dquat_over_s_dQ[mask, 0] = eye
             for i in range(3):
                 j = (i+1) % 3
                 k = (i+2) % 3
-                new_values[..., i + 1, k, j] =  s
-                new_values[..., i + 1, j, k] = -s
-                new_values[..., i + 1, 0, 0] = neg2_s3 * (Q[..., k, j] - Q[..., j, k])
 
-            new_values[..., 2, 2] = new_values[..., 1, 1] = new_values[..., 0, 0]
+                dquat_over_s_dQ[mask, i + 1, k, j] =  1.
+                dquat_over_s_dQ[mask, i + 1, j, k] = -1.
 
-            dq_dQ = Quaternion(new_values, matrix._mask, drank=2)  # noqa: N806
+            new_values = (s[..., np.newaxis, np.newaxis, np.newaxis]
+                          * dquat_over_s_dQ
+                          - (2 * s**3)[..., np.newaxis, np.newaxis, np.newaxis]
+                          * quat_over_s[..., np.newaxis, np.newaxis]
+                          * du_dQ[..., np.newaxis, :, :])
+
+            dq_dQ = Quaternion(new_values[0], matrix._mask, drank=2)  # noqa: N806
 
             for key, deriv in matrix._derivs.items():
                 obj.insert_deriv(key, dq_dQ.chain(deriv))

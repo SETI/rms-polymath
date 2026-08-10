@@ -118,6 +118,117 @@ def test_quaternion_matrix3_n_quaternions_with_unit() -> None:
     assert not b.readonly
 
 
+def _euler_path(angles: np.ndarray, velocity: np.ndarray, t: float) -> Matrix3:
+    """A Matrix3 at one point along a straight path through Euler angle space."""
+
+    return Matrix3.from_euler(*(angles + t * velocity), 'rzxz')
+
+
+@pytest.mark.parametrize('angles', [(0., 0., 0.),           # trace branch
+                                    (1.e-7, 0., 0.),        # trace branch
+                                    (0.3, 0.2, 0.1),        # trace branch
+                                    (1.0, 2.0, 3.0),        # diagonal branch
+                                    (0., np.pi, 0.),        # diagonal branch, x largest
+                                    (np.pi, 0., 0.)])       # diagonal branch, z largest
+def test_quaternion_matrix3_from_matrix3_with_derivatives(
+        angles: tuple[float, float, float]) -> None:
+    """Matrix3 to Quaternion derivatives match finite differences in every branch."""
+
+    np.random.seed(2496)
+
+    angles_ = np.array(angles)
+    velocity = np.random.randn(3)
+    EPS = 1.e-6
+
+    mat = _euler_path(angles_, velocity, 0.)
+    dmat_dt = (_euler_path(angles_, velocity, EPS).values
+               - _euler_path(angles_, velocity, -EPS).values) / (2. * EPS)
+    mat.insert_deriv('t', Matrix(dmat_dt))
+
+    q = Quaternion.from_matrix3(mat)
+
+    dq_dt = ((Quaternion.from_matrix3(_euler_path(angles_, velocity, EPS)).values
+              - Quaternion.from_matrix3(_euler_path(angles_, velocity, -EPS)).values)
+             / (2. * EPS))
+
+    DEL = 1.e-8
+    for j in range(4):
+        assert q.d_dt.values[j] == pytest.approx(dq_dt[j], abs=DEL)
+
+
+def test_quaternion_matrix3_from_matrix3_derivative_round_trip() -> None:
+    """A derivative survives the round trip Quaternion to Matrix3 and back."""
+
+    np.random.seed(2496)
+
+    N = 20
+    a = Quaternion(np.random.randn(N,4)).unit()
+
+    # from_matrix3() returns the quaternion whose largest component is positive
+    signs = np.sign(a.values[np.arange(N), np.argmax(np.abs(a.values), axis=-1)])
+    a = Quaternion(a.values * signs[:,np.newaxis])
+
+    # The derivative of a rotation is orthogonal to the quaternion; a parallel
+    # component leaves the matrix unchanged and so cannot be recovered
+    da_dt = np.random.randn(N,4)
+    da_dt -= np.sum(da_dt * a.values, axis=-1)[:,np.newaxis] * a.values
+    a.insert_deriv('t', Quaternion(da_dt))
+
+    b = Quaternion.from_matrix3(a.to_matrix3(recursive=True))
+
+    DEL = 1.e-13
+    for i in range(N):
+        for j in range(4):
+            assert b.values[i,j] == pytest.approx(a.values[i,j], abs=DEL)
+            assert b.d_dt.values[i,j] == pytest.approx(da_dt[i,j], abs=DEL)
+
+
+def test_quaternion_matrix3_from_matrix3_with_denominator() -> None:
+    """A Matrix3 derivative with a denominator yields one Quaternion column each."""
+
+    np.random.seed(2496)
+
+    N = 7
+    angles = np.random.randn(N,3)
+    mat = Matrix3.from_euler(angles[:,0], angles[:,1], angles[:,2], 'rzxz')
+
+    dmat_du = np.random.randn(N,3,3,2)
+    mat.insert_deriv('u', Matrix(dmat_du, drank=1))
+    q = Quaternion.from_matrix3(mat)
+
+    assert q.d_du.denom == (2,)
+
+    DEL = 1.e-14
+    for c in range(2):
+        column = mat.wod
+        column.insert_deriv('u', Matrix(dmat_du[...,c]))
+        expected = Quaternion.from_matrix3(column).d_du
+
+        for i in range(N):
+            for j in range(4):
+                assert q.d_du.values[i,j,c] == pytest.approx(expected.values[i,j],
+                                                             abs=DEL)
+
+
+def test_quaternion_matrix3_from_matrix3_derivative_masking() -> None:
+    """A masked Matrix3 yields a masked Quaternion derivative."""
+
+    np.random.seed(2496)
+
+    angles = np.random.randn(5,3)
+    mat = Matrix3.from_euler(angles[:,0], angles[:,1], angles[:,2], 'rzxz')
+    mat = mat.mask_where(np.array([False, True, False, False, True]))
+    mat.insert_deriv('t', Matrix(np.random.randn(5,3,3)))
+
+    q = Quaternion.from_matrix3(mat)
+
+    assert not q.d_dt.mask[0]
+    assert q.d_dt.mask[1]
+    assert not q.d_dt.mask[2]
+    assert not q.d_dt.mask[3]
+    assert q.d_dt.mask[4]
+
+
 def test_quaternion_matrix3_quaternion_to_matrix3_with_derivatives() -> None:
     """Quaternion to Matrix3, with derivatives."""
 
