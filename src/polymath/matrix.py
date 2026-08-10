@@ -2,6 +2,7 @@
 # polymath/matrix.py: Matrix subclass ofse PolyMath base class
 ##########################################################################################
 
+import math
 import numpy as np
 import warnings
 
@@ -441,83 +442,110 @@ class Matrix(Qube):
 
         return Qube._MATRIX3_CLASS(next_m._values, new_mask)
 
-# Algorithm has been validated but code has not been tested
-#     def solve(self, values, recursive=True):
-#         """Solve for the Vector X that satisfies A X = B, for this square matrix
-#         A and a Vector B of results."""
-#
-#         b = Vector.as_vector(values, recursive=True)
-#
-#         size = self.item[0]
-#         if size != self.item[1]:
-#             raise ValueError('solver requires a square Matrix')
-#
-#         if self._drank:
-#             raise ValueError('solver does not suppart a Matrix with a ' +
-#                              'denominator')
-#
-#         if size != b.item[0]:
-#             raise ValueError('Matrix and Vector have incompatible sizes')
-#
-#         # Easy cases: X = A-1 B
-#         if size <= 3:
-#             if recursive:
-#                 return self.inverse(True) * b
-#             else:
-#                 return self.inverse(False) * b.wod
-#
-#         new_shape = Qube.broadcasted_shape(self._shape, b._shape)
-#
-#         # Algorithm is simpler with matrix indices rolled to front
-#         # Also, Vector b's elements are placed after the elements of Matrix a
-#
-#         ab_vals = np.empty((size,size+1) + new_shape)
-#         rolled = np.rollaxis(self._values, -1, 0)
-#         rolled = np.rollaxis(rolled, -1, 0)
-#
-#         ab_vals[:,:-1] = rolled
-#         ab_vals[:,-1] = b._values
-#
-#         for k in range(size-1):
-#             # Zero out the leading coefficients from each row at each iteration
-#             ab_saved = ab_vals[k+1:,k:k+1]
-#             ab_vals[k+1:,k:] *= ab_vals[k,k:k+1]
-#             ab_vals[k+1:,k:] -= ab_vals[k,k:] * ab_saved
-#
-#         # Now work backward solving for values, replacing Vector b
-#         for k in range(size,0):
-#             ab_vals[ k,-1] /= ab_vals[k,k]
-#             ab_vals[:k,-1] -= ab_vals[k,-1] * ab_vals[:k,k]
-#
-#         ab_vals[0,-1] /= ab_vals[0,0]
-#
-#         x = np.rollaxis(ab_vals[:,-1], 0, len(shape))
-#
-#         x = Vector(x, self._mask | b._mask, derivs={},
-#                       unit=Unit._unit_div(self._unit, b._unit))
-#
-#         # Deal with derivatives if necessary
-#         # A x = B
-#         # A dx/dt + dA/dt x = dB/dt
-#         # A dx/dt = dB/dt - dA/dt x
-#
-#         if recursive and (self._derivs or b._derivs):
-#             derivs = {}
-#             for key in self._derivs:
-#                 if key in b._derivs:
-#                     values = b._derivs[key] - self._derivs[key] * x
-#                 else:
-#                     values = -self._derivs[k] * x
-#
-#             derivs[key] = self.solve(values, recursive=False)
-#
-#             for key in b._derivs:
-#                 if key not in self._derivs:
-#                     derivs[key] = self.solve(b._derivs[k], recursive=False)
-#
-#             self.insert_derivs(derivs)
-#
-#         return x
+    def solve(self, arg, *, recursive=True, nozeros=False):
+        """The Vector X that satisfies A X = B, for this square matrix A.
+
+        Parameters:
+            arg (Vector, array-like): The Vector B of right-hand sides. Its item shape
+                must match the size of this matrix.
+            recursive (bool, optional): True to include the derivatives of the solution,
+                which are derived from those of this matrix and of `arg`.
+            nozeros (bool, optional): False to mask out any matrices with a zero-valued
+                determinant. Set to True only if you know in advance that every
+                determinant is nonzero.
+
+        Returns:
+            Vector: The solution X, with the leading shape obtained by broadcasting this
+            matrix against `arg`. Elements where this matrix is singular are masked. The
+            returned object takes the subclass of `arg` where that subclass fits.
+
+        Raises:
+            ValueError: If this matrix is not square.
+            ValueError: If this matrix or `arg` has a denominator.
+            ValueError: If the item shape of `arg` does not match the size of this matrix.
+            ValueError: If `nozeros` is True but this matrix is singular.
+
+        Examples:
+            >>> a = Matrix([[2., 0.], [0., 4.]])
+            >>> a.solve(Vector([2., 4.]))
+            Vector(1.0 1.0)
+        """
+
+        size = self._numer[0]
+        if self._numer[1] != size:
+            raise ValueError(f'{type(self).__name__}.solve() requires a square matrix; '
+                             f'shape is {self._numer}')
+
+        if self._drank:
+            raise ValueError(f'{type(self).__name__}.solve() does not support '
+                             'denominators')
+
+        b = Vector.as_vector(arg, recursive=recursive)
+
+        if b._drank:
+            raise ValueError(f'{type(self).__name__}.solve() right operand does not '
+                             f'support denominators: {b._denom}')
+
+        if b._numer != (size,):
+            raise ValueError(f'{type(self).__name__}.solve() operand item shapes are '
+                             f'incompatible: {self._numer}, {b._numer}')
+
+        # Broadcast to a common leading shape. The broadcast values are only ever read,
+        # so the operands themselves need not become read-only.
+        (a, b) = Qube.broadcast(self, b, recursive=recursive, _protected=False)
+        new_shape = a._shape
+
+        # Mask out the singular matrices, substituting the identity into a copy so that
+        # this object is left alone
+        a_vals = a._values
+        new_mask = Qube.or_(a._mask, b._mask)
+        if not nozeros:
+            singular = (np.linalg.det(a_vals) == 0.)
+            if np.any(singular):
+                a_vals = a_vals.copy()
+                a_vals[singular] = np.diag(np.ones(size))
+                new_mask = Qube.or_(new_mask, singular)
+
+        def solve_values(values, denom):
+            """Solve for one right-hand side, with any denominator axes flattened into
+            additional columns.
+            """
+
+            columns = values.reshape(new_shape + (size, math.prod(denom)))
+
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try:
+                    solution = np.linalg.solve(a_vals, columns)
+                except (RuntimeWarning, np.linalg.LinAlgError) as err:
+                    raise ValueError(f'{type(self).__name__}.solve() matrix is singular'
+                                     ) from err
+
+            return solution.reshape(values.shape)
+
+        obj = Vector(solve_values(b._values, ()), new_mask,
+                     unit=Unit.div_units(b._unit, a._unit))
+
+        # Differentiating A X = B gives A dX/dt = dB/dt - (dA/dt) X, so each derivative
+        # is the solution of the same system with a new right-hand side
+        if recursive and (a._derivs or b._derivs):
+            x = obj.wod
+            new_derivs = {}
+            for key in set(a._derivs) | set(b._derivs):
+                if key in a._derivs:
+                    term = a._derivs[key] * x
+                    rhs = (b._derivs[key] - term) if key in b._derivs else -term
+                else:
+                    rhs = b._derivs[key]
+
+                new_derivs[key] = Vector(solve_values(rhs._values, rhs._denom),
+                                         Qube.or_(new_mask, rhs._mask),
+                                         unit=Unit.div_units(rhs._unit, a._unit),
+                                         drank=rhs._drank)
+
+            obj.insert_derivs(new_derivs)
+
+        return obj.cast(type(b))
 
     ######################################################################################
     # Overrides of superclass operators
