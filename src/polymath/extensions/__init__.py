@@ -72,6 +72,27 @@ from polymath.extensions import iterator
 Qube.__iter__           = iterator.__iter__
 Qube.ndenumerate        = iterator.ndenumerate
 
+from polymath.extensions import masking
+Qube._as_mask           = masking._as_mask
+Qube._suitable_mask     = masking._suitable_mask
+Qube.or_                = masking.or_
+Qube.and_               = masking.and_
+Qube.is_all_masked      = masking.is_all_masked
+Qube.count_masked       = masking.count_masked
+Qube.count_unmasked     = masking.count_unmasked
+Qube.masked_single      = masking.masked_single
+Qube.without_mask       = masking.without_mask
+Qube.as_all_masked      = masking.as_all_masked
+Qube.as_one_masked      = masking.as_one_masked
+Qube.remask             = masking.remask
+Qube.remask_or          = masking.remask_or
+Qube.expand_mask        = masking.expand_mask
+Qube.collapse_mask      = masking.collapse_mask
+Qube.as_mask_where_nonzero = masking.as_mask_where_nonzero
+Qube.as_mask_where_zero    = masking.as_mask_where_zero
+Qube.as_mask_where_nonzero_or_masked = masking.as_mask_where_nonzero_or_masked
+Qube.as_mask_where_zero_or_masked    = masking.as_mask_where_zero_or_masked
+
 from polymath.extensions import math_ops
 Qube.__pos__            = math_ops.__pos__
 Qube.__neg__            = math_ops.__neg__
