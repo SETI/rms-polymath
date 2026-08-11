@@ -1066,6 +1066,38 @@ class Qube:
     # Alternative constructors
     ######################################################################################
 
+    # The attributes that describe every Qube, in the order __init__ assigns them.
+    # "_derivs" and "_cache" are excluded because the methods that copy an object always
+    # decide what to do with them separately. Keep this in step with __init__.
+    _TRANSFERABLE_ATTRS = ('_values', '_mask', '_is_array', '_is_scalar', '_shape',
+                           '_ndims', '_rank', '_nrank', '_drank', '_item', '_numer',
+                           '_denom', '_size', '_isize', '_nsize', '_dsize', '_unit',
+                           '_readonly', '_truth_if_any', '_truth_if_all', '_default')
+
+    # Attributes that an object carries only once something has set them
+    _OPTIONAL_ATTRS = ('_pickle_digits', '_pickle_reference')
+
+    @staticmethod
+    def _transfer_attrs(source, dest):
+        """Copy the descriptive attributes of one object onto another.
+
+        Derivatives and the cache are not copied; the caller decides what those should
+        be. The attributes are named explicitly rather than discovered from the instance
+        dictionary, because reading __dict__ materializes it and forfeits the inline
+        attribute storage that CPython would otherwise give both objects.
+
+        Parameters:
+            source (Qube): The object to copy from.
+            dest (Qube): The object to copy onto.
+        """
+
+        for attr in Qube._TRANSFERABLE_ATTRS:
+            setattr(dest, attr, getattr(source, attr))
+
+        for attr in Qube._OPTIONAL_ATTRS:
+            if hasattr(source, attr):
+                setattr(dest, attr, getattr(source, attr))
+
     def clone(self, *, recursive=True, preserve=(), retain_cache=False):
         """Fast construction of a shallow copy.
 
@@ -1084,15 +1116,9 @@ class Qube:
         obj = Qube.__new__(type(self))
 
         # Transfer attributes other than derivatives and cache
-        for attr, value in self.__dict__.items():
-            if attr in ('_derivs', '_cache'):
-                obj.__dict__[attr] = {}
-            elif attr.startswith('d_d'):
-                continue
-            elif isinstance(value, dict):
-                obj.__dict__[attr] = value.copy()
-            else:
-                obj.__dict__[attr] = value
+        Qube._transfer_attrs(self, obj)
+        obj._derivs = {}
+        obj._cache = {}
 
         # Handle derivatives recursively
         if recursive:
@@ -1966,17 +1992,7 @@ class Qube:
             return self._cache['wod']
 
         wod = Qube.__new__(type(self))
-        wod.__init__(self._values, self._mask, example=self)
-        for key, attr in self.__dict__.items():
-            if key.startswith('d_d'):
-                pass
-            elif isinstance(attr, Qube):
-                wod.__dict__[key] = attr.wod
-            elif isinstance(attr, dict):
-                # Copy, so that the two objects do not share one dictionary
-                wod.__dict__[key] = attr.copy()
-            else:
-                wod.__dict__[key] = attr
+        Qube._transfer_attrs(self, wod)
 
         wod._derivs = {}
         wod._cache = {}
