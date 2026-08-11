@@ -266,9 +266,25 @@ def _check_pickle_digits(self):
 
 
 def _validate_pickle_digits(digits, reference):
-    """Validate and return the pickle digit values."""
+    """Validate and return the pickle digit values.
 
-    original_digits = digits
+    Parameters:
+        digits (int, float, str, list, tuple, or None): A single value, or one value for
+            an object and a second for its derivatives. Each value is a number of decimal
+            digits, "single", or "double". Use None for "double". Values beyond the first
+            two are ignored.
+        reference (tuple): The validated pickle reference values, as returned by
+            _validate_pickle_reference().
+
+    Returns:
+        tuple: The validated digit values. A number of digits is truncated to the range
+        that single and double precision can represent, unless the reference value that
+        applies to it is itself a number.
+
+    Raises:
+        ValueError: If a value is neither a number nor "single" or "double".
+        ValueError: If a value is a number but `reference` provides no value to match it.
+    """
 
     if digits is None:
         digits = 'double'
@@ -280,28 +296,38 @@ def _validate_pickle_digits(digits, reference):
         digits = (digits, digits)
 
     new_digits = []
-    # TODO This code raises a ValueError inside a try block that detects a ValueError
-    # and thus the original message is thrown away. This could be improved.
-    try:
-        for k, digit in enumerate(digits[:2]):
-            if isinstance(digit, numbers.Real):
-                if not isinstance(reference[k], numbers.Real):
-                    digit = min(max(_SINGLE_DIGITS, float(digit)), _DOUBLE_DIGITS)
-            elif digit not in {'single', 'double'}:
-                raise ValueError('invalid pickle digits: ' + repr(digit))
+    for k, digit in enumerate(digits[:2]):
+        if isinstance(digit, numbers.Real):
+            if k >= len(reference):
+                raise ValueError(f'missing pickle reference for digits: {digit!r}')
+            if not isinstance(reference[k], numbers.Real):
+                digit = min(max(_SINGLE_DIGITS, float(digit)), _DOUBLE_DIGITS)
 
-            new_digits.append(digit)
+        # The alternatives are a tuple rather than a set so that an unhashable value
+        # compares unequal instead of raising a TypeError
+        elif digit not in ('single', 'double'):
+            raise ValueError(f'invalid pickle digits: {digit!r}')
 
-    except (ValueError, IndexError, TypeError):
-        raise ValueError('invalid pickle digits: ' + repr(original_digits)) from None
+        new_digits.append(digit)
 
     return tuple(new_digits)
 
 
 def _validate_pickle_reference(references):
-    """Validate and return the pickle reference values."""
+    """Validate and return the pickle reference values.
 
-    original_references = references
+    Parameters:
+        references (int, float, str, list, tuple, or None): A single value, or one value
+            for an object and a second for its derivatives. Each value is a number or one
+            of "smallest", "largest", "mean", "median", "logmean", or "fpzip". Use None
+            for "fpzip". Values beyond the first two are ignored.
+
+    Returns:
+        tuple: The validated reference values.
+
+    Raises:
+        ValueError: If a value is neither a number nor one of the recognized names.
+    """
 
     if references is None:
         references = 'fpzip'
@@ -312,17 +338,15 @@ def _validate_pickle_reference(references):
     elif not isinstance(references, tuple):
         references = (references, references)
 
-    try:
-        references = references[:2]
-        for reference in references[:2]:
-            if isinstance(reference, numbers.Real):
-                pass
-            elif reference not in {'smallest', 'largest', 'mean', 'median', 'logmean',
-                                   'fpzip'}:
-                raise ValueError(f'invalid pickle reference {reference!r}')
+    references = references[:2]
+    for reference in references:
 
-    except (ValueError, IndexError, TypeError) as err:
-        raise ValueError(f'invalid pickle reference {original_references!r}') from err
+        # The alternatives are a tuple rather than a set so that an unhashable value
+        # compares unequal instead of raising a TypeError
+        if (not isinstance(reference, numbers.Real)
+                and reference not in ('smallest', 'largest', 'mean', 'median', 'logmean',
+                                      'fpzip')):
+            raise ValueError(f'invalid pickle reference {reference!r}')
 
     return references
 

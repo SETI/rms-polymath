@@ -1171,3 +1171,43 @@ def test_qube_ext_pickler_test_array_ndim_4_reshaping_create_a_5d_array_2() -> N
     assert b.shape == a.shape
 
 
+
+
+def test_qube_ext_pickler_invalid_digits_names_the_offending_value() -> None:
+    """An invalid digit value is named in the error, not the whole argument."""
+
+    a = Scalar([1., 2., 3.])
+    with pytest.raises(ValueError, match="invalid pickle digits: 'quadruple'"):
+        a.set_pickle_digits(('double', 'quadruple'), 'fpzip')
+
+
+def test_qube_ext_pickler_unhashable_digits_are_rejected() -> None:
+    """A digit value that cannot be hashed is rejected as invalid."""
+
+    a = Scalar([1., 2., 3.])
+    with pytest.raises(ValueError, match=r'invalid pickle digits: \[1\]'):
+        a.set_pickle_digits(([1], 'double'), 'fpzip')
+
+
+def test_qube_ext_pickler_digits_without_a_reference_are_rejected() -> None:
+    """A number of digits with no reference value to match it is rejected."""
+
+    a = Scalar([1., 2., 3.])
+    with pytest.raises(ValueError, match='missing pickle reference for digits: 7'):
+        a.set_pickle_digits((8, 7), ('fpzip',))
+
+
+def test_qube_ext_pickler_invalid_reference_names_the_offending_value() -> None:
+    """An invalid reference value is named in the error, not the whole argument."""
+
+    a = Scalar([1., 2., 3.])
+    with pytest.raises(ValueError, match="invalid pickle reference 'bogus'"):
+        a.set_pickle_digits('double', ('fpzip', 'bogus'))
+
+
+def test_qube_ext_pickler_unhashable_reference_is_rejected() -> None:
+    """A reference value that cannot be hashed is rejected as invalid."""
+
+    a = Scalar([1., 2., 3.])
+    with pytest.raises(ValueError, match=r"invalid pickle reference \['1'\]"):
+        a.set_pickle_digits('double', (['1'], 'fpzip'))
