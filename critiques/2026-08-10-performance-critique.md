@@ -12,6 +12,14 @@ under the profiler are inflated and are quoted only as proportions.
 
 ## Summary
 
+> **Status: sections 1 through 5.2 were implemented on 2026-08-10**, each with its own
+> commit, differential testing against the previous behavior, and measurements recorded in
+> the commit message. Section 5.3 (`Quaternion.from_matrix3()`) and section 5.4 (the
+> `Matrix3` pickling trade) were reviewed and deliberately left alone. Each section below
+> carries a note recording what was done. The measurements in the text are the ones taken
+> on 2026-08-09 and 2026-08-10 before the work, and are kept unedited as the record of
+> that reading.
+
 The branch is roughly **2.9x faster than `main`** across a spread of 41 operations
 (geometric mean; median 2.7x), so the large structural wins are already banked. What
 remains is concentrated in three themes, in descending order of value.
@@ -40,6 +48,13 @@ slow, and §1 alone removes an 8x cliff from ordinary numerical code.
 ---
 
 ## 1. `mask_where(..., replace=...)` costs the same whether it replaces two items or a thousand — **highest value** [confirmed]
+
+> **Done** in `6a98197`. A replacement that is a single unmasked item without
+> derivatives is written into the value arrays directly, and a number replacing the
+> items of a rank-zero object is cast rather than wrapped in an object. Verified
+> against the previous path over 384 combinations. `mask_where()` with a replacement
+> went from 80.4 to 7.2 us, and `Scalar.sqrt()` of an array holding two negative
+> values from 91.7 to 16.9 us.
 
 `src/polymath/extensions/mask_ops.py:79-85`
 
@@ -144,6 +159,12 @@ a.broadcast_to((5, N))               1          0
 
 ### 2.1 `cast()` re-runs the full constructor, immediately after the fast one [confirmed]
 
+> **Done** in `690dd44`. `_castable_to()` decides whether the new class restricts the
+> data type, unit, denominator or derivatives; when it does not, the fast constructor
+> builds the result. Verified over 165 source and target combinations, including the
+> ones that coerce and the ones that raise. A cast that re-types went from 6.9 to
+> 2.3 us.
+
 `src/polymath/qube.py:2796-2800`
 
 ```python
@@ -185,6 +206,11 @@ in the first place.
 
 ### 2.2 Unary math, reductions, indexing and boolean operations [confirmed]
 
+> **Done** in `3ae8699`, along with section 5.2. The unary `Scalar` functions, the
+> reductions, max and min, the logical operators, indexing and `broadcast_to()` all
+> build their results with the fast constructor now. The reductions keep their
+> `cast()`, because that is what makes `Boolean.sum()` a `Scalar`.
+
 None of these use the fast constructor, and each is dominated by the one they do use:
 
 ```text
@@ -205,6 +231,9 @@ reductions next, then the indexing results.
 
 ### 2.3 `Qube.__init__` still computes the four shape products [confirmed]
 
+> **Done** in `7eb4a89`, and marginal as predicted: between nothing and 5%. Validated
+> across 262005 constructions in the test suite.
+
 Commit `dea0fa0` taught `_new_from_parts()` to take `_size`, `_isize`, `_nsize` and
 `_dsize` from its `example` when the shapes carried through. `__init__` was left alone and
 still calls `math.prod` four times per construction (`src/polymath/qube.py:305-308`); a
@@ -216,6 +245,13 @@ that §2.1 and §2.2 do not eliminate. The profile also shows 14 `isinstance` ca
 construction, which is worth a look while in the area.
 
 ## 3. The generic contraction in `dot()` is the cost of every matrix product [confirmed]
+
+> **Done** in `ac8dc4a`. `matmul` for a matrix times a matrix, a direct subscript for
+> a matrix times a vector, and the general path for everything else. One wrinkle the
+> measurements below missed: `matmul` is much slower on strided input than on a
+> contiguous copy, and a transposed matrix is always strided, so the operands are
+> made contiguous first. `Matrix3 * Matrix3` went from 156 to 70 us, or to 85 us when
+> one operand is a transpose.
 
 `src/polymath/extensions/vector_ops.py:244-261`
 
@@ -268,6 +304,11 @@ about 7 us on `Matrix3 * Vector3`.
 
 ## 4. `clone()` and `wod` iterate `self.__dict__`
 
+> **Done** in `915939c`. The attributes are listed on the class and copied by name,
+> with a test asserting the list covers everything a constructed object carries.
+> Objects made by either method now read their attributes as fast as fresh ones, and
+> so do the objects they were made from. `clone()` went from 5.8 to 2.3 us.
+
 `src/polymath/qube.py:1075-1083` and `1958-1967`
 
 ```python
@@ -317,6 +358,8 @@ breaking the dynamically-named `d_d*` derivative attributes.
 
 ### 5.1 `norm()` squares into a temporary
 
+> **Done** in `c74473d`. `Vector3.norm()` went from 21.4 to 15.4 us.
+
 `src/polymath/extensions/vector_ops.py:341`
 
 ```python
@@ -340,11 +383,17 @@ already does.
 
 ### 5.2 `Matrix3.to_euler()` builds three objects
 
+> **Done** in `3ae8699`. The three `Scalar`s are built with the fast constructor;
+> `to_euler()` went from 76 to 63 us.
+
 75.27 us, with three `__init__` calls and the body of `matrix3.py:721` accounting for half
 the profile. It returns three `Scalar`s, so three constructions is the floor unless the
 method is restructured, but they can be the cheap kind (§2.2).
 
 ### 5.3 `Quaternion.from_matrix3()` is the slowest single conversion
+
+> **Not done**, as recommended. It is correct and well tested, and the vectorization
+> it would take is not worth the risk against the value.
 
 267.55 us, of which the function body is 73% — four Python-level branches each doing
 boolean-mask fancy indexing, plus an `argmax` and two reductions. It is also the only
@@ -354,6 +403,9 @@ well tested now; treat it as a low priority and change it only with the finite-d
 tests in `tests/test_quaternion_matrix3.py` as the guard.
 
 ### 5.4 `Matrix3` pickling trades CPU for size
+
+> **Not done**, and nothing to do: this records an intended trade rather than a
+> defect.
 
 Writing a 1000-element `Matrix3` costs 1118 us against `main`'s 460 us, and produces 24233
 bytes against 68276. That is the intended trade from the quaternion encoding, and the
