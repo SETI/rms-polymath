@@ -845,6 +845,8 @@ def test_qube_ext_vector_ops_norm_sq_of_integers_stays_integral() -> None:
 
     obj = Vector(np.random.randint(0, 5, (6, 3)))
 
-    assert Qube.norm_sq(obj).values.dtype == np.int64
+    # The width follows the platform's default integer, which is 32 bits on Windows, so
+    # the contract under test is that the result is an integer at all.
+    assert Qube.norm_sq(obj).values.dtype.kind == 'i'
     assert Qube.norm_sq(obj).values[0] == int(np.sum(obj.values[0]**2))
 
