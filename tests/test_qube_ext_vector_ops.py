@@ -6,7 +6,7 @@
 import numpy as np
 import pytest
 
-from polymath import Qube, Scalar, Vector, Vector3
+from polymath import Matrix, Matrix3, Qube, Scalar, Vector, Vector3
 from polymath.extensions.vector_ops import _cross_2x2, _cross_3x3, _mean_or_sum
 
 
@@ -714,3 +714,110 @@ def test_qube_ext_vector_ops_test_limit_from_qube_line_465_when_limit_numer_is_t
         # This happens when limit._numer is falsy but self._numer is truthy
         # For Scalar, numer is always (), so this is hard to test
         # This might be defensive code for future types
+
+
+def _reference_dot(arg1, arg2, axis1=-1, axis2=0):
+    """The dot product computed by broadcasting the numerator axes and contracting."""
+
+    a1 = axis1 if axis1 >= 0 else axis1 + arg1._nrank
+    a2 = axis2 if axis2 >= 0 else axis2 + arg2._nrank
+    k1 = a1 + arg1._ndims
+    k2 = a2 + arg2._ndims + arg1._nrank - 1
+
+    array1 = arg1._values.reshape(arg1._shape + arg1._numer
+                                  + (arg2._nrank - 1) * (1,)
+                                  + arg1._denom + arg2._drank * (1,))
+    array2 = arg2._values.reshape(arg2._shape + (arg1._nrank - 1) * (1,)
+                                  + arg2._numer + arg1._drank * (1,) + arg2._denom)
+
+    return np.einsum('...i,...i->...', np.moveaxis(array1, k1, -1),
+                     np.moveaxis(array2, k2, -1))
+
+
+def test_qube_ext_vector_ops_dot_of_two_matrices() -> None:
+    """A matrix times a matrix contracts the adjacent axes."""
+
+    np.random.seed(7714)
+
+    a = Matrix(np.random.randn(6, 3, 3))
+    b = Matrix(np.random.randn(6, 3, 3))
+    result = Qube.dot(a, b, -1, 0)
+
+    assert result.numer == (3, 3)
+    assert np.abs(result.values - _reference_dot(a, b)).max() <= 1.e-14
+
+
+def test_qube_ext_vector_ops_dot_of_a_matrix_and_a_vector() -> None:
+    """A matrix times a vector contracts the last axis against the first."""
+
+    np.random.seed(7714)
+
+    a = Matrix(np.random.randn(6, 3, 4))
+    b = Vector(np.random.randn(6, 4))
+    result = Qube.dot(a, b, -1, 0)
+
+    assert result.numer == (3,)
+    assert np.abs(result.values - _reference_dot(a, b)).max() <= 1.e-14
+
+
+def test_qube_ext_vector_ops_dot_of_a_transposed_matrix() -> None:
+    """A strided operand gives the same product as a contiguous one."""
+
+    np.random.seed(7714)
+
+    a = Matrix3(np.random.randn(6, 3, 3))
+    b = a.transpose()
+
+    assert not b.values.flags['C_CONTIGUOUS']
+    assert np.abs((a * b).values - _reference_dot(a, b)).max() <= 1.e-14
+
+
+def test_qube_ext_vector_ops_dot_broadcasts_the_leading_shapes() -> None:
+    """Operands of different leading shapes broadcast against each other."""
+
+    np.random.seed(7714)
+
+    a = Matrix(np.random.randn(5, 1, 3, 3))
+    b = Matrix(np.random.randn(4, 3, 3))
+    result = Qube.dot(a, b, -1, 0)
+
+    assert result.shape == (5, 4)
+    assert np.abs(result.values - _reference_dot(a, b)).max() <= 1.e-14
+
+
+def test_qube_ext_vector_ops_dot_with_a_non_default_axis() -> None:
+    """A contraction over axes other than the adjacent pair still works."""
+
+    np.random.seed(7714)
+
+    a = Matrix(np.random.randn(6, 3, 3))
+    b = Matrix(np.random.randn(6, 3, 3))
+    result = Qube.dot(a, b, 0, 1)
+
+    assert np.abs(result.values - _reference_dot(a, b, 0, 1)).max() <= 1.e-14
+
+
+def test_qube_ext_vector_ops_dot_with_a_denominator() -> None:
+    """An operand with a denominator keeps its denominator axes in the result."""
+
+    np.random.seed(7714)
+
+    a = Matrix(np.random.randn(6, 3, 3, 2), drank=1)
+    b = Matrix(np.random.randn(6, 3, 3))
+    result = Qube.dot(a, b, -1, 0)
+
+    assert result.denom == (2,)
+    assert np.abs(result.values - _reference_dot(a, b)).max() <= 1.e-14
+
+
+def test_qube_ext_vector_ops_dot_of_integer_operands() -> None:
+    """Integer operands contract without being coerced to floats."""
+
+    np.random.seed(7714)
+
+    a = Matrix(np.random.randint(0, 5, (6, 3, 3)))
+    b = Vector(np.random.randint(0, 5, (6, 3)))
+    result = Qube.dot(a, b, -1, 0)
+
+    assert np.all(result.values == _reference_dot(a, b))
+
