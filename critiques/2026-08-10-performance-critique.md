@@ -16,9 +16,9 @@ under the profiler are inflated and are quoted only as proportions.
 > commit, differential testing against the previous behavior, and measurements recorded in
 > the commit message. Section 5.3 (`Quaternion.from_matrix3()`) and section 5.4 (the
 > `Matrix3` pickling trade) were reviewed and deliberately left alone. Each section below
-> carries a note recording what was done. The measurements in the text are the ones taken
-> on 2026-08-09 and 2026-08-10 before the work, and are kept unedited as the record of
-> that reading.
+> carries a note recording what was done, and a closing section tabulates the result
+> against `main`. The measurements in the body are the ones taken on 2026-08-09 and
+> 2026-08-10 before the work, and are kept unedited as the record of that reading.
 
 The branch is roughly **2.9x faster than `main`** across a spread of 41 operations
 (geometric mean; median 2.7x), so the large structural wins are already banked. What
@@ -434,3 +434,97 @@ rather than assumed, and the differential-testing approach used for
 `mask_where_eq` in commit `08fc6df` — comparing the new implementation against the old
 across a grid of dtypes, ranks, masks and arguments — is the right guard for §1 and §2.1
 in particular, where the derivative and mask semantics are easy to get subtly wrong.
+
+---
+
+## Outcome: measured against `main`
+
+Taken after sections 1 through 5.2 were implemented, at commit `085f1fd`. Both versions
+were run from the same interpreter and NumPy (Python 3.12.0, NumPy 2.5.2) with `main`
+checked out into a temporary worktree, on objects of 1000 elements, as the better of two
+runs of the minimum of three `timeit` repeats.
+
+**Median 4.29x, geometric mean 3.71x** across 41 operations, against 2.71x and 2.91x
+before this work. Thirty-nine of the 41 are more than 5% faster; the two that are slower
+are both deliberate trades described below.
+
+### Arithmetic
+
+```text
+Scalar +                       22.14us ->  3.34us    6.62x
+Scalar -                       22.05us ->  3.33us    6.63x
+Scalar *                       22.40us ->  3.73us    6.01x
+Scalar /                       76.67us ->  8.12us    9.44x
+Scalar //                      78.54us -> 16.28us    4.82x
+Scalar %                       77.79us -> 15.82us    4.92x
+Scalar + shapeless             23.12us ->  2.48us    9.34x
+Scalar / shapeless             76.56us ->  8.62us    8.88x
+masked Scalar +                22.41us ->  3.60us    6.22x
+Boolean &                      22.77us ->  6.28us    3.62x
+```
+
+### With derivatives
+
+```text
+Scalar + w/ derivs             45.68us ->  7.65us    5.97x
+Scalar * w/ derivs             92.76us -> 16.51us    5.62x
+Scalar / w/ derivs            198.79us -> 40.66us    4.89x
+Vector3.unit() w/ derivs      449.54us -> 115.39us   3.90x
+```
+
+### Unary functions and reductions
+
+```text
+Scalar.sqrt()                 145.49us -> 10.84us   13.42x
+Scalar.reciprocal()            72.44us -> 11.33us    6.39x
+Scalar.sum()                   47.60us -> 10.53us    4.52x
+Scalar.mean()                  49.41us -> 11.52us    4.29x
+Scalar.max()                   24.65us ->  7.06us    3.49x
+Scalar.clip()                  27.78us -> 13.12us    2.12x
+```
+
+`Scalar.sqrt()` is the largest single gain because the array it was measured on holds a
+negative value, which used to send it down the copy-and-`__setitem__` path described in
+section 1.
+
+### Vectors and matrices
+
+```text
+Vector3 / Scalar               80.28us -> 12.37us    6.49x
+Matrix3 * Vector3             103.12us -> 21.51us    4.79x
+Vector3.unit()                137.07us -> 29.98us    4.57x
+Matrix3 * Matrix3             281.31us -> 67.69us    4.16x
+Vector3.norm()                 57.48us -> 15.12us    3.80x
+Vector3 * Scalar               26.13us ->  7.45us    3.51x
+Vector3.dot()                  59.48us -> 18.77us    3.17x
+Matrix3.transpose()            18.80us ->  6.89us    2.73x
+Vector3.cross()                56.73us -> 29.09us    1.95x
+```
+
+### Shape, masking and conversions
+
+```text
+mask_where_eq(0.)              52.40us ->  4.49us   11.68x
+broadcast_to                   23.27us ->  4.57us    5.10x
+slice a[10:900]                28.17us ->  9.73us    2.90x
+construct Vector3              19.00us ->  6.93us    2.74x
+boolean index a[mask]          64.74us -> 31.88us    2.03x
+Matrix3.to_euler()            112.85us -> 62.75us    1.80x
+construct Scalar               47.77us -> 33.97us    1.41x
+mask_where_gt(0.)              13.61us ->  9.90us    1.37x
+Quaternion.to_matrix3()        71.48us -> 59.14us    1.21x
+pickle Scalar                  79.25us -> 65.54us    1.21x
+```
+
+### The two that are slower
+
+```text
+pickle Matrix3                459.58us -> 1055.18us  0.44x
+Quaternion.from_matrix3()     239.60us ->  258.27us  0.93x
+```
+
+Pickling a `Matrix3` spends 2.3 times the CPU to produce output 2.8 times smaller, 24233
+bytes against 68276, which is the quaternion encoding described in section 5.4;
+`_QUATERNION_PICKLE_CUTOFF` in `matrix3.py` is the knob if that balance is wrong for a
+given workload. `Quaternion.from_matrix3()` costs 7% for the fourth branch of Shepperd's
+method, which is what makes the identity matrix and rotations near it convert at all.
