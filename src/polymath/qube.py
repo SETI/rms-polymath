@@ -302,10 +302,22 @@ class Qube:
         self._item  = item
         self._numer = numer
         self._denom = denom
-        self._size  = math.prod(shape)
-        self._isize = math.prod(item)
-        self._nsize = math.prod(numer)
-        self._dsize = math.prod(denom)
+
+        # The example supplies the products of the shape and of the item shape whenever
+        # those carried through, exactly as in _new_from_parts()
+        if example is not None and example._item == item and example._nrank == nrank:
+            self._isize = example._isize
+            self._nsize = example._nsize
+            self._dsize = example._dsize
+        else:
+            self._nsize = math.prod(numer)
+            self._dsize = math.prod(denom)
+            self._isize = self._nsize * self._dsize
+
+        if example is not None and example._shape == shape:
+            self._size = example._size
+        else:
+            self._size = math.prod(shape)
 
         # Fill in the unit
         self._unit = None if Qube.is_one_false(unit) else unit
