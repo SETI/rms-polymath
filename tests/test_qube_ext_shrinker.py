@@ -1012,9 +1012,9 @@ def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_that_requires_broadca
     a = Scalar(np.arange(20).reshape(4, 5))
 
     antimask = np.array([[True, False, True, False, True],
-                       [False, False, False, False, False],
-                       [True, True, False, False, False],
-                       [False, False, False, False, False]])
+                         [False, False, False, False, False],
+                         [True, True, False, False, False],
+                         [False, False, False, False, False]])
     b = a.shrink(antimask)
     assert b.readonly
 
@@ -1030,9 +1030,9 @@ def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_self_needs_broadcasti
 
     a = Scalar(np.arange(20).reshape(4, 5))
     antimask = np.array([[True, False, True, False, True],
-                       [False, False, False, False, False],
-                       [True, True, False, False, False],
-                       [False, False, False, False, False]])
+                         [False, False, False, False, False],
+                         [True, True, False, False, False],
+                         [False, False, False, False, False]])
     b = a.shrink(antimask)
     assert b.readonly
 
@@ -1284,9 +1284,9 @@ def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_requiring_broadcast_t
 
     a = Scalar(np.arange(40).reshape(2, 4, 5))
     antimask = np.array([[True, False, True, False, True],
-                       [False, False, False, False, False],
-                       [True, True, False, False, False],
-                       [False, False, False, False, False]])
+                         [False, False, False, False, False],
+                         [True, True, False, False, False],
+                         [False, False, False, False, False]])
 
     b = a.shrink(antimask)
     assert b.readonly

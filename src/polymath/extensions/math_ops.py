@@ -1549,8 +1549,8 @@ def __and__(self, /, arg):
 
     if isinstance(arg, Qube):
         return Qube._BOOLEAN_CLASS._new_from_parts(
-                                (self._values != 0) & (arg._values != 0),
-                                Qube.or_(self._mask, arg._mask), nrank=0)
+            (self._values != 0) & (arg._values != 0),
+            Qube.or_(self._mask, arg._mask), nrank=0)
 
     return Qube._BOOLEAN_CLASS._new_from_parts((self._values != 0) & (arg != 0),
                                                self._mask, nrank=0)
@@ -1570,8 +1570,8 @@ def __or__(self, /, arg):
 
     if isinstance(arg, Qube):
         return Qube._BOOLEAN_CLASS._new_from_parts(
-                                (self._values != 0) | (arg._values != 0),
-                                Qube.or_(self._mask, arg._mask), nrank=0)
+            (self._values != 0) | (arg._values != 0),
+            Qube.or_(self._mask, arg._mask), nrank=0)
 
     return Qube._BOOLEAN_CLASS._new_from_parts((self._values != 0) | (arg != 0),
                                                self._mask, nrank=0)
@@ -1590,8 +1590,8 @@ def __xor__(self, /, arg):
 
     if isinstance(arg, Qube):
         return Qube._BOOLEAN_CLASS._new_from_parts(
-                                (self._values != 0) != (arg._values != 0),
-                                Qube.or_(self._mask, arg._mask), nrank=0)
+            (self._values != 0) != (arg._values != 0),
+            Qube.or_(self._mask, arg._mask), nrank=0)
 
     return Qube._BOOLEAN_CLASS._new_from_parts((self._values != 0) != (arg != 0),
                                                self._mask, nrank=0)

@@ -899,7 +899,7 @@ class Scalar(Qube):
             # In this case, the values and mask are both arrays
             min_possible = Scalar._minval(self._values.dtype)   # smallest possible value
             max_values = np.max(np.where(self._mask, min_possible, self._values),
-                                  axis=axis)
+                                axis=axis)
 
             # Deal with completely masked items. Here, use the max of the
             # unmasked values. This object is only partially masked, so a reduction over
@@ -969,7 +969,7 @@ class Scalar(Qube):
             # In this case, the values and mask are both arrays
             max_possible = Scalar._maxval(self._values.dtype)   # largest possible value
             min_values = np.min(np.where(self._mask, max_possible, self._values),
-                                  axis=axis)
+                                axis=axis)
 
             # Deal with completely masked items. Here, use the min of the
             # unmasked values. This object is only partially masked, so a reduction over
@@ -1044,7 +1044,7 @@ class Scalar(Qube):
         else:
             min_possible = Scalar._minval(self._values.dtype)   # smallest possible value
             argmax = np.argmax(np.where(self._mask, min_possible, self._values),
-                              axis=axis)
+                               axis=axis)
 
             # Deal with completely masked items. Here, use the argmax of the unmasked
             # values. This object is only partially masked, so a reduction over every
@@ -1116,7 +1116,7 @@ class Scalar(Qube):
         else:
             max_possible = Scalar._maxval(self._values.dtype)   # largest possible value
             argmin = np.argmin(np.where(self._mask, max_possible, self._values),
-                              axis=axis)
+                               axis=axis)
 
             # Deal with completely masked items. Here, use the argmin of the unmasked
             # values. This object is only partially masked, so a reduction over every

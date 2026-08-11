@@ -50,8 +50,7 @@ def extract_numer(self, axis, index, classes=(), *, recursive=True):
     if recursive:
         for key, deriv in self._derivs.items():
             obj.insert_deriv(key, deriv.extract_numer(
-                                        a1, index, classes=Qube._deriv_classes(classes),
-                                                      recursive=False))
+                a1, index, classes=Qube._deriv_classes(classes), recursive=False))
 
     return obj
 
@@ -167,8 +166,8 @@ def slice_numer(self, axis, index1, index2, classes=(), *, recursive=True):
     if recursive:
         for key, deriv in self._derivs.items():
             obj.insert_deriv(key, deriv.slice_numer(
-                            a1, index1, index2, classes=Qube._deriv_classes(classes),
-                                                    recursive=False))
+                a1, index1, index2, classes=Qube._deriv_classes(classes),
+                recursive=False))
 
     return obj
 

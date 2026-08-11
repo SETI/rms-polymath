@@ -140,10 +140,10 @@ def _replace_where(self, replace_values, mask, *, remask, recursive):
             deriv_values = deriv._values.copy()
             deriv_values[mask] = 0
             new_derivs[key] = type(deriv)._new_from_parts(
-                                    deriv_values,
-                                    _replaced_mask(deriv._mask, mask, remask),
-                                    nrank=deriv._nrank, drank=deriv._drank,
-                                    unit=deriv._unit, example=deriv)
+                deriv_values,
+                _replaced_mask(deriv._mask, mask, remask),
+                nrank=deriv._nrank, drank=deriv._drank,
+                unit=deriv._unit, example=deriv)
 
         obj.insert_derivs(new_derivs)
 

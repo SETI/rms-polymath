@@ -78,7 +78,7 @@ def _raise_unsupported_op(op, /, obj1, obj2=None):
         raise TypeError(f'{opstr} operation is not supported')
 
     if (isinstance(obj1, (list, tuple, np.ndarray)) or
-        isinstance(obj2, (list, tuple, np.ndarray))):
+            isinstance(obj2, (list, tuple, np.ndarray))):
 
         if isinstance(obj1, Qube):
             shape1 = obj1._numer
