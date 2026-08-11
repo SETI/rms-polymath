@@ -2764,6 +2764,35 @@ class Qube:
 
         return obj
 
+    def _castable_to(self, cls):
+        """True if this object's content already satisfies every restriction of a class.
+
+        This answers whether :meth:`cast` can build the new object without the validation
+        that the constructor performs. It does not consider the numerator shape or rank,
+        which :meth:`cast` checks for itself.
+
+        Parameters:
+            cls (class): The Qube subclass to test.
+
+        Returns:
+            bool: True if the data type, unit, denominator and derivatives of this object
+            are all permitted by `cls`.
+        """
+
+        if not cls._DERIVS_OK and (self._derivs or self._drank):
+            return False
+
+        if not cls._UNITS_OK and self._unit is not None:
+            return False
+
+        dtype = Qube._dtype(self._values)
+        if dtype == 'float':
+            return cls._FLOATS_OK
+        if dtype == 'int':
+            return cls._INTS_OK
+
+        return cls._BOOLS_OK
+
     def cast(self, classes):
         """A shallow copy of this object casted to another Qube subclass.
 
@@ -2793,7 +2822,17 @@ class Qube:
             if cls._NRANK is not None and self._nrank != cls._NRANK:
                 continue
 
-            # Construct the new object
+            # Construct the new object. The values, mask, unit and derivatives are
+            # already valid, so the fast constructor suffices whenever the new class
+            # imposes no restriction that the validating constructor would enforce.
+            if self._castable_to(cls):
+                obj = cls._new_from_parts(self._values, self._mask, nrank=self._nrank,
+                                          drank=self._drank, unit=self._unit,
+                                          example=self)
+                if self._derivs:
+                    obj.insert_derivs(self._derivs)
+                return obj
+
             obj = Qube.__new__(cls)
             obj.__init__(self._values, self._mask, derivs=self._derivs,
                          example=self)
