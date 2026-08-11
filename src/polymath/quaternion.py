@@ -726,7 +726,7 @@ class Quaternion(Vector):
     def identity(self):
         """The identity-valued Quaternion.
 
-        This method overrides :meth:`~extensions.math_ops.identity` for the base class.
+        This method overrides :meth:`~Qube.identity` for the base class.
 
         Returns:
             Quaternion: A read-only identity quaternion [1,0,0,0].

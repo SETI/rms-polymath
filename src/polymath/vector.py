@@ -1082,7 +1082,7 @@ class Vector(Qube):
         another. The reciprocal is therefore the matrix inverse, the derivative of the
         second vector with respect to the first.
 
-        This method overrides :meth:`~extensions.math_ops.reciprocal` for the base class.
+        This method overrides :meth:`~Qube.reciprocal` for the base class.
 
         Parameters:
             nozeros (bool, optional): False to mask out any matrices with zero-valued

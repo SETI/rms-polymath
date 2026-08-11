@@ -1681,7 +1681,7 @@ def any(self, axis=None, *, builtins=None, masked=None, out=None):
         masked (bool, optional): The value to return if builtins is True but the returned
             value is masked. Default is to return a masked Boolean instead of a builtin
             type in this case.
-        out (any, optional): Ignored. This enables "np.any(Qube)" to work.
+        out (object, optional): Ignored. This enables "np.any(Qube)" to work.
 
     Returns:
         (Boolean or bool): Result of operation.
@@ -1726,7 +1726,7 @@ def all(self, axis=None, *, builtins=None, masked=None, out=None):
         masked (bool, optional): The value to return if builtins is True but the returned
             value is masked. Default is to return a masked Boolean instead of a builtin
             type in this case.
-        out (any, optional): Ignored. This enables "np.any(Qube)" to work.
+        out (object, optional): Ignored. This enables "np.any(Qube)" to work.
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)

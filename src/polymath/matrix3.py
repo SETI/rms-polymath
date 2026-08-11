@@ -180,7 +180,7 @@ class Matrix3(Matrix):
         by the same angle.
 
         Parameters:
-            angle (Scalar, np.ndarray, or float): The rotation angle in radians.
+            angle (Scalar, array-like, or float): The rotation angle in radians.
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
@@ -226,7 +226,7 @@ class Matrix3(Matrix):
         by the same angle.
 
         Parameters:
-            angle (Scalar, array-like, or float: The rotation angle in radians.
+            angle (Scalar, array-like, or float): The rotation angle in radians.
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
@@ -272,7 +272,7 @@ class Matrix3(Matrix):
         by the same angle.
 
         Parameters:
-            angle: The rotation angle in radians.
+            angle (Scalar, array-like, or float): The rotation angle in radians.
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
@@ -318,7 +318,7 @@ class Matrix3(Matrix):
         coordinate system clockwise by the same angle.
 
         Parameters:
-            angle: The rotation angle in radians.
+            angle (Scalar, array-like, or float): The rotation angle in radians.
             axis (int, optional): The axis to rotate around (0=X, 1=Y, 2=Z).
             recursive (bool, optional): True to include derivatives in the result.
 

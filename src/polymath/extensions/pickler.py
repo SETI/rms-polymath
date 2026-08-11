@@ -25,9 +25,9 @@ This module employs a variety of options for compressing floating point values.
    variations from pixel to pixel. See https://pypi.org/project/rms-fpzip/.
 
 For each object, the user can define the floating-point compression method using
-:meth:`~Qube.set_pickle_digits`. One can also define the global default compression method
-using :meth:`~Qube.set_default_pickle_digits`. The inputs to these functions are as
-follows:
+:meth:`~polymath.Qube.set_pickle_digits`. One can also define the global default
+compression method using :meth:`~polymath.Qube.set_default_pickle_digits`. The inputs to
+these functions are as follows:
 
 **digits** (`str or int`): The number of digits to preserve.
 

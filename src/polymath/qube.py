@@ -162,7 +162,7 @@ class Qube:
         """Default constructor.
 
         Parameters:
-            arg (Qube, array-like, float, in, or bool), : An object to define the numeric
+            arg (Qube, array-like, float, int, or bool): An object to define the numeric
                 value(s) of the returned object. If this object is read-only, then the
                 returned object will be entirely read-only. Otherwise, the object will be
                 read-writable. The values are generally given in standard units of km,

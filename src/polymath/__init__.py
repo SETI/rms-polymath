@@ -148,7 +148,7 @@ primary axes).
 :class:`Matrix3` functions :meth:`~Matrix3.rotate` and :meth:`~Matrix3.unrotate` apply a
 rotation to another object. Methods :meth:`~Matrix3.x_rotation`,
 :meth:`~Matrix3.y_rotation`, :meth:`~Matrix3.z_rotation`, :meth:`~Matrix3.axis_rotation`,
-:meth:`~Matrix3.pole_rotation`, :meth:`~Matrix3.from_euler`, and :meth:`~Matrix3.unitary`
+:meth:`~Matrix3.pole_rotation`, :meth:`~Matrix3.from_euler`, and :meth:`~Matrix.unitary`
 are convenient, alternative ways to define a rotation matrix. Use
 :meth:`~Matrix3.to_euler` and :meth:`~Matrix3.to_quaternion` to reverse these definitions.
 
