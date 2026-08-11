@@ -10,6 +10,18 @@ Qube.broadcast_to       = broadcaster.broadcast_to
 Qube.broadcasted_shape  = broadcaster.broadcasted_shape
 Qube.broadcast          = broadcaster.broadcast
 
+from polymath.extensions import deriv_ops
+Qube.insert_deriv       = deriv_ops.insert_deriv
+Qube.insert_derivs      = deriv_ops.insert_derivs
+Qube.delete_deriv       = deriv_ops.delete_deriv
+Qube.delete_derivs      = deriv_ops.delete_derivs
+Qube.without_derivs     = deriv_ops.without_derivs
+Qube.wod                = deriv_ops.wod
+Qube.without_deriv      = deriv_ops.without_deriv
+Qube.with_deriv         = deriv_ops.with_deriv
+Qube.rename_deriv       = deriv_ops.rename_deriv
+Qube.unique_deriv_name  = deriv_ops.unique_deriv_name
+
 from polymath.extensions import errors
 Qube._opstr             = errors._opstr
 Qube._disallow_denom    = errors._disallow_denom
