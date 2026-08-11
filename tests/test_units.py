@@ -5,6 +5,8 @@
 import numpy as np
 import pytest
 
+from collections.abc import Callable
+
 from polymath import Scalar, Unit
 
 
@@ -1611,3 +1613,20 @@ def test_units_div_names_drops_a_zero_absent_from_the_first_name() -> None:
     """A zero exponent in the second name is dropped, not looked up in the first."""
 
     assert Unit._div_names({'s': 1}, {'km': 0}) == {'s': 1}
+
+
+@pytest.mark.parametrize(('operation', 'message'), [
+    (lambda: Unit.KM * 'invalid', "can't multiply sequence by non-int"),
+    (lambda: Unit.KM / 'invalid', 'unsupported operand type'),
+    (lambda: 'invalid' / Unit.KM, 'unsupported operand type'),
+])
+def test_units_unsupported_operand_raises_type_error(operation: Callable[[], object],
+                                                     message: str) -> None:
+    """An operand that Unit does not support makes the operator raise TypeError.
+
+    The methods themselves return NotImplemented, which leaves Python to try the
+    reflected operation of the other operand and then raise.
+    """
+
+    with pytest.raises(TypeError, match=message):
+        operation()

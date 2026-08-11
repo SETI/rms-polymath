@@ -371,10 +371,12 @@ class Unit:
             arg (Unit, None, or numbers.Real): The object to multiply by.
 
         Returns:
-            Unit: The product of the unit multiplication.
+            Unit: The product of the unit multiplication. If the type of `arg` is not
+            supported, NotImplemented is returned instead, so that Python falls back on
+            the reflected operation of `arg`.
 
         Raises:
-            NotImplementedError: If the argument type is not supported.
+            TypeError: If neither operand supports the multiplication.
         """
 
         if isinstance(arg, Unit):
@@ -410,10 +412,12 @@ class Unit:
             arg (Unit, None, or numbers.Real): The object to divide by.
 
         Returns:
-            Unit: The quotient of the unit division.
+            Unit: The quotient of the unit division. If the type of `arg` is not
+            supported, NotImplemented is returned instead, so that Python falls back on
+            the reflected operation of `arg`.
 
         Raises:
-            NotImplementedError: If the argument type is not supported.
+            TypeError: If neither operand supports the division.
         """
 
         if isinstance(arg, Unit):
@@ -440,10 +444,12 @@ class Unit:
             arg (None or numbers.Real): The scalar to divide.
 
         Returns:
-            Unit: The reciprocal of this Unit object multiplied by arg.
+            Unit: The reciprocal of this Unit object multiplied by arg. If the type of
+            `arg` is not supported, NotImplemented is returned instead, so that Python
+            falls back on the reflected operation of `arg`.
 
         Raises:
-            NotImplementedError: If the argument type is not supported.
+            TypeError: If neither operand supports the division.
         """
 
         if arg is None:
