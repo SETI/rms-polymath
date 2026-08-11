@@ -34,6 +34,29 @@ Qube.with_deriv         = deriv_ops.with_deriv
 Qube.rename_deriv       = deriv_ops.rename_deriv
 Qube.unique_deriv_name  = deriv_ops.unique_deriv_name
 
+from polymath.extensions import dtypes
+Qube._has_qube          = dtypes._has_qube
+Qube._has_masked_array  = dtypes._has_masked_array
+Qube._as_values_and_mask = dtypes._as_values_and_mask
+Qube._dtype_and_value   = dtypes._dtype_and_value
+Qube._array_dtype_and_value = dtypes._array_dtype_and_value
+Qube._dtype             = dtypes._dtype
+Qube._casted_to_dtype   = dtypes._casted_to_dtype
+# These three take the class as their first argument. A module-level @classmethod is not
+# a function, which stubtest rejects, so the decorator is applied here instead.
+Qube._suitable_dtype    = classmethod(dtypes._suitable_dtype)
+Qube._suitable_numer    = classmethod(dtypes._suitable_numer)
+Qube._suitable_value    = classmethod(dtypes._suitable_value)
+Qube.dtype              = dtypes.dtype
+Qube.is_numeric         = dtypes.is_numeric
+Qube.as_numeric         = dtypes.as_numeric
+Qube.is_float           = dtypes.is_float
+Qube.as_float           = dtypes.as_float
+Qube.is_int             = dtypes.is_int
+Qube.as_int             = dtypes.as_int
+Qube.is_bool            = dtypes.is_bool
+Qube.as_bool            = dtypes.as_bool
+
 from polymath.extensions import errors
 Qube._opstr             = errors._opstr
 Qube._disallow_denom    = errors._disallow_denom
