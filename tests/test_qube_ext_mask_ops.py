@@ -7,7 +7,7 @@
 import numpy as np
 import pytest
 
-from polymath import Qube, Scalar, Vector
+from polymath import Qube, Boolean, Scalar, Vector, Vector3
 
 
 def test_qube_ext_mask_ops_simple_1_d_case_empty_mask_returns_unchanged() -> None:
@@ -762,6 +762,110 @@ def test_qube_ext_mask_ops_test_line_474_with_larger_multi_dimensional_array() -
 
     if isinstance(b.mask, np.ndarray):
         assert not b.mask[0, 1, 2]  # limit[0,1,2] is masked, treated as +inf
+
+
+
+def test_qube_ext_mask_ops_mask_where_eq_coerces_the_match_to_the_data_type() -> None:
+    """A match value is coerced to the object's data type before comparison."""
+
+    a = Scalar([0, 1, 2])                   # integers
+    b = a.mask_where_eq(0.5)                # 0.5 becomes the integer 0
+
+    assert b.mask[0]
+    assert not b.mask[1]
+    assert not b.mask[2]
+
+
+def test_qube_ext_mask_ops_mask_where_ne_coerces_the_match_to_the_data_type() -> None:
+    """A match value is coerced to the object's data type by mask_where_ne() too."""
+
+    a = Scalar([0, 1, 2])                   # integers
+    b = a.mask_where_ne(0.5)                # 0.5 becomes the integer 0
+
+    assert not b.mask[0]
+    assert b.mask[1]
+    assert b.mask[2]
+
+
+def test_qube_ext_mask_ops_mask_where_eq_matches_an_integer_against_floats() -> None:
+    """An integer match value applies to a floating-point object."""
+
+    a = Scalar([0., 1., 2.])
+    b = a.mask_where_eq(1)
+
+    assert not b.mask[0]
+    assert b.mask[1]
+    assert not b.mask[2]
+
+
+def test_qube_ext_mask_ops_mask_where_eq_matches_a_boolean() -> None:
+    """A Boolean object matches a bool value."""
+
+    a = Boolean([True, False, True])
+    b = a.mask_where_eq(False)
+
+    assert not b.mask[0]
+    assert b.mask[1]
+    assert not b.mask[2]
+
+
+def test_qube_ext_mask_ops_mask_where_eq_matches_a_shapeless_object() -> None:
+    """A shapeless object is masked when its single value matches."""
+
+    assert Scalar(0.).mask_where_eq(0.).mask
+    assert not Scalar(1.).mask_where_eq(0.).mask
+
+
+def test_qube_ext_mask_ops_mask_where_eq_matches_whole_items() -> None:
+    """An item of rank greater than zero matches only when every element does."""
+
+    a = Vector3([[0., 0., 0.], [0., 0., 1.], [1., 1., 1.]])
+    b = a.mask_where_eq(Vector3.ZERO)
+
+    assert b.mask[0]
+    assert not b.mask[1]
+    assert not b.mask[2]
+
+
+def test_qube_ext_mask_ops_mask_where_ne_matches_whole_items() -> None:
+    """An item of rank greater than zero differs only when every element does."""
+
+    a = Vector3([[0., 0., 0.], [0., 0., 1.], [1., 1., 1.]])
+    b = a.mask_where_ne(Vector3.ZERO)
+
+    assert not b.mask[0]
+    assert not b.mask[1]        # this item shares two elements with the match
+    assert b.mask[2]
+
+
+def test_qube_ext_mask_ops_mask_where_eq_matches_a_denominator_item() -> None:
+    """An object with a denominator matches only when every element of an item does."""
+
+    a = Scalar([[0., 0.], [0., 1.]], drank=1)
+    b = a.mask_where_eq(Scalar([0., 0.], drank=1))
+
+    assert b.mask[0]
+    assert not b.mask[1]
+
+
+def test_qube_ext_mask_ops_mask_where_eq_replaces_the_matching_values() -> None:
+    """A replacement value is inserted wherever an item matches."""
+
+    a = Scalar([0., 1., 0.])
+    b = a.mask_where_eq(0., replace=9.)
+
+    assert b.values[0] == 9.
+    assert b.values[1] == 1.
+    assert b.values[2] == 9.
+    assert b.mask[0]
+
+
+def test_qube_ext_mask_ops_mask_where_eq_returns_self_when_nothing_matches() -> None:
+    """An object with no matching item is returned unchanged."""
+
+    a = Scalar([1., 2., 3.])
+
+    assert a.mask_where_eq(0.) is a
 
 
 ##########################################################################################

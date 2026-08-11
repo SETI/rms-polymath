@@ -2,7 +2,10 @@
 # polymath/extensions/mask_ops.py: masking operations
 #########################################################################################
 
+import numbers
+
 import numpy as np
+
 from polymath.qube import Qube
 
 __all__ = ['clip', 'is_above', 'is_below', 'is_inside', 'is_outside', 'mask_where',
@@ -104,12 +107,8 @@ def mask_where_eq(self, match, replace=None, *, remask=True):
         Qube: A copy of this object with matching items masked.
     """
 
-    match = self.as_this_type(match, recursive=False)
-
-    axes = tuple(range(-self._rank, 0))
-    mask = np.all(self._values == match._values, axis=axes)
-
-    return self.mask_where(mask, replace=replace, remask=remask)
+    return self.mask_where(_mask_where_match(self, match, np.equal),
+                           replace=replace, remask=remask)
 
 
 def mask_where_ne(self, match, replace=None, *, remask=True):
@@ -131,12 +130,42 @@ def mask_where_ne(self, match, replace=None, *, remask=True):
         Qube: A copy of this object with non-matching items masked.
     """
 
+    return self.mask_where(_mask_where_match(self, match, np.not_equal),
+                           replace=replace, remask=remask)
+
+
+def _mask_where_match(self, match, comparison):
+    """The mask of the items of this object that satisfy a comparison against a value.
+
+    An item qualifies only if every element of the item satisfies the comparison.
+
+    Parameters:
+        self (Qube): The object whose items are to be compared.
+        match (Qube, array-like, float, int, or bool): The item value to match. A value
+            that is not already an object of this class is converted to one, which
+            coerces it to this object's data type.
+        comparison (function): The NumPy comparison to apply, one of numpy.equal or
+            numpy.not_equal.
+
+    Returns:
+        (numpy.ndarray or bool): True for each item that satisfies the comparison.
+    """
+
+    # An object whose items are single elements can compare directly against a number
+    # once that number has been coerced to its data type, which is all that constructing
+    # an object for the number would accomplish, at a small fraction of the cost
+    if self._rank == 0:
+        if isinstance(match, numbers.Real):
+            match_values = Qube._casted_to_dtype(match, Qube._dtype(self._values))
+        else:
+            match_values = self.as_this_type(match, recursive=False)._values
+
+        return comparison(self._values, match_values)
+
     match = self.as_this_type(match, recursive=False)
-
     axes = tuple(range(-self._rank, 0))
-    mask = np.all(self._values != match._values, axis=axes)
 
-    return self.mask_where(mask, replace=replace, remask=remask)
+    return np.all(comparison(self._values, match._values), axis=axes)
 
 
 def mask_where_le(self, limit, replace=None, *, remask=True):
