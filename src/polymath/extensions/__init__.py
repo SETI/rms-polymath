@@ -209,6 +209,17 @@ Qube.tvl_le             = tvl.tvl_le
 Qube.tvl_ge             = tvl.tvl_ge
 Qube._tvl_op            = tvl._tvl_op
 
+from polymath.extensions import unit_ops
+Qube.set_unit           = unit_ops.set_unit
+Qube.without_unit       = unit_ops.without_unit
+Qube.into_unit          = unit_ops.into_unit
+Qube.confirm_unit       = unit_ops.confirm_unit
+Qube.is_unitless        = unit_ops.is_unitless
+Qube._require_unitless  = unit_ops._require_unitless
+Qube._require_angle     = unit_ops._require_angle
+Qube._require_compatible_units = unit_ops._require_compatible_units
+
+# This module exports no names of its own; it binds the extension methods onto Qube.
 __all__ = []
 
 ################################################################################
