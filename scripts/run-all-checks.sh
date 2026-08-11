@@ -18,6 +18,7 @@
 #   -m, --markdown         Run only PyMarkdown (RUN_PYMARKDOWN)
 #   --ruff-check           Run ruff check only (may combine with other --* flags)
 #   --ruff-format          Run ruff format --check only
+#   --flake8-cont          Run flake8 continuation-line checks only (E12x, E13x)
 #   --mypy                 Run mypy only
 #   --pytest               Run pytest only
 #   --pyroma               Run pyroma only
@@ -38,14 +39,15 @@
 #   pyproject.toml [tool.coverage.report] or .coveragerc [report]).
 #
 #   RUN_* (set by this script from CLI or full-run defaults): RUN_RUFF_CHECK,
-#   RUN_RUFF_FORMAT, RUN_MYPY, RUN_PYTEST, RUN_PYROMA, RUN_STUBTEST, RUN_BANDIT,
-#   RUN_VULTURE, RUN_SPHINX, RUN_PYMARKDOWN
+#   RUN_RUFF_FORMAT, RUN_FLAKE8_CONT, RUN_MYPY, RUN_PYTEST, RUN_PYROMA,
+#   RUN_STUBTEST, RUN_BANDIT, RUN_VULTURE, RUN_SPHINX, RUN_PYMARKDOWN
 #
 #   Per-check toggles (true/false). Defaults favor a minimal CI set; export to
 #   enable more tools in a given repo. Each check runs only if both RUN_* and
 #   ENABLE_* are true (RUN_* from CLI or defaults below; ENABLE_* from env):
 #     ENABLE_RUFF_CHECK   (default: true)
 #     ENABLE_RUFF_FORMAT  (default: false)
+#     ENABLE_FLAKE8_CONT  continuation-line indent, E12x/E13x (default: true)
 #     ENABLE_MYPY         (default: false)
 #     ENABLE_PYTEST       (default: true)
 #     ENABLE_PYROMA       (default: true)
@@ -56,8 +58,10 @@
 #     ENABLE_PYMARKDOWN   PyMarkdown scan (default: true)
 #
 # Checks (each run separately; -d runs both Sphinx and Markdown):
-#   Code:     optional: ruff check, ruff format --check, mypy, pytest, pyroma,
-#             stubtest, bandit, vulture (see ENABLE_* above)
+#   Code:     optional: ruff check, ruff format --check, flake8 continuation-line
+#             indent, mypy, pytest, pyroma, stubtest, bandit, vulture (see
+#             ENABLE_* above). Ruff implements no E12x/E13x rule, so the
+#             continuation-line indent checks come from flake8 instead.
 #   Sphinx:   make -C docs html SPHINXOPTS="-W"
 #   Markdown: pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
 #
@@ -81,6 +85,7 @@ PARALLEL=true
 PYTEST_WORKERS=auto
 RUN_RUFF_CHECK=false
 RUN_RUFF_FORMAT=false
+RUN_FLAKE8_CONT=false
 RUN_MYPY=false
 RUN_PYTEST=false
 RUN_PYROMA=false
@@ -95,6 +100,7 @@ SCOPE_SPECIFIED=false
 # permanently change here)
 : "${ENABLE_RUFF_CHECK:=true}"
 : "${ENABLE_RUFF_FORMAT:=false}"
+: "${ENABLE_FLAKE8_CONT:=true}"
 : "${ENABLE_MYPY:=false}"
 : "${ENABLE_PYTEST:=true}"
 : "${ENABLE_PYROMA:=true}"
@@ -214,6 +220,7 @@ while [[ $# -gt 0 ]]; do
         -c|--code)
             RUN_RUFF_CHECK=true
             RUN_RUFF_FORMAT=true
+            RUN_FLAKE8_CONT=true
             RUN_MYPY=true
             RUN_PYTEST=true
             RUN_PYROMA=true
@@ -241,6 +248,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         --ruff-format)
             RUN_RUFF_FORMAT=true
+            SCOPE_SPECIFIED=true
+            shift
+            ;;
+        --flake8-cont)
+            RUN_FLAKE8_CONT=true
             SCOPE_SPECIFIED=true
             shift
             ;;
@@ -300,6 +312,7 @@ done
 if [ "$SCOPE_SPECIFIED" = false ]; then
     RUN_RUFF_CHECK=true
     RUN_RUFF_FORMAT=true
+    RUN_FLAKE8_CONT=true
     RUN_MYPY=true
     RUN_PYTEST=true
     RUN_PYROMA=true
@@ -327,6 +340,7 @@ fi
 _code_checks_any_scheduled() {
     [ "$RUN_RUFF_CHECK" = true ] && [ "$ENABLE_RUFF_CHECK" = true ] && return 0
     [ "$RUN_RUFF_FORMAT" = true ] && [ "$ENABLE_RUFF_FORMAT" = true ] && return 0
+    [ "$RUN_FLAKE8_CONT" = true ] && [ "$ENABLE_FLAKE8_CONT" = true ] && return 0
     [ "$RUN_MYPY" = true ] && [ "$ENABLE_MYPY" = true ] && return 0
     [ "$RUN_PYTEST" = true ] && [ "$ENABLE_PYTEST" = true ] && return 0
     [ "$RUN_PYROMA" = true ] && [ "$ENABLE_PYROMA" = true ] && return 0
@@ -385,6 +399,20 @@ run_code_checks() {
             print_error "Ruff format check failed"
             failed=true
             failed_checks="${failed_checks}Code - Ruff format"$'\n'
+        fi
+    fi
+
+    if [ "$RUN_FLAKE8_CONT" = true ] && [ "$ENABLE_FLAKE8_CONT" = true ]; then
+        print_info "Running flake8 continuation-line checks (E12x, E13x)..."
+        # Ruff implements no rule in the E121-E133 range, so continuation-line
+        # indentation is the one pycodestyle family it cannot gate. flake8 reads
+        # .flake8 for the per-file exemptions.
+        if python -m flake8 --select=E12,E13 src tests; then
+            print_success "Flake8 continuation-line checks passed"
+        else
+            print_error "Flake8 continuation-line checks failed"
+            failed=true
+            failed_checks="${failed_checks}Code - Flake8 continuation"$'\n'
         fi
     fi
 

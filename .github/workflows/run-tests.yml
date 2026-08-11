@@ -27,13 +27,20 @@ jobs:
         run: |
           python -m pip install -e ".[dev]"
 
-      # Ruff is the linter of record. .flake8 is retained for anyone who still
-      # runs flake8 by hand, but nothing in CI reads it.
+      # Ruff is the linter of record for every rule it implements.
       # TODO Add `ruff format --check src tests` once the source has been
       # reformatted; mypy stays off while src is deliberately unannotated.
       - name: Ruff
         run: |
           ruff check src tests
+
+      # Ruff implements no rule in the E121-E133 range, so continuation-line
+      # indentation is the one pycodestyle family it cannot gate. This step
+      # matches `--flake8-cont` in scripts/run-all-checks.sh and reads the
+      # per-file-ignores in .flake8.
+      - name: Flake8 continuation-line indent
+        run: |
+          flake8 --select=E12,E13 src tests
 
       - name: Pyroma
         run: |

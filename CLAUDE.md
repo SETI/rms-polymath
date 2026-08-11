@@ -29,8 +29,15 @@ required to run exactly that set. Run it after any change.
 
 ## Python style
 
-- **Ruff is the linter of record.** `ruff check src tests` must pass; it runs in CI and in the
-  check script. `.flake8` is retained for manual use only and is not authoritative.
+- **Ruff is the linter of record** for every rule it implements. `ruff check src tests` must
+  pass; it runs in CI and in the check script.
+- Ruff implements no rule in the `E121`-`E133` range, so continuation-line indentation is the
+  one pycodestyle family it cannot gate — no amount of `preview` changes that, because the
+  rules are not written. `flake8 --select=E12,E13 src tests` covers it, in CI and as
+  `--flake8-cont` in the check script. That makes the `per-file-ignores` in `.flake8`
+  authoritative for those codes alone; for every other code `.flake8` is still manual-use
+  only. The exemptions there cover deliberate column alignment that pycodestyle cannot know
+  about, so read the comment before removing one.
 - **Maximum line length 90.** Test files are exempt from E501.
 - Several rules are switched off deliberately in `pyproject.toml`, each with the reason beside
   it — notably `RUF005` (Qube overloads `+`, so the rule cannot tell vector addition from list
