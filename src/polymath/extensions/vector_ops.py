@@ -358,8 +358,10 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
                          f'{type(arg)}.norm(): {axis}')
     k1 = a1 + arg._ndims
 
-    # Evaluate the norm
-    new_values = np.sqrt(np.sum(arg._values**2, axis=k1))
+    # Evaluate the norm. Contracting the axis against itself avoids the temporary that
+    # squaring the whole array would allocate.
+    values = np.moveaxis(arg._values, k1, -1)
+    new_values = np.sqrt(np.einsum('...i,...i->...', values, values))
 
     # Construct the object and cast
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,
@@ -417,8 +419,10 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
                          f'{type(arg)}.norm_sq(): {axis}')
     k1 = a1 + arg._ndims
 
-    # Evaluate the norm
-    new_values = np.sum(arg._values**2, axis=k1)
+    # Evaluate the norm. Contracting the axis against itself avoids the temporary that
+    # squaring the whole array would allocate.
+    values = np.moveaxis(arg._values, k1, -1)
+    new_values = np.einsum('...i,...i->...', values, values)
 
     # Construct the object and cast
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,

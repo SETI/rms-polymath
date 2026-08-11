@@ -821,3 +821,30 @@ def test_qube_ext_vector_ops_dot_of_integer_operands() -> None:
 
     assert np.all(result.values == _reference_dot(a, b))
 
+
+@pytest.mark.parametrize('axis', [-1, 0])
+def test_qube_ext_vector_ops_norm_over_either_axis(axis: int) -> None:
+    """The norm contracts the requested axis of a rank-two item."""
+
+    np.random.seed(7714)
+
+    values = np.random.randn(6, 3, 4)
+    obj = Qube._new_from_parts(values, False, nrank=2)
+    k1 = (axis if axis >= 0 else axis + 2) + 1
+
+    assert np.abs(Qube.norm(obj, axis).values
+                  - np.sqrt(np.sum(values**2, axis=k1))).max() <= 1.e-14
+    assert np.abs(Qube.norm_sq(obj, axis).values
+                  - np.sum(values**2, axis=k1)).max() <= 1.e-13
+
+
+def test_qube_ext_vector_ops_norm_sq_of_integers_stays_integral() -> None:
+    """The squared norm of an integer object is an integer."""
+
+    np.random.seed(7714)
+
+    obj = Vector(np.random.randint(0, 5, (6, 3)))
+
+    assert Qube.norm_sq(obj).values.dtype == np.int64
+    assert Qube.norm_sq(obj).values[0] == int(np.sum(obj.values[0]**2))
+
