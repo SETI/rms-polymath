@@ -321,9 +321,10 @@ class Scalar(Qube):
             new_values = self._values % 1.
 
         # Construct a new copy
-        obj = Qube.__new__(type(self))
-        obj.__init__(new_values, mask=self._mask,
-                     derivs=(self._derivs if recursive else {}))
+        obj = type(self)._new_from_parts(new_values, self._mask, nrank=0,
+                                         example=self)
+        if recursive and self._derivs:
+            obj.insert_derivs(self._derivs)
 
         return obj
 
@@ -346,7 +347,8 @@ class Scalar(Qube):
 
         self._require_angle('sin()')
 
-        obj = Scalar(np.sin(self._values), mask=self._mask)
+        obj = Scalar._new_from_parts(np.sin(self._values), self._mask, nrank=0,
+                                     example=self)
 
         if recursive and self._derivs:
             factor = self.wod.cos()
@@ -374,7 +376,8 @@ class Scalar(Qube):
 
         self._require_angle('cos()')
 
-        obj = Scalar(np.cos(self._values), mask=self._mask)
+        obj = Scalar._new_from_parts(np.cos(self._values), self._mask, nrank=0,
+                                     example=self)
 
         if recursive and self._derivs:
             factor = -self.wod.sin()
@@ -402,7 +405,8 @@ class Scalar(Qube):
 
         self._require_angle('tan()')
 
-        obj = Scalar(np.tan(self._values), mask=self._mask)
+        obj = Scalar._new_from_parts(np.tan(self._values), self._mask, nrank=0,
+                                     example=self)
 
         if recursive and self._derivs:
             inv_sec_sq = self.wod.cos()**(-2)
@@ -450,7 +454,8 @@ class Scalar(Qube):
                 temp_values = self._values
                 temp_mask = self._mask
 
-            obj = Scalar(np.arcsin(temp_values), temp_mask)
+            obj = Scalar._new_from_parts(np.arcsin(temp_values), temp_mask,
+                                         nrank=0, example=self)
 
         else:
             with warnings.catch_warnings():
@@ -461,7 +466,8 @@ class Scalar(Qube):
                     raise ValueError('Scalar.arcsin() of value outside domain (-1,1)'
                                      ) from err
 
-            obj = Scalar(func_values, mask=self._mask)
+            obj = Scalar._new_from_parts(func_values, self._mask, nrank=0,
+                                         example=self)
 
         if recursive and self._derivs:
             factor = (1. - self.wod**2)**(-0.5)
@@ -509,7 +515,8 @@ class Scalar(Qube):
                 temp_values = self._values
                 temp_mask = self._mask
 
-            obj = Scalar(np.arccos(temp_values), temp_mask)
+            obj = Scalar._new_from_parts(np.arccos(temp_values), temp_mask,
+                                         nrank=0, example=self)
 
         else:
             with warnings.catch_warnings():
@@ -520,7 +527,8 @@ class Scalar(Qube):
                     raise ValueError('Scalar.arccos() of value outside domain (-1,1)'
                                      ) from err
 
-            obj = Scalar(func_values, mask=self._mask)
+            obj = Scalar._new_from_parts(func_values, self._mask, nrank=0,
+                                         example=self)
 
         if recursive and self._derivs:
             factor = -(1. - self.wod**2)**(-0.5)
@@ -548,7 +556,8 @@ class Scalar(Qube):
 
         self._require_unitless('arctan()')
 
-        obj = Scalar(np.arctan(self._values), mask=self._mask)
+        obj = Scalar._new_from_parts(np.arctan(self._values), self._mask, nrank=0,
+                                     example=self)
 
         if recursive and self._derivs:
             factor = 1. / (1. + self.wod**2)
@@ -582,8 +591,9 @@ class Scalar(Qube):
         if x._drank or y._drank:
             raise ValueError('Scalar.arctan2() does not support denominators')
 
-        obj = Scalar(np.arctan2(y._values, x._values),
-                     Qube.or_(x._mask, y._mask))
+        obj = Scalar._new_from_parts(np.arctan2(y._values, x._values),
+                                     Qube.or_(x._mask, y._mask), nrank=0,
+                                     example=x)
 
         if recursive and (x._derivs or y._derivs):
             denom_inv = (x.wod**2 + y.wod**2).reciprocal()
@@ -640,8 +650,9 @@ class Scalar(Qube):
                 except RuntimeWarning as err:
                     raise ValueError('Scalar.sqrt() of negative value') from err
 
-        obj = Scalar(sqrt_vals, mask=no_negs._mask,
-                     unit=Unit.sqrt_unit(no_negs._unit))
+        obj = Scalar._new_from_parts(sqrt_vals, no_negs._mask, nrank=0,
+                                     unit=Unit.sqrt_unit(no_negs._unit),
+                                     example=no_negs)
 
         if recursive and no_negs._derivs:
             factor = 0.5 / obj
@@ -686,7 +697,8 @@ class Scalar(Qube):
                 except RuntimeWarning as err:
                     raise ValueError('Scalar.log() of non-positive value') from err
 
-        obj = Scalar(log_values, mask=no_negs._mask)
+        obj = Scalar._new_from_parts(log_values, no_negs._mask, nrank=0,
+                                     example=no_negs)
 
         if recursive and no_negs._derivs:
             for key, deriv in self._derivs.items():
@@ -733,7 +745,8 @@ class Scalar(Qube):
                 except RuntimeWarning as err:
                     raise ValueError('Scalar.exp() overflow encountered') from err
 
-        obj = Scalar(exp_values, mask=no_oflow._mask)
+        obj = Scalar._new_from_parts(exp_values, no_oflow._mask, nrank=0,
+                                     example=no_oflow)
 
         if recursive and self._derivs:
             for key, deriv in self._derivs.items():
@@ -874,11 +887,13 @@ class Scalar(Qube):
             result = self.wod
 
         elif not np.any(self._mask):
-            result = Scalar(np.max(self._values, axis=axis), mask=False, example=self)
+            result = Scalar._new_from_parts(np.max(self._values, axis=axis), False,
+                                            nrank=0, unit=self._unit, example=self)
 
         # If all masked, use the unmasked values but leave the result masked
         elif np.all(self._mask):
-            result = Scalar(np.max(self._values, axis=axis), mask=True, example=self)
+            result = Scalar._new_from_parts(np.max(self._values, axis=axis), True,
+                                            nrank=0, unit=self._unit, example=self)
 
         else:
             # In this case, the values and mask are both arrays
@@ -896,7 +911,8 @@ class Scalar(Qube):
             else:
                 mask = False
 
-            result = Scalar(max_values, mask, example=self)
+            result = Scalar._new_from_parts(max_values, mask, nrank=0,
+                                            unit=self._unit, example=self)
 
         # Convert result to a Python type if necessary
         if builtins is None:
@@ -941,13 +957,13 @@ class Scalar(Qube):
             result = self.wod
 
         elif not np.any(self._mask):
-            result = Scalar(np.min(self._values, axis=axis), mask=False,
-                            example=self)
+            result = Scalar._new_from_parts(np.min(self._values, axis=axis), False,
+                                            nrank=0, unit=self._unit, example=self)
 
         # If all masked, use the unmasked values but leave the result masked
         elif np.all(self._mask):
-            result = Scalar(np.min(self._values, axis=axis), mask=True,
-                            example=self)
+            result = Scalar._new_from_parts(np.min(self._values, axis=axis), True,
+                                            nrank=0, unit=self._unit, example=self)
 
         else:
             # In this case, the values and mask are both arrays
@@ -965,7 +981,8 @@ class Scalar(Qube):
             else:
                 mask = False
 
-            result = Scalar(min_values, mask, example=self)
+            result = Scalar._new_from_parts(min_values, mask, nrank=0,
+                                            unit=self._unit, example=self)
 
         # Convert result to a Python type if necessary
         if builtins is None:

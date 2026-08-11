@@ -51,16 +51,22 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
 
     # If there's no mask, this is easy
     if not np.any(arg._mask):
-        obj = Qube(func(arg._values, axis=new_axis), False, example=arg)
+        obj = Qube._new_from_parts(func(arg._values, axis=new_axis), False,
+                                   nrank=arg._nrank, drank=arg._drank,
+                                   unit=arg._unit, example=arg)
 
     # Handle a fully masked object
     elif np.all(arg._mask):
-        obj = Qube(func(arg._values, axis=new_axis), True, example=arg)
+        obj = Qube._new_from_parts(func(arg._values, axis=new_axis), True,
+                                   nrank=arg._nrank, drank=arg._drank,
+                                   unit=arg._unit, example=arg)
 
     # If we are averaging over all axes, this is fairly easy
     elif axis is None:
         if arg._shape:
-            obj = Qube(func(arg._values[arg.antimask], axis=0), False, example=arg)
+            obj = Qube._new_from_parts(func(arg._values[arg.antimask], axis=0),
+                                       False, nrank=arg._nrank, drank=arg._drank,
+                                       unit=arg._unit, example=arg)
         else:  # pragma: no cover
             # This is unreachable because if arg._shape is (), then the mask is boolean
             # and either mask=False (line 50 hits) or mask=True (line 54 hits).
@@ -101,7 +107,8 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
         else:
             new_mask = False
 
-        obj = Qube(new_values, new_mask, example=arg)
+        obj = Qube._new_from_parts(new_values, new_mask, nrank=arg._nrank,
+                                   drank=arg._drank, unit=arg._unit, example=arg)
 
     # Cast to the proper class
     obj = obj.cast(type(arg))

@@ -78,8 +78,9 @@ def broadcast_to(self, shape, *, recursive=True, _protected=True):
             new_mask = bool(self._mask)
 
         # Construct the new object
-        obj = Qube.__new__(type(self))
-        obj.__init__(new_values, new_mask, example=self)
+        obj = type(self)._new_from_parts(new_values, new_mask, nrank=self._nrank,
+                                         drank=self._drank, unit=self._unit,
+                                         example=self)
 
     else:
 
@@ -106,8 +107,9 @@ def broadcast_to(self, shape, *, recursive=True, _protected=True):
             new_mask = self._mask
 
         # Construct the new object
-        obj = Qube.__new__(type(self))
-        obj.__init__(new_values, new_mask, example=self)
+        obj = type(self)._new_from_parts(new_values, new_mask, nrank=self._nrank,
+                                         drank=self._drank, unit=self._unit,
+                                         example=self)
         obj.as_readonly(recursive=False)
 
     # Process the derivatives if necessary

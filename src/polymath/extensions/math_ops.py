@@ -1546,10 +1546,12 @@ def __and__(self, /, arg):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
 
     if isinstance(arg, Qube):
-        return Qube._BOOLEAN_CLASS((self._values != 0) & (arg._values != 0),
-                                   Qube.or_(self._mask, arg._mask))
+        return Qube._BOOLEAN_CLASS._new_from_parts(
+                                (self._values != 0) & (arg._values != 0),
+                                Qube.or_(self._mask, arg._mask), nrank=0)
 
-    return Qube._BOOLEAN_CLASS((self._values != 0) & (arg != 0), self._mask)
+    return Qube._BOOLEAN_CLASS._new_from_parts((self._values != 0) & (arg != 0),
+                                               self._mask, nrank=0)
 
 
 def __rand__(self, /, arg):
@@ -1565,10 +1567,12 @@ def __or__(self, /, arg):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
 
     if isinstance(arg, Qube):
-        return Qube._BOOLEAN_CLASS((self._values != 0) | (arg._values != 0),
-                                   Qube.or_(self._mask, arg._mask))
+        return Qube._BOOLEAN_CLASS._new_from_parts(
+                                (self._values != 0) | (arg._values != 0),
+                                Qube.or_(self._mask, arg._mask), nrank=0)
 
-    return Qube._BOOLEAN_CLASS((self._values != 0) | (arg != 0), self._mask)
+    return Qube._BOOLEAN_CLASS._new_from_parts((self._values != 0) | (arg != 0),
+                                               self._mask, nrank=0)
 
 def __ror__(self, /, arg):
     """arg | self, element-by-element logical "or"."""
@@ -1583,10 +1587,12 @@ def __xor__(self, /, arg):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
 
     if isinstance(arg, Qube):
-        return Qube._BOOLEAN_CLASS((self._values != 0) != (arg._values != 0),
-                                   Qube.or_(self._mask, arg._mask))
+        return Qube._BOOLEAN_CLASS._new_from_parts(
+                                (self._values != 0) != (arg._values != 0),
+                                Qube.or_(self._mask, arg._mask), nrank=0)
 
-    return Qube._BOOLEAN_CLASS((self._values != 0) != (arg != 0), self._mask)
+    return Qube._BOOLEAN_CLASS._new_from_parts((self._values != 0) != (arg != 0),
+                                               self._mask, nrank=0)
 
 def __rxor__(self, /, arg):
     """arg | self, element-by-element logical exclusive "or"."""

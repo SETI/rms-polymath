@@ -112,9 +112,10 @@ def __getitem__(self, indx):
         if np.shape(result_mask):
             result_mask = np.moveaxis(result_mask, tuple(before), tuple(after))
 
-    # Construct the object
-    obj = Qube.__new__(type(self))
-    obj.__init__(result_values, result_mask, example=self)
+    # Construct the object. Indexing only touches the leading axes, so the rank, the
+    # item shape and the unit all carry through unchanged.
+    obj = type(self)._new_from_parts(result_values, result_mask, nrank=self._nrank,
+                                     drank=self._drank, unit=self._unit, example=self)
     obj._readonly = self._readonly
 
     # Apply the same indexing to any derivatives
