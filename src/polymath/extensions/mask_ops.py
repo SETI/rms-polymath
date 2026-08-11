@@ -14,7 +14,7 @@ __all__ = ['clip', 'is_above', 'is_below', 'is_inside', 'is_outside', 'mask_wher
 
 
 def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
-    """Return a copy of this object after a mask has been applied.
+    """A copy of this object after a mask has been applied.
 
     If the mask is empty, this object is returned unchanged.
 
@@ -172,7 +172,7 @@ def _replaced_mask(old_mask, mask, remask):
 
 
 def mask_where_eq(self, match, replace=None, *, remask=True):
-    """Return a copy of this object with items equal to a value masked.
+    """A copy of this object with items equal to a value masked.
 
     Instead of or in addition to masking the items, the values can be
     replaced. If no items need to be masked, this object is returned
@@ -196,7 +196,7 @@ def mask_where_eq(self, match, replace=None, *, remask=True):
 
 
 def mask_where_ne(self, match, replace=None, *, remask=True):
-    """Return a copy of this object with items not equal to a value masked.
+    """A copy of this object with items not equal to a value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
@@ -253,7 +253,7 @@ def _mask_where_match(self, match, comparison):
 
 
 def mask_where_le(self, limit, replace=None, *, remask=True):
-    """Return a copy of this object with items <= a limit value masked.
+    """A copy of this object with items <= a limit value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
@@ -281,7 +281,7 @@ def mask_where_le(self, limit, replace=None, *, remask=True):
 
 
 def mask_where_ge(self, limit, replace=None, *, remask=True):
-    """Return a copy of this object with items >= a limit value masked.
+    """A copy of this object with items >= a limit value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
@@ -309,7 +309,7 @@ def mask_where_ge(self, limit, replace=None, *, remask=True):
 
 
 def mask_where_lt(self, limit, replace=None, *, remask=True):
-    """Return a copy with items less than a limit value masked.
+    """A copy with items less than a limit value masked.
 
     Instead of or in addition to masking the items, the values can be
     replaced. If no items need to be masked, this object is returned
@@ -338,7 +338,7 @@ def mask_where_lt(self, limit, replace=None, *, remask=True):
 
 
 def mask_where_gt(self, limit, replace=None, *, remask=True):
-    """Return a copy with items greater than a limit value masked.
+    """A copy with items greater than a limit value masked.
 
     Instead of or in addition to masking the items, the values can be replaced.
     If no items need to be masked, this object is returned unchanged.
@@ -367,7 +367,7 @@ def mask_where_gt(self, limit, replace=None, *, remask=True):
 
 def mask_where_between(self, lower, upper, *, mask_endpoints=False, replace=None,
                        remask=True):
-    """Return a copy with values between two limits masked.
+    """A copy with values between two limits masked.
 
     Instead of or in addition to masking the items, the values can be replaced. If no
     items need to be masked, this object is returned unchanged.
@@ -422,7 +422,7 @@ def mask_where_between(self, lower, upper, *, mask_endpoints=False, replace=None
 
 def mask_where_outside(self, lower, upper, *, mask_endpoints=False, replace=None,
                        remask=True):
-    """Return a copy with values outside two limits masked.
+    """A copy with values outside two limits masked.
 
     Instead of or in addition to masking the items, the values can be replaced. If no
     items need to be masked, this object is returned unchanged.
@@ -476,7 +476,7 @@ def mask_where_outside(self, lower, upper, *, mask_endpoints=False, replace=None
 
 
 def clip(self, lower, upper, *, remask=True, inclusive=True):
-    """Return a copy with values clipped to fall within a pair of limits.
+    """A copy with values clipped to fall within a pair of limits.
 
     Values below the lower limit become equal to the lower limit; values above
     the upper limit become equal to the upper limit.

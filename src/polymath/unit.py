@@ -501,7 +501,7 @@ class Unit:
                         Unit._name_power(self.name, power))
 
     def sqrt(self):
-        """Return the square root of this Unit object.
+        """The square root of this Unit object.
 
         Returns:
             Unit: The square root of this Unit object.
@@ -578,7 +578,7 @@ class Unit:
 
     @staticmethod
     def sqrt_unit(unit):
-        """Return the square root of a Unit object.
+        """The square root of a Unit object.
 
         Parameters:
             unit (Unit or None): The Unit object to take the square root of.
@@ -658,7 +658,7 @@ class Unit:
         return Unit(self.exponents, self.triple, self.name)
 
     def copy(self):
-        """Return a copy of this Unit object.
+        """A copy of this Unit object.
 
         Returns:
             Unit: A copy of this Unit object.
@@ -671,7 +671,7 @@ class Unit:
     ######################################################################################
 
     def __str__(self):
-        """Return a string representation of this Unit object.
+        """A string representation of this Unit object.
 
         Returns:
             str: A string representation of the unit.
@@ -680,7 +680,7 @@ class Unit:
         return self.get_name()
 
     def __repr__(self):
-        """Return a detailed string representation of this Unit object.
+        """A detailed string representation of this Unit object.
 
         Returns:
             str: A detailed string representation of the unit.

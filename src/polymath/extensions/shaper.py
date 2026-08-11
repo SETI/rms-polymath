@@ -10,7 +10,7 @@ __all__ = ['flatten', 'move_axis', 'reshape', 'roll_axis', 'stack', 'swap_axes']
 
 
 def reshape(self, shape, *, recursive=True):
-    """Return a shallow copy of the object with a new leading shape.
+    """A shallow copy of the object with a new leading shape.
 
     Parameters:
         shape (tuple or int): A tuple defining the new leading shape. A value of -1 can
@@ -50,7 +50,7 @@ def reshape(self, shape, *, recursive=True):
 
 
 def flatten(self, *, recursive=True):
-    """Return a shallow copy of the object flattened to one dimension.
+    """A shallow copy of the object flattened to one dimension.
 
     Parameters:
         recursive (bool, optional): True to apply the same flattening to the derivatives.
@@ -68,7 +68,7 @@ def flatten(self, *, recursive=True):
 
 
 def swap_axes(self, axis1, axis2, *, recursive=True):
-    """Return a shallow copy of the object with two leading axes swapped.
+    """A shallow copy of the object with two leading axes swapped.
 
     Parameters:
         axis1 (int): The first index of the swap. Negative indices are relative to the

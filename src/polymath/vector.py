@@ -90,7 +90,7 @@ class Vector(Qube):
         return Vector(arg)
 
     def to_scalar(self, indx, *, recursive=True):
-        """Return one of the components of this Vector as a Scalar.
+        """One of the components of this Vector as a Scalar.
 
         Parameters:
             indx (int): Index of the vector component.
@@ -103,7 +103,7 @@ class Vector(Qube):
         return self.extract_numer(0, indx, Scalar, recursive=recursive)
 
     def to_scalars(self, *, recursive=True):
-        """Return all the components of this Vector as a tuple of Scalars.
+        """All the components of this Vector as a tuple of Scalars.
 
         Parameters:
             recursive (bool, optional): True to include the derivatives.
@@ -119,7 +119,7 @@ class Vector(Qube):
         return tuple(results)
 
     def to_pair(self, axes=(0, 1), *, recursive=True):
-        """Return a Pair containing two selected components of this Vector.
+        """A Pair containing two selected components of this Vector.
 
         Overrides the default method to include an 'axes' argument, which can extract any
         two components of a Vector very efficiently.
@@ -262,7 +262,7 @@ class Vector(Qube):
         return (tuple(np.moveaxis(new_values, -1, 0)), self._mask)
 
     def int(self, top=None, *, remask=False, clip=False, inclusive=True, shift=None):
-        """Return an integer (floor) version of this Vector.
+        """An integer (floor) version of this Vector.
 
         If this object already contains integers, it is returned as is. Otherwise, a copy
         is returned with values converted to np.intp. Derivatives are always removed and
@@ -519,7 +519,7 @@ class Vector(Qube):
         return self.cross(arg, recursive=recursive).unit(recursive=recursive)
 
     def outer(self, arg, *, recursive=True):
-        """Return the outer product of two vectors, resulting in a Matrix.
+        """The outer product of two vectors, resulting in a Matrix.
 
         Parameters:
             arg (Vector or vector-like): The vector to compute the outer product with.
@@ -533,7 +533,7 @@ class Vector(Qube):
         return Qube.outer(self, arg, Qube._MATRIX_CLASS, recursive=recursive)
 
     def perp(self, arg, *, recursive=True):
-        """Return the component of this vector perpendicular to another.
+        """The component of this vector perpendicular to another.
 
         Parameters:
             arg (Vector or vector-like): The vector to calculate perpendicular component
@@ -553,7 +553,7 @@ class Vector(Qube):
         return self - arg * self.dot(arg, recursive=recursive)
 
     def proj(self, arg, *, recursive=True):
-        """Return the component of this vector projected onto another.
+        """The component of this vector projected onto another.
 
         Parameters:
             arg (Vector or vector-like): The vector to project onto.
@@ -895,7 +895,7 @@ class Vector(Qube):
         return cls(data, mask)
 
     def mask_where_component_le(self, axis, limit, replace=None, remask=True):
-        """Return a copy with masked values where a component is <= a limit.
+        """A copy with masked values where a component is <= a limit.
 
         Creates a copy of this object where values of a specified component that
         are less than or equal to a limit value are masked.
@@ -919,7 +919,7 @@ class Vector(Qube):
         return self.mask_where(scalar <= limit, replace=replace, remask=remask)
 
     def mask_where_component_ge(self, axis, limit, replace=None, remask=True):
-        """Return a copy with masked values where a component is >= a limit.
+        """A copy with masked values where a component is >= a limit.
 
         Creates a copy of this object where values of a specified component that
         are greater than or equal to a limit value are masked.
@@ -943,7 +943,7 @@ class Vector(Qube):
         return self.mask_where(scalar >= limit, replace=replace, remask=remask)
 
     def mask_where_component_lt(self, axis, limit, replace=None, remask=True):
-        """Return a copy with masked values where a component is < a limit.
+        """A copy with masked values where a component is < a limit.
 
         Creates a copy of this object where values of a specified component that
         are less than a limit value are masked.
@@ -966,7 +966,7 @@ class Vector(Qube):
         return self.mask_where(scalar < limit, replace=replace, remask=remask)
 
     def mask_where_component_gt(self, axis, limit, replace=None, remask=True):
-        """Return a copy with masked values where a component is > a limit.
+        """A copy with masked values where a component is > a limit.
 
         Creates a copy of this object where values of a specified component that
         are greater than a limit value are masked.
@@ -990,7 +990,7 @@ class Vector(Qube):
         return self.mask_where(scalar > limit, replace=replace, remask=remask)
 
     def clip_component(self, axis, lower, upper, remask=False):
-        """Return a copy with component values clipped to specified range.
+        """A copy with component values clipped to specified range.
 
         Creates a copy of this object where values of a specified component that are
         outside a given range are shifted to the closest in-range value. Clips only the
@@ -1055,7 +1055,7 @@ class Vector(Qube):
     ############################################################################
 
     def __abs__(self, recursive=True):
-        """Return the Euclidean norm of this Vector.
+        """The Euclidean norm of this Vector.
 
         Parameters:
             recursive (bool, optional): If True, include derivatives in the result.
@@ -1076,7 +1076,7 @@ class Vector(Qube):
         Qube._raise_unsupported_op('identity()', self)
 
     def reciprocal(self, nozeros=False):
-        """Return the reciprocal of this Vector as a Jacobian..
+        """The reciprocal of this Vector as a Jacobian..
 
         This Vector must be a Jacobian, i.e., the derivative of one Vector with respect to
         another. The reciprocal is therefore the matrix inverse, the derivative of the

@@ -231,7 +231,7 @@ class Polynomial(Vector):
     ######################################################################################
 
     def __neg__(self):
-        """Return the negation of this polynomial.
+        """The negation of this polynomial.
 
         Returns:
             Polynomial: The negated polynomial.
@@ -599,7 +599,7 @@ class Polynomial(Vector):
     ######################################################################################
 
     def deriv(self, recursive=True):
-        """Return the first derivative of this Polynomial.
+        """The first derivative of this Polynomial.
 
         Parameters:
             recursive (bool, optional): True to evaluate derivatives as well.

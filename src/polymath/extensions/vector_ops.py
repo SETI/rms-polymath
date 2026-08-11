@@ -166,7 +166,7 @@ def _check_axis(arg, axis, op):
 
 
 def _zero_sized_result(self, axis):
-    """Return a zero-sized result obtained by collapsing one or more axes.
+    """A zero-sized result obtained by collapsing one or more axes.
 
     Parameters:
         axis (int or tuple, optional): The axis or axes to collapse.
@@ -207,8 +207,8 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         arg2 (Qube): The second operand as a subclass of Qube.
         axis1 (int, optional): The item axis of arg1 for the dot product. Default is -1.
         axis2 (int, optional): The item axis of arg2 for the dot product. Default is 0.
-        classes (class, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
+        classes (class, list, or tuple, optional): The class of the object returned. If a
+            list is provided, the object will be an instance of the first suitable class
             in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
@@ -249,10 +249,10 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
                          f'{arg1._numer[a1]}, {arg2._numer[a2]}')
 
     # The general contraction below broadcasts the numerator axes of the two operands
-    # against each other and reduces over the outer product, which is a great deal of
-    # work for the matrix products that dominate ordinary use. Where the operands
-    # contract their adjacent axes and neither carries a denominator, a specialized
-    # contraction gives the same answer for much less.
+    # against each other and reduces over the outer product, which is a great deal of work
+    # for the matrix products that dominate ordinary use. Where the operands contract
+    # their adjacent axes and neither carries a denominator, a specialized contraction
+    # gives the same answer for much less.
     if not arg1._drank and not arg2._drank and a1 == arg1._nrank - 1 and a2 == 0:
         if arg1._nrank == 2 and arg2._nrank == 2:       # matrix times matrix
             # Unlike einsum, matmul is much slower on strided input than it is on a
@@ -336,8 +336,8 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
     Parameters:
         arg (Qube): The object for which to calculate the norm.
         axis (int, optional): The numerator axis for the norm. Defaults to -1.
-        classes (class, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
+        classes (class, list, or tuple, optional): The class of the object returned. If a
+            list is provided, the object will be an instance of the first suitable class
             in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
@@ -399,8 +399,8 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
     Parameters:
         arg: The object for which to calculate the norm-squared.
         axis (int, optional): The item axis for the norm. Default is -1.
-        classes (class, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
+        classes (class, list, or tuple, optional): The class of the object returned. If a
+            list is provided, the object will be an instance of the first suitable class
             in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
@@ -465,8 +465,8 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         arg2 (Qube): The second operand.
         axis1 (int, optional): The item axis of the first object. Defaults to -1.
         axis2 (int, optional): The item axis of the second object. Defaults to 0.
-        classes (class, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
+        classes (class, list, or tuple, optional): The class of the object returned. If a
+            list is provided, the object will be an instance of the first suitable class
             in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
@@ -637,8 +637,8 @@ def outer(arg1, arg2, classes=(), recursive=True):
     Parameters:
         arg1 (Qube): The first operand.
         arg2 (Qube): The second operand.
-        classes (class, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
+        classes (class, list, or tuple, optional): The class of the object returned. If a
+            list is provided, the object will be an instance of the first suitable class
             in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
@@ -705,7 +705,7 @@ def outer(arg1, arg2, classes=(), recursive=True):
 
 @staticmethod
 def as_diagonal(arg, axis, classes=(), recursive=True):
-    """Return a copy with one axis converted to a diagonal across two.
+    """A copy with one axis converted to a diagonal across two.
 
     Note: This is a static method. Call it as Qube.as_diagonal(arg, axis, ...) rather than
     arg.as_diagonal(axis, ...).
@@ -713,8 +713,8 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
     Parameters:
         arg (Qube): The object to convert.
         axis (int): The item axis to convert to two.
-        classes (class, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
+        classes (class, list, or tuple, optional): The class of the object returned. If a
+            list is provided, the object will be an instance of the first suitable class
             in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 

@@ -10,7 +10,7 @@ __all__ = ['tvl_all', 'tvl_and', 'tvl_any', 'tvl_eq', 'tvl_ge', 'tvl_gt', 'tvl_l
 
 
 def tvl_and(self, arg, builtins=None, masked=None):
-    """Return the three-valued logic "and" operator result.
+    """The three-valued logic "and" operator result.
 
     Masked values are treated as indeterminate rather than being ignored. These are the
     rules:
@@ -105,7 +105,7 @@ def tvl_and(self, arg, builtins=None, masked=None):
 
 
 def tvl_or(self, arg, builtins=None, masked=None):
-    """Return the three-valued logic "or" operator result.
+    """The three-valued logic "or" operator result.
 
     Masked values are treated as indeterminate rather than being ignored. These are the
     rules:
@@ -197,7 +197,7 @@ def tvl_or(self, arg, builtins=None, masked=None):
 
 
 def tvl_any(self, axis=None, builtins=None, masked=None):
-    """Return True if any unmasked value is True using three-valued logic.
+    """True if any unmasked value is True using three-valued logic.
 
     Masked values are treated as indeterminate rather than being ignored. These are the
     rules:
@@ -262,7 +262,7 @@ def tvl_any(self, axis=None, builtins=None, masked=None):
 
 
 def tvl_all(self, axis=None, builtins=None, masked=None):
-    """Return True if all unmasked values are True using three-valued logic.
+    """True if all unmasked values are True using three-valued logic.
 
     Masked values are treated as indeterminate rather than being ignored. These are the
     rules:
@@ -328,7 +328,7 @@ def tvl_all(self, axis=None, builtins=None, masked=None):
 
 
 def tvl_eq(self, arg, builtins=None):
-    """Return the three-valued logic "equals" operator result.
+    """The three-valued logic "equals" operator result.
 
     Masked values are treated as indeterminate, so if either value is masked, the returned
     value is masked.
@@ -350,7 +350,7 @@ def tvl_eq(self, arg, builtins=None):
 
 
 def tvl_ne(self, arg, builtins=None):
-    """Return the three-valued logic "not equal" operator result.
+    """The three-valued logic "not equal" operator result.
 
     Masked values are treated as indeterminate, so if either value is masked, the returned
     value is masked.
@@ -372,7 +372,7 @@ def tvl_ne(self, arg, builtins=None):
 
 
 def tvl_lt(self, arg, builtins=None):
-    """Return the three-valued logic "less than" operator result.
+    """The three-valued logic "less than" operator result.
 
     Masked values are treated as indeterminate, so if either value is masked, the returned
     value is masked.
@@ -394,7 +394,7 @@ def tvl_lt(self, arg, builtins=None):
 
 
 def tvl_gt(self, arg, builtins=None):
-    """Return the three-valued logic "greater than" operator result.
+    """The three-valued logic "greater than" operator result.
 
     Masked values are treated as indeterminate, so if either value is masked, the returned
     value is masked.
@@ -416,7 +416,7 @@ def tvl_gt(self, arg, builtins=None):
 
 
 def tvl_le(self, arg, builtins=None):
-    """Return the three-valued logic "less than or equal to" operator result.
+    """The three-valued logic "less than or equal to" operator result.
 
     Masked values are treated as indeterminate, so if either value is masked, the returned
     value is masked.
@@ -438,7 +438,7 @@ def tvl_le(self, arg, builtins=None):
 
 
 def tvl_ge(self, arg, builtins=None):
-    """Return the three-valued logic "greater than or equal to" operator result.
+    """The three-valued logic "greater than or equal to" operator result.
 
     Masked values are treated as indeterminate, so if either value is masked, the returned
     value is masked.
@@ -460,7 +460,7 @@ def tvl_ge(self, arg, builtins=None):
 
 
 def _tvl_op(self, arg, comparison, builtins=None):
-    """Return the three-valued logic version of any boolean operator.
+    """The three-valued logic version of any boolean operator.
 
     Masked values are treated as indeterminate, so if either value is masked, the returned
     value is masked.

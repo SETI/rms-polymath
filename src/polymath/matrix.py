@@ -636,7 +636,7 @@ class Matrix(Qube):
     ######################################################################################
 
     def reciprocal(self, *, recursive=True, nozeros=False):
-        """Return an object equivalent to the reciprocal of this object.
+        """A Matrix equivalent to the reciprocal of this Matrix.
 
         For a Matrix, the reciprocal is the inverse. This overrides
         :meth:`Qube.reciprocal`.

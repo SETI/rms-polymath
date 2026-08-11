@@ -355,7 +355,7 @@ def _validate_pickle_reference(references):
 ################################################################################
 
 def fpzip_compress(array, digits=16, dtype=np.float64):
-    """Return an fpzip-compressed array plus the number of bits that have been zeroed."""
+    """An fpzip-compressed array plus the number of bits that have been zeroed."""
 
     array = np.require(array, dtype=dtype, requirements=['C', 'A', 'W'])
     shape = array.shape
@@ -450,9 +450,7 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
 
 
 def fpzip_decompress(fpzip_bytes, shape, bits):
-    """Return an fpzip-decompressed array with compensation for any compression
-    bias.
-    """
+    """An fpzip-decompressed array with compensation for any compression bias."""
 
     floats = fpzip.decompress(fpzip_bytes).astype(np.float64).reshape(shape)
 

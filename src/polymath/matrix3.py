@@ -576,7 +576,7 @@ class Matrix3(Matrix):
         return self
 
     def reciprocal(self, *, recursive=True, nozeros=False):
-        """Return the reciprocal of this Matrix3, which is its transpose.
+        """The reciprocal of this Matrix3, which is its transpose.
 
         Parameters:
             recursive (bool, optional): True to return the derivatives of the reciprocal

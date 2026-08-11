@@ -166,7 +166,7 @@ class Vector3(Vector):
             return Scalar.as_scalar(length, recursive=recursive) * result
 
     def to_ra_dec_length(self, *, recursive=True):
-        """Return a tuple (ra, dec, length) from this Vector3.
+        """A tuple (ra, dec, length) derived from this Vector3.
 
         Parameters:
             recursive (bool, optional): True to include the derivatives.
@@ -219,7 +219,7 @@ class Vector3(Vector):
         return Vector3.from_scalars(x, y, z, recursive=recursive)
 
     def to_cylindrical(self, *, recursive=True):
-        """Return a tuple (radius, longitude, z) from this Vector3.
+        """A tuple (radius, longitude, z) from this Vector3.
 
         Parameters:
             recursive (bool, optional): True to include the derivatives.
@@ -239,7 +239,7 @@ class Vector3(Vector):
         return (radius, longitude, z)
 
     def longitude(self, *, recursive=True):
-        """Return the longitude (azimuthal angle) of this Vector3.
+        """The longitude (azimuthal angle) of this Vector3.
 
         Parameters:
             recursive (bool, optional): True to include the derivatives.
@@ -255,7 +255,7 @@ class Vector3(Vector):
         return y.arctan2(x) % Scalar.TWOPI
 
     def latitude(self, *, recursive=True):
-        """Return the latitude (elevation angle) of this Vector3.
+        """The latitude (elevation angle) of this Vector3.
 
         Parameters:
             recursive (bool, optional): True to include the derivatives.
@@ -292,7 +292,7 @@ class Vector3(Vector):
     #     def __abs__(self)
 
     def spin(self, pole, angle=None, *, recursive=True):
-        """Return this Vector3 rotated about a pole vector.
+        """This Vector3 rotated about a pole vector.
 
         Parameters:
             pole (Vector3): The pole vector about which to rotate.
@@ -333,7 +333,7 @@ class Vector3(Vector):
         return r * (angle.cos() * xaxis + angle.sin() * yaxis) + z * zaxis
 
     def offset_angles(self, vector, *, recursive=True):
-        """Return the angular offset between this Vector3 and another.
+        """The angular offset between this Vector3 and another.
 
         Parameters:
             vector (Vector3): The vector to measure the offset from.

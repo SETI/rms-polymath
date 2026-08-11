@@ -37,7 +37,7 @@ class QubeIterator:
         self.index = -1
 
     def __iter__(self):
-        """Return the iterator object itself.
+        """The iterator object itself.
 
         Returns:
             QubeIterator: This iterator instance.
@@ -47,7 +47,7 @@ class QubeIterator:
         return self
 
     def __next__(self):
-        """Return the next item in the iteration.
+        """The next item in the iteration.
 
         Returns:
             Qube: The next element in the iteration.
@@ -92,7 +92,7 @@ class QubeNDIterator:
         self.iterator = None
 
     def __iter__(self):
-        """Return the iterator object itself.
+        """The iterator object itself.
 
         Returns:
             QubeNDIterator: This iterator instance.
@@ -102,7 +102,7 @@ class QubeNDIterator:
         return self
 
     def __next__(self):
-        """Return the next item in the iteration.
+        """The next item in the iteration.
 
         Returns:
             tuple: A tuple containing (index_tuple, item_at_index).
@@ -116,7 +116,7 @@ class QubeNDIterator:
 
 
 def __iter__(self):
-    """Return an iterator over the first axis of this object.
+    """An iterator over the first axis of this object.
 
     Returns:
         QubeIterator: An iterator that iterates over the first axis of the object.
