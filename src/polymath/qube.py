@@ -1184,7 +1184,9 @@ class Qube:
             drank (int, optional): The number of denominator axes at the end of `values`.
             unit (Unit, optional): The unit of the new object; None for unitless.
             example (Qube, optional): An object from which to take the default value when
-                its item shape and dtype match those of the new object.
+                its item shape and dtype match those of the new object, and from which to
+                take the products of the shape and of the item shape when those match.
+                It is used only to avoid repeating work and never changes the result.
 
         Returns:
             Qube: The new object, without derivatives.
@@ -1224,10 +1226,26 @@ class Qube:
         obj._item  = item
         obj._numer = full_shape[ndims:ndims + nrank]
         obj._denom = full_shape[ndims + nrank:]
-        obj._size  = math.prod(shape)
-        obj._isize = math.prod(item)
-        obj._nsize = math.prod(obj._numer)
-        obj._dsize = math.prod(obj._denom)
+
+        # The item products depend only on the item shape and on the way it divides into
+        # a numerator and a denominator, so the example supplies them whenever both of
+        # those carried through the operation. Failing that, the numerator and
+        # denominator products multiply to give the item product, so the item shape does
+        # not need a pass of its own.
+        if example is not None and example._item == item and example._nrank == nrank:
+            obj._isize = example._isize
+            obj._nsize = example._nsize
+            obj._dsize = example._dsize
+        else:
+            obj._nsize = math.prod(obj._numer)
+            obj._dsize = math.prod(obj._denom)
+            obj._isize = obj._nsize * obj._dsize
+
+        # Likewise, the shape product comes from the example whenever the shape did
+        if example is not None and example._shape == shape:
+            obj._size = example._size
+        else:
+            obj._size = math.prod(shape)
 
         obj._unit = unit
         obj._readonly = is_array and not values.flags['WRITEABLE']
