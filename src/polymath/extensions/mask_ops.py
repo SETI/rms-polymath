@@ -48,6 +48,16 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
 
     # Get the replacement value as this type
     if replace is not None:
+
+        # A number replacing the items of an object whose items are single elements needs
+        # only to be cast to this object's data type, which is all that constructing an
+        # object for it would accomplish, at a small fraction of the cost
+        if (self._is_array and self._rank == 0 and isinstance(mask, np.ndarray)
+                and isinstance(replace, numbers.Real)):
+            values = Qube._casted_to_dtype(replace, Qube._dtype(self._values))
+            return _replace_where(self, values, mask, remask=remask,
+                                  recursive=recursive)
+
         replace = self.as_this_type(replace, recursive=True)
         if replace._shape not in ((), self._shape):
             raise ValueError(f'{type(self).__name__}.mask_where() replacement has '
@@ -71,6 +81,15 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
         obj = self.remask_or(mask, recursive=recursive)
         return obj
 
+    # A replacement that is a single unmasked item without derivatives of its own can be
+    # written into the value arrays directly. This is the common case, and it avoids the
+    # copy and the __setitem__ machinery below, which cost the same whether one item is
+    # replaced or all of them.
+    if (isinstance(mask, np.ndarray) and not replace._shape and not replace._derivs
+            and Qube.is_one_false(replace._mask)):
+        return _replace_where(self, replace._values, mask, remask=remask,
+                              recursive=recursive)
+
     # If replacement is an array or single Qube...
 
     # We need a mask to apply to the given replacement value.
@@ -85,6 +104,71 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
         obj = obj.remask_or(mask, recursive=recursive)
 
     return obj
+
+
+def _replace_where(self, replace_values, mask, *, remask, recursive):
+    """A copy of this object with one value substituted wherever a mask is True.
+
+    This is the fast path of mask_where() for a replacement value that is a single item,
+    unmasked, and without derivatives. The result matches the general path: the replaced
+    items take the new value, their derivatives are set to zero, and their mask is set if
+    `remask` is True and cleared otherwise.
+
+    Parameters:
+        self (Qube): The object to copy.
+        replace_values (numpy.ndarray, float, int, or bool): The values of one item to
+            substitute, already cast to this object's data type.
+        mask (numpy.ndarray): Boolean mask of the items to replace, already validated
+            against the shape of this object and known to contain at least one True.
+        remask (bool): True to mask the replaced items; False to unmask them.
+        recursive (bool): True to carry the derivatives into the returned object.
+
+    Returns:
+        Qube: A new read-writable object with the replacements applied.
+    """
+
+    values = self._values.copy()
+    values[mask] = replace_values
+
+    obj = type(self)._new_from_parts(values, _replaced_mask(self._mask, mask, remask),
+                                     nrank=self._nrank, drank=self._drank,
+                                     unit=self._unit, example=self)
+
+    if recursive and self._derivs:
+        new_derivs = {}
+        for key, deriv in self._derivs.items():
+            deriv_values = deriv._values.copy()
+            deriv_values[mask] = 0
+            new_derivs[key] = type(deriv)._new_from_parts(
+                                    deriv_values,
+                                    _replaced_mask(deriv._mask, mask, remask),
+                                    nrank=deriv._nrank, drank=deriv._drank,
+                                    unit=deriv._unit, example=deriv)
+
+        obj.insert_derivs(new_derivs)
+
+    return obj
+
+
+def _replaced_mask(old_mask, mask, remask):
+    """The mask of an object after unmasked values have been substituted into it.
+
+    Parameters:
+        old_mask (numpy.ndarray or bool): The mask before the substitution.
+        mask (numpy.ndarray): Boolean mask of the items that were replaced.
+        remask (bool): True to mask the replaced items; False to unmask them.
+
+    Returns:
+        (numpy.ndarray or bool): The mask after the substitution.
+    """
+
+    if remask:
+        return Qube.or_(old_mask, mask)
+
+    if Qube.is_one_false(old_mask):
+        return False
+
+    return old_mask & np.logical_not(mask)
 
 
 def mask_where_eq(self, match, replace=None, *, remask=True):

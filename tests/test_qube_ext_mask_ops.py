@@ -868,4 +868,89 @@ def test_qube_ext_mask_ops_mask_where_eq_returns_self_when_nothing_matches() -> 
     assert a.mask_where_eq(0.) is a
 
 
+
+def test_qube_ext_mask_ops_mask_where_replace_zeroes_the_derivatives() -> None:
+    """A replaced item takes the new value and a derivative of zero."""
+
+    a = Scalar([1., -2., 3.])
+    a.insert_deriv('t', Scalar([10., 20., 30.]))
+    b = a.mask_where_lt(0., replace=99.)
+
+    assert b.values[1] == 99.
+    assert b.mask[1]
+    assert b.d_dt.values[1] == 0.
+    assert b.d_dt.values[0] == 10.
+    assert b.d_dt.mask[1]
+
+
+def test_qube_ext_mask_ops_mask_where_replace_without_remask_unmasks() -> None:
+    """A replacement with remask False clears the mask of the replaced items."""
+
+    a = Scalar([1., 2., 3., 4.], [False, True, False, True])
+    b = a.mask_where(np.array([True, True, False, False]), replace=99., remask=False)
+
+    assert b.values[1] == 99.
+    assert not b.mask[0]
+    assert not b.mask[1]                # was masked, now replaced and unmasked
+    assert b.mask[3]                    # untouched, so still masked
+
+
+def test_qube_ext_mask_ops_mask_where_replace_carries_a_denominator() -> None:
+    """A derivative with a denominator is zeroed at the replaced items."""
+
+    a = Scalar([1., -2., 3.])
+    a.insert_deriv('uv', Scalar(np.arange(6.).reshape(3, 2), drank=1))
+    b = a.mask_where_lt(0., replace=99.)
+
+    assert b.d_duv.denom == (2,)
+    assert b.d_duv.values[1, 0] == 0.
+    assert b.d_duv.values[1, 1] == 0.
+    assert b.d_duv.values[0, 0] == 0.   # unchanged, and this item happens to be zero
+    assert b.d_duv.values[2, 0] == 4.
+
+
+def test_qube_ext_mask_ops_mask_where_replace_with_an_item_value() -> None:
+    """An item-shaped replacement value applies to every element of the item."""
+
+    a = Vector3([[1., 2., 3.], [4., 5., 6.]])
+    b = a.mask_where(np.array([True, False]), replace=Vector3([0., 0., 1.]))
+
+    assert b.values[0, 2] == 1.
+    assert b.values[0, 0] == 0.
+    assert b.values[1, 1] == 5.
+    assert b.mask[0]
+
+
+def test_qube_ext_mask_ops_mask_where_replace_that_carries_a_derivative() -> None:
+    """A replacement value with a derivative of its own supplies that derivative."""
+
+    a = Scalar([1., -2., 3.])
+    replace = Scalar(99.)
+    replace.insert_deriv('t', Scalar(5.))
+    b = a.mask_where_lt(0., replace=replace, remask=False)
+
+    assert b.values[1] == 99.
+    assert b.d_dt.values[1] == 5.
+    assert b.d_dt.values[0] == 0.
+
+
+def test_qube_ext_mask_ops_mask_where_replace_preserves_the_source() -> None:
+    """A replacement leaves the object it was applied to unchanged."""
+
+    a = Scalar([1., -2., 3.])
+    a.mask_where_lt(0., replace=99.)
+
+    assert a.values[1] == -2.
+    assert not np.any(a.mask)
+
+
+def test_qube_ext_mask_ops_mask_where_replace_result_is_writable() -> None:
+    """The result of a replacement is writable even when the source is read-only."""
+
+    a = Scalar([1., -2., 3.]).as_readonly()
+    b = a.mask_where_lt(0., replace=99.)
+
+    assert not b.readonly
+
+
 ##########################################################################################
