@@ -184,6 +184,16 @@ Qube.set_default_pickle_digits = pickler.set_default_pickle_digits
 Qube._check_pickle_digits      = pickler._check_pickle_digits
 Qube._pickle_debug             = pickler._pickle_debug
 
+from polymath.extensions import readonly_ops
+Qube._array_is_readonly = readonly_ops._array_is_readonly
+Qube._array_to_readonly = readonly_ops._array_to_readonly
+Qube.as_readonly        = readonly_ops.as_readonly
+Qube.match_readonly     = readonly_ops.match_readonly
+Qube.require_writeable  = readonly_ops.require_writeable
+Qube.require_writable   = readonly_ops.require_writable
+Qube.copy               = readonly_ops.copy
+Qube.__copy__           = readonly_ops.__copy__
+
 from polymath.extensions import shaper
 Qube.reshape            = shaper.reshape
 Qube.flatten            = shaper.flatten
