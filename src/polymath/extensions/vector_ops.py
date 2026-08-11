@@ -301,17 +301,18 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
     # Insert derivatives if necessary
     if recursive and (arg1._derivs or arg2._derivs):
         new_derivs = {}
+        deriv_classes = Qube._deriv_classes(classes)
 
         if arg1._derivs:
             arg2_wod = arg2.wod
             for key, arg1_deriv in arg1._derivs.items():
-                new_derivs[key] = Qube.dot(arg1_deriv, arg2_wod, a1, a2, classes=classes,
-                                           recursive=False)
+                new_derivs[key] = Qube.dot(arg1_deriv, arg2_wod, a1, a2,
+                                           classes=deriv_classes, recursive=False)
 
         if arg2._derivs:
             arg1_wod = arg1.wod
             for key, arg2_deriv in arg2._derivs.items():
-                term = Qube.dot(arg1_wod, arg2_deriv, a1, a2, classes=classes,
+                term = Qube.dot(arg1_wod, arg2_deriv, a1, a2, classes=deriv_classes,
                                 recursive=False)
                 if key in new_derivs:
                     new_derivs[key] += term
@@ -379,7 +380,8 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
     if recursive and arg._derivs:
         factor = arg.wod / obj
         for key, arg_deriv in arg._derivs.items():
-            obj.insert_deriv(key, Qube.dot(factor, arg_deriv, a1, a1, classes=classes,
+            obj.insert_deriv(key, Qube.dot(factor, arg_deriv, a1, a1,
+                                           classes=Qube._deriv_classes(classes),
                                            recursive=False))
 
     return obj
@@ -441,7 +443,8 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
     if recursive and arg._derivs:
         factor = 2. * arg.wod
         for key, arg_deriv in arg._derivs.items():
-            obj.insert_deriv(key, Qube.dot(factor, arg_deriv, a1, a1, classes=classes,
+            obj.insert_deriv(key, Qube.dot(factor, arg_deriv, a1, a1,
+                                           classes=Qube._deriv_classes(classes),
                                            recursive=False))
 
     return obj
@@ -548,12 +551,14 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
             arg2_wod = arg2.wod
             for key, arg1_deriv in arg1._derivs.items():
                 new_derivs[key] = Qube.cross(arg1_deriv, arg2_wod, a1, a2,
-                                             classes=classes, recursive=False)
+                                             classes=Qube._deriv_classes(classes),
+                                             recursive=False)
 
         if arg2._derivs:
             arg1_wod = arg1.wod
             for key, arg2_deriv in arg2._derivs.items():
-                term = Qube.cross(arg1_wod, arg2_deriv, a1, a2, classes=classes,
+                term = Qube.cross(arg1_wod, arg2_deriv, a1, a2,
+                                  classes=Qube._deriv_classes(classes),
                                   recursive=False)
                 if key in new_derivs:
                     new_derivs[key] += term
@@ -678,13 +683,16 @@ def outer(arg1, arg2, classes=(), recursive=True):
         if arg1._derivs:
             arg_wod = arg2.wod
             for key, self_deriv in arg1._derivs.items():
-                new_derivs[key] = Qube.outer(self_deriv, arg_wod, classes=classes,
+                new_derivs[key] = Qube.outer(self_deriv, arg_wod,
+                                             classes=Qube._deriv_classes(classes),
                                              recursive=False)
 
         if arg2._derivs:
             self_wod = arg1.wod
             for key, arg_deriv in arg2._derivs.items():
-                term = Qube.outer(self_wod, arg_deriv, classes=classes, recursive=False)
+                term = Qube.outer(self_wod, arg_deriv,
+                                  classes=Qube._deriv_classes(classes),
+                                  recursive=False)
                 if key in new_derivs:
                     new_derivs[key] += term
                 else:

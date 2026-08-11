@@ -41,6 +41,9 @@ class Matrix3(Matrix):
     _DERIVS_OK = True   # True to allow derivatives and denominators; False to disallow.
     _DEFAULT_VALUE = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
 
+    # The derivative of a rotation matrix is not a rotation matrix
+    _DERIV_CLASS = Matrix
+
     @staticmethod
     def as_matrix3(arg, *, recursive=True):
         """Convert the argument to Matrix3. The result is not checked to be unitary.

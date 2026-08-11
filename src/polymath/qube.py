@@ -2792,6 +2792,34 @@ class Qube:
 
         return obj
 
+    # The class that represents a derivative of this class. A derivative does not satisfy
+    # the constraint that defines some classes, so such a class names a more general
+    # substitute here. None means that a derivative has the same class as the object.
+    _DERIV_CLASS = None
+
+    @staticmethod
+    def _deriv_classes(classes):
+        """The candidate classes to use when constructing a derivative.
+
+        A derivative does not necessarily satisfy the constraint that defines the class of
+        the object it belongs to. The derivative of a rotation matrix is not a rotation
+        matrix: it is not orthogonal, and two of them can be added where two rotation
+        matrices cannot. Any class defined by such a constraint names a more general
+        substitute, which replaces it here.
+
+        Parameters:
+            classes (class, list, or tuple): One class or a list of candidate classes, as
+                :meth:`cast` accepts.
+
+        Returns:
+            tuple: The candidate classes for a derivative, in the same order.
+        """
+
+        if isinstance(classes, type):
+            classes = (classes,)
+
+        return tuple(cls._DERIV_CLASS or cls for cls in classes)
+
     def _castable_to(self, cls):
         """True if this object's content already satisfies every restriction of a class.
 
