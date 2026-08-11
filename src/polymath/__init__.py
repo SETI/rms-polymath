@@ -12,13 +12,15 @@ PolyMath expands on the NumPy module and introduces a variety of additional data
 and features to simplify 3-D geometry calculations. It is a product of the the [PDS
 Ring-Moon Systems Node](https://pds-rings.seti.org). The PolyMath classes are:
 
-* :class:`Scalar`: A single zero-dimensional number=.
+* :class:`Scalar`: A single zero-dimensional number.
 * :class:`Vector`: An arbitrary 1-D object.
 * :class:`Pair`: A subclass of `Vector` representing a vector with two coordinates.
 * :class:`Vector3`: A subclass of `Vector` representing a vector with three coordinates.
 * :class:`Matrix`: An arbitrary 2-D matrix.
 * :class:`Matrix3`: A subclass of `Matrix` representing a unitary 3x3 rotation matrix.
 * :class:`Quaternion`: A subclass of `Vector` representing a 4-component quaternion.
+* :class:`Polynomial`: A subclass of `Vector` representing the coefficients of a
+  polynomial in one variable, in order of decreasing exponent.
 * :class:`Boolean`: A True or False value.
 * :class:`Qube`: The superclass of all of the above, supporting objects of arbitrary
   dimension.

@@ -71,6 +71,9 @@ The PolyMath classes are:
   A subclass of `Matrix` representing a unitary 3x3 rotation matrix.
 * `Quaternion`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Quaternion):
   A subclass of `Vector` representing a 4-component quaternion.
+* `Polynomial`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Polynomial):
+  A subclass of `Vector` representing the coefficients of a polynomial in one variable,
+  in order of decreasing exponent.
 * `Boolean`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Boolean):
   A True or False value.
 * `Qube`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube):
