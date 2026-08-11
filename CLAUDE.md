@@ -47,6 +47,16 @@ required to run exactly that set. Run it after any change.
   are bound on at import time from `extensions/`, and they all have to appear in `qube.pyi`.
   Signature shapes in the stubs are exact; types come from the docstrings where those state one
   and are `Any` where they do not, which is deliberate rather than an omission to fill in blindly.
+- `qube.py` holds only what defines an object: the class constants, `__init__`, the construction
+  path, low-level access, the properties and the cache. Everything else lives in `extensions/` and
+  is bound onto `Qube` by `extensions/__init__.py`. Two rules keep that working. First,
+  `polymath/__init__.py` must import `polymath.extensions` **before** any subclass module, because
+  each subclass builds read-only constants such as `Scalar.ZERO` as it loads and those calls need
+  the bound methods; for the same reason no module under `extensions/` may import a subclass at
+  module level — reach for `Qube._SCALAR_CLASS` and friends instead. Second, a `@staticmethod` or
+  `@property` can be written at module level and bound directly, but a module-level `@classmethod`
+  is not a function and `stubtest` rejects it: write the plain function and wrap it at the binding
+  site, as `_suitable_dtype` does.
 - **Never run `mypy` on `src/`.** `[tool.mypy] strict = true` is configured but `src/` is
   deliberately unannotated, so it would produce meaningless errors. Run mypy on `tests/` only.
 - Run `ruff check src tests` after changes. Do not disable the `A` (builtins) or `N` (naming) rule
