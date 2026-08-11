@@ -10,6 +10,18 @@ Qube.broadcast_to       = broadcaster.broadcast_to
 Qube.broadcasted_shape  = broadcaster.broadcasted_shape
 Qube.broadcast          = broadcaster.broadcast
 
+from polymath.extensions import casting
+Qube.as_one_bool        = casting.as_one_bool
+Qube.is_one_true        = casting.is_one_true
+Qube.is_one_false       = casting.is_one_false
+Qube._is_one_value      = casting._is_one_value
+Qube.as_this_type       = casting.as_this_type
+Qube._deriv_classes     = casting._deriv_classes
+Qube._castable_to       = casting._castable_to
+Qube.cast               = casting.cast
+Qube.as_all_constant    = casting.as_all_constant
+Qube.as_size_zero       = casting.as_size_zero
+
 from polymath.extensions import deriv_ops
 Qube.insert_deriv       = deriv_ops.insert_deriv
 Qube.insert_derivs      = deriv_ops.insert_derivs
