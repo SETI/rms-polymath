@@ -52,6 +52,8 @@ jobs:
         run: |
           python -m mypy.stubtest polymath --mypy-config-file pyproject.toml
 
+      # -W makes warnings errors; docs/conf.py sets nitpicky = True, so a
+      # cross-reference with no target fails the build too.
       - name: Sphinx
         run: |
           sphinx-build -W -b html docs docs/_build

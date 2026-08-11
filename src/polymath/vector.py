@@ -30,7 +30,7 @@ class Vector(Qube):
         """Initialize a Vector object.
 
         Parameters:
-            arg (ndarray, float, int, list, or tuple): The input data to construct
+            arg (numpy.ndarray, float, int, list, or tuple): The input data to construct
                 the Vector. A Python scalar will be converted to an array of shape (1,).
             *args: Additional arguments passed to the Qube constructor.
             **kwargs: Additional "keyword=value" arguments passd to the Qube
@@ -193,7 +193,7 @@ class Vector(Qube):
         a tuple of N arrays, one for each component dimension.
 
         Parameters:
-            masked (scalar, list, tuple, or array, optional): The index or indices to
+            masked (scalar, list, tuple, or array-like, optional): The index or indices to
                 insert in place of masked items. If None and the object contains masked
                 elements, the array will be flattened and masked elements will be skipped
                 over.
@@ -903,9 +903,9 @@ class Vector(Qube):
         Parameters:
             axis (int): The index of the component to use for comparison.
             limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
-            replace (scalar or array, optional): A single replacement value or an array
-                of replacement values, inserted at every masked location. Use None to
-                leave values unchanged.
+            replace (scalar or array-like, optional): A single replacement value or an
+                array of replacement values, inserted at every masked location. Use None
+                to leave values unchanged.
             remask (bool, optional): True to include the new mask in the object's mask;
                 False to replace the values but leave them unmasked.
 
@@ -927,8 +927,8 @@ class Vector(Qube):
         Parameters:
             axis (int): The index of the component to use for comparison.
             limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
-            replace (scalar or array, optional): A single replacement value or an array
-                of replacement values, inserted at every masked location. Use None to
+            replace (scalar or array-like, optional): A single replacement value or an
+                array of replacement values, inserted at every masked location. Use None
                 to leave values unchanged.
             remask (bool, optional): True to include the new mask in the object's mask;
                 False to replace the values but leave them unmasked.
@@ -951,9 +951,9 @@ class Vector(Qube):
         Parameters:
             axis (int): The index of the component to use for comparison.
             limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
-            replace (scalar or array, optional): A single replacement value or an array
-                of replacement values, inserted at every masked location. Use None to
-                leave values unchanged.
+            replace (scalar or array-like, optional): A single replacement value or an
+                array of replacement values, inserted at every masked location. Use None
+                to leave values unchanged.
             remask (bool, optional): True to include the new mask in the object's mask;
                 False to replace the values but leave them unmasked.
 
@@ -974,9 +974,9 @@ class Vector(Qube):
         Parameters:
             axis (int): The index of the component to use for comparison.
             limit (scalar or Scalar): The limiting value or a Scalar of limiting values.
-            replace (scalar or array, optional): A single replacement value or an array
-                of replacement values, inserted at every masked location. Use None to
-                leave values unchanged.
+            replace (scalar or array-like, optional): A single replacement value or an
+                array of replacement values, inserted at every masked location. Use None
+                to leave values unchanged.
             remask (bool, optional): True to include the new mask in the object's mask;
                 False to replace the values but leave them unmasked.
 

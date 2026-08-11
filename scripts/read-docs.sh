@@ -2,7 +2,8 @@
 #
 # rms-polymath - Build Sphinx documentation and open the HTML index
 #
-# Runs `make html` in docs/ with SPHINXOPTS=-W (warnings fail the build),
+# Runs `make html` in docs/ with SPHINXOPTS=-W (warnings fail the build; docs/conf.py
+# also sets nitpicky = True, so an unresolved cross-reference fails it as well),
 # then opens docs/_build/html/index.html using the platform default handler.
 #
 # Usage:
@@ -35,7 +36,7 @@ fi
 # shellcheck source=/dev/null
 source "$VENV/bin/activate"
 
-echo "Building documentation (warnings treated as errors, SPHINXOPTS=-W)..."
+echo "Building documentation (warnings and unresolved refs are errors)..."
 make -C "$DOCS_DIR" html SPHINXOPTS="-W"
 
 if [ ! -f "$HTML_INDEX" ]; then

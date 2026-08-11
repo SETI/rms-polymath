@@ -160,7 +160,7 @@ def or_(*masks):
         *masks (array-like or bool): One or more boolean masks.
 
     Returns:
-        (np.ndarray or bool): New mask array or bool.
+        (numpy.ndarray or bool): New mask array or bool.
     """
 
     # Two inputs is most common
@@ -217,7 +217,7 @@ def and_(*masks):
         *masks (array-like or bool): One or more boolean masks.
 
     Returns:
-        (np.ndarray or bool): New mask array or bool.
+        (numpy.ndarray or bool): New mask array or bool.
     """
 
     # Two inputs is most common

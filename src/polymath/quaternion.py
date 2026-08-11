@@ -630,11 +630,11 @@ class Quaternion(Vector):
         """Multiply two quaternion arrays element-wise.
 
         Parameters:
-            a (ndarray): First quaternion array.
-            b (ndarray): Second quaternion array.
+            a (numpy.ndarray): First quaternion array.
+            b (numpy.ndarray): Second quaternion array.
 
         Returns:
-            ndarray: The product of the two quaternion arrays.
+            numpy.ndarray: The product of the two quaternion arrays.
         """
 
         # Construct the new value array

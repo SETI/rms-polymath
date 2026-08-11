@@ -93,6 +93,31 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
 }
 
+# Nitpicky mode: report every cross-reference that does not resolve. Set here rather
+# than passed as -n so that every build gets it -- the check script, CI, and
+# scripts/read-docs.sh alike -- and none of them can drift out of step.
+nitpicky = True
+
+# The only cross-references that cannot resolve are the informal type words this
+# project's docstrings use to describe what an argument accepts. They name no Python
+# object, so there is nothing for Sphinx to link them to. Anything that does name a real
+# object is expected to resolve, so do not add entries here for symbols we own or for
+# third-party classes with an intersphinx inventory; fix the reference instead.
+nitpick_ignore_regex = [
+    # Napoleon splits a type such as "(bool, optional)" on the comma and looks up each
+    # piece, so the trailing "optional" of every optional parameter arrives here.
+    (r'py:class', r'optional'),
+    # Anything NumPy can turn into an array: a nested sequence, a scalar, an ndarray or
+    # another PolyMath object. There is no single class that expresses it.
+    (r'py:class', r'array-like'),
+    # A single number, as opposed to an array of them.
+    (r'py:class', r'scalar'),
+    # Anything convertible to a Vector, in the same sense as "array-like".
+    (r'py:class', r'vector-like'),
+    # Anything the surrounding class can convert into itself.
+    (r'py:class', r'convertible'),
+]
+
 # MyST-Parser settings
 myst_enable_extensions = [
     "colon_fence",

@@ -266,11 +266,11 @@ class Unit:
         """Convert a scalar or numpy array in this unit to a standard unit.
 
         Parameters:
-            value (scalar or ndarray): The value to convert from this unit to standard
-                units of km, seconds and radians.
+            value (scalar or numpy.ndarray): The value to convert from this unit to
+                standard units of km, seconds and radians.
 
         Returns:
-            scalar or ndarray: The value converted to a standard unit.
+            scalar or numpy.ndarray: The value converted to a standard unit.
         """
 
         return self.factor * value
@@ -279,11 +279,11 @@ class Unit:
         """Convert a scalar or numpy array from a standard unit to this unit.
 
         Parameters:
-            value (scalar or ndarray): The value to convert from a standard unit to this
-                unit.
+            value (scalar or numpy.ndarray): The value to convert from a standard unit
+                to this unit.
 
         Returns:
-            scalar or ndarray: The converted value in this unit.
+            scalar or numpy.ndarray: The converted value in this unit.
         """
 
         return self.factor_inv * value
@@ -294,12 +294,12 @@ class Unit:
 
         Parameters:
             unit (Unit or None): The unit to convert from.
-            value (scalar or ndarray): The value to convert.
+            value (scalar or numpy.ndarray): The value to convert.
 
         Returns:
-            scalar or ndarray: The `value` converted from the given `unit` to standard
-                units involving km, seconds and radians. If `unit` is None, `value` is
-                returned untouched.
+            scalar or numpy.ndarray: The `value` converted from the given `unit` to
+                standard units involving km, seconds and radians. If `unit` is None,
+                `value` is returned untouched.
         """
 
         if unit is None:
@@ -313,11 +313,11 @@ class Unit:
 
         Parameters:
             unit (Unit or None): The unit to convert to.
-            value (scalar or ndarray): The value to convert.
+            value (scalar or numpy.ndarray): The value to convert.
 
         Returns:
-            scalar or ndarray: The `value` in standard units involving km, seconds and
-                radians converted to the given `unit`. If `unit` is None, `value` is
+            scalar or numpy.ndarray: The `value` in standard units involving km, seconds
+                and radians converted to the given `unit`. If `unit` is None, `value` is
                 returned untouched.
         """
 
@@ -333,12 +333,12 @@ class Unit:
         specified. Conversions are exact whenever possible.
 
         Parameters:
-            value (scalar or ndarray): The value to convert.
+            value (scalar or numpy.ndarray): The value to convert.
             unit (Unit or None): The target unit. If None, converts to unitless.
             info (str, optional): Info to embed into the error message.
 
         Returns:
-            scalar or ndarray: The converted value in the target unit.
+            scalar or numpy.ndarray: The converted value in the target unit.
 
         Raises:
             ValueError: If the units are incompatible for conversion.

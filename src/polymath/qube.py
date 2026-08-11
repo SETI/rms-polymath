@@ -663,7 +663,7 @@ class Qube:
         """The default value for an object of this class, item shape and dtype.
 
         Parameters:
-            cls (class): Qube subclass.
+            cls (type): Qube subclass.
             item (tuple): Shape of the items.
             drank (int): The number of denominator axes.
             dtype (str): One of "float", "int", or "bool".

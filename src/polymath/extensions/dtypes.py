@@ -295,7 +295,7 @@ def _suitable_dtype(cls, dtype='float', opstr=''):
     """The dtype for this Qube subclass closest to a given dtype.
 
     Parameters:
-        cls (class): Qube subclass.
+        cls (type): Qube subclass.
         dtype (str, optional): Default dtype, one of "float", "int", or "bool", to
             return if it is compatible with the subclass.
         opstr (str, optional): Name of the operation to include in any error message.
@@ -352,7 +352,7 @@ def _suitable_numer(cls, numer=None, opstr=''):
     """The given numerator made suitable for this class; ValueError otherwise.
 
     Parameters:
-        cls (class): Qube subclass.
+        cls (type): Qube subclass.
         numer (tuple, optional): Numerator shape to make suitable for use; None to
             return the default numerator shape for this Qube subclass.
         opstr (str, optional): Name of operation to include in any error message.
@@ -390,7 +390,7 @@ def _suitable_value(cls, arg, *, numer=None, denom=(), expand=True, opstr=''):
     """This argument converted to a suitable value for this class.
 
     Parameters:
-        cls (class): Qube subclass.
+        cls (type): Qube subclass.
         arg (Qube, array-like, float, int, or bool): Object to be made suitable.
         numer (tuple, optional): Numerator shape; None for class default.
         denom (tuple, optional): Denominator shape.

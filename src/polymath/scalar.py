@@ -135,7 +135,7 @@ class Scalar(Qube):
                 elements will be skipped.
 
         Returns:
-            ndarray: An array suitable for indexing.
+            numpy.ndarray: An array suitable for indexing.
         """
 
         (index, _mask) = self.as_index_and_mask(purge=(masked is None), masked=masked)

@@ -62,7 +62,8 @@
 #             indent, mypy, pytest, pyroma, stubtest, bandit, vulture (see
 #             ENABLE_* above). Ruff implements no E12x/E13x rule, so the
 #             continuation-line indent checks come from flake8 instead.
-#   Sphinx:   make -C docs html SPHINXOPTS="-W"
+#   Sphinx:   make -C docs html SPHINXOPTS="-W". docs/conf.py sets nitpicky = True,
+#             so unresolved cross-references are errors here too.
 #   Markdown: pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
 #
 # Exit codes:
@@ -516,7 +517,7 @@ run_sphinx_build() {
     # shellcheck source=/dev/null
     source "$VENV/bin/activate"
 
-    print_info "Building documentation (warnings treated as errors)..."
+    print_info "Building documentation (warnings and unresolved refs are errors)..."
     if (cd docs && make clean && make html SPHINXOPTS="-W"); then
         print_success "Sphinx build passed"
         deactivate 2>/dev/null || true

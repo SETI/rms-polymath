@@ -505,7 +505,7 @@ def _encode_one_float_array(values, digits, reference):
     """Encode one array into a tuple for the specified digits precision.
 
     Parameters:
-        values (ndarray): Array of floats to encode.
+        values (numpy.ndarray): Array of floats to encode.
         digits (float): Number of digits to preserve.
         reference (str or float): One of 'smallest', 'largest', 'mean', 'median',
             'logmean', 'fpzip', or a number.
@@ -619,7 +619,7 @@ def _encode_floats(values, rank, digits, reference):
         ('items', shape, item_rank, list of individual encoded items)
 
     Parameters:
-        values (ndarray): Array of values to encode.
+        values (numpy.ndarray): Array of values to encode.
         rank (int): Rank of the individual items in this array.
         digits (str or float): 'float64', 'float32', or number of digits to
             preserve.

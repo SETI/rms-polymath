@@ -378,7 +378,7 @@ def tvl_lt(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or number): The right-hand operand for the comparison.
+        arg (Qube or numbers.Real): The right-hand operand for the comparison.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
             Default is to use the global setting defined by Qube.prefer_builtins().
@@ -400,7 +400,7 @@ def tvl_gt(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or number): The right-hand operand for the comparison.
+        arg (Qube or numbers.Real): The right-hand operand for the comparison.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
             Default is to use the global setting defined by Qube.prefer_builtins().
@@ -422,7 +422,7 @@ def tvl_le(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or number): The right-hand operand for the comparison.
+        arg (Qube or numbers.Real): The right-hand operand for the comparison.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
             Default is to use the global setting defined by Qube.prefer_builtins().
@@ -444,7 +444,7 @@ def tvl_ge(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or number): The right-hand operand for the comparison.
+        arg (Qube or numbers.Real): The right-hand operand for the comparison.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.
             Default is to use the global setting defined by Qube.prefer_builtins().
@@ -466,7 +466,7 @@ def _tvl_op(self, arg, comparison, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or number): The right-hand operand for the operation.
+        arg (Qube or numbers.Real): The right-hand operand for the operation.
         comparison (Qube or bool): The result of the boolean comparison.
         builtins (bool, optional): If True and the result is a single unmasked scalar, the
             result is returned as a Python boolean instead of as an instance of Boolean.

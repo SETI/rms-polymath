@@ -51,7 +51,7 @@ class Boolean(Scalar):
         """An object suitable for indexing a NumPy ndarray.
 
         Returns:
-            ndarray: A boolean array with False values where masked.
+            numpy.ndarray: A boolean array with False values where masked.
         """
 
         return (self._values & self.antimask)
@@ -156,7 +156,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__add__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -172,7 +172,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__radd__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -187,7 +187,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__iadd__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Raises:
             ValueError: Always; in-place addition is not supported for Boolean.
@@ -202,7 +202,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__sub__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -218,7 +218,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__rsub__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -233,7 +233,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__isub__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Raises:
             ValueError: Always; in-place subtraction is not supported for Boolean.
@@ -248,7 +248,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__mul__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -264,7 +264,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__rmul__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -279,7 +279,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__imul__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Raises:
             ValueError: Always; in-place multiplication is not supported for Boolean.
@@ -294,7 +294,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__truediv__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -310,7 +310,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__rtruediv__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
@@ -328,7 +328,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__itruediv__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Raises:
             ValueError: Always; in-place division is not supported for Boolean.
@@ -343,7 +343,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__floordiv__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Returns:
             Scalar: The result of the floor division.
@@ -358,7 +358,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__rfloordiv__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Returns:
             Scalar: The result of the floor division.
@@ -375,7 +375,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__ifloordiv__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Raises:
             ValueError: Always; in-place floor division is not supported for Boolean.
@@ -390,7 +390,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__mod__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Returns:
             Scalar: The remainder.
@@ -405,7 +405,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__rmod__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Returns:
             Scalar: The remainder.
@@ -422,7 +422,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__imod__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The argument.
+            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
 
         Raises:
             ValueError: Always; in-place modulo is not supported for Boolean.
@@ -437,7 +437,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__pow__`.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The exponent.
+            arg (Qube, numpy.ndarray, float, int, or bool): The exponent.
 
         Returns:
             Scalar: The result of the exponentiation.
@@ -464,7 +464,7 @@ class Boolean(Scalar):
         the result cannot be stored back into a Boolean.
 
         Parameters:
-            arg (Qube, np.ndarray, float, int, or bool): The exponent.
+            arg (Qube, numpy.ndarray, float, int, or bool): The exponent.
 
         Raises:
             ValueError: Always; in-place exponentiation is not supported for Boolean.

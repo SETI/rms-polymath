@@ -110,7 +110,13 @@ history, user requests, or issue numbers in a docstring.
 ## Documentation
 
 Sphinx builds are warning-as-error (`-W`) in CI, in the check script, and in `read-docs.sh`, so any
-new warning breaks the build. Narrative docs are `.rst`; Markdown is only for README/CONTRIBUTING
+new warning breaks the build. `docs/conf.py` also sets `nitpicky = True`, rather than passing `-n`
+at each call site, so a cross-reference with no target is an error in all three too. The only
+exemptions are in `nitpick_ignore_regex`, and they cover the informal type words the docstrings use
+(`optional`, `array-like`, `scalar`, `vector-like`, `convertible`), which name no Python object.
+Never add an entry for a symbol this project owns, or for a third-party class that intersphinx can
+resolve — `numpy.ndarray` and `numbers.Real` link, while `np.ndarray` and `number` do not; write
+the resolvable spelling. Narrative docs are `.rst`; Markdown is only for README/CONTRIBUTING
 via MyST. Every API symbol named in prose must use a Sphinx role (`:class:`, `:meth:`, `:func:`,
 `:mod:`, `:attr:`, `:data:`) — a bare CamelCase name or inline literal is a violation. American
 spelling, one space after a sentence-ending period, no time-anchored words ("new", "legacy", "now").

@@ -147,7 +147,7 @@ def _deriv_classes(classes):
     substitute, which replaces it here.
 
     Parameters:
-        classes (class, list, or tuple): One class or a list of candidate classes, as
+        classes (type, list, or tuple): One class or a list of candidate classes, as
             :meth:`cast` accepts.
 
     Returns:
@@ -168,7 +168,7 @@ def _castable_to(self, cls):
     which :meth:`cast` checks for itself.
 
     Parameters:
-        cls (class): The Qube subclass to test.
+        cls (type): The Qube subclass to test.
 
     Returns:
         bool: True if the data type, unit, denominator and derivatives of this object
@@ -194,7 +194,7 @@ def cast(self, classes):
     """A shallow copy of this object casted to another Qube subclass.
 
     Parameters:
-        classes (class or list): A Qube subclass or list of subclasses. The object
+        classes (type or list): A Qube subclass or list of subclasses. The object
             will be casted to the first suitable class in the list.
 
     Returns:

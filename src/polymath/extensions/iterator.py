@@ -70,7 +70,7 @@ class QubeNDIterator:
     returning both the index tuple and the value at that index.
 
     Attributes:
-        obj (ndarray): The object to iterate over.
+        obj (numpy.ndarray): The object to iterate over.
         shape (tuple): The shape of the object.
         iterator (iterator): The underlying iterator.
     """
