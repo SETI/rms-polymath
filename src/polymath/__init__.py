@@ -492,19 +492,23 @@ generated automatically.
   values in the array.
 """
 
+from polymath.qube       import Qube
+from polymath.unit       import Unit
+
+# The extension methods must be bound onto Qube before any subclass module is imported.
+# Each subclass builds read-only class constants, such as Scalar.ZERO, while it loads, and
+# constructing those objects calls methods that this import supplies.
+import polymath.extensions  # noqa: F401  # binds the extension methods onto Qube
+
 from polymath.boolean    import Boolean
 from polymath.matrix     import Matrix
 from polymath.matrix3    import Matrix3
 from polymath.pair       import Pair
 from polymath.polynomial import Polynomial
 from polymath.quaternion import Quaternion
-from polymath.qube       import Qube
 from polymath.scalar     import Scalar
-from polymath.unit       import Unit
 from polymath.vector     import Vector
 from polymath.vector3    import Vector3
-
-import polymath.extensions  # noqa: F401  # binds the extension methods onto Qube
 
 try:
     from ._version import __version__

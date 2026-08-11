@@ -4,7 +4,6 @@
 
 import numpy as np
 from polymath.qube import Qube
-from polymath.scalar import Scalar
 
 __all__ = ['shrink', 'unshrink']
 
@@ -183,7 +182,7 @@ def unshrink(self, antimask, shape=()):
 
     # ...where single values can be handled by broadcasting...
     else:
-        item = Scalar(self._values)
+        item = Qube._SCALAR_CLASS(self._values)
         new_values = item.broadcast_to(new_shape)._values
 
     # Create the new mask array
