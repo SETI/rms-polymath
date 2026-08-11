@@ -3338,63 +3338,6 @@ class Qube:
 
         return type(self).__name__ + '(' + string + suffix + ')'
 
-    def _opstr(self, /, op):
-        """An operation string to use in an error message for this class.
-
-        Parameters:
-            op (str): Name of the operation.
-
-        Returns:
-            str: The class name followed by the operation, updated for an error message.
-        """
-
-        name = self.__name__ if isinstance(self, type) else type(self).__name__
-
-        if not op:
-            return name
-
-        if op[0].isalpha():
-            return name + '.' + op
-
-        return name + ' "' + op + '"'
-
-    def _disallow_denom(self, op):
-        """Raise ValueError if this object has a denominator.
-
-        Parameters:
-            op (str): Name of the operation to appear in the error message.
-        """
-
-        if self._drank:
-            raise ValueError(self._opstr(op) + ' does not support denominators')
-
-    def _require_scalar(self, op):
-        """Raise ValueError if this object has rank > 0.
-
-        Parameters:
-            op (str): Name of the operation to appear in the error message.
-        """
-
-        if self._nrank:
-            raise ValueError(self._opstr(op) + ' requires scalar items')
-
-    def _require_axis_in_range(self, axis, rank, op, name='axis'):
-        """Raise ValueError if a given axis index is out of range.
-
-        Parameters:
-            axis (int): Axis index, positive or negative.
-            rank (int): Rank of an array for indexing.
-            op (str): Name of the operation to appear in the error message.
-            name (str, optional): Name of axis variable.
-
-        Raises:
-            ValueError: If axis < -rank or >= rank.
-        """
-
-        if axis < -rank or axis >= rank:
-            opstr = self._opstr(op)
-            raise ValueError(f'{opstr} {name} is out of range ({-rank},{rank}): {axis}')
-
     ######################################################################################
     # from_scalars() special method
     ######################################################################################

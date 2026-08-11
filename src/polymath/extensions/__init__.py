@@ -10,6 +10,17 @@ Qube.broadcast_to       = broadcaster.broadcast_to
 Qube.broadcasted_shape  = broadcaster.broadcasted_shape
 Qube.broadcast          = broadcaster.broadcast
 
+from polymath.extensions import errors
+Qube._opstr             = errors._opstr
+Qube._disallow_denom    = errors._disallow_denom
+Qube._require_scalar    = errors._require_scalar
+Qube._require_axis_in_range     = errors._require_axis_in_range
+Qube._raise_unsupported_op      = errors._raise_unsupported_op
+Qube._raise_incompatible_shape  = errors._raise_incompatible_shape
+Qube._raise_incompatible_numers = errors._raise_incompatible_numers
+Qube._raise_incompatible_denoms = errors._raise_incompatible_denoms
+Qube._raise_dual_denoms         = errors._raise_dual_denoms
+
 from polymath.extensions import indexer
 Qube.__getitem__        = indexer.__getitem__
 Qube.__setitem__        = indexer.__setitem__
@@ -106,11 +117,6 @@ Qube.zero               = math_ops.zero
 Qube.identity           = math_ops.identity
 Qube.sum                = math_ops.sum
 Qube.mean               = math_ops.mean
-Qube._raise_unsupported_op      = math_ops._raise_unsupported_op
-Qube._raise_incompatible_shape  = math_ops._raise_incompatible_shape
-Qube._raise_incompatible_numers = math_ops._raise_incompatible_numers
-Qube._raise_incompatible_denoms = math_ops._raise_incompatible_denoms
-Qube._raise_dual_denoms         = math_ops._raise_dual_denoms
 
 # Defining __eq__ inside a class body makes Python set __hash__ to None. These operators
 # are bound after the class is created, so that never happened, leaving Qube with the
@@ -191,7 +197,6 @@ Qube.tvl_le             = tvl.tvl_le
 Qube.tvl_ge             = tvl.tvl_ge
 Qube._tvl_op            = tvl._tvl_op
 
-# This module exports no names of its own; it binds the extension methods onto Qube.
 __all__ = []
 
 ################################################################################

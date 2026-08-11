@@ -4,6 +4,8 @@
 
 import numpy as np
 import numbers
+from polymath.extensions.errors import (_raise_dual_denoms, _raise_incompatible_denoms,
+                                        _raise_incompatible_numers, _raise_unsupported_op)
 from polymath.qube import Qube, _NUMERIC_TYPES
 from polymath.unit import Unit
 
@@ -1961,65 +1963,5 @@ def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=N
         return result.as_builtin(masked=masked)
 
     return result
-
-##########################################################################################
-# Error messages
-##########################################################################################
-
-def _raise_unsupported_op(op, /, obj1, obj2=None):
-    """Raise a TypeError or ValueError for unsupported operations."""
-
-    opstr = obj1._opstr(op)
-
-    if obj2 is None:
-        raise TypeError(f'{opstr} operation is not supported')
-
-    if (isinstance(obj1, (list, tuple, np.ndarray)) or
-        isinstance(obj2, (list, tuple, np.ndarray))):
-
-        if isinstance(obj1, Qube):
-            shape1 = obj1._numer
-        else:
-            shape1 = np.shape(obj1)
-
-        if isinstance(obj2, Qube):
-            shape2 = obj2._numer
-        else:
-            shape2 = np.shape(obj2)
-
-        raise ValueError(f'unsupported operand item for {opstr}: {shape1}, {shape2}')
-
-    raise TypeError(f'unsupported operand type for {opstr}: {type(obj2)}')
-
-
-def _raise_incompatible_shape(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible object shapes."""
-
-    opstr = obj1._opstr(op)
-    raise ValueError(f'incompatible object shapes for {opstr}: '
-                     f'{obj1._shape}, {obj2._shape}')
-
-
-def _raise_incompatible_numers(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible numerators in operation."""
-
-    opstr = obj1._opstr(op)
-    raise ValueError(f'incompatible numerator shapes for {opstr}: '
-                     f'{obj1._numer}, {obj2._numer}')
-
-
-def _raise_incompatible_denoms(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible denominators in operation."""
-
-    opstr = obj1._opstr(op)
-    raise ValueError(f'incompatible denominator shapes for {opstr}: '
-                     f'{obj1._denom}, {obj2._denom}')
-
-
-def _raise_dual_denoms(op, /, obj1, obj2):
-    """Raise a ValueError for denominators on both operands."""
-
-    opstr = obj1._opstr(op)
-    raise ValueError(f'only one operand of {opstr} can have a denominator')
 
 ##########################################################################################
