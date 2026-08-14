@@ -1026,6 +1026,24 @@ def __setstate__(self, state):
             raise ValueError('unrecognized values encoding: ' + str(encoding))
 
     ############################
+    # Restore the attributes that an older pickle does not carry
+    ############################
+
+    # A state dictionary replaces the instance dictionary wholesale, so an object
+    # restored from a pickle written before an attribute existed simply lacks it, and the
+    # first operation to read it fails. Each of these is derived from the values or the
+    # shape, so it can be recomputed here rather than lost. The two array flags always
+    # appeared together, so one check serves for both. The values are decoded by this
+    # point, so the test for an array gives the same answer it gives in __init__.
+
+    if not hasattr(self, '_is_array'):
+        self._is_array = isinstance(self._values, np.ndarray)
+        self._is_scalar = not self._is_array
+
+    if not hasattr(self, '_ndims'):
+        self._ndims = len(self._shape)
+
+    ############################
     # Set readonly status
     ############################
 

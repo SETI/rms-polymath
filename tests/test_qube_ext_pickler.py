@@ -6,6 +6,7 @@
 import numpy as np
 import pytest
 import pickle
+from typing import Any
 
 from polymath import Qube, Scalar, Vector, Vector3, Boolean
 
@@ -1211,3 +1212,135 @@ def test_qube_ext_pickler_unhashable_reference_is_rejected() -> None:
     a = Scalar([1., 2., 3.])
     with pytest.raises(ValueError, match=r"invalid pickle reference \['1'\]"):
         a.set_pickle_digits('double', (['1'], 'fpzip'))
+
+
+def _state_without_derived_attrs(obj: Qube) -> dict[str, Any]:
+    """The pickled state of an object with its derived attributes removed.
+
+    A state dictionary written by a version of the package that predates `_is_array`,
+    `_is_scalar` and `_ndims` holds none of the three.
+
+    Parameters:
+        obj (Qube): The object to encode.
+
+    Returns:
+        dict: The state dictionary, without those three keys.
+    """
+
+    state = obj.__getstate__()
+    for name in ('_is_array', '_is_scalar', '_ndims'):
+        del state[name]
+
+    return state
+
+
+def _state_with_earlier_names(obj: Qube) -> dict[str, Any]:
+    """The pickled state of an object using the attribute names of an earlier format.
+
+    Every internal attribute was keyed by its name plus a trailing underscore, the unit
+    was keyed by "_units_", and the derived attributes did not exist.
+
+    Parameters:
+        obj (Qube): The object to encode.
+
+    Returns:
+        dict: The state dictionary, keyed by the earlier names.
+    """
+
+    renamed = {}
+    for key, value in _state_without_derived_attrs(obj).items():
+        if key == '_unit':
+            renamed['_units_'] = value
+        elif key.startswith('_'):
+            renamed[key + '_'] = value
+        else:
+            renamed[key] = value
+
+    return renamed
+
+
+def _restored(state: dict[str, Any]) -> Scalar:
+    """A Scalar restored from a state dictionary.
+
+    Parameters:
+        state (dict): The state dictionary.
+
+    Returns:
+        Scalar: The restored object.
+    """
+
+    obj = Qube.__new__(Scalar)
+    obj.__setstate__(state)
+    return obj
+
+
+@pytest.mark.parametrize(('values', 'is_array'), [(np.arange(5.), True), (1.5, False)])
+def test_qube_ext_pickler_restores_the_array_flag_absent_from_a_state(
+        values: Any, is_array: bool) -> None:
+    """A state dictionary without `_is_array` restores an object that has it."""
+
+    obj = _restored(_state_without_derived_attrs(Scalar(values)))
+
+    assert obj._is_array == is_array
+
+
+@pytest.mark.parametrize(('values', 'is_scalar'), [(np.arange(5.), False), (1.5, True)])
+def test_qube_ext_pickler_restores_the_scalar_flag_absent_from_a_state(
+        values: Any, is_scalar: bool) -> None:
+    """A state dictionary without `_is_scalar` restores an object that has it."""
+
+    obj = _restored(_state_without_derived_attrs(Scalar(values)))
+
+    assert obj._is_scalar == is_scalar
+
+
+@pytest.mark.parametrize(('values', 'ndims'), [(np.arange(5.), 1), (1.5, 0)])
+def test_qube_ext_pickler_restores_the_dimension_count_absent_from_a_state(
+        values: Any, ndims: int) -> None:
+    """A state dictionary without `_ndims` restores an object that has it."""
+
+    obj = _restored(_state_without_derived_attrs(Scalar(values)))
+
+    assert obj._ndims == ndims
+
+
+def test_qube_ext_pickler_restores_every_transferable_attribute() -> None:
+    """A state dictionary without the derived attributes restores a complete object."""
+
+    obj = _restored(_state_without_derived_attrs(Scalar(np.arange(5.))))
+    missing = set(Qube._TRANSFERABLE_ATTRS) - set(obj.__dict__)
+
+    assert missing == set()
+
+
+def test_qube_ext_pickler_a_state_without_the_derived_attributes_can_be_cloned() -> None:
+    """An object restored without the derived attributes supports a clone."""
+
+    obj = _restored(_state_without_derived_attrs(Scalar(np.arange(5.))))
+
+    assert np.all(obj.clone().values == np.arange(5.))
+
+
+def test_qube_ext_pickler_restores_a_state_that_uses_the_earlier_attribute_names() -> None:
+    """A state dictionary keyed by the earlier attribute names restores completely."""
+
+    obj = _restored(_state_with_earlier_names(Scalar(np.arange(5.))))
+    missing = set(Qube._TRANSFERABLE_ATTRS) - set(obj.__dict__)
+
+    assert missing == set()
+
+
+def test_qube_ext_pickler_restores_the_values_of_the_earlier_attribute_names() -> None:
+    """A state dictionary keyed by the earlier attribute names restores the values."""
+
+    obj = _restored(_state_with_earlier_names(Scalar(np.arange(5.))))
+
+    assert np.all(obj.values == np.arange(5.))
+
+
+def test_qube_ext_pickler_keeps_the_array_flag_of_a_complete_state() -> None:
+    """A state dictionary that carries `_is_array` keeps the value it carries."""
+
+    obj = pickle.loads(pickle.dumps(Scalar(np.arange(5.))))
+
+    assert obj._is_array is True
