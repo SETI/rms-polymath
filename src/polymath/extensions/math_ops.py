@@ -40,7 +40,7 @@ def __neg__(self, *, recursive=True):
     """
 
     # Construct a copy with negative values
-    obj = self.clone(recursive=False)
+    obj = self._clone_new_values(recursive=False)
     obj._set_values(-self._values)
 
     # Fill in the negative derivatives
@@ -102,7 +102,7 @@ def __add__(self, /, arg, *, recursive=True):
 
     # Handle a simple right-hand value...
     if self._rank == 0 and isinstance(arg, _NUMERIC_TYPES):
-        obj = self.clone(recursive=recursive, retain_cache=True)
+        obj = self._clone_new_values(recursive=recursive, retain_cache=True)
         obj._set_values(self._values + arg, retain_cache=True)
         return obj
 
@@ -243,7 +243,7 @@ def __sub__(self, /, arg, *, recursive=True):
 
     # Handle a simple right-hand value...
     if self._rank == 0 and isinstance(arg, _NUMERIC_TYPES):
-        obj = self.clone(recursive=recursive, retain_cache=True)
+        obj = self._clone_new_values(recursive=recursive, retain_cache=True)
         obj._set_values(self._values - arg, retain_cache=True)
         return obj
 
@@ -525,7 +525,7 @@ def __imul__(self, /, arg):
 def _mul_by_number(self, /, arg, *, recursive=True):
     """Internal multiply op when the arg is a Python scalar."""
 
-    obj = self.clone(recursive=False, retain_cache=True)
+    obj = self._clone_new_values(recursive=False, retain_cache=True)
     obj._set_values(self._values * arg, retain_cache=True)
 
     if recursive and self._derivs:
@@ -725,7 +725,7 @@ def __itruediv__(self, /, arg):
 def _div_by_number(self, /, arg, *, recursive=True):
     """Internal division op when the arg is a Python scalar."""
 
-    obj = self.clone(recursive=False, retain_cache=True)
+    obj = self._clone_new_values(recursive=False, retain_cache=True)
 
     # Mask out zeros
     if arg == 0:
@@ -924,7 +924,7 @@ def __ifloordiv__(self, /, arg):
 def _floordiv_by_number(self, /, arg):
     """Internal floor division op when the arg is a Python scalar."""
 
-    obj = self.clone(recursive=False, retain_cache=True)
+    obj = self._clone_new_values(recursive=False, retain_cache=True)
 
     if arg == 0:
         obj._set_mask(True)
@@ -1087,7 +1087,7 @@ def __imod__(self, /, arg):
 def _mod_by_number(self, /, arg, *, recursive=True):
     """Internal modulus op when the arg is a Python scalar."""
 
-    obj = self.clone(recursive=False, retain_cache=True)
+    obj = self._clone_new_values(recursive=False, retain_cache=True)
 
     # Mask out zeros
     if arg == 0:

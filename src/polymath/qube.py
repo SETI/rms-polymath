@@ -428,8 +428,13 @@ class Qube:
     # Attributes that an object carries only once something has set them
     _OPTIONAL_ATTRS = ('_pickle_digits', '_pickle_reference')
 
+    # The names of the attributes added by add_attr(). This class-level value is shared by
+    # every object that has not added one, so it is never modified in place; add_attr()
+    # replaces it with a new frozenset instead.
+    _added_attrs = frozenset()
+
     @staticmethod
-    def _transfer_attrs(source, dest):
+    def _transfer_attrs(source, dest, *, added_attrs=True):
         """Copy the descriptive attributes of one object onto another.
 
         Derivatives and the cache are not copied; the caller decides what those should
@@ -440,6 +445,8 @@ class Qube:
         Parameters:
             source (Qube): The object to copy from.
             dest (Qube): The object to copy onto.
+            added_attrs (bool, optional): True to copy the attributes added by
+                add_attr(), which are transferred by reference; False to omit them.
         """
 
         for attr in Qube._TRANSFERABLE_ATTRS:
@@ -449,8 +456,16 @@ class Qube:
             if hasattr(source, attr):
                 setattr(dest, attr, getattr(source, attr))
 
+        added = source._added_attrs if added_attrs else ()
+        if added:
+            dest._added_attrs = added
+            for attr in added:
+                setattr(dest, attr, getattr(source, attr))
+
     def clone(self, *, recursive=True, preserve=(), retain_cache=False):
         """Fast construction of a shallow copy.
+
+        The copy carries any attributes added by add_attr().
 
         Parameters:
             recursive (bool, optional): True to clone the derivatives of this object;
@@ -464,10 +479,52 @@ class Qube:
             Qube: The shallow clone.
         """
 
+        return self._clone(recursive=recursive, preserve=preserve,
+                           retain_cache=retain_cache, added_attrs=True)
+
+    def _clone_new_values(self, *, recursive=True, retain_cache=False):
+        """Fast construction of a shallow copy that is about to be given new values.
+
+        This is the counterpart to clone() for an operation, such as a negation or a
+        multiplication, that builds its result by copying this object and then replacing
+        the values. Any attributes added by add_attr() describe this object's own values,
+        so they are not carried onto a copy whose values are about to become something
+        else.
+
+        Parameters:
+            recursive (bool, optional): True to clone the derivatives of this object;
+                False to ignore them.
+            retain_cache (bool, optional): True to retain cache except "unshrunk" and
+                "wod"; False to return clone with an empty cache.
+
+        Returns:
+            Qube: The shallow clone.
+        """
+
+        return self._clone(recursive=recursive, preserve=(),
+                           retain_cache=retain_cache, added_attrs=False)
+
+    def _clone(self, *, recursive, preserve, retain_cache, added_attrs):
+        """Fast construction of a shallow copy, with or without the added attributes.
+
+        Parameters:
+            recursive (bool): True to clone the derivatives of this object; False to
+                ignore them.
+            preserve (list): Name(s) of derivatives to include even if `recursive` is
+                False.
+            retain_cache (bool): True to retain cache except "unshrunk" and "wod"; False
+                to return clone with an empty cache.
+            added_attrs (bool): True to carry the attributes added by add_attr() onto the
+                copy; False to omit them.
+
+        Returns:
+            Qube: The shallow clone.
+        """
+
         obj = Qube.__new__(type(self))
 
         # Transfer attributes other than derivatives and cache
-        Qube._transfer_attrs(self, obj)
+        Qube._transfer_attrs(self, obj, added_attrs=added_attrs)
         obj._derivs = {}
         obj._cache = {}
 

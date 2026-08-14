@@ -4,6 +4,9 @@
 
 from polymath.qube import Qube
 
+from polymath.extensions import attr_ops
+Qube.add_attr           = attr_ops.add_attr
+
 from polymath.extensions import broadcaster
 Qube.broadcast_into_shape = broadcaster.broadcast_into_shape
 Qube.broadcast_to       = broadcaster.broadcast_to

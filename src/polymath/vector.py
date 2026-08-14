@@ -318,7 +318,7 @@ class Vector(Qube):
                 return self.wod.as_int()
 
             if self.is_int() and not clip:      # avoid a copy if we can
-                obj = self.clone(recursive=False)
+                obj = self._clone_new_values(recursive=False)
             else:
                 obj = self.as_int(copy=True)
                 if clip:

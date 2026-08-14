@@ -1693,7 +1693,7 @@ class Scalar(Qube):
         """
 
         # Construct a copy with absolute values
-        obj = self.clone(recursive=False)
+        obj = self._clone_new_values(recursive=False)
         obj._set_values(np.abs(self._values))
 
         # Fill in the derivatives, multiplied by sign(self)

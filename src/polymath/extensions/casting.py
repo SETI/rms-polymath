@@ -258,7 +258,7 @@ def as_all_constant(self, constant=None, *, recursive=True):
 
     constant = self.as_this_type(constant, recursive=False)
 
-    obj = self.clone(recursive=False)
+    obj = self._clone_new_values(recursive=False)
     obj._set_values(Qube.broadcast(constant, obj)[0]._values)
     obj.as_readonly()
 

@@ -576,6 +576,29 @@ instead. The
 `readonly` property is True if the object is read-only; False if it is
 read-write.
 
+## Custom Attributes
+
+The
+`add_attr()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.add_attr)
+method attaches an attribute of your own choosing to an object,
+letting additional information travel alongside it. After:
+
+```python
+obj.add_attr('label', 'north pole')
+```
+
+the value is available as **obj.label**, and every copy and clone of the object carries it
+too. The value itself is not copied; each copy refers to the same value. An operation that
+computes new values, such as **-obj** or **obj + 1**, describes a different quantity, so
+its result does not carry the attribute.
+
+An attribute that the object already has cannot be replaced in this way, and a name
+beginning with "d_d" is disallowed because that prefix is reserved for derivatives.
+However, an attribute that
+`add_attr()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.add_attr)
+added earlier can be given a new value,
+either by calling the method again or by direct assignment.
+
 ## Alternative Constructors
 
 Aside from the explicit constructor methods, numerous methods are available to construct
