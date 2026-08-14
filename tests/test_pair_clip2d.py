@@ -3,28 +3,24 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
 
 from polymath import Pair
 
 
-class Test_Pair_clip2d(unittest.TestCase):
+def test_pair_clip2d() -> None:
+    """Exercise pair clip2d."""
 
-    def runTest(self):
+    a = Pair([[1,2],[3,4],[5,6]])
+    assert a.clip2d([2,3],[4,5], remask=False) == [[2,3],[3,4],[4,5]]
+    assert (np.all(a.clip2d([2,3],[4,5], remask=True).mask ==
+                                    [True,False,True]))
+    assert a.clip2d(None,[4,5], remask=False) == [[1,2],[3,4],[4,5]]
+    assert (np.all(a.clip2d(None,[4,5], remask=True).mask ==
+                                    [False,False,True]))
+    lower = Pair([2,3], True)
+    assert a.clip2d(lower,[4,5], remask=False) == [[1,2],[3,4],[4,5]]
+    assert (np.all(a.clip2d(lower,[4,5], remask=True).mask ==
+                                    [False,False,True]))
 
-        a = Pair([[1,2],[3,4],[5,6]])
-
-        self.assertEqual(a.clip2d([2,3],[4,5], remask=False), [[2,3],[3,4],[4,5]])
-        self.assertTrue(np.all(a.clip2d([2,3],[4,5], remask=True).mask ==
-                                        [True,False,True]))
-
-        self.assertEqual(a.clip2d(None,[4,5], remask=False), [[1,2],[3,4],[4,5]])
-        self.assertTrue(np.all(a.clip2d(None,[4,5], remask=True).mask ==
-                                        [False,False,True]))
-
-        lower = Pair([2,3], True)
-        self.assertEqual(a.clip2d(lower,[4,5], remask=False), [[1,2],[3,4],[4,5]])
-        self.assertTrue(np.all(a.clip2d(lower,[4,5], remask=True).mask ==
-                                        [False,False,True]))
 
 ##########################################################################################

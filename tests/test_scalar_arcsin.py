@@ -3,126 +3,118 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
+import pytest
 
 from polymath import Scalar, Unit
 
 
-class Test_Scalar_arcsin(unittest.TestCase):
+def test_scalar_arcsin_individual_values() -> None:
+    """Individual values."""
 
-    def runTest(self):
+    np.random.seed(7221)
 
-        np.random.seed(7221)
+    assert Scalar(-0.3).arcsin() == np.arcsin(-0.3)
+    assert type(Scalar(-0.3).arcsin()) == Scalar
+    assert Scalar(0.).arcsin() == np.arcsin(0.)
+    assert Scalar(0).arcsin() == 0.
+    assert Scalar( 1.).arcsin() == np.pi/2. or abs(Scalar( 1.).arcsin() - np.pi/2.) <= 1.e-15
+    assert Scalar(-1.).arcsin() == -np.pi/2. or abs(Scalar(-1.).arcsin() - -np.pi/2.) <= 1.e-15
+    assert Scalar(0).arcsin() == 0.
 
-        # Individual values
-        self.assertEqual(Scalar(-0.3).arcsin(), np.arcsin(-0.3))
-        self.assertEqual(type(Scalar(-0.3).arcsin()), Scalar)
+    assert Scalar((-0.1,0.,0.1)).arcsin() == np.arcsin((-0.1,0.,0.1))
+    assert type(Scalar((-0.1,0.,0.1)).arcsin()) == Scalar
 
-        self.assertEqual(Scalar(0.).arcsin(), np.arcsin(0.))
-        self.assertEqual(Scalar(0).arcsin(), 0.)
+    N = 1000
+    x = Scalar(np.random.randn(N))
+    y = x.arcsin()
+    for i in range(N):
+        if abs(x.values[i]) <= 1.:
+            assert y[i] == np.arcsin(x.values[i])
+            assert not y.mask[i]
+        else:
+            assert y.mask[i]
+    for i in range(N-1):
+        if np.all(np.abs(x.values[i:i+2]) <= 1):
+            assert y[i:i+2] == np.arcsin(x.values[i:i+2])
 
-        self.assertAlmostEqual(Scalar( 1.).arcsin(),  np.pi/2., 1.e-15)
-        self.assertAlmostEqual(Scalar(-1.).arcsin(), -np.pi/2., 1.e-15)
-        self.assertEqual(Scalar(0).arcsin(), 0.)
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.KM)
+    with pytest.raises(ValueError):
+        Scalar.arcsin(random)
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.SECONDS)
+    with pytest.raises(ValueError):
+        Scalar.arcsin(random)
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.DEG)
+    with pytest.raises(ValueError):
+        Scalar.arcsin(random)
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.RAD)
+    with pytest.raises(ValueError):
+        Scalar.arcsin(random)
+    x = Scalar(3.25, unit=Unit.UNITLESS)
+    assert x.arcsin().mask
+    x = Scalar(3.25, unit=Unit.UNITLESS)
+    with pytest.raises(ValueError):
+        x.arcsin(recursive=True, check=False)
+    x = Scalar(0.25, unit=Unit.UNITLESS)
+    assert not x.arcsin().mask
+    assert x.arcsin() == np.arcsin(x.values)
 
-        # Multiple values
-        self.assertEqual(Scalar((-0.1,0.,0.1)).arcsin(), np.arcsin((-0.1,0.,0.1)))
-        self.assertEqual(type(Scalar((-0.1,0.,0.1)).arcsin()), Scalar)
+    values = np.random.randn(10)
+    random = Scalar(values, unit=Unit.UNITLESS)
+    assert (random.arcsin().unit_ is None)
 
-        # Arrays
-        N = 1000
-        x = Scalar(np.random.randn(N))
-        y = x.arcsin()
-        for i in range(N):
-            if abs(x.values[i]) <= 1.:
-                self.assertEqual(y[i], np.arcsin(x.values[i]))
-                self.assertFalse(y.mask[i])
-            else:
-                self.assertTrue(y.mask[i])
+    N = 100
+    x = Scalar(np.random.randn(N), mask=(np.random.randn(N) < -1.))
+    y = x.arcsin()
+    assert np.all(y.mask[x.mask])
 
-        for i in range(N-1):
-            if np.all(np.abs(x.values[i:i+2]) <= 1):
-                self.assertEqual(y[i:i+2], np.arcsin(x.values[i:i+2]))
+    N = 100
+    x = Scalar(np.random.randn(N))
+    x.insert_deriv('t', Scalar(np.random.randn(N)))
+    assert 't' in x.derivs
+    assert hasattr(x, 'd_dt')
+    assert 't' in x.arcsin().derivs
+    assert hasattr(x.arcsin(), 'd_dt')
+    EPS = 1.e-6
+    y1 = (x + EPS).arcsin()
+    y0 = (x - EPS).arcsin()
+    dy_dx = 0.5 * (y1 - y0) / EPS
+    dy_dt = x.arcsin().d_dt
+    DEL = 3.e-6
+    for i in range(N):
+        if not dy_dt[i].mask and abs(dy_dt[i]) < 10:    # big errors near end points
+            assert dy_dx[i] * x.d_dt[i] == dy_dt[i] or abs(dy_dx[i] * x.d_dt[i] - dy_dt[i]) <= DEL
 
-        # Test valid unit
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.KM)
-        self.assertRaises(ValueError, Scalar.arcsin, random)
+    assert x.arcsin(recursive=False).derivs == {}
+    assert hasattr(x, 'd_dt')
+    assert not hasattr(x.arcsin(recursive=False), 'd_dt')
 
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.SECONDS)
-        self.assertRaises(ValueError, Scalar.arcsin, random)
+    N = 10
+    x = Scalar(np.random.randn(N))
+    assert not x.readonly
+    assert not x.arcsin().readonly
+    assert x.as_readonly().readonly
+    assert not x.as_readonly().arcsin().readonly
 
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.DEG)
-        self.assertRaises(ValueError, Scalar.arcsin, random)
+    N = 1000
+    x = Scalar(np.random.randn(N))
+    with pytest.raises(ValueError):
+        x.arcsin(check=False)
+    x = Scalar(np.random.randn(N).clip(-1,1))
+    assert x.arcsin() == np.arcsin(x.values)
 
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.RAD)
-        self.assertRaises(ValueError, Scalar.arcsin, random)
 
-        x = Scalar(3.25, unit=Unit.UNITLESS)
-        self.assertTrue(x.arcsin().mask)
+def test_scalar_arcsin_unchecked_values_inside_the_domain() -> None:
+    """With check=False, values inside the domain still give the arcsine."""
 
-        x = Scalar(3.25, unit=Unit.UNITLESS)
-        self.assertRaises(ValueError, x.arcsin, recursive=True, check=False)
+    np.random.seed(7221)
 
-        x = Scalar(0.25, unit=Unit.UNITLESS)
-        self.assertFalse(x.arcsin().mask)
-        self.assertEqual(x.arcsin(), np.arcsin(x.values))
+    x = Scalar(np.random.randn(100).clip(-1., 1.))
+    assert x.arcsin(check=False) == np.arcsin(x.values)
+    assert x.arcsin(check=False).mask is False
 
-        # Units should be removed
-        values = np.random.randn(10)
-        random = Scalar(values, unit=Unit.UNITLESS)
-        self.assertTrue(random.arcsin().unit_ is None)
-
-        # Masks
-        N = 100
-        x = Scalar(np.random.randn(N), mask=(np.random.randn(N) < -1.))
-        y = x.arcsin()
-        self.assertTrue(np.all(y.mask[x.mask]))
-
-        # Derivatives
-        N = 100
-        x = Scalar(np.random.randn(N))
-        x.insert_deriv('t', Scalar(np.random.randn(N)))
-
-        self.assertIn('t', x.derivs)
-        self.assertTrue(hasattr(x, 'd_dt'))
-
-        self.assertIn('t', x.arcsin().derivs)
-        self.assertTrue(hasattr(x.arcsin(), 'd_dt'))
-
-        EPS = 1.e-6
-        y1 = (x + EPS).arcsin()
-        y0 = (x - EPS).arcsin()
-        dy_dx = 0.5 * (y1 - y0) / EPS
-        dy_dt = x.arcsin().d_dt
-
-        DEL = 3.e-6
-        for i in range(N):
-            if not dy_dt[i].mask and abs(dy_dt[i]) < 10:    # big errors near end points
-                self.assertAlmostEqual(dy_dx[i] * x.d_dt[i], dy_dt[i], delta=DEL)
-
-        # Derivatives should be removed if necessary
-        self.assertEqual(x.arcsin(recursive=False).derivs, {})
-        self.assertTrue(hasattr(x, 'd_dt'))
-        self.assertFalse(hasattr(x.arcsin(recursive=False), 'd_dt'))
-
-        # Read-only status should NOT be preserved
-        N = 10
-        x = Scalar(np.random.randn(N))
-        self.assertFalse(x.readonly)
-        self.assertFalse(x.arcsin().readonly)
-        self.assertTrue(x.as_readonly().readonly)
-        self.assertFalse(x.as_readonly().arcsin().readonly)
-
-        # Without Checking
-        N = 1000
-        x = Scalar(np.random.randn(N))
-        self.assertRaises(ValueError, x.arcsin, check=False)
-
-        x = Scalar(np.random.randn(N).clip(-1,1))
-        self.assertEqual(x.arcsin(), np.arcsin(x.values))
 
 ##########################################################################################

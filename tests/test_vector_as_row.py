@@ -3,84 +3,96 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
 
 from polymath import Matrix, Vector, Unit
 
 
-class Test_Vector_as_row(unittest.TestCase):
+def test_vector_as_row_check_units_and_masks() -> None:
+    """check units and masks."""
 
-    def runTest(self):
+    np.random.seed(2957)
+    N = 100
+    a = Vector(np.random.randn(N,1))
+    b = a.as_row()
+    assert np.all(a.values.ravel() == b.values.ravel())
+    assert a.shape == b.shape
+    assert a.values.shape == (N,1)
+    assert b.values.shape == (N,1,1)
+    assert type(b) == Matrix
 
-        np.random.seed(2957)
+    N = 100
+    a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5),
+               unit=Unit.RAD)
+    b = a.as_row()
+    assert a.unit_ == b.unit_
+    assert np.all(b.values[...,0,:] == a.values)
+    assert np.all(b.mask == a.mask)
+    a.values[0,0] = 22.
+    assert b.values[0,0,0] == 22.
 
-        N = 100
-        a = Vector(np.random.randn(N,1))
-        b = a.as_row()
-        self.assertTrue(np.all(a.values.ravel() == b.values.ravel()))
-        self.assertEqual(a.shape, b.shape)
-        self.assertEqual(a.values.shape, (N,1))
-        self.assertEqual(b.values.shape, (N,1,1))
-        self.assertEqual(type(b), Matrix)
 
-        # check units and masks
-        N = 100
-        a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5),
-                   unit=Unit.RAD)
-        b = a.as_row()
-        self.assertEqual(a.unit_, b.unit_)
+def test_vector_as_row_check_derivatives() -> None:
+    """check derivatives."""
 
-        self.assertTrue(np.all(b.values[...,0,:] == a.values))
-        self.assertTrue(np.all(b.mask == a.mask))
+    np.random.seed(2957)
+    N = 100
+    a = Vector(np.random.randn(N,1))
+    b = a.as_row()
+    assert np.all(a.values.ravel() == b.values.ravel())
+    assert a.shape == b.shape
+    assert a.values.shape == (N,1)
+    assert b.values.shape == (N,1,1)
+    assert type(b) == Matrix
 
-        a.values[0,0] = 22.
-        self.assertEqual(b.values[0,0,0], 22.)
+    N = 100
+    a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5))
+    da_dt = Vector(np.random.randn(N,4))
+    da_dv = Vector(np.random.randn(N,4,2), drank=1)
+    a.insert_deriv('t', da_dt)
+    a.insert_deriv('v', da_dv)
+    assert hasattr(a, 'd_dt')
+    assert hasattr(a, 'd_dv')
+    b = a.as_row(recursive=False)
+    assert not hasattr(b, 'd_dt')
+    assert not hasattr(b, 'd_dv')
+    b = a.as_row(recursive=True)
+    assert hasattr(b, 'd_dt')
+    assert hasattr(b, 'd_dv')
+    assert b.d_dt.shape == a.shape
+    assert b.d_dt.numer == (1,4)
+    assert b.d_dt.denom == ()
+    assert b.d_dv.shape == a.shape
+    assert b.d_dv.numer == (1,4)
+    assert b.d_dv.denom == (2,)
+    assert np.all(a.values == b.values[...,0,:])
+    assert np.all(a.mask == b.mask)
+    assert np.all(a.d_dt.values == b.d_dt.values[...,0,:])
+    assert np.all(a.d_dv.values == b.d_dv.values[...,0,:,:])
 
-        # check derivatives
-        N = 100
-        a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5))
-        da_dt = Vector(np.random.randn(N,4))
-        da_dv = Vector(np.random.randn(N,4,2), drank=1)
 
-        a.insert_deriv('t', da_dt)
-        a.insert_deriv('v', da_dv)
-        self.assertTrue(hasattr(a, 'd_dt'))
-        self.assertTrue(hasattr(a, 'd_dv'))
+def test_vector_as_row_read_only_status_is_not_preserved() -> None:
+    """read-only status is not preserved."""
 
-        b = a.as_row(recursive=False)
-        self.assertFalse(hasattr(b, 'd_dt'))
-        self.assertFalse(hasattr(b, 'd_dv'))
+    np.random.seed(2957)
+    N = 100
+    a = Vector(np.random.randn(N,1))
+    b = a.as_row()
+    assert np.all(a.values.ravel() == b.values.ravel())
+    assert a.shape == b.shape
+    assert a.values.shape == (N,1)
+    assert b.values.shape == (N,1,1)
+    assert type(b) == Matrix
 
-        b = a.as_row(recursive=True)
-        self.assertTrue(hasattr(b, 'd_dt'))
-        self.assertTrue(hasattr(b, 'd_dv'))
+    N = 10
+    a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5))
+    assert not a.readonly
+    b = a.as_row()
+    assert not b.readonly
+    a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5))
+    a = a.as_readonly()
+    assert a.readonly
+    b = a.as_row()
+    assert b.readonly     # shared memory
 
-        self.assertEqual(b.d_dt.shape, a.shape)
-        self.assertEqual(b.d_dt.numer, (1,4))
-        self.assertEqual(b.d_dt.denom, ())
-
-        self.assertEqual(b.d_dv.shape, a.shape)
-        self.assertEqual(b.d_dv.numer, (1,4))
-        self.assertEqual(b.d_dv.denom, (2,))
-
-        self.assertTrue(np.all(a.values == b.values[...,0,:]))
-        self.assertTrue(np.all(a.mask == b.mask))
-        self.assertTrue(np.all(a.d_dt.values == b.d_dt.values[...,0,:]))
-        self.assertTrue(np.all(a.d_dv.values == b.d_dv.values[...,0,:,:]))
-
-        # read-only status is not preserved
-        N = 10
-        a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5))
-        self.assertFalse(a.readonly)
-
-        b = a.as_row()
-        self.assertFalse(b.readonly)
-
-        a = Vector(np.random.randn(N,4), mask=(np.random.randn(N) < -0.5))
-        a = a.as_readonly()
-        self.assertTrue(a.readonly)
-
-        b = a.as_row()
-        self.assertTrue(b.readonly)     # shared memory
 
 ##########################################################################################

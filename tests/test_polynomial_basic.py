@@ -4,226 +4,374 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
+import pytest
 
 from polymath import Vector, Polynomial
 
 
-class Test_Polynomial_Basic(unittest.TestCase):
+def test_polynomial_basic_test_basic_construction_polynomial_is_a_vector_subclass_so_i() -> None:
+    """Test basic construction # Polynomial is a Vector subclass, so it should accept Vector-like inputs # Coefficients are in decreasing order: [a, b, c] = a*x^2 + b*x + c."""
 
-    def runTest(self):
+    np.random.seed(2599)
 
-        np.random.seed(2599)
+    p1 = Polynomial([1., 2., 3.])  # x^2 + 2x + 3
+    assert p1.shape == ()
+    assert p1.numer == (3,)
+    assert p1.order == 2
 
-        # Test basic construction
-        # Polynomial is a Vector subclass, so it should accept Vector-like inputs
-        # Coefficients are in decreasing order: [a, b, c] = a*x^2 + b*x + c
-        p1 = Polynomial([1., 2., 3.])  # x^2 + 2x + 3
-        self.assertEqual(p1.shape, ())
-        self.assertEqual(p1.numer, (3,))
-        self.assertEqual(p1.order, 2)
+    v = Vector([1., 2., 3.])
+    p2 = Polynomial(v)
+    assert p2.order == 2
+    assert np.allclose(p2.values, p1.values)
 
-        # Test construction from Vector
-        v = Vector([1., 2., 3.])
-        p2 = Polynomial(v)
-        self.assertEqual(p2.order, 2)
-        self.assertTrue(np.allclose(p2.values, p1.values))
+    p0 = Polynomial([5.])  # constant polynomial
+    assert p0.order == 0
+    p1_order = Polynomial([1., 0.])  # linear: x
+    assert p1_order.order == 1
+    p2_order = Polynomial([1., 2., 3.])  # quadratic: x^2 + 2x + 3
+    assert p2_order.order == 2
 
-        # Test order property
-        p0 = Polynomial([5.])  # constant polynomial
-        self.assertEqual(p0.order, 0)
+    p3 = Polynomial.as_polynomial([4., 5., 6.])
+    assert type(p3) == Polynomial
+    assert p3.order == 2
 
-        p1_order = Polynomial([1., 0.])  # linear: x
-        self.assertEqual(p1_order.order, 1)
+    v2 = Vector([7., 8.])
+    p4 = Polynomial.as_polynomial(v2)
+    assert type(p4) == Polynomial
+    assert p4.order == 1
 
-        p2_order = Polynomial([1., 2., 3.])  # quadratic: x^2 + 2x + 3
-        self.assertEqual(p2_order.order, 2)
+    p5 = Polynomial([1., 2., 3.])
+    v3 = p5.as_vector()
+    assert type(v3) == Vector
+    assert np.allclose(v3.values, p5.values)
 
-        # Test as_polynomial static method
-        p3 = Polynomial.as_polynomial([4., 5., 6.])
-        self.assertEqual(type(p3), Polynomial)
-        self.assertEqual(p3.order, 2)
+    p_small = Polynomial([1., 2.])  # order 1
+    p_large = p_small.at_least_order(3)  # should pad to order 3
+    assert p_large.order == 3
+    assert p_large.numer[0] == 4  # 4 coefficients for order 3
 
-        # Test as_polynomial with Vector
-        v2 = Vector([7., 8.])
-        p4 = Polynomial.as_polynomial(v2)
-        self.assertEqual(type(p4), Polynomial)
-        self.assertEqual(p4.order, 1)
+    assert p_large.values[0] == 0.
+    assert p_large.values[1] == 0.
 
-        # Test as_vector method
-        p5 = Polynomial([1., 2., 3.])
-        v3 = p5.as_vector()
-        self.assertEqual(type(v3), Vector)
-        self.assertTrue(np.allclose(v3.values, p5.values))
+    assert p_large.values[2] == 1.
+    assert p_large.values[3] == 2.
 
-        # Test at_least_order
-        p_small = Polynomial([1., 2.])  # order 1
-        p_large = p_small.at_least_order(3)  # should pad to order 3
-        self.assertEqual(p_large.order, 3)
-        self.assertEqual(p_large.numer[0], 4)  # 4 coefficients for order 3
-        # Leading coefficients should be zero
-        self.assertEqual(p_large.values[0], 0.)
-        self.assertEqual(p_large.values[1], 0.)
-        # Original coefficients should be at the end
-        self.assertEqual(p_large.values[2], 1.)
-        self.assertEqual(p_large.values[3], 2.)
+    p_big = Polynomial([1., 2., 3., 4.])  # order 3
+    p_big2 = p_big.at_least_order(2)
+    assert p_big2.order == 3
+    assert np.allclose(p_big2.values, p_big.values)
 
-        # If already larger order, should return unchanged
-        p_big = Polynomial([1., 2., 3., 4.])  # order 3
-        p_big2 = p_big.at_least_order(2)
-        self.assertEqual(p_big2.order, 3)
-        self.assertTrue(np.allclose(p_big2.values, p_big.values))
+    p6 = Polynomial([1., 2.])  # order 1
+    p7 = p6.set_order(2)
+    assert p7.order == 2
+    assert p7.numer[0] == 3
 
-        # Test set_order
-        p6 = Polynomial([1., 2.])  # order 1
-        p7 = p6.set_order(2)
-        self.assertEqual(p7.order, 2)
-        self.assertEqual(p7.numer[0], 3)
+    p8 = Polynomial([1., 2., 3., 4.])  # order 3
+    with pytest.raises(ValueError):
+        p8.set_order(2)
 
-        # set_order should raise ValueError if order is too small
-        p8 = Polynomial([1., 2., 3., 4.])  # order 3
-        self.assertRaises(ValueError, p8.set_order, 2)
+    p_linear = Polynomial([3., 2.])  # 3x + 2 (coefficients in decreasing order)
+    p_inv = p_linear.invert_line()
+    assert p_inv.order == 1
 
-        # Test invert_line
-        # Linear polynomial: y = 3x + 2, so x = (y - 2) / 3 = (1/3)y - 2/3
-        p_linear = Polynomial([3., 2.])  # 3x + 2 (coefficients in decreasing order)
-        p_inv = p_linear.invert_line()
-        self.assertEqual(p_inv.order, 1)
-        # Inverse: x = (1/3)y - 2/3, so coefficients in decreasing order: [1/3, -2/3]
-        self.assertAlmostEqual(p_inv.values[0], 1./3., places=10)
-        self.assertAlmostEqual(p_inv.values[1], -2./3., places=10)
+    assert p_inv.values[0] == 1./3. or abs(p_inv.values[0] - 1./3.) <= 1e-10
+    assert p_inv.values[1] == -2./3. or abs(p_inv.values[1] - -2./3.) <= 1e-10
 
-        # Test invert_line preserves derivatives
-        p_linear_with_deriv = Polynomial([3., 2.])
-        p_linear_deriv = Polynomial([1., 0.])  # derivative of 3 + 2x is 2
-        p_linear_with_deriv.insert_deriv('t', p_linear_deriv)
-        p_inv_with_deriv = p_linear_with_deriv.invert_line(recursive=True)
-        self.assertTrue(hasattr(p_inv_with_deriv, 'd_dt'))
-        # Derivative of inverse: if y = 3 + 2x (or 2x + 3), then x = 0.5y - 1.5
-        # If dy/dt = 2, then dx/dt = 0.5 * 2 = 1
-        # But we need to check the actual derivative structure
-        self.assertEqual(type(p_inv_with_deriv.d_dt), Polynomial)
+    p_linear_with_deriv = Polynomial([3., 2.])
+    p_linear_deriv = Polynomial([1., 0.])  # derivative of 3 + 2x is 2
+    p_linear_with_deriv.insert_deriv('t', p_linear_deriv)
+    p_inv_with_deriv = p_linear_with_deriv.invert_line(recursive=True)
+    assert hasattr(p_inv_with_deriv, 'd_dt')
 
-        # invert_line should raise ValueError for non-linear
-        p_nonlinear = Polynomial([1., 2., 3.])
-        self.assertRaises(ValueError, p_nonlinear.invert_line)
+    assert type(p_inv_with_deriv.d_dt) == Polynomial
 
-        # Test that Polynomial only allows floats (not ints)
-        # Based on _INTS_OK = False
-        # This should work but be coerced to float
-        p_int_coeffs = Polynomial([1, 2, 3])
-        self.assertEqual(p_int_coeffs.values.dtype.kind, 'f')
+    p_nonlinear = Polynomial([1., 2., 3.])
+    with pytest.raises(ValueError):
+        p_nonlinear.invert_line()
 
-        # Test that coefficients are in decreasing order of exponent
-        # p = x^2 + 2x + 3 should have coefficients [1, 2, 3]
-        p_test_order = Polynomial([1., 2., 3.])
-        # Verify coefficient order: [1, 2, 3] means 1*x^2 + 2*x + 3
-        self.assertEqual(p_test_order.values[0], 1.)  # x^2 coefficient
-        self.assertEqual(p_test_order.values[1], 2.)  # x coefficient
-        self.assertEqual(p_test_order.values[2], 3.)  # constant
-        # Verify by evaluation: at x=1, should be 1+2+3=6
-        self.assertAlmostEqual(p_test_order.eval(1.).values, 6., places=10)
-        # At x=2, should be 4+4+3=11
-        self.assertAlmostEqual(p_test_order.eval(2.).values, 11., places=10)
+    p_int_coeffs = Polynomial([1, 2, 3])
+    assert p_int_coeffs.values.dtype.kind == 'f'
 
-        # Additional tests for coverage
+    p_test_order = Polynomial([1., 2., 3.])
 
-        # Test __init__ with Vector subclass that has derivatives
-        v_with_deriv = Vector([1., 2.])
-        v_deriv = Vector([0., 1.])
-        v_with_deriv.insert_deriv('t', v_deriv)
-        # Create a subclass to test the type check
+    assert p_test_order.values[0] == 1.  # x^2 coefficient
+    assert p_test_order.values[1] == 2.  # x coefficient
+    assert p_test_order.values[2] == 3.  # constant
 
-        class PolySubclass(Polynomial):
-            pass
-        p_sub = PolySubclass(v_with_deriv)
-        # The derivative should be converted to Polynomial when type(self) is not Polynomial
-        self.assertTrue(hasattr(p_sub, 'd_dt'))
-        # Check _derivs directly to verify conversion happened
-        self.assertEqual(type(p_sub._derivs['t']), Polynomial)
+    assert p_test_order.eval(1.).values == 6. or abs(p_test_order.eval(1.).values - 6.) <= 1e-10
 
-        # Test as_polynomial with recursive=False
-        v3 = Vector([1., 2., 3.])
-        v3.insert_deriv('t', Vector([0., 1., 2.]))
-        p_no_rec = Polynomial.as_polynomial(v3, recursive=False)
-        self.assertFalse(hasattr(p_no_rec, 'd_dt'))
+    assert p_test_order.eval(2.).values == 11. or abs(p_test_order.eval(2.).values - 11.) <= 1e-10
 
-        p_no_rec2 = Polynomial.as_polynomial([1., 2.], recursive=False)
-        self.assertEqual(type(p_no_rec2), Polynomial)
+    # Additional tests for coverage
 
-        # Test as_vector with recursive=False
-        p_with_deriv2 = Polynomial([1., 2.])
-        p_with_deriv2.insert_deriv('t', Polynomial([0., 1.]))
-        v_no_rec = p_with_deriv2.as_vector(recursive=False)
-        # When recursive=False, derivatives should not be preserved
-        self.assertEqual(type(v_no_rec), Vector)
-        # The _derivs might still exist from __dict__ copy, but the code path is tested
+    v_with_deriv = Vector([1., 2.])
+    v_deriv = Vector([0., 1.])
+    v_with_deriv.insert_deriv('t', v_deriv)
+    # Create a subclass to test the type check
 
-        # Test at_least_order with recursive=False when already >= order
-        p_large2 = Polynomial([1., 2., 3., 4.])
-        p_large3 = p_large2.at_least_order(2, recursive=False)
-        self.assertEqual(p_large3.order, 3)
+    class PolySubclass(Polynomial):
+        pass
+    p_sub = PolySubclass(v_with_deriv)
 
-        # Test at_least_order with derivatives
-        p_with_deriv3 = Polynomial([1., 2.])
-        p_with_deriv3.insert_deriv('t', Polynomial([0., 1.]))
-        p_padded = p_with_deriv3.at_least_order(3, recursive=True)
-        self.assertTrue(hasattr(p_padded, 'd_dt'))
-        self.assertEqual(p_padded.d_dt.order, 3)
+    assert hasattr(p_sub, 'd_dt')
 
-        # Test as_vector with recursive=True
-        p_asvec_deriv = Polynomial([1., 2.])
-        p_asvec_deriv.insert_deriv('t', Polynomial([0., 1.]))
-        v_with_deriv = p_asvec_deriv.as_vector(recursive=True)
-        self.assertTrue(hasattr(v_with_deriv, 'd_dt'))
-        # Derivatives should be preserved with recursive=True
-        self.assertEqual(type(v_with_deriv.d_dt), Vector)
+    assert type(p_sub._derivs['t']) == Polynomial
 
-        # Test eval with zero-order polynomial and zero-order derivative
-        p_const = Polynomial([5.])
-        p_deriv = Polynomial([3.])
-        p_const.insert_deriv('t', p_deriv)
-        result = p_const.eval(10., recursive=True)
-        self.assertEqual(result.values, 5.)
-        self.assertEqual(result.d_dt.values, 3.)
 
-        # Test eval with zero-order polynomial and non-zero-order derivative
-        # Manually set derivative to bypass numerator shape check
-        p_const3 = Polynomial([9.])
-        p_deriv3 = Polynomial([2., 1.])  # 2x + 1, order 1
-        p_const3._derivs['t'] = p_deriv3
-        result3 = p_const3.eval(8., recursive=True)
-        self.assertEqual(result3.values, 9.)
-        self.assertEqual(result3.d_dt.values, 1.)
+def test_polynomial_basic_test_as_polynomial_with_recursive_false() -> None:
+    """Test as_polynomial with recursive=False."""
 
-        # Test eval with zero-order polynomial, zero-order derivative with zero-order nested derivative
-        p_const2 = Polynomial([7.])
-        p_deriv2 = Polynomial([4.])
-        p_const2.insert_deriv('t', p_deriv2)
-        p_const2._derivs['t']._derivs = {'s': Polynomial([0.5])}
-        result2 = p_const2.eval(5., recursive=True)
-        self.assertEqual(result2.values, 7.)
-        self.assertEqual(result2.d_dt.values, 4.)
+    np.random.seed(2599)
 
-        # Test eval with zero-order polynomial, non-zero-order derivative with nested derivatives
-        p_const4 = Polynomial([11.])
-        p_deriv4 = Polynomial([1., 5.])  # x + 5, order 1
-        p_nested_zero = Polynomial([6.])  # zero-order nested
-        p_nested_nonzero = Polynomial([2., 3.])  # 2x + 3, order 1 nested
-        p_deriv4._derivs = {'v': p_nested_zero, 'w': p_nested_nonzero}
-        p_const4._derivs['t'] = p_deriv4
-        result4 = p_const4.eval(12., recursive=True)
-        self.assertEqual(result4.values, 11.)
-        self.assertEqual(result4.d_dt.values, 5.)
+    v3 = Vector([1., 2., 3.])
+    v3.insert_deriv('t', Vector([0., 1., 2.]))
+    p_no_rec = Polynomial.as_polynomial(v3, recursive=False)
+    assert not hasattr(p_no_rec, 'd_dt')
+    p_no_rec2 = Polynomial.as_polynomial([1., 2.], recursive=False)
+    assert type(p_no_rec2) == Polynomial
 
-        # Test eval with zero-order polynomial, non-zero-order derivative with nested derivative that has drank > 0
-        p_const5 = Polynomial([13.])
-        p_deriv5 = Polynomial([3., 7.])  # 3x + 7, order 1
-        p_nested_with_drank = Polynomial(np.array([8.]).reshape(1, 1), drank=1)  # zero-order with drank > 0
-        p_deriv5._derivs = {'u': p_nested_with_drank}
-        p_const5._derivs['t'] = p_deriv5
-        result5 = p_const5.eval(14., recursive=True)
-        self.assertEqual(result5.values, 13.)
-        self.assertEqual(result5.d_dt.values, 7.)
+
+def test_polynomial_basic_test_as_vector_with_recursive_false() -> None:
+    """Test as_vector with recursive=False."""
+
+    np.random.seed(2599)
+
+    p_with_deriv2 = Polynomial([1., 2.])
+    p_with_deriv2.insert_deriv('t', Polynomial([0., 1.]))
+    v_no_rec = p_with_deriv2.as_vector(recursive=False)
+
+    assert type(v_no_rec) == Vector
+    # The _derivs might still exist from __dict__ copy, but the code path is tested
+
+
+def test_polynomial_basic_test_at_least_order_with_recursive_false_when_already_order() -> None:
+    """Test at_least_order with recursive=False when already >= order."""
+
+    np.random.seed(2599)
+
+    p_large2 = Polynomial([1., 2., 3., 4.])
+    p_large3 = p_large2.at_least_order(2, recursive=False)
+    assert p_large3.order == 3
+
+
+def test_polynomial_basic_test_at_least_order_with_derivatives() -> None:
+    """Test at_least_order with derivatives."""
+
+    np.random.seed(2599)
+
+    p_with_deriv3 = Polynomial([1., 2.])
+    p_with_deriv3.insert_deriv('t', Polynomial([0., 1.]))
+    p_padded = p_with_deriv3.at_least_order(3, recursive=True)
+    assert hasattr(p_padded, 'd_dt')
+    assert p_padded.d_dt.order == 3
+
+
+def test_polynomial_basic_test_as_vector_with_recursive_true() -> None:
+    """Test as_vector with recursive=True."""
+
+    np.random.seed(2599)
+
+    p_asvec_deriv = Polynomial([1., 2.])
+    p_asvec_deriv.insert_deriv('t', Polynomial([0., 1.]))
+    v_with_deriv = p_asvec_deriv.as_vector(recursive=True)
+    assert hasattr(v_with_deriv, 'd_dt')
+
+    assert type(v_with_deriv.d_dt) == Vector
+
+
+def test_polynomial_basic_test_eval_with_zero_order_polynomial_and_zero_order_derivati() -> None:
+    """Test eval with zero-order polynomial and zero-order derivative."""
+
+    np.random.seed(2599)
+
+    p_const = Polynomial([5.])
+    p_deriv = Polynomial([3.])
+    p_const.insert_deriv('t', p_deriv)
+    result = p_const.eval(10., recursive=True)
+    assert result.values == 5.
+    assert result.d_dt.values == 3.
+
+
+def test_polynomial_basic_test_eval_with_zero_order_polynomial_and_non_zero_order_deri() -> None:
+    """Test eval with zero-order polynomial and non-zero-order derivative # Manually set derivative to bypass numerator shape check."""
+
+    np.random.seed(2599)
+
+    p_const3 = Polynomial([9.])
+    p_deriv3 = Polynomial([2., 1.])  # 2x + 1, order 1
+    p_const3._derivs['t'] = p_deriv3
+    result3 = p_const3.eval(8., recursive=True)
+    assert result3.values == 9.
+    assert result3.d_dt.values == 1.
+
+
+def test_polynomial_basic_test_eval_with_zero_order_polynomial_zero_order_derivative_w() -> None:
+    """Test eval with zero-order polynomial, zero-order derivative with zero-order nested derivative."""
+
+    np.random.seed(2599)
+
+    p_const2 = Polynomial([7.])
+    p_deriv2 = Polynomial([4.])
+    p_const2.insert_deriv('t', p_deriv2)
+    p_const2._derivs['t']._derivs = {'s': Polynomial([0.5])}
+    result2 = p_const2.eval(5., recursive=True)
+    assert result2.values == 7.
+    assert result2.d_dt.values == 4.
+
+
+def test_polynomial_basic_test_eval_with_zero_order_polynomial_non_zero_order_derivati() -> None:
+    """Test eval with zero-order polynomial, non-zero-order derivative with nested derivatives."""
+
+    np.random.seed(2599)
+
+    p_const4 = Polynomial([11.])
+    p_deriv4 = Polynomial([1., 5.])  # x + 5, order 1
+    p_nested_zero = Polynomial([6.])  # zero-order nested
+    p_nested_nonzero = Polynomial([2., 3.])  # 2x + 3, order 1 nested
+    p_deriv4._derivs = {'v': p_nested_zero, 'w': p_nested_nonzero}
+    p_const4._derivs['t'] = p_deriv4
+    result4 = p_const4.eval(12., recursive=True)
+    assert result4.values == 11.
+    assert result4.d_dt.values == 5.
+
+
+def test_polynomial_basic_test_eval_with_zero_order_polynomial_non_zero_order_derivati_2() -> None:
+    """Test eval with zero-order polynomial, non-zero-order derivative with nested derivative that has drank > 0."""
+
+    np.random.seed(2599)
+
+    p_const5 = Polynomial([13.])
+    p_deriv5 = Polynomial([3., 7.])  # 3x + 7, order 1
+    p_nested_with_drank = Polynomial(np.array([8.]).reshape(1, 1), drank=1)  # zero-order with drank > 0
+    p_deriv5._derivs = {'u': p_nested_with_drank}
+    p_const5._derivs['t'] = p_deriv5
+    result5 = p_const5.eval(14., recursive=True)
+    assert result5.values == 13.
+    assert result5.d_dt.values == 7.
+
+
+def test_polynomial_basic_construction_from_a_vector_copies_the_derivs() -> None:
+    """A Polynomial built from a Vector does not share the Vector's derivative dict."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([1., 0.]))
+    p = Polynomial(v)
+    assert p._derivs is not v._derivs
+
+    p.insert_deriv('x', Vector([0., 1.]))
+    assert 'x' in p.derivs
+    assert 'x' not in v.derivs
+
+
+def test_polynomial_basic_as_vector_leaves_this_polynomial_unchanged() -> None:
+    """as_vector() does not downgrade the derivatives held by the original Polynomial."""
+
+    p = Polynomial([1., 2.])
+    p.insert_deriv('t', Polynomial([1., 0.]))
+    v = p.as_vector()
+    assert type(p.derivs['t']) is Polynomial
+    assert type(v.derivs['t']) is Vector
+
+
+def test_polynomial_construction_converts_vector_derivs() -> None:
+    """A Polynomial built from a Vector converts the Vector's derivatives."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([0., 1.]))
+    p = Polynomial(v)
+    assert type(p.derivs['t']) is Polynomial
+    assert type(p.d_dt) is Polynomial
+
+
+def test_polynomial_construction_deriv_attribute_matches_dict() -> None:
+    """The derivative attribute and the derivative dictionary hold the same object."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([0., 1.]))
+
+    class PolySubclass(Polynomial):
+        pass
+
+    for p in (Polynomial(v), PolySubclass(v)):
+        assert p.d_dt is p.derivs['t']
+
+
+def test_polynomial_construction_leaves_polynomial_derivs_alone() -> None:
+    """A derivative that is already a Polynomial is carried over unchanged."""
+
+    p = Polynomial([1., 2.])
+    p.insert_deriv('t', Polynomial([0., 1.]))
+    assert Polynomial(p).d_dt is p.d_dt
+
+
+def test_polynomial_construction_does_not_alter_the_source_vector() -> None:
+    """Converting a Vector to a Polynomial leaves the Vector's derivatives as Vectors."""
+
+    v = Vector([1., 2.])
+    v.insert_deriv('t', Vector([0., 1.]))
+    Polynomial(v)
+    assert type(v.derivs['t']) is Vector
+    assert type(v.d_dt) is Vector
+
+
+def test_polynomial_invert_line_derivative_values() -> None:
+    """invert_line() propagates derivatives by the chain rule."""
+
+    p = Polynomial([2., 3.])                    # y = 2x + 3
+    p.insert_deriv('t', Polynomial([1., 4.]))   # da/dt = 1, db/dt = 4
+
+    inv = p.invert_line()
+    assert type(inv.d_dt) is Polynomial
+    assert inv.d_dt.values[0] == pytest.approx(-0.25)    # -da/a**2
+    assert inv.d_dt.values[1] == pytest.approx(-1.25)    # -db/a + b*da/a**2
+
+
+def test_polynomial_invert_line_derivative_matches_finite_difference() -> None:
+    """The derivatives from invert_line() match a finite-difference estimate."""
+
+    a, b, da, db = 2., 3., 1., 4.
+    eps = 1.e-7
+
+    p = Polynomial([a, b])
+    p.insert_deriv('t', Polynomial([da, db]))
+    inv = p.invert_line()
+
+    nudged = Polynomial([a + da*eps, b + db*eps]).invert_line()
+    expected = (nudged.values - inv.values) / eps
+    assert inv.d_dt.values[0] == pytest.approx(expected[0], abs=1.e-6)
+    assert inv.d_dt.values[1] == pytest.approx(expected[1], abs=1.e-6)
+
+
+def test_polynomial_invert_line_two_derivatives() -> None:
+    """invert_line() propagates every derivative independently."""
+
+    p = Polynomial([2., 3.])
+    p.insert_deriv('t', Polynomial([1., 4.]))
+    p.insert_deriv('u', Polynomial([0., 1.]))
+
+    inv = p.invert_line()
+    assert inv.d_du.values[0] == pytest.approx(0.)       # -0/a**2
+    assert inv.d_du.values[1] == pytest.approx(-0.5)     # -1/a
+
+
+def test_polynomial_invert_line_not_recursive() -> None:
+    """invert_line(recursive=False) returns a Polynomial without derivatives."""
+
+    p = Polynomial([2., 3.])
+    p.insert_deriv('t', Polynomial([1., 4.]))
+
+    inv = p.invert_line(recursive=False)
+    assert type(inv) is Polynomial
+    assert inv.derivs == {}
+
+
+def test_polynomial_invert_line_masks_zero_slope() -> None:
+    """invert_line() masks any element whose leading coefficient is zero."""
+
+    p = Polynomial(np.array([[2., 3.], [0., 5.]]))
+    inv = p.invert_line()
+    assert not inv.mask[0]
+    assert inv.mask[1]
+
 
 ##########################################################################################

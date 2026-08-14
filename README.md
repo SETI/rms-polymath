@@ -22,6 +22,8 @@
 [![Number of GitHub stars](https://img.shields.io/github/stars/SETI/rms-polymath)](https://github.com/SETI/rms-polymath/stargazers)
 ![GitHub forks](https://img.shields.io/github/forks/SETI/rms-polymath)
 
+<!-- start-after-point -->
+
 # Introduction
 
 `PolyMath` expands on the NumPy module and introduces a variety of additional data types
@@ -40,12 +42,16 @@ pip install rms-polymath
 
 The typical way to use this is just to include this line in your programs:
 
-    import polymath
+```python
+import polymath
+```
 
 or
 
-    from polymath import (Boolean, Matrix, Matrix3, Pair, Quaternion, Qube, Scalar, Unit,
-                          Vector, Vector3)
+```python
+from polymath import (Boolean, Matrix, Matrix3, Pair, Quaternion, Qube, Scalar, Unit,
+                      Vector, Vector3)
+```
 
 # Features
 
@@ -65,6 +71,9 @@ The PolyMath classes are:
   A subclass of `Matrix` representing a unitary 3x3 rotation matrix.
 * `Quaternion`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Quaternion):
   A subclass of `Vector` representing a 4-component quaternion.
+* `Polynomial`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Polynomial):
+  A subclass of `Vector` representing the coefficients of a polynomial in one variable,
+  in order of decreasing exponent.
 * `Boolean`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Boolean):
   A True or False value.
 * `Qube`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube):
@@ -82,11 +91,15 @@ any need to ever do "index bookkeeping". For example, suppose **S** is a Scalar 
 `Vector`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Vector).
 Then, in PolyMath, you can write:
 
-    S * V
+```python
+S * V
+```
 
 whereas, in NumPy, you would have to write:
 
-    S[..., np.newaxis] * V
+```python
+S[..., np.newaxis] * V
+```
 
 to get the same result. This capability makes it possible to write out algorithms as if
 each operation is on a single vector, scalar, or matrix, ignoring the internal
@@ -563,6 +576,29 @@ instead. The
 `readonly` property is True if the object is read-only; False if it is
 read-write.
 
+## Custom Attributes
+
+The
+`add_attr()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.add_attr)
+method attaches an attribute of your own choosing to an object,
+letting additional information travel alongside it. After:
+
+```python
+obj.add_attr('label', 'north pole')
+```
+
+the value is available as **obj.label**, and every copy and clone of the object carries it
+too. The value itself is not copied; each copy refers to the same value. An operation that
+computes new values, such as **-obj** or **obj + 1**, describes a different quantity, so
+its result does not carry the attribute.
+
+An attribute that the object already has cannot be replaced in this way, and a name
+beginning with "d_d" is disallowed because that prefix is reserved for derivatives.
+However, an attribute that
+`add_attr()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.add_attr)
+added earlier can be given a new value,
+either by calling the method again or by direct assignment.
+
 ## Alternative Constructors
 
 Aside from the explicit constructor methods, numerous methods are available to construct
@@ -742,10 +778,10 @@ Information on contributing to this package can be found in the
 
 # Links
 
-- [Documentation](https://rms-polymath.readthedocs.io)
-- [Repository](https://github.com/SETI/rms-polymath)
-- [Issue tracker](https://github.com/SETI/rms-polymath/issues)
-- [PyPi](https://pypi.org/project/rms-polymath)
+* [Documentation](https://rms-polymath.readthedocs.io)
+* [Repository](https://github.com/SETI/rms-polymath)
+* [Issue tracker](https://github.com/SETI/rms-polymath/issues)
+* [PyPi](https://pypi.org/project/rms-polymath)
 
 # Licensing
 

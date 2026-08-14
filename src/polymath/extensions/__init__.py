@@ -1,0 +1,294 @@
+################################################################################
+# polymath/extensions/__init__.py
+################################################################################
+
+from polymath.qube import Qube
+
+from polymath.extensions import attr_ops
+Qube.add_attr           = attr_ops.add_attr
+
+from polymath.extensions import broadcaster
+Qube.broadcast_into_shape = broadcaster.broadcast_into_shape
+Qube.broadcast_to       = broadcaster.broadcast_to
+Qube.broadcasted_shape  = broadcaster.broadcasted_shape
+Qube.broadcast          = broadcaster.broadcast
+
+from polymath.extensions import casting
+Qube.as_one_bool        = casting.as_one_bool
+Qube.is_one_true        = casting.is_one_true
+Qube.is_one_false       = casting.is_one_false
+Qube._is_one_value      = casting._is_one_value
+Qube.as_this_type       = casting.as_this_type
+Qube._deriv_classes     = casting._deriv_classes
+Qube._castable_to       = casting._castable_to
+Qube.cast               = casting.cast
+Qube.as_all_constant    = casting.as_all_constant
+Qube.as_size_zero       = casting.as_size_zero
+
+from polymath.extensions import deriv_ops
+Qube.insert_deriv       = deriv_ops.insert_deriv
+Qube.insert_derivs      = deriv_ops.insert_derivs
+Qube.delete_deriv       = deriv_ops.delete_deriv
+Qube.delete_derivs      = deriv_ops.delete_derivs
+Qube.without_derivs     = deriv_ops.without_derivs
+Qube.wod                = deriv_ops.wod
+Qube.without_deriv      = deriv_ops.without_deriv
+Qube.with_deriv         = deriv_ops.with_deriv
+Qube.rename_deriv       = deriv_ops.rename_deriv
+Qube.unique_deriv_name  = deriv_ops.unique_deriv_name
+
+from polymath.extensions import dtypes
+Qube._has_qube          = dtypes._has_qube
+Qube._has_masked_array  = dtypes._has_masked_array
+Qube._as_values_and_mask = dtypes._as_values_and_mask
+Qube._dtype_and_value   = dtypes._dtype_and_value
+Qube._array_dtype_and_value = dtypes._array_dtype_and_value
+Qube._dtype             = dtypes._dtype
+Qube._casted_to_dtype   = dtypes._casted_to_dtype
+# These three take the class as their first argument. A module-level @classmethod is not
+# a function, which stubtest rejects, so the decorator is applied here instead.
+Qube._suitable_dtype    = classmethod(dtypes._suitable_dtype)
+Qube._suitable_numer    = classmethod(dtypes._suitable_numer)
+Qube._suitable_value    = classmethod(dtypes._suitable_value)
+Qube.dtype              = dtypes.dtype
+Qube.is_numeric         = dtypes.is_numeric
+Qube.as_numeric         = dtypes.as_numeric
+Qube.is_float           = dtypes.is_float
+Qube.as_float           = dtypes.as_float
+Qube.is_int             = dtypes.is_int
+Qube.as_int             = dtypes.as_int
+Qube.is_bool            = dtypes.is_bool
+Qube.as_bool            = dtypes.as_bool
+
+from polymath.extensions import errors
+Qube._opstr             = errors._opstr
+Qube._disallow_denom    = errors._disallow_denom
+Qube._require_scalar    = errors._require_scalar
+Qube._require_axis_in_range     = errors._require_axis_in_range
+Qube._raise_unsupported_op      = errors._raise_unsupported_op
+Qube._raise_incompatible_shape  = errors._raise_incompatible_shape
+Qube._raise_incompatible_numers = errors._raise_incompatible_numers
+Qube._raise_incompatible_denoms = errors._raise_incompatible_denoms
+Qube._raise_dual_denoms         = errors._raise_dual_denoms
+
+from polymath.extensions import indexer
+Qube.__getitem__        = indexer.__getitem__
+Qube.__setitem__        = indexer.__setitem__
+Qube._prep_index        = indexer._prep_index
+Qube._prep_scalar_index = indexer._prep_scalar_index
+
+from polymath.extensions import item_ops
+Qube.extract_numer      = item_ops.extract_numer
+Qube.extract_denom      = item_ops.extract_denom
+Qube.extract_denoms     = item_ops.extract_denoms
+Qube.slice_numer        = item_ops.slice_numer
+Qube.transpose_numer    = item_ops.transpose_numer
+Qube.reshape_numer      = item_ops.reshape_numer
+Qube.flatten_numer      = item_ops.flatten_numer
+Qube.transpose_denom    = item_ops.transpose_denom
+Qube.reshape_denom      = item_ops.reshape_denom
+Qube.flatten_denom      = item_ops.flatten_denom
+Qube.join_items         = item_ops.join_items
+Qube.split_items        = item_ops.split_items
+Qube.swap_items         = item_ops.swap_items
+Qube.chain              = item_ops.chain
+Qube.__matmul__         = item_ops.__matmul__
+
+from polymath.extensions import iterator
+Qube.__iter__           = iterator.__iter__
+Qube.ndenumerate        = iterator.ndenumerate
+
+from polymath.extensions import masking
+Qube._as_mask           = masking._as_mask
+Qube._suitable_mask     = masking._suitable_mask
+Qube.or_                = masking.or_
+Qube.and_               = masking.and_
+Qube.is_all_masked      = masking.is_all_masked
+Qube.count_masked       = masking.count_masked
+Qube.count_unmasked     = masking.count_unmasked
+Qube.masked_single      = masking.masked_single
+Qube.without_mask       = masking.without_mask
+Qube.as_all_masked      = masking.as_all_masked
+Qube.as_one_masked      = masking.as_one_masked
+Qube.remask             = masking.remask
+Qube.remask_or          = masking.remask_or
+Qube.expand_mask        = masking.expand_mask
+Qube.collapse_mask      = masking.collapse_mask
+Qube.as_mask_where_nonzero = masking.as_mask_where_nonzero
+Qube.as_mask_where_zero    = masking.as_mask_where_zero
+Qube.as_mask_where_nonzero_or_masked = masking.as_mask_where_nonzero_or_masked
+Qube.as_mask_where_zero_or_masked    = masking.as_mask_where_zero_or_masked
+
+from polymath.extensions import math_ops
+Qube.__pos__            = math_ops.__pos__
+Qube.__neg__            = math_ops.__neg__
+Qube.__abs__            = math_ops.__abs__
+Qube.abs                = math_ops.abs
+Qube.__len__            = math_ops.__len__
+Qube.len                = math_ops.len
+Qube.__add__            = math_ops.__add__
+Qube.__radd__           = math_ops.__radd__
+Qube.__iadd__           = math_ops.__iadd__
+Qube._add_derivs        = math_ops._add_derivs
+Qube.__sub__            = math_ops.__sub__
+Qube.__rsub__           = math_ops.__rsub__
+Qube.__isub__           = math_ops.__isub__
+Qube._sub_derivs        = math_ops._sub_derivs
+Qube.__mul__            = math_ops.__mul__
+Qube.__rmul__           = math_ops.__rmul__
+Qube.__imul__           = math_ops.__imul__
+Qube._mul_by_number     = math_ops._mul_by_number
+Qube._mul_by_scalar     = math_ops._mul_by_scalar
+Qube._mul_derivs        = math_ops._mul_derivs
+Qube.__truediv__        = math_ops.__truediv__
+Qube.__rtruediv__       = math_ops.__rtruediv__
+Qube.__itruediv__       = math_ops.__itruediv__
+Qube._div_by_number     = math_ops._div_by_number
+Qube._div_by_scalar     = math_ops._div_by_scalar
+Qube._div_derivs        = math_ops._div_derivs
+Qube.__floordiv__       = math_ops.__floordiv__
+Qube.__rfloordiv__      = math_ops.__rfloordiv__
+Qube.__ifloordiv__      = math_ops.__ifloordiv__
+Qube._floordiv_by_number = math_ops._floordiv_by_number
+Qube._floordiv_by_scalar = math_ops._floordiv_by_scalar
+Qube.__mod__            = math_ops.__mod__
+Qube.__rmod__           = math_ops.__rmod__
+Qube.__imod__           = math_ops.__imod__
+Qube._mod_by_number     = math_ops._mod_by_number
+Qube._mod_by_scalar     = math_ops._mod_by_scalar
+Qube.__pow__            = math_ops.__pow__
+Qube.__ipow__           = math_ops.__ipow__
+Qube._compatible_arg    = math_ops._compatible_arg
+Qube.__eq__             = math_ops.__eq__
+Qube.__ne__             = math_ops.__ne__
+Qube.__lt__             = math_ops.__lt__
+Qube.__gt__             = math_ops.__gt__
+Qube.__le__             = math_ops.__le__
+Qube.__ge__             = math_ops.__ge__
+Qube.__bool__           = math_ops.__bool__
+Qube.__float__          = math_ops.__float__
+Qube.__int__            = math_ops.__int__
+Qube.__invert__         = math_ops.__invert__
+Qube.__and__            = math_ops.__and__
+Qube.__rand__           = math_ops.__rand__
+Qube.__or__             = math_ops.__or__
+Qube.__ror__            = math_ops.__ror__
+Qube.__xor__            = math_ops.__xor__
+Qube.__rxor__           = math_ops.__rxor__
+Qube.__iand__           = math_ops.__iand__
+Qube.__ior__            = math_ops.__ior__
+Qube.__ixor__           = math_ops.__ixor__
+Qube.logical_not        = math_ops.logical_not
+Qube.any                = math_ops.any
+Qube.all                = math_ops.all
+Qube.any_true_or_masked = math_ops.any_true_or_masked
+Qube.all_true_or_masked = math_ops.all_true_or_masked
+Qube.reciprocal         = math_ops.reciprocal
+Qube.zero               = math_ops.zero
+Qube.identity           = math_ops.identity
+Qube.sum                = math_ops.sum
+Qube.mean               = math_ops.mean
+
+# Defining __eq__ inside a class body makes Python set __hash__ to None. These operators
+# are bound after the class is created, so that never happened, leaving Qube with the
+# default hash by identity even though it compares by value. Two equal objects then hashed
+# differently, so a Qube used as a dictionary key could not be looked up again. Qube is
+# also mutable, which rules out hashing by value. Say so explicitly.
+Qube.__hash__ = None
+
+from polymath.extensions import mask_ops
+Qube.mask_where         = mask_ops.mask_where
+Qube.mask_where_eq      = mask_ops.mask_where_eq
+Qube.mask_where_ne      = mask_ops.mask_where_ne
+Qube.mask_where_le      = mask_ops.mask_where_le
+Qube.mask_where_ge      = mask_ops.mask_where_ge
+Qube.mask_where_lt      = mask_ops.mask_where_lt
+Qube.mask_where_gt      = mask_ops.mask_where_gt
+Qube.mask_where_between = mask_ops.mask_where_between
+Qube.mask_where_outside = mask_ops.mask_where_outside
+Qube.clip               = mask_ops.clip
+Qube.is_below           = mask_ops.is_below
+Qube.is_above           = mask_ops.is_above
+Qube.is_outside         = mask_ops.is_outside
+Qube.is_inside          = mask_ops.is_inside
+
+from polymath.extensions import vector_ops
+Qube._mean_or_sum       = vector_ops._mean_or_sum
+Qube._check_axis        = vector_ops._check_axis
+Qube._zero_sized_result = vector_ops._zero_sized_result
+Qube.dot                = vector_ops.dot
+Qube.norm               = vector_ops.norm
+Qube.norm_sq            = vector_ops.norm_sq
+Qube.cross              = vector_ops.cross
+Qube.outer              = vector_ops.outer
+Qube.as_diagonal        = vector_ops.as_diagonal
+Qube.rms                = vector_ops.rms
+
+from polymath.extensions import pickler
+# The pickler module itself is documented through docs/module.rst, rather than bound
+# onto Qube, where a non-callable module attribute in every object's namespace surprised
+# anyone who reached for it expecting a method.
+Qube.__getstate__       = pickler.__getstate__
+Qube.__setstate__       = pickler.__setstate__
+Qube._encode_floats     = pickler._encode_floats
+Qube._decode_floats     = pickler._decode_floats
+Qube._encode_ints       = pickler._encode_ints
+Qube._decode_ints       = pickler._decode_ints
+Qube._encode_bools      = pickler._encode_bools
+Qube._decode_bools      = pickler._decode_bools
+Qube.pickle_digits      = pickler.pickle_digits
+Qube.pickle_reference   = pickler.pickle_reference
+Qube.set_pickle_digits         = pickler.set_pickle_digits
+Qube.set_default_pickle_digits = pickler.set_default_pickle_digits
+Qube._check_pickle_digits      = pickler._check_pickle_digits
+Qube._pickle_debug             = pickler._pickle_debug
+
+from polymath.extensions import readonly_ops
+Qube._array_is_readonly = readonly_ops._array_is_readonly
+Qube._array_to_readonly = readonly_ops._array_to_readonly
+Qube.as_readonly        = readonly_ops.as_readonly
+Qube.match_readonly     = readonly_ops.match_readonly
+Qube.require_writeable  = readonly_ops.require_writeable
+Qube.require_writable   = readonly_ops.require_writable
+Qube.copy               = readonly_ops.copy
+Qube.__copy__           = readonly_ops.__copy__
+
+from polymath.extensions import shaper
+Qube.reshape            = shaper.reshape
+Qube.flatten            = shaper.flatten
+Qube.swap_axes          = shaper.swap_axes
+Qube.roll_axis          = shaper.roll_axis
+Qube.move_axis          = shaper.move_axis
+Qube.stack              = shaper.stack
+
+from polymath.extensions import shrinker
+Qube.shrink             = shrinker.shrink
+Qube.unshrink           = shrinker.unshrink
+
+from polymath.extensions import tvl
+Qube.tvl_and            = tvl.tvl_and
+Qube.tvl_or             = tvl.tvl_or
+Qube.tvl_any            = tvl.tvl_any
+Qube.tvl_all            = tvl.tvl_all
+Qube.tvl_eq             = tvl.tvl_eq
+Qube.tvl_ne             = tvl.tvl_ne
+Qube.tvl_lt             = tvl.tvl_lt
+Qube.tvl_gt             = tvl.tvl_gt
+Qube.tvl_le             = tvl.tvl_le
+Qube.tvl_ge             = tvl.tvl_ge
+Qube._tvl_op            = tvl._tvl_op
+
+from polymath.extensions import unit_ops
+Qube.set_unit           = unit_ops.set_unit
+Qube.without_unit       = unit_ops.without_unit
+Qube.into_unit          = unit_ops.into_unit
+Qube.confirm_unit       = unit_ops.confirm_unit
+Qube.is_unitless        = unit_ops.is_unitless
+Qube._require_unitless  = unit_ops._require_unitless
+Qube._require_angle     = unit_ops._require_angle
+Qube._require_compatible_units = unit_ops._require_compatible_units
+
+# This module exports no names of its own; it binds the extension methods onto Qube.
+__all__ = []
+
+################################################################################

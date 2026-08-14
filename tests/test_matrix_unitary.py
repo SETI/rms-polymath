@@ -3,39 +3,51 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
 
 from polymath import Matrix3, Matrix
 
 
-class Test_Matrix_unitary(unittest.TestCase):
+def test_matrix_unitary_matrices_10_perturbed_from_unitary() -> None:
+    """Matrices 10% perturbed from unitary."""
 
-    def runTest(self):
+    np.random.seed(2163)
 
-        np.random.seed(2163)
+    N = 100
+    SCALE = 0.1
+    euler = (np.random.rand(N) * 2.*np.pi,
+             np.random.rand(N) * 2.*np.pi,
+             np.random.rand(N) * 2.*np.pi)
+    a = Matrix(Matrix3.from_euler(*euler))
+    a += SCALE * Matrix(np.random.randn(N,3,3))
+    b = a.unitary()
+    assert b.count_masked() == 0
 
-        # Matrices 10% perturbed from unitary
-        N = 100
-        SCALE = 0.1
-        euler = (np.random.rand(N) * 2.*np.pi,
-                 np.random.rand(N) * 2.*np.pi,
-                 np.random.rand(N) * 2.*np.pi)
 
-        a = Matrix(Matrix3.from_euler(*euler))
-        a += SCALE * Matrix(np.random.randn(N,3,3))
-        b = a.unitary()
-        self.assertEqual(b.count_masked(), 0)
+def test_matrix_unitary_matrices_30_perturbed_from_unitary() -> None:
+    """Matrices 30% perturbed from unitary."""
 
-        # Matrices 30% perturbed from unitary
-        N = 100
-        SCALE = 0.3
-        euler = (np.random.rand(N) * 2.*np.pi,
-                 np.random.rand(N) * 2.*np.pi,
-                 np.random.rand(N) * 2.*np.pi)
+    np.random.seed(2163)
 
-        a = Matrix(Matrix3.from_euler(*euler))
-        a += SCALE * Matrix(np.random.randn(N,3,3))
-        b = a.unitary()
-        self.assertTrue(b.count_masked() <= 30)
+    N = 100
+    SCALE = 0.3
+    euler = (np.random.rand(N) * 2.*np.pi,
+             np.random.rand(N) * 2.*np.pi,
+             np.random.rand(N) * 2.*np.pi)
+    a = Matrix(Matrix3.from_euler(*euler))
+    a += SCALE * Matrix(np.random.randn(N,3,3))
+    b = a.unitary()
+    assert (b.count_masked() <= 30)
+
+
+def test_matrix_unitary_accepts_a_numpy_false_mask() -> None:
+    """A mask of np.False_ is recognized as unmasked, as a Python False is."""
+
+    m = Matrix3(np.eye(3))
+    m._mask = np.False_
+
+    result = m.unitary()
+    assert type(result) is Matrix3
+    assert not np.any(result.mask)
+
 
 ##########################################################################################

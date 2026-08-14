@@ -1,3 +1,9 @@
+# Ruff is the linter of record for everything it implements; see [tool.ruff] in
+# pyproject.toml. Ruff has no rule in the E121-E133 range, so the
+# continuation-line indent checks come from flake8, and CI and
+# scripts/run-all-checks.sh read the per-file-ignores below when they run
+# `flake8 --select=E12,E13`. For every other code, this file is for anyone
+# running flake8 by hand and is not authoritative.
 [flake8]
 max-line-length: 90
 extend-ignore =
@@ -22,7 +28,17 @@ per-file-ignores =
     quaternion.py: E115, E128
 
     # E121 Continuation line under-indented for hanging indent
-    scalar.py: E121
+    # E126 Continuation line over-indented for hanging indent
+    # E131 Continuation line unaligned for hanging indent
+    # The _EASY_INT_POWERS and _EASY_FLOAT_POWERS tables align their keys on the
+    # digit rather than the sign, so that -1 lines up under 0; that alignment is
+    # deliberate and puts the entries off a four-space grid.
+    scalar.py: E121, E126, E131
+
+    # E127 Continuation line over-indented for visual indent
+    # to_ra_dec_length() builds a 3x3 rotation from a stacked literal whose rows
+    # are aligned as a matrix, which costs one column where a term has no sign.
+    matrix3.py: E127
 
     # E302 Expected 2 blank lines, found 0
     item_ops.py: E302
@@ -51,6 +67,10 @@ per-file-ignores =
     # E501 Line too long (82 > 79 characters)
     # E712 Comparison to true should be 'if cond is true:' or 'if cond:'
     tests/*: E127, E128, E225, E228, E231, E251, E261, F403, E501, E712
+
+    # F401 Imported but unused. Stub files re-export names using the redundant
+    # "X as X" form, which flake8 does not recognize as a re-export.
+    *.pyi: F401
 
 # E111 Indentation is not a multiple of four
 # E114 Indentation is not a multiple of four (comment)

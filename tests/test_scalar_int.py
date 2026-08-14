@@ -3,106 +3,150 @@
 ##########################################################################################
 
 import numpy as np
-import unittest
+import pytest
 
 from polymath import Scalar, Unit
 
 
-class Test_Scalar_int(unittest.TestCase):
+def test_scalar_int_individual_values() -> None:
+    """Individual values."""
 
-    def runTest(self):
+    np.random.seed(4353)
 
-        np.random.seed(4353)
+    assert Scalar( 1.2).int() == 1
+    assert Scalar(-1.2).int() == -2
+    assert Scalar( 1).int() == 1
+    assert Scalar(-1).int() == -1
+    assert Scalar(1.2,True).int() == Scalar(0.).masked_single()
+    assert Scalar(1,  True).int() == Scalar(0.).masked_single()
 
-        # Individual values
-        self.assertEqual(Scalar( 1.2).int(),  1)
-        self.assertEqual(Scalar(-1.2).int(), -2)
-        self.assertEqual(Scalar( 1).int(),  1)
-        self.assertEqual(Scalar(-1).int(), -1)
+    assert Scalar((1.2, -1.2)).int() == (1,-2)
+    assert not Scalar((1.2, -1.2)).int().is_float()
+    assert Scalar((1, -1)).int() == (1,-1)
+    assert not Scalar((1.2, -1.2)).int().is_float()
 
-        self.assertEqual(Scalar(1.2,True).int(), Scalar(0.).masked_single())
-        self.assertEqual(Scalar(1,  True).int(), Scalar(0.).masked_single())
+    N = 1000
+    values = np.random.randn(N) * 10.
+    random = Scalar(values)
+    irandom = random.int()
+    for i in range(N):
+        assert irandom[i] == int(np.floor(values[i]))
+    for i in range(N-1):
+        assert random[i:i+2].int() == np.floor(values[i:i+2])
 
-        # Multiple values
-        self.assertEqual(Scalar((1.2, -1.2)).int(), (1,-2))
-        self.assertFalse(Scalar((1.2, -1.2)).int().is_float())
+    values = np.random.randn(10) * 10.
+    random = Scalar(values, unit=Unit.KM)
+    with pytest.raises(ValueError):
+        Scalar.int(random)
+    random = Scalar(values, unit=Unit.DEG)
+    with pytest.raises(ValueError):
+        Scalar.int(random)
+    random = Scalar(3.14, unit=Unit.UNITLESS)
+    assert random.int() == 3
 
-        self.assertEqual(Scalar((1, -1)).int(), (1,-1))
-        self.assertFalse(Scalar((1.2, -1.2)).int().is_float())
 
-        # Arrays
-        N = 1000
-        values = np.random.randn(N) * 10.
-        random = Scalar(values)
-        irandom = random.int()
-        for i in range(N):
-            self.assertEqual(irandom[i], int(np.floor(values[i])))
+def test_scalar_int_denominators_are_disallowed() -> None:
+    """Denominators are disallowed."""
 
-        for i in range(N-1):
-            self.assertEqual(random[i:i+2].int(), np.floor(values[i:i+2]))
+    a = Scalar([[1., 2.], [3., 4.]], drank=1)
+    with pytest.raises(ValueError, match='does not support denominators'):
+        a.int()
 
-        # Unit should be disallowed
-        values = np.random.randn(10) * 10.
-        random = Scalar(values, unit=Unit.KM)
-        self.assertRaises(ValueError, Scalar.int, random)
 
-        random = Scalar(values, unit=Unit.DEG)
-        self.assertRaises(ValueError, Scalar.int, random)
+def test_scalar_int_shift_of_a_shapeless_value() -> None:
+    """A shapeless value equal to top shifts down by one; a smaller value does not."""
 
-        random = Scalar(3.14, unit=Unit.UNITLESS)
-        self.assertEqual(random.int(), 3)
+    assert Scalar(3.).int(3, shift=True) == 2
+    assert Scalar(3).int(3, shift=True) == 2
+    assert Scalar(2.9).int(3, shift=True) == 2
+    assert Scalar(0.5).int(3, shift=True) == 0
 
-        # Masks
-        N = 100
-        x = Scalar(np.random.randn(N), mask=(np.random.randn(N) < -1.))
-        y = x.int()
-        self.assertTrue(np.all(y.mask[x.mask]))
-        self.assertTrue(not np.any(y.mask[~x.mask]))
 
-        # Derivatives should be stripped
-        N = 10
-        random = Scalar(np.random.randn(N) * 10.)
-        random.insert_deriv('t', Scalar(np.random.randn(N) * 10.))
-        random.insert_deriv('vec', Scalar(np.random.randn(3*N).reshape(N,3),
-                                           drank=1))
-        self.assertIn('t', random.derivs)
-        self.assertIn('vec', random.derivs)
-        self.assertTrue(hasattr(random, 'd_dt'))
-        self.assertTrue(hasattr(random, 'd_dvec'))
+def test_scalar_int_clip_without_a_top_value() -> None:
+    """Without a top value, clip replaces negative values by zero."""
 
-        self.assertEqual(random.int().derivs, {})
-        self.assertNotIn('t', random.int().derivs)
-        self.assertNotIn('vec', random.int().derivs)
-        self.assertFalse(hasattr(random.int(), 'd_dt'))
-        self.assertFalse(hasattr(random.int(), 'd_dvec'))
+    a = Scalar([-3.5, 2.5]).int(clip=True)
+    assert a == (0, 2)
+    assert a.mask is False
 
-        N = 10
-        random = Scalar(np.arange(10))
-        random.insert_deriv('t', Scalar(np.random.randn(N) * 10.))
-        random.insert_deriv('vec', Scalar(np.random.randn(3*N).reshape((N,3)),
-                                           drank=1))
-        self.assertIn('t', random.derivs)
-        self.assertIn('vec', random.derivs)
-        self.assertTrue(hasattr(random, 'd_dt'))
-        self.assertTrue(hasattr(random, 'd_dvec'))
 
-        self.assertEqual(random.int().derivs, {})
-        self.assertNotIn('t', random.int().derivs, 't')
-        self.assertNotIn('vec', random.int().derivs, 'vec')
-        self.assertFalse(hasattr(random.int(), 'd_dt'))
-        self.assertFalse(hasattr(random.int(), 'd_dvec'))
+def test_scalar_int_clip_and_remask_without_a_top_value() -> None:
+    """Without a top value, clip and remask together replace and mask negative values."""
 
-        # Read-only status should NOT be preserved
-        N = 10
-        random = Scalar(np.random.randn(N) * 10.)
-        self.assertFalse(random.readonly)
-        self.assertFalse(random.int().readonly)
-        self.assertTrue(random.as_readonly().readonly)
-        self.assertFalse(random.as_readonly().int().readonly)
+    a = Scalar([-3.5, 2.5]).int(clip=True, remask=True)
+    assert a.values[0] == 0
+    assert a.values[1] == 2
+    assert np.all(a.mask == [True, False])
 
-        # But int objects are returned as is
-        a = Scalar(np.arange(10)).as_readonly()
-        self.assertTrue(a.readonly)
-        self.assertTrue(a.int().readonly)
+
+def test_scalar_int_masks() -> None:
+    """Masks."""
+
+    np.random.seed(4353)
+
+    N = 100
+    x = Scalar(np.random.randn(N), mask=(np.random.randn(N) < -1.))
+    y = x.int()
+    assert np.all(y.mask[x.mask])
+    assert not np.any(y.mask[~x.mask])
+
+
+def test_scalar_int_derivatives_should_be_stripped() -> None:
+    """Derivatives should be stripped."""
+
+    np.random.seed(4353)
+
+    N = 10
+    random = Scalar(np.random.randn(N) * 10.)
+    random.insert_deriv('t', Scalar(np.random.randn(N) * 10.))
+    random.insert_deriv('vec', Scalar(np.random.randn(3*N).reshape(N,3),
+                                       drank=1))
+    assert 't' in random.derivs
+    assert 'vec' in random.derivs
+    assert hasattr(random, 'd_dt')
+    assert hasattr(random, 'd_dvec')
+    assert random.int().derivs == {}
+    assert 't' not in random.int().derivs
+    assert 'vec' not in random.int().derivs
+    assert not hasattr(random.int(), 'd_dt')
+    assert not hasattr(random.int(), 'd_dvec')
+    N = 10
+    random = Scalar(np.arange(10))
+    random.insert_deriv('t', Scalar(np.random.randn(N) * 10.))
+    random.insert_deriv('vec', Scalar(np.random.randn(3*N).reshape((N,3)),
+                                       drank=1))
+    assert 't' in random.derivs
+    assert 'vec' in random.derivs
+    assert hasattr(random, 'd_dt')
+    assert hasattr(random, 'd_dvec')
+    assert random.int().derivs == {}
+    assert 't' not in random.int().derivs
+    assert 'vec' not in random.int().derivs
+    assert not hasattr(random.int(), 'd_dt')
+    assert not hasattr(random.int(), 'd_dvec')
+
+
+def test_scalar_int_read_only_status_should_not_be_preserved() -> None:
+    """Read-only status should NOT be preserved."""
+
+    np.random.seed(4353)
+
+    N = 10
+    random = Scalar(np.random.randn(N) * 10.)
+    assert not random.readonly
+    assert not random.int().readonly
+    assert random.as_readonly().readonly
+    assert not random.as_readonly().int().readonly
+
+
+def test_scalar_int_but_int_objects_are_returned_as_is() -> None:
+    """But int objects are returned as is."""
+
+    np.random.seed(4353)
+
+    a = Scalar(np.arange(10)).as_readonly()
+    assert a.readonly
+    assert a.int().readonly
+
 
 ##########################################################################################
