@@ -45,6 +45,40 @@ def test_scalar_int_individual_values() -> None:
     assert random.int() == 3
 
 
+def test_scalar_int_denominators_are_disallowed() -> None:
+    """Denominators are disallowed."""
+
+    a = Scalar([[1., 2.], [3., 4.]], drank=1)
+    with pytest.raises(ValueError, match='does not support denominators'):
+        a.int()
+
+
+def test_scalar_int_shift_of_a_shapeless_value() -> None:
+    """A shapeless value equal to top shifts down by one; a smaller value does not."""
+
+    assert Scalar(3.).int(3, shift=True) == 2
+    assert Scalar(3).int(3, shift=True) == 2
+    assert Scalar(2.9).int(3, shift=True) == 2
+    assert Scalar(0.5).int(3, shift=True) == 0
+
+
+def test_scalar_int_clip_without_a_top_value() -> None:
+    """Without a top value, clip replaces negative values by zero."""
+
+    a = Scalar([-3.5, 2.5]).int(clip=True)
+    assert a == (0, 2)
+    assert a.mask is False
+
+
+def test_scalar_int_clip_and_remask_without_a_top_value() -> None:
+    """Without a top value, clip and remask together replace and mask negative values."""
+
+    a = Scalar([-3.5, 2.5]).int(clip=True, remask=True)
+    assert a.values[0] == 0
+    assert a.values[1] == 2
+    assert np.all(a.mask == [True, False])
+
+
 def test_scalar_int_masks() -> None:
     """Masks."""
 

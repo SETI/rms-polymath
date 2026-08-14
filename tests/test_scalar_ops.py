@@ -3,7 +3,10 @@
 ##########################################################################################
 
 import numpy as np
+import operator
 import pytest
+
+from collections.abc import Callable
 
 from polymath import Boolean, Scalar, Unit, Vector
 
@@ -1602,6 +1605,59 @@ def test_scalar_ops_masks() -> None:
     assert not (x.as_readonly() >  y.as_readonly()).readonly
     assert not (x.as_readonly() <= y.as_readonly()).readonly
     assert not (x.as_readonly() >= y.as_readonly()).readonly
+
+
+def test_scalar_ops_reciprocal_disallows_denominators() -> None:
+    """Reciprocal does not support denominators."""
+
+    a = Scalar([[1., 2.], [3., 4.]], drank=1)
+    with pytest.raises(ValueError, match='does not support denominators'):
+        a.reciprocal()
+
+
+@pytest.mark.parametrize(('symbol', 'func'),
+                         [('<' , operator.lt),
+                          ('<=', operator.le),
+                          ('>' , operator.gt),
+                          ('>=', operator.ge)])
+def test_scalar_ops_comparisons_disallow_denominators(
+        symbol: str, func: Callable[[Scalar, Scalar], object]) -> None:
+    """The ordering comparisons do not support denominators."""
+
+    a = Scalar([[1., 2.], [3., 4.]], drank=1)
+    with pytest.raises(ValueError, match=f'"{symbol}" does not support denominators'):
+        func(a, a)
+
+
+def test_scalar_ops_power_zero_without_derivatives() -> None:
+    """Raising to the power zero can skip the derivatives."""
+
+    a = Scalar(3., derivs={'t': Scalar(1.)})
+    b = a.__pow__(0, recursive=False)
+    assert b == 1.
+    assert b.derivs == {}
+
+
+def test_scalar_ops_power_exponent_disallows_denominators() -> None:
+    """An exponent with a denominator is rejected."""
+
+    with pytest.raises(ValueError, match='exponent requires scalar items'):
+        Scalar(2.) ** Scalar([[1., 2.]], drank=1)
+
+
+def test_scalar_ops_power_masks_a_complex_result() -> None:
+    """A shapeless power whose result is not real is masked."""
+
+    a = Scalar(-1.) ** Scalar(0.5)
+    assert a.mask is True
+
+
+def test_scalar_ops_power_of_an_array_with_units() -> None:
+    """An array with units raised to a single power scales the unit by that power."""
+
+    a = Scalar([1., 4., 9.], unit=Unit.KM**2) ** Scalar(0.5)
+    assert a == (1., 2., 3.)
+    assert a.unit_ == Unit.KM
 
 
 ##########################################################################################

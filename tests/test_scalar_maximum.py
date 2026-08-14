@@ -42,4 +42,12 @@ def test_scalar_maximum() -> None:
                     assert not ab[i,j,k].mask
 
 
+def test_scalar_maximum_replaces_a_fully_masked_running_result() -> None:
+    """A masked shapeless value is replaced by a later unmasked one, however small."""
+
+    result = Scalar.maximum(Scalar(1., True), Scalar(-5.))
+    assert result == -5.
+    assert result.mask is False
+
+
 ##########################################################################################

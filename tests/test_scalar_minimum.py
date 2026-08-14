@@ -42,4 +42,12 @@ def test_scalar_minimum() -> None:
                     assert not ab[i,j,k].mask
 
 
+def test_scalar_minimum_replaces_a_fully_masked_running_result() -> None:
+    """A masked shapeless value is replaced by a later unmasked one, however large."""
+
+    result = Scalar.minimum(Scalar(1., True), Scalar(5.))
+    assert result == 5.
+    assert result.mask is False
+
+
 ##########################################################################################

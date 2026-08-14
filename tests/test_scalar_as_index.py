@@ -25,4 +25,14 @@ def test_scalar_as_index() -> None:
                 assert test[i,j] == a.values[i,j]
 
 
+def test_scalar_as_index_and_mask_without_purge_or_replacement() -> None:
+    """Masked items keep their values when purge is False and masked is None."""
+
+    a = Scalar([1, 2, 3], [False, True, False])
+    (index, mask) = a.as_index_and_mask(purge=False, masked=None)
+    assert np.all(index == [1, 2, 3])
+    assert index.dtype.kind == 'i'
+    assert np.all(mask == [False, True, False])
+
+
 ##########################################################################################

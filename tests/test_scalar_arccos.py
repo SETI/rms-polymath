@@ -107,4 +107,14 @@ def test_scalar_arccos_individual_values() -> None:
     assert x.arccos() == np.arccos(x.values)
 
 
+def test_scalar_arccos_unchecked_values_inside_the_domain() -> None:
+    """With check=False, values inside the domain still give the arccosine."""
+
+    np.random.seed(7221)
+
+    x = Scalar(np.random.randn(100).clip(-1., 1.))
+    assert x.arccos(check=False) == np.arccos(x.values)
+    assert x.arccos(check=False).mask is False
+
+
 ##########################################################################################

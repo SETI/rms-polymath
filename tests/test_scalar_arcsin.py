@@ -107,4 +107,14 @@ def test_scalar_arcsin_individual_values() -> None:
     assert x.arcsin() == np.arcsin(x.values)
 
 
+def test_scalar_arcsin_unchecked_values_inside_the_domain() -> None:
+    """With check=False, values inside the domain still give the arcsine."""
+
+    np.random.seed(7221)
+
+    x = Scalar(np.random.randn(100).clip(-1., 1.))
+    assert x.arcsin(check=False) == np.arcsin(x.values)
+    assert x.arcsin(check=False).mask is False
+
+
 ##########################################################################################
