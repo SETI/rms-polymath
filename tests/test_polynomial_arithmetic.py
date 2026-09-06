@@ -177,7 +177,7 @@ def test_polynomial_arithmetic_test_neg() -> None:
     p_iadd1 += p_iadd2
     assert id(p_iadd1) == id_before  # In-place
 
-    assert len(p_iadd1.values) == 3  # Should have 3 coefficients
+    assert len(np.asarray(p_iadd1.values)) == 3  # Should have 3 coefficients
 
     p_iadd_deriv1 = Polynomial([1., 2.])
     p_iadd_deriv2 = Polynomial([3., 4.])
@@ -189,7 +189,7 @@ def test_polynomial_arithmetic_test_neg() -> None:
     p_isub1 = Polynomial([5., 6.])  # order 1
     p_isub2 = Polynomial([1., 2., 3.])  # order 2
     p_isub1 -= p_isub2
-    assert len(p_isub1.values) == 3
+    assert len(np.asarray(p_isub1.values)) == 3
 
     p_isub_self_larger = Polynomial([10., 20., 30., 40.])  # order 3
     p_isub_arg_smaller = Polynomial([1., 2.])  # order 1
@@ -200,7 +200,7 @@ def test_polynomial_arithmetic_test_neg() -> None:
     p_isub3 = Polynomial([5., 6., 7.])  # order 2
     p_isub4 = Polynomial([1., 2.])  # order 1, needs at_least_order
     p_isub3 -= p_isub4
-    assert len(p_isub3.values) == 3
+    assert len(np.asarray(p_isub3.values)) == 3
 
     p_isub_deriv1 = Polynomial([5., 6.])
     p_isub_deriv2 = Polynomial([1., 2.])

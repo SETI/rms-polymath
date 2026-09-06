@@ -3,6 +3,8 @@
 # Old Pair tests, updated by MRS 2/18/14
 ##########################################################################################
 
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -16,7 +18,7 @@ def test_pair_misc_basic_comparisons_and_indexing() -> None:
     assert pairs.numer == (2,)
     assert pairs.shape == (3,)
     assert pairs.rank == 1
-    test = [[1,2],[3,4],[5,6]]
+    test: Any = [[1,2],[3,4],[5,6]]
     assert pairs == test
     test = Pair(test)
     assert pairs == test

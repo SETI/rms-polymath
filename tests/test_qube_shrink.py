@@ -2,6 +2,8 @@
 # tests/test_qube_shrink.py
 ##########################################################################################
 
+from typing import Any
+
 import numpy as np
 
 from polymath import Qube, Scalar, Vector3, Boolean
@@ -97,7 +99,7 @@ def test_qube_shrink_antimask() -> None:
     assert a[a.antimask] == a
     a = Scalar(values, True)
     assert np.all(a.mask ^ a.antimask)
-    assert a[a.antimask].shape == (np.sum(a.antimask),200)
+    assert a[a.antimask].shape == (int(np.sum(a.antimask)),200)
     assert a[np.newaxis][:0].shape == (0,100,200)
     values = np.ones((100,200,3))
     mask = np.zeros((100,200), dtype='bool')
@@ -110,7 +112,7 @@ def test_qube_shrink_antimask() -> None:
     assert a[a.antimask] == a
     a = Vector3(values, True)
     assert np.all(a.mask ^ a.antimask)
-    assert a[a.antimask].shape == (np.sum(a.antimask),200)
+    assert a[a.antimask].shape == (int(np.sum(a.antimask)),200)
 
 
 def test_qube_shrink_test_unshrink_with_and_without_ignore_unshrunk_as_cached() -> None:
@@ -313,11 +315,13 @@ def test_qube_shrink_test_unshrink_with_and_without_ignore_unshrunk_as_cached() 
         c = Scalar(np.random.randn(3,1,100), mask=np.random.randn(3,1,100) > 1.)
         d = Vector3(np.random.randn(100,3), mask=np.random.randn(100) > 1.)
 
-        for value in [1., Scalar(np.random.randn(2,100))]:
-            for mask in [True, False,
-                         np.ones((2,100), dtype='bool'),
-                         np.zeros((2,100), dtype='bool'),
-                         np.random.randn(2,100) > 1.]:
+        samples: list[Any] = [1., Scalar(np.random.randn(2,100))]
+        masks: list[Any] = [True, False,
+                            np.ones((2,100), dtype='bool'),
+                            np.zeros((2,100), dtype='bool'),
+                            np.random.randn(2,100) > 1.]
+        for value in samples:
+            for mask in masks:
 
                 if np.shape(value) == () and np.shape(mask) != ():
                     continue
@@ -345,7 +349,7 @@ def test_qube_shrink_test_unshrink_with_and_without_ignore_unshrunk_as_cached() 
                         else:
                             assert test1.all()
 
-                        if np.shape(antimask) == ():
+                        if not np.shape(antimask):
                             test_mask = antimask
                         else:
                             pad = len(value1.shape) - len(np.shape(antimask))
@@ -370,7 +374,7 @@ def test_qube_shrink_qube_antimask() -> None:
 
     np.random.seed(1207)
 
-    values = [
+    cases: list[tuple[Any, Any]] = [
         (Boolean(True, False), False),
         (Boolean(True, True ), False),
         (Scalar([1,2], False), False),
@@ -381,7 +385,7 @@ def test_qube_shrink_qube_antimask() -> None:
         (Scalar([1.,2.], np.array([False, True])), np.array([False, True])),
         (Scalar(np.arange(100), False), False),
     ]
-    for (a, antimask) in values:
+    for (a, antimask) in cases:
         aa = a.shrink(antimask)
         assert aa.shape == ()
         b = aa.unshrink(antimask, a.shape)

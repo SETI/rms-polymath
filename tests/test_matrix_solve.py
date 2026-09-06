@@ -79,7 +79,7 @@ def test_matrix_solve_propagates_the_mask_of_either_operand() -> None:
     a = Matrix([np.eye(2), np.eye(2)], mask=[True, False])
     b = Vector([[1., 2.], [3., 4.]], mask=[False, True])
 
-    assert list(a.solve(b).mask) == [True, True]
+    assert list(np.asarray(a.solve(b).mask)) == [True, True]
 
 
 def test_matrix_solve_with_nozeros_raises_on_a_singular_matrix() -> None:

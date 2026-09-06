@@ -706,7 +706,7 @@ def test_qube_floordiv_by_a_number_matches_division_by_a_scalar() -> None:
 
     a = Scalar([7.5, -3.5, 0.5])
     assert a // 2 == a // Scalar(2)
-    assert list((a // 2).values) == [3., -2., 0.]
+    assert list(np.asarray((a // 2).values)) == [3., -2., 0.]
 
 
 def test_qube_floordiv_by_zero_masks_everything() -> None:
@@ -740,8 +740,8 @@ def test_qube_ipow_raises_this_object_in_place() -> None:
 
     a **= 3
     assert a is before
-    assert list(a.values) == [1., 8., 27.]
-    assert list(a.derivs['t'].values) == [3., 12., 27.]
+    assert list(np.asarray(a.values)) == [1., 8., 27.]
+    assert list(np.asarray(a.derivs['t'].values)) == [3., 12., 27.]
 
 
 def test_qube_ipow_updates_the_unit() -> None:
@@ -759,8 +759,8 @@ def test_qube_ipow_of_an_exponent_of_one_keeps_the_derivatives() -> None:
     a = Scalar([1., 2.])
     a.insert_deriv('t', Scalar([5., 6.]))
     a **= 1
-    assert list(a.values) == [1., 2.]
-    assert list(a.derivs['t'].values) == [5., 6.]
+    assert list(np.asarray(a.values)) == [1., 2.]
+    assert list(np.asarray(a.derivs['t'].values)) == [5., 6.]
 
 
 def test_qube_ipow_rejects_a_non_integer_result_for_an_integer_object() -> None:
@@ -770,7 +770,7 @@ def test_qube_ipow_rejects_a_non_integer_result_for_an_integer_object() -> None:
     with pytest.raises(TypeError, match='non-integer result'):
         a **= -1
 
-    assert list(a.values) == [2, 3]     # unchanged by the failed operation
+    assert list(np.asarray(a.values)) == [2, 3]     # unchanged by the failed operation
 
 
 def test_qube_ipow_rejects_a_read_only_object() -> None:

@@ -49,7 +49,7 @@ def test_math_ops_coverage_test_incompatible_types() -> None:
 
     a = Scalar([1., 2., 3.])
     with pytest.raises(TypeError) as cm:
-        a += "invalid"
+        a += "invalid"  # type: ignore[arg-type]  # deliberately the wrong type
     assert 'unsupported operand type' in str(cm.value)
 
     a = Scalar([1, 2, 3])  # Integer
@@ -165,7 +165,7 @@ def test_math_ops_coverage_test_incompatible_types() -> None:
 
     a = Scalar([1., 2., 3.])
     with pytest.raises(TypeError) as cm:
-        a /= object()
+        a /= object()  # type: ignore[arg-type]  # deliberately the wrong type
     assert 'unsupported operand type' in str(cm.value)
 
     a = Scalar([7, 8, 9])
@@ -194,7 +194,7 @@ def test_math_ops_coverage_test_incompatible_types() -> None:
 
     a = Scalar([5., 7., 9.])
     with pytest.raises(TypeError) as cm:
-        a //= object()
+        a //= object()  # type: ignore[arg-type]  # deliberately the wrong type
     assert 'unsupported operand type' in str(cm.value)
 
     a = Scalar([7, 8, 9])
@@ -230,7 +230,7 @@ def test_math_ops_coverage_test_incompatible_types() -> None:
 
     a = Scalar([5., 7., 9.])
     with pytest.raises(TypeError) as cm:
-        a %= object()
+        a %= object()  # type: ignore[arg-type]  # deliberately the wrong type
     assert 'unsupported operand type' in str(cm.value)
 
     a = Scalar([2., 3., 4.])

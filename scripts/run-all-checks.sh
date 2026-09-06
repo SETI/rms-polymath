@@ -48,7 +48,7 @@
 #     ENABLE_RUFF_CHECK   (default: true)
 #     ENABLE_RUFF_FORMAT  (default: false)
 #     ENABLE_FLAKE8_CONT  continuation-line indent, E12x/E13x (default: true)
-#     ENABLE_MYPY         (default: false)
+#     ENABLE_MYPY         mypy on tests/ only (default: true)
 #     ENABLE_PYTEST       (default: true)
 #     ENABLE_PYROMA       (default: true)
 #     ENABLE_STUBTEST     the two .pyi stubs match the runtime API (default: true)
@@ -102,7 +102,7 @@ SCOPE_SPECIFIED=false
 : "${ENABLE_RUFF_CHECK:=true}"
 : "${ENABLE_RUFF_FORMAT:=false}"
 : "${ENABLE_FLAKE8_CONT:=true}"
-: "${ENABLE_MYPY:=false}"
+: "${ENABLE_MYPY:=true}"
 : "${ENABLE_PYTEST:=true}"
 : "${ENABLE_PYROMA:=true}"
 : "${ENABLE_STUBTEST:=true}"
@@ -418,7 +418,7 @@ run_code_checks() {
     fi
 
     if [ "$RUN_MYPY" = true ] && [ "$ENABLE_MYPY" = true ]; then
-        print_info "Running mypy..."
+        print_info "Running mypy (tests/ only; src/ is deliberately unannotated)..."
         if MYPYPATH=src python -m mypy tests; then
             print_success "Mypy passed"
         else

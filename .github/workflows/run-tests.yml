@@ -29,7 +29,7 @@ jobs:
 
       # Ruff is the linter of record for every rule it implements.
       # TODO Add `ruff format --check src tests` once the source has been
-      # reformatted; mypy stays off while src is deliberately unannotated.
+      # reformatted.
       - name: Ruff
         run: |
           ruff check src tests
@@ -41,6 +41,14 @@ jobs:
       - name: Flake8 continuation-line indent
         run: |
           flake8 --select=E12,E13 src tests
+
+      # Every module under tests/ is checked. src/ is deliberately unannotated and
+      # carries no stub of its own, so mypy is kept off it by the excludes and the
+      # overrides in pyproject.toml; this step matches `--mypy` in
+      # scripts/run-all-checks.sh.
+      - name: Mypy
+        run: |
+          MYPYPATH=src mypy tests
 
       - name: Pyroma
         run: |

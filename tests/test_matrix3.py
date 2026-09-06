@@ -292,7 +292,7 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
     assert m2.shape == m.shape
 
     with pytest.raises(TypeError):
-        Matrix3(np.eye(3), unit='km')
+        Matrix3(np.eye(3), unit='km')  # type: ignore[arg-type]  # deliberately the wrong type
 
     m = Matrix3.zeros((2, 2), dtype='int')
     assert m.vals.dtype.kind == 'f'
@@ -344,7 +344,7 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
 
     m_write = Matrix3.x_rotation(np.pi/4).copy()
     with pytest.raises((ValueError, TypeError)):
-        (lambda: m_write.__imul__("invalid"))()
+        (lambda: m_write.__imul__("invalid"))()  # type: ignore[arg-type]  # deliberately the wrong type
 
     m_readonly = Matrix3.IDENTITY
     with pytest.raises(ValueError):

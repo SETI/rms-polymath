@@ -81,7 +81,7 @@ def test_qube_add_attr_allows_direct_assignment_afterward() -> None:
 
     a = Scalar(np.random.randn(5))
     a.add_attr('label', 'north')
-    a.label = 'south'  # type: ignore[attr-defined]  # add_attr() created it above
+    a.label = 'south'
 
     assert attr(a.clone(), 'label') == 'south'
 

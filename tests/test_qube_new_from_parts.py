@@ -2,13 +2,15 @@
 # tests/test_qube_new_from_parts.py
 ##########################################################################################
 
+from typing import Any
+
 import numpy as np
 import pytest
 
 from polymath import Matrix, Qube, Scalar, Unit, Vector, Vector3
 
 
-def _attrs(obj: Qube) -> dict:
+def _attrs(obj: Qube) -> dict[str, Any]:
     """Every shape and type attribute that the two constructors both determine."""
 
     return {name: getattr(obj, name)
@@ -27,7 +29,7 @@ def _attrs(obj: Qube) -> dict:
     ((), 2, 0),
     ((4,), 2, 1),
 ])
-def test_qube_new_from_parts_matches_the_constructor(shape: tuple, nrank: int,
+def test_qube_new_from_parts_matches_the_constructor(shape: tuple[int, ...], nrank: int,
                                                      drank: int) -> None:
     """The fast constructor derives the same shape attributes as __init__()."""
 

@@ -793,7 +793,7 @@ def test_scalar_comprehensive_test_sort_preserves_the_mask() -> None:
 
     s = Scalar([3., 9., 1.], mask=[False, False, True])
     result = s.sort()
-    assert list(result.mask) == [False, False, True]
+    assert list(np.asarray(result.mask)) == [False, False, True]
     assert result.vals[0] == 3.
     assert result.vals[1] == 9.
 
@@ -803,7 +803,7 @@ def test_scalar_comprehensive_test_sort_mask_when_a_value_matches_the_fill() -> 
 
     s = Scalar([3., np.inf, 1.], mask=[False, False, True])
     result = s.sort()
-    assert list(result.mask) == [False, False, True]
+    assert list(np.asarray(result.mask)) == [False, False, True]
     assert result.vals[0] == 3.
     assert result.vals[1] == np.inf
 

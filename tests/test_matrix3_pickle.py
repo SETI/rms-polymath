@@ -2,11 +2,13 @@
 # tests/test_matrix3_pickle.py: Tests of Matrix3.__getstate__ and __setstate__
 ##########################################################################################
 
+from typing import Any
+
 import numpy as np
 import pickle
 import pytest
 
-from polymath import Matrix, Matrix3, Quaternion
+from polymath import Matrix, Matrix3, Quaternion, Qube
 
 
 def _rotations(shape: tuple[int, ...]) -> Matrix3:
@@ -32,7 +34,7 @@ def _tangent(matrix: Matrix3, denom: tuple[int, ...] = ()) -> np.ndarray:
     return np.moveaxis(np.matmul(skew, values), (-2, -1), (-2 - drank, -1 - drank))
 
 
-def _uses_quaternion(matrix: Matrix3) -> bool:
+def _uses_quaternion(matrix: Qube) -> bool:
     """True if this object pickles via the quaternion encoding."""
 
     return 'QUATERNION_ENCODING' in matrix.__getstate__()
@@ -117,7 +119,7 @@ def test_matrix3_pickle_round_trip_at_180_degrees() -> None:
 
     quaternion = Quaternion(np.zeros((500, 4)))
     quaternion.values[:, 1] = 1.            # (0, 1, 0, 0): 180 degrees about x
-    matrix = quaternion.to_matrix3()
+    matrix: Any = quaternion.to_matrix3()
     assert _uses_quaternion(matrix)
 
     restored = pickle.loads(pickle.dumps(matrix))
@@ -185,7 +187,7 @@ def test_matrix3_pickle_round_trip_masked_derivative() -> None:
 
 
 @pytest.mark.parametrize('digits', ['double', 'single', 10, 7])
-def test_matrix3_pickle_honors_pickle_digits(digits: object) -> None:
+def test_matrix3_pickle_honors_pickle_digits(digits: Any) -> None:
     """Every supported precision setting round-trips through the quaternion encoding."""
 
     np.random.seed(8021)

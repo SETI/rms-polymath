@@ -64,8 +64,8 @@ def test_vector_masking() -> None:
 def test_vector_clip_component_assigns_the_limit_value() -> None:
     """A shapeless Vector clips against an upper limit given as a plain number."""
 
-    assert list(Vector([5., 0.]).clip_component(0, None, 2.).values) == [2., 0.]
-    assert list(Vector([-5., 0.]).clip_component(0, -2., None).values) == [-2., 0.]
+    assert list(np.asarray(Vector([5., 0.]).clip_component(0, None, 2.).values)) == [2., 0.]
+    assert list(np.asarray(Vector([-5., 0.]).clip_component(0, -2., None).values)) == [-2., 0.]
 
 
 ##########################################################################################

@@ -6,7 +6,7 @@
 import numpy as np
 import pytest
 import pickle
-from typing import Any
+from typing import Any, cast
 
 from polymath import Qube, Scalar, Vector, Vector3, Boolean
 
@@ -1271,7 +1271,7 @@ def _restored(state: dict[str, Any]) -> Scalar:
 
     obj = Qube.__new__(Scalar)
     obj.__setstate__(state)
-    return obj
+    return cast(Scalar, obj)
 
 
 @pytest.mark.parametrize(('values', 'is_array'), [(np.arange(5.), True), (1.5, False)])

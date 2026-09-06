@@ -114,7 +114,7 @@ def test_qube_setitem() -> None:
     a[0] = b[0]
     assert np.all(a.values[0] == b.values[0])
     assert np.all(a.mask[0] == True)
-    assert type(a.mask) == np.ndarray
+    assert isinstance(a.mask, np.ndarray)
     assert type(b.mask) == bool
     a[:,0] = b[:,0]
     assert np.all(a.values[:,0] == b.values[:,0])

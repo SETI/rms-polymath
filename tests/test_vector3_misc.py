@@ -3,6 +3,8 @@
 # Old Vector3 tests, updated by MRS 2/18/14
 ##########################################################################################
 
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -18,7 +20,7 @@ def test_vector3_misc_basic_comparisons_and_indexing() -> None:
     assert vecs.numer == (3,)
     assert vecs.shape == (3,)
     assert vecs.rank == 1
-    test = [[1,2,3],[3,4,5],[5,6,7]]
+    test: Any = [[1,2,3],[3,4,5],[5,6,7]]
     assert vecs == test
     test = Vector3(test)
     assert vecs == test

@@ -2,6 +2,8 @@
 # test_qube_getstate.py: Tests of __getstate__ and __setstate__
 ##########################################################################################
 
+from typing import Any
+
 import numpy as np
 import pickle
 import os
@@ -261,7 +263,8 @@ def test_qube_getstate_scalar_tests_derivatives_units(pickle_debug: object) -> N
 
     # COMPRESSION
 
-    references = (1., 'smallest', 'largest', 'mean', 'median', 'logmean')
+    references: tuple[Any, ...] = (1., 'smallest', 'largest', 'mean', 'median',
+                                   'logmean')
     ref_values = [1.,
                   np.min(np.abs(a.values)),
                   np.max(np.abs(a.values)),

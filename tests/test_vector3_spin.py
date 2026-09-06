@@ -35,13 +35,13 @@ def test_vector3_spin_offset_angles() -> None:
     assert (np.all(abs(Z.spin(X, deg20) - (0., -sin20, cos20))).vals < EPS)
     assert (np.all(abs(Z.spin(Y, deg20) - (sin20,  0., cos20))).vals < EPS)
 
-    assert Z.offset_angles(Z) == (0.,0.)
+    assert Z.offset_angles(Z) == (0.,0.)  # type: ignore[comparison-overlap]
     target = Vector3([0., sin20, cos20])
-    assert Z.offset_angles(target) == (0., -deg20)
+    assert Z.offset_angles(target) == (0., -deg20)  # type: ignore[comparison-overlap]
     test = Z.spin(X, -deg20)
     assert np.all(abs(test - target).vals < EPS)
     target = Vector3([sin20, 0., cos20])
-    assert Z.offset_angles(target) == (deg20, 0.)
+    assert Z.offset_angles(target) == (deg20, 0.)  # type: ignore[comparison-overlap]
     test = Z.spin(Y, deg20)
     assert np.all(abs(test - target).vals < EPS)
     start  = Vector3([0., -sin20, cos20])
