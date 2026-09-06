@@ -1,7 +1,7 @@
 ##########################################################################################
-# polymath/typedefs.py
+# polymath/typedefs.pyi
 ##########################################################################################
-"""Public type aliases naming the values that the PolyMath constructors accept.
+"""Type stub for :mod:`polymath.typedefs`, mirroring the aliases defined there.
 
 The `src` tree carries no inline annotations, so these aliases exist for the benefit of
 downstream code that does annotate. Each alias is an ordinary runtime object, so it can be
@@ -24,7 +24,7 @@ from typing import Any, Literal, TypeAlias
 
 import numpy as np
 
-from polymath.qube import Qube
+from polymath import Qube
 
 __all__ = ['BooleanLike', 'MaskType', 'Matrix3Like', 'MatrixLike', 'PairLike',
            'QuaternionLike', 'QubeLike', 'ScalarLike', 'ValsType', 'Vector3Like',

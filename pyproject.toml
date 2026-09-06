@@ -114,16 +114,38 @@ fail_under = 90
 [tool.mypy]
 strict = true
 disallow_subclassing_any = false
+# stubtest discovers every module under the package and would compare each unannotated
+# .py module against itself. Only __init__.pyi and typedefs.pyi carry type information,
+# so every other module is excluded from discovery; the overrides below keep mypy from
+# following an import into one of them.
+exclude = [
+  'polymath/(qube|unit|scalar|boolean|vector|pair|vector3|quaternion|polynomial|matrix|matrix3)\.py$',
+  'polymath/extensions/',
+]
 
 [[tool.mypy.overrides]]
 module = "polymath._version"
 ignore_missing_imports = true
 
-# The .pyi stubs alongside each module carry the published type information; the modules
-# themselves are deliberately unannotated, so mypy must not be turned loose on them. These
-# overrides keep it to the stubs, which is what `mypy.stubtest` needs in order to run.
+# The published type information lives in __init__.pyi and typedefs.pyi, because the only
+# supported imports are from those two modules. Every other module is deliberately
+# unannotated and has no stub, so mypy must not be turned loose on it. These overrides
+# keep mypy to the two stubs, which is what `mypy.stubtest` needs in order to run.
 [[tool.mypy.overrides]]
-module = "polymath.extensions.*"
+module = [
+  "polymath.extensions.*",
+  "polymath.qube",
+  "polymath.unit",
+  "polymath.scalar",
+  "polymath.boolean",
+  "polymath.vector",
+  "polymath.pair",
+  "polymath.vector3",
+  "polymath.quaternion",
+  "polymath.polynomial",
+  "polymath.matrix",
+  "polymath.matrix3",
+]
 follow_imports = "skip"
 ignore_errors = true
 

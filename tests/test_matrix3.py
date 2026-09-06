@@ -6,8 +6,7 @@
 import numpy as np
 import pytest
 
-from polymath import Matrix3, Matrix, Vector, Vector3, Scalar, Quaternion
-from polymath.unit import Unit
+from polymath import Matrix3, Matrix, Vector, Vector3, Scalar, Quaternion, Unit
 
 
 def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() -> None:

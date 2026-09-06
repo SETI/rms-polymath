@@ -44,16 +44,30 @@ required to run exactly that set. Run it after any change.
   concatenation) and `I001` (its fix collapses the column-aligned imports used throughout).
   Read the comment before re-enabling one.
 - Single quotes (`[tool.ruff.format] quote-style = "single"`).
-- **Never use type annotations anywhere under `src/`** — parameter and return types belong in the
-  docstrings. **Annotate all test functions and methods**, including `-> None`.
-- The package ships a PEP 561 `py.typed` marker, so public type information goes in `.pyi` stubs
-  alongside the modules. A stub replaces its module entirely for type checkers: whatever the stub
-  omits becomes invisible downstream, so a new stub must cover the module's whole public surface.
-  `stubtest` enforces exactly that and runs in the check script and in CI, so adding, renaming or
-  re-signing any public member means updating its stub in the same change. Most of `Qube`'s methods
-  are bound on at import time from `extensions/`, and they all have to appear in `qube.pyi`.
-  Signature shapes in the stubs are exact; types come from the docstrings where those state one
-  and are `Any` where they do not, which is deliberate rather than an omission to fill in blindly.
+- **No type annotations under `src/`, with one exception** — parameter and return types belong in
+  the docstrings. The exception is a **property**, which may carry an inline return annotation:
+  a property has no parameters, and Sphinx renders the annotation as the property's type beside
+  its name, so `Qube.shape` reads as `property shape: tuple[int, ...]`. A property documented only
+  through a `Returns:` block renders the type in a separate trailing line instead, so the two
+  styles do not mix; annotate the property and leave its docstring a one-line summary. Where the
+  annotation names something from `polymath.typedefs`, quote it and import it under
+  `if TYPE_CHECKING:` — that module imports `Qube`, so a runtime import from `qube.py` is
+  circular. **Annotate all test functions and methods**, including `-> None`.
+- The package ships a PEP 561 `py.typed` marker, and **exactly two stubs** carry the public type
+  information: `__init__.pyi`, which declares every public class in full, and `typedefs.pyi`. The
+  only supported imports are `from polymath import ...` and `from polymath.typedefs import ...`, so
+  no other module has a stub and none may be added: a per-module stub would make an import such as
+  `from polymath.scalar import ...` look supported. A stub replaces its module entirely for type
+  checkers: whatever the stub omits becomes invisible downstream, so the two stubs must cover the
+  whole public surface. `stubtest` enforces exactly that and runs in the check script and in CI, so
+  adding, renaming or re-signing any public member means updating `__init__.pyi` in the same change.
+  Most of `Qube`'s methods are bound on at import time from `extensions/`, and they all have to
+  appear under `Qube` in `__init__.pyi`. Signature shapes in the stubs are exact; types come from
+  the docstrings where those state one, from the inline annotation for a property that has one, and
+  are `Any` where neither does, which is deliberate rather than an omission to fill in blindly.
+  stubtest would otherwise compare each stub-less module against itself, so `[tool.mypy] exclude`
+  and the override list in `pyproject.toml`, and `.stubtest-allowlist`, each name those modules
+  explicitly; a new module goes in all three.
 - `qube.py` holds only what defines an object: the class constants, `__init__`, the construction
   path, low-level access, the properties and the cache. Everything else lives in `extensions/` and
   is bound onto `Qube` by `extensions/__init__.py`. Two rules keep that working. First,
