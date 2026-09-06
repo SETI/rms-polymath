@@ -218,8 +218,9 @@ def pickle_digits(self):
     derivatives.
 
     Returns:
-        str, float, or int: One of "double", "single", or a number of digits roughly in
-        the range 7-16.
+        tuple[str | float | int, str | float | int]: The setting for this object and
+        the one for its derivatives, each either "double", "single", or a number of
+        digits roughly in the range 7-16.
     """
 
     if not hasattr(self, '_pickle_digits') or self._pickle_digits is None:
@@ -233,8 +234,9 @@ def pickle_reference(self):
     precision in this object and its derivatives.
 
     Returns:
-        str, float, or int: One of "fpzip", "smallest", "largest", "mean", "median",
-        "logmean", or a number.
+        tuple[str | float | int, str | float | int]: The setting for this object and
+        the one for its derivatives, each either "fpzip", "smallest", "largest",
+        "mean", "median", "logmean", or a number.
     """
 
     if (not hasattr(self, '_pickle_reference')
