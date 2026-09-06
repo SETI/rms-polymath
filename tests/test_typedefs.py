@@ -38,6 +38,14 @@ NUMBER_ALIASES = ('BooleanLike', 'ScalarLike', 'QubeLike')
 
 NUMBER_TYPES = (float, int, bool, np.bool_)
 
+# The number types named by each alias that accepts a lone number. Pair.as_pair() repeats
+# one across both components, so PairLike accepts one too, but a Pair holds no truth
+# values, so it names only the numeric spellings.
+SINGLE_NUMBER_TYPES: dict[str, tuple[type, ...]] = {
+    **dict.fromkeys(NUMBER_ALIASES, NUMBER_TYPES),
+    'PairLike': (float, int),
+}
+
 
 def _array_member(alias: Any) -> Any:
     """The one member of a union alias that is a parameterized numpy.ndarray."""
@@ -96,18 +104,27 @@ def test_like_alias_array_dtype(name: str) -> None:
     assert typing.get_args(dtype) == (np.number[Any] | np.bool_,)
 
 
-@pytest.mark.parametrize('name', NUMBER_ALIASES)
-def test_number_alias_accepts_single_numbers(name: str) -> None:
-    """The aliases for rank-0 classes accept a lone Python or NumPy number."""
+@pytest.mark.parametrize('name', sorted(SINGLE_NUMBER_TYPES))
+def test_single_number_alias_accepts_single_numbers(name: str) -> None:
+    """Every alias that accepts a lone number names the types its class converts."""
 
     alias, _, _ = LIKE_ALIASES[name]
     members = typing.get_args(alias)
-    for number_type in NUMBER_TYPES:
+    for number_type in SINGLE_NUMBER_TYPES[name]:
         assert number_type in members
+    for number_type in set(NUMBER_TYPES) - set(SINGLE_NUMBER_TYPES[name]):
+        assert number_type not in members
+
+
+@pytest.mark.parametrize('name', NUMBER_ALIASES)
+def test_number_alias_array_has_free_shape(name: str) -> None:
+    """The aliases for rank-0 classes put no constraint on the shape of the array."""
+
+    alias, _, _ = LIKE_ALIASES[name]
     assert _shape_args(alias) == (int, Ellipsis)
 
 
-@pytest.mark.parametrize('name', sorted(set(LIKE_ALIASES) - set(NUMBER_ALIASES)))
+@pytest.mark.parametrize('name', sorted(set(LIKE_ALIASES) - set(SINGLE_NUMBER_TYPES)))
 def test_item_alias_rejects_single_numbers(name: str) -> None:
     """The aliases for classes with item axes do not accept a lone number."""
 
@@ -115,6 +132,19 @@ def test_item_alias_rejects_single_numbers(name: str) -> None:
     members = typing.get_args(alias)
     for number_type in NUMBER_TYPES:
         assert number_type not in members
+
+
+@pytest.mark.parametrize('number', [0, 1, -3, 2.5, -0.75, np.float64(0.5)])
+def test_pairlike_single_number_converts(number: float) -> None:
+    """Every lone number that PairLike names converts to a Pair with the value repeated."""
+
+    pair = Pair.as_pair(number)
+    assert type(pair) is Pair
+    assert pair.shape == ()
+    assert pair.numer == (2,)
+    values = np.asarray(pair.values)
+    assert values[0] == number
+    assert values[1] == number
 
 
 @pytest.mark.parametrize(

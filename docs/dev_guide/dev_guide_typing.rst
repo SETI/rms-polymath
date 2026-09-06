@@ -84,6 +84,8 @@ The Type Aliases
 annotations, because its purpose is to define them. Each public alias names what the
 corresponding constructor accepts: a :class:`~polymath.Qube`, a NumPy array with the
 required trailing axes, a nested sequence, and for the rank-0 classes a single number.
+:data:`~polymath.typedefs.PairLike` names a single number as well, because
+:meth:`~polymath.Pair.as_pair` repeats a lone value across both components of the pair.
 The private aliases that build them describe NumPy arrays by their shape type. The
 aliases are ordinary runtime objects, used both by the stubs and by downstream code.
 ``typedefs.pyi`` repeats the same definitions for the type checker, taking

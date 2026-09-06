@@ -33,7 +33,9 @@ is broader than the class itself.
    * - :data:`~polymath.typedefs.PairLike`, :data:`~polymath.typedefs.Vector3Like`,
        :data:`~polymath.typedefs.QuaternionLike`
      - A PolyMath object, a numeric array whose last axis has length two, three, or four
-       respectively, or a nested sequence.
+       respectively, or a nested sequence. :data:`~polymath.typedefs.PairLike` also
+       accepts a single number, because :meth:`~polymath.Pair.as_pair` repeats a lone
+       value across both components.
    * - :data:`~polymath.typedefs.MatrixLike`
      - A PolyMath object, a numeric array with two or more axes, or a nested sequence.
    * - :data:`~polymath.typedefs.Matrix3Like`

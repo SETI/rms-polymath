@@ -63,9 +63,10 @@ ScalarLike: TypeAlias = Qube | _Array | _ArrayLike | _Scalar
 """Any value convertible to a :class:`~polymath.Scalar`: a PolyMath object, a numeric
 array, a nested sequence of numbers, or a single number."""
 
-PairLike: TypeAlias = Qube | _Array2 | _ArrayLike
+PairLike: TypeAlias = Qube | _Array2 | _ArrayLike | float | int
 """Any value convertible to a :class:`~polymath.Pair`: a PolyMath object, a numeric array
-whose last axis has length two, or a nested sequence of numbers."""
+whose last axis has length two, or a nested sequence of numbers. As a special case, a
+single value becomes a Pair with the value repeated."""
 
 VectorLike: TypeAlias = Qube | _Array1D | _ArrayLike
 """Any value convertible to a :class:`~polymath.Vector`: a PolyMath object, a numeric
