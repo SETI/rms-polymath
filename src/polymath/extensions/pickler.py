@@ -98,6 +98,12 @@ _LOG10_BIT = np.log10(2.)
 
 @staticmethod
 def _pickle_debug(debug):
+    """Enable or disable the printing of pickle diagnostics.
+
+    Parameters:
+        debug (bool): True to print diagnostic information while pickling.
+    """
+
     global _PICKLE_DEBUG
     _PICKLE_DEBUG = debug
 
@@ -111,22 +117,21 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
     integer or boolean arrays.
 
     Parameters:
-        digits (int, float, str or tuple, optional):
-            The number of digits to preserve when pickling this object. If two values are
-            given, the second applies to any derivatives. If a number is specified, this
-            is the number of decimal digits to preserve when this object is pickled. It
-            need not be an integer. It is truncated to the range supported by single and
-            double precision. Alternatively, use "double" to preserve full double
-            precision; use "single" for single precision.
+        digits (int | float | str | tuple, optional): The number of digits to preserve
+            when pickling this object. If two values are given, the second applies to any
+            derivatives. If a number is specified, this is the number of decimal digits to
+            preserve when this object is pickled. It need not be an integer. It is
+            truncated to the range supported by single and double precision.
+            Alternatively, use "double" to preserve full double precision; use "single"
+            for single precision.
 
-        reference (int, float, str or tuple, optional):
-            A value defining the number to use when assessing how many digits are
-            preserved. If two values are given, the second applies to any derivatives. If
-            a number is specified, the number of `digits` will be relative to this value.
-            For example, if the `reference=100` and `digits=8`, the absolute precision
-            will be 1.e-6. Alternatively, use one of these strings to let the precision be
-            referenced to the values in the array: "smallest", "largest", "mean",
-            "median", "logmean", or "fpzip".
+        reference (int | float | str | tuple, optional): A value defining the number to
+            use when assessing how many digits are preserved. If two values are given, the
+            second applies to any derivatives. If a number is specified, the number of
+            `digits` will be relative to this value. For example, if the `reference=100`
+            and `digits=8`, the absolute precision will be 1.e-6. Alternatively, use one
+            of these strings to let the precision be referenced to the values in the
+            array: "smallest", "largest", "mean", "median", "logmean", or "fpzip".
 
     Notes:
         The reference options are:
@@ -168,21 +173,20 @@ def set_default_pickle_digits(digits='double', reference='fpzip'):
     floating-point values and their derivatives.
 
     Parameters:
-        digits (int, float, str or tuple, optional):
-            The number of digits to preserve when pickling this object. If two values are
-            given, the second applies to any derivatives. If a number is specified, this
-            is the number of decimal digits to preserve when this object is pickled. It
-            need not be an integer. It is truncated to the range supported by single and
-            double precision. Alternatively, use "double" to preserve full double
-            precision; use "single" for single precision.
-        reference (int, float, str or tuple, optional):
-            A value defining the number to use when assessing how many digits are
-            preserved. If two values are given, the second applies to any derivatives. If
-            a number is specified, the number of `digits` will be relative to this value.
-            For example, if the `reference=100` and `digits=8`, the precision will be
-            1.e-6. Alternatively, use one of these strings to let the precision be
-            referenced to the values in the array: "smallest", "largest", "mean",
-            "median", "logmean", or "fpzip".
+        digits (int | float | str | tuple, optional): The number of digits to preserve
+            when pickling this object. If two values are given, the second applies to any
+            derivatives. If a number is specified, this is the number of decimal digits to
+            preserve when this object is pickled. It need not be an integer. It is
+            truncated to the range supported by single and double precision.
+            Alternatively, use "double" to preserve full double precision; use "single"
+            for single precision.
+        reference (int | float | str | tuple, optional): A value defining the number to
+            use when assessing how many digits are preserved. If two values are given, the
+            second applies to any derivatives. If a number is specified, the number of
+            `digits` will be relative to this value. For example, if the `reference=100`
+            and `digits=8`, the precision will be 1.e-6. Alternatively, use one of these
+            strings to let the precision be referenced to the values in the array:
+            "smallest", "largest", "mean", "median", "logmean", or "fpzip".
 
     Notes:
         The reference options are:
@@ -214,7 +218,7 @@ def pickle_digits(self):
     derivatives.
 
     Returns:
-        (str, float, or int): One of "double", "single", or a number of digits roughly in
+        str, float, or int: One of "double", "single", or a number of digits roughly in
         the range 7-16.
     """
 
@@ -229,7 +233,7 @@ def pickle_reference(self):
     precision in this object and its derivatives.
 
     Returns:
-        (str, float, or int): One of "fpzip", "smallest", "largest", "mean", "median",
+        str, float, or int: One of "fpzip", "smallest", "largest", "mean", "median",
         "logmean", or a number.
     """
 
@@ -269,7 +273,7 @@ def _validate_pickle_digits(digits, reference):
     """Validate and return the pickle digit values.
 
     Parameters:
-        digits (int, float, str, list, tuple, or None): A single value, or one value for
+        digits (int | float | str | list | tuple | None): A single value, or one value for
             an object and a second for its derivatives. Each value is a number of decimal
             digits, "single", or "double". Use None for "double". Values beyond the first
             two are ignored.
@@ -317,7 +321,7 @@ def _validate_pickle_reference(references):
     """Validate and return the pickle reference values.
 
     Parameters:
-        references (int, float, str, list, tuple, or None): A single value, or one value
+        references (int | float | str | list | tuple | None): A single value, or one value
             for an object and a second for its derivatives. Each value is a number or one
             of "smallest", "largest", "mean", "median", "logmean", or "fpzip". Use None
             for "fpzip". Values beyond the first two are ignored.
@@ -355,7 +359,18 @@ def _validate_pickle_reference(references):
 ################################################################################
 
 def fpzip_compress(array, digits=16, dtype=np.float64):
-    """An fpzip-compressed array plus the number of bits that have been zeroed."""
+    """An fpzip-compressed array plus the number of bits that have been zeroed.
+
+    Parameters:
+        array (numpy.ndarray): The floating-point array to compress.
+        digits (int | float, optional): The number of decimal digits of precision to
+            preserve.
+        dtype (type, optional): The NumPy floating-point type to which `array` is cast
+            before compression.
+
+    Returns:
+        tuple: The compressed bytes and the number of low-order mantissa bits zeroed.
+    """
 
     array = np.require(array, dtype=dtype, requirements=['C', 'A', 'W'])
     shape = array.shape
@@ -450,7 +465,18 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
 
 
 def fpzip_decompress(fpzip_bytes, shape, bits):
-    """An fpzip-decompressed array with compensation for any compression bias."""
+    """An fpzip-decompressed array with compensation for any compression bias.
+
+    Parameters:
+        fpzip_bytes (bytes): The compressed array as returned by
+            :func:`~polymath.extensions.pickler.fpzip_compress`.
+        shape (tuple[int, ...]): The shape of the array to reconstruct.
+        bits (int): The number of low-order mantissa bits that were zeroed during
+            compression, used to compensate for the resulting bias.
+
+    Returns:
+        numpy.ndarray: The decompressed array.
+    """
 
     floats = fpzip.decompress(fpzip_bytes).astype(np.float64).reshape(shape)
 
@@ -507,7 +533,7 @@ def _encode_one_float_array(values, digits, reference):
     Parameters:
         values (numpy.ndarray): Array of floats to encode.
         digits (float): Number of digits to preserve.
-        reference (str or float): One of 'smallest', 'largest', 'mean', 'median',
+        reference (str | float): One of 'smallest', 'largest', 'mean', 'median',
             'logmean', 'fpzip', or a number.
 
     Returns:
@@ -621,14 +647,13 @@ def _encode_floats(values, rank, digits, reference):
     Parameters:
         values (numpy.ndarray): Array of values to encode.
         rank (int): Rank of the individual items in this array.
-        digits (str or float): 'float64', 'float32', or number of digits to
-            preserve.
-        reference (str): One of 'smallest', 'largest', 'mean', 'median',
-            'logmean', or 'fpzip'.
+        digits (str | float): 'float64', 'float32', or number of digits to preserve.
+        reference (str): One of 'smallest', 'largest', 'mean', 'median', 'logmean', or
+            'fpzip'.
 
     Returns:
-        tuple: Encoded array in one of several formats depending on the
-            compression method used.
+        tuple: Encoded array in one of several formats depending on the compression method
+            used.
     """
 
     shape = values.shape
@@ -669,7 +694,14 @@ def _encode_floats(values, rank, digits, reference):
 
 
 def _decode_scaled_uints(encoded):
-    """Decode a scaled, compressed array of unsigned integers."""
+    """Decode a scaled, compressed array of unsigned integers.
+
+    Parameters:
+        encoded (tuple): The encoded array as written by the matching encoder.
+
+    Returns:
+        numpy.ndarray: The reconstructed array.
+    """
 
     (_, shape, dtype, nbytes, scale_factor, offset, bz2_bytes) = encoded
     bz2_ints = np.frombuffer(bz2.decompress(bz2_bytes), dtype=dtype)
@@ -694,7 +726,14 @@ def _decode_scaled_uints(encoded):
 
 
 def _decode_floats(encoded):
-    """Complete decoding of a floating-point array."""
+    """Complete decoding of a floating-point array.
+
+    Parameters:
+        encoded (tuple): The encoded array as written by the matching encoder.
+
+    Returns:
+        numpy.ndarray: The reconstructed floating-point array.
+    """
 
     method = encoded[0]
 
@@ -733,7 +772,14 @@ def _decode_floats(encoded):
 
 
 def _encode_ints(values):
-    """Encode an integer array using BZ2 compression."""
+    """Encode an integer array using BZ2 compression.
+
+    Parameters:
+        values (numpy.ndarray): The integer array to encode.
+
+    Returns:
+        bytes: The compressed array.
+    """
 
     if not values.flags['CONTIGUOUS']:
         values = values.copy()
@@ -742,14 +788,29 @@ def _encode_ints(values):
 
 
 def _decode_ints(values, shape):
-    """Decode an integer array using BZ2 decompression."""
+    """Decode an integer array using BZ2 decompression.
+
+    Parameters:
+        values (bytes): The compressed array.
+        shape (tuple[int, ...]): The shape of the array to reconstruct.
+
+    Returns:
+        numpy.ndarray: The reconstructed integer array.
+    """
 
     bz2_bytes = bz2.decompress(values)
     return np.frombuffer(bz2_bytes, dtype='int').reshape(shape)
 
 
 def _encode_bools(values):
-    """Encode a boolean array using packbits + BZ2 compression."""
+    """Encode a boolean array using packbits + BZ2 compression.
+
+    Parameters:
+        values (numpy.ndarray): The boolean array to encode.
+
+    Returns:
+        bytes: The compressed array.
+    """
 
     if not values.flags['CONTIGUOUS']:
         values = values.copy()
@@ -758,7 +819,17 @@ def _encode_bools(values):
 
 
 def _decode_bools(values, shape, size):
-    """Decode a boolean array using BZ2 decompression."""
+    """Decode a boolean array using BZ2 decompression.
+
+    Parameters:
+        values (bytes): The compressed array.
+        shape (tuple[int, ...]): The shape of the array to reconstruct.
+        size (int): The number of boolean values, needed because the packed representation
+            is padded to a whole number of bytes.
+
+    Returns:
+        numpy.ndarray: The reconstructed boolean array.
+    """
 
     bz2_bytes = bz2.decompress(values)
     packed = np.frombuffer(bz2_bytes, dtype='uint8')
@@ -801,6 +872,9 @@ def __getstate__(self):
         or reference != 'double'), the round-trip values may differ slightly from the
         original due to compression precision limits. Use 'double' precision with 'fpzip'
         reference for lossless compression.
+
+    Returns:
+        dict: The encoded state of this object.
     """
 
     # Start with a shallow clone; save derivatives for later
@@ -928,7 +1002,7 @@ def __setstate__(self, state):
     reference for lossless compression.
 
     Parameters:
-        state (dict): The state dictionary as returned by __getstate__().
+        state (dict[str, Any]): The state dictionary as returned by __getstate__().
     """
 
     # Handle renamed keys

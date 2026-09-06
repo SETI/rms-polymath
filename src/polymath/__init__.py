@@ -513,8 +513,8 @@ generated automatically.
   values in the array.
 """
 
-from polymath.qube       import Qube
-from polymath.unit       import Unit
+from polymath.qube import Qube
+from polymath.unit import Unit
 
 # The extension methods must be bound onto Qube before any subclass module is imported.
 # Each subclass builds read-only class constants, such as Scalar.ZERO, while it loads, and

@@ -3,8 +3,16 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
+#
+# SPHINXBUILD points into the project virtualenv rather than relying on PATH, because a
+# sphinx-build found on PATH is often an older installation. The docs need Sphinx 9 (see
+# the docs extra in pyproject.toml); on earlier versions every polymath.typedefs alias
+# reference goes unresolved and the -W build fails. Override VENV (as
+# scripts/run-all-checks.sh does) to build against another environment.
+MAKEFILE_DIR  := $(dir $(lastword $(MAKEFILE_LIST)))
+VENV          ?= $(MAKEFILE_DIR)../venv
 SPHINXOPTS    ?=
-SPHINXBUILD   ?= sphinx-build
+SPHINXBUILD   ?= $(VENV)/bin/sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 

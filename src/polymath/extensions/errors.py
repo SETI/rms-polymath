@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/extensions/errors.py: Error message support
 ##########################################################################################
+"""Construction of the error messages raised by PolyMath operations.
+
+The functions here raise the exceptions that operations share, so that a message naming
+the operation, the classes involved, and the offending shapes is phrased the same way
+everywhere. They also perform the checks that many operations begin with, such as
+requiring an object to have no denominator.
+"""
 
 import numpy as np
 from polymath.qube import Qube
@@ -70,7 +77,18 @@ def _require_axis_in_range(self, axis, rank, op, name='axis'):
 
 
 def _raise_unsupported_op(op, /, obj1, obj2=None):
-    """Raise a TypeError or ValueError for unsupported operations."""
+    """Raise a TypeError or ValueError for unsupported operations.
+
+    Parameters:
+        op (str): Name of the operation to appear in the error message.
+        obj1 (Qube): The left operand of the operation.
+        obj2 (QubeLike | None, optional): The right operand of the operation. If None, the
+            operation is reported as unsupported for `obj1` alone.
+
+    Raises:
+        TypeError: If `obj2` is None or its type is unsupported.
+        ValueError: If either operand is array-like and the item shapes are incompatible.
+    """
 
     opstr = obj1._opstr(op)
 
@@ -96,7 +114,16 @@ def _raise_unsupported_op(op, /, obj1, obj2=None):
 
 
 def _raise_incompatible_shape(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible object shapes."""
+    """Raise a ValueError for incompatible object shapes.
+
+    Parameters:
+        op (str): Name of the operation to appear in the error message.
+        obj1 (Qube): The left operand of the operation.
+        obj2 (Qube): The right operand of the operation.
+
+    Raises:
+        ValueError: Always, quoting the shape of each operand.
+    """
 
     opstr = obj1._opstr(op)
     raise ValueError(f'incompatible object shapes for {opstr}: '
@@ -104,7 +131,16 @@ def _raise_incompatible_shape(op, /, obj1, obj2):
 
 
 def _raise_incompatible_numers(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible numerators in operation."""
+    """Raise a ValueError for incompatible numerators in operation.
+
+    Parameters:
+        op (str): Name of the operation to appear in the error message.
+        obj1 (Qube): The left operand of the operation.
+        obj2 (Qube): The right operand of the operation.
+
+    Raises:
+        ValueError: Always, quoting the numerator shape of each operand.
+    """
 
     opstr = obj1._opstr(op)
     raise ValueError(f'incompatible numerator shapes for {opstr}: '
@@ -112,7 +148,16 @@ def _raise_incompatible_numers(op, /, obj1, obj2):
 
 
 def _raise_incompatible_denoms(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible denominators in operation."""
+    """Raise a ValueError for incompatible denominators in operation.
+
+    Parameters:
+        op (str): Name of the operation to appear in the error message.
+        obj1 (Qube): The left operand of the operation.
+        obj2 (Qube): The right operand of the operation.
+
+    Raises:
+        ValueError: Always, quoting the denominator shape of each operand.
+    """
 
     opstr = obj1._opstr(op)
     raise ValueError(f'incompatible denominator shapes for {opstr}: '
@@ -120,7 +165,16 @@ def _raise_incompatible_denoms(op, /, obj1, obj2):
 
 
 def _raise_dual_denoms(op, /, obj1, obj2):
-    """Raise a ValueError for denominators on both operands."""
+    """Raise a ValueError for denominators on both operands.
+
+    Parameters:
+        op (str): Name of the operation to appear in the error message.
+        obj1 (Qube): The left operand of the operation.
+        obj2 (Qube): The right operand of the operation.
+
+    Raises:
+        ValueError: Always, because only one operand may have a denominator.
+    """
 
     opstr = obj1._opstr(op)
     raise ValueError(f'only one operand of {opstr} can have a denominator')

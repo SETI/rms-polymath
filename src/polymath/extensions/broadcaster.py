@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/extensions/broadcaster.py: broadcast operations
 ##########################################################################################
+"""Broadcasting of PolyMath objects to a common shape.
+
+These functions follow the NumPy broadcasting rules, applied to the leading array axes of
+an object rather than to its items, so that objects of different shapes can be combined.
+A broadcast object shares memory with its source and is therefore read-only.
+"""
 
 import numpy as np
 from polymath.qube import Qube
@@ -12,7 +18,7 @@ def broadcast_into_shape(self, shape, *, recursive=True, _protected=True):
     """This object broadcasted to the specified shape. DEPRECATED name; use broadcast_to.
 
     Parameters:
-        shape (tuple): The shape into which the object is to be broadcast.
+        shape (tuple[int, ...]): The shape into which the object is to be broadcast.
         recursive (bool, optional): True to broadcast the derivatives as well. Otherwise,
             they are removed.
         _protected (bool, optional): False to prevent the arrays being set to readonly.
@@ -20,7 +26,7 @@ def broadcast_into_shape(self, shape, *, recursive=True, _protected=True):
             returned array share memory with one another and with the original object.
 
     Returns:
-        The broadcasted object; self if the shape already matches.
+        Qube: The broadcasted object; self if the shape already matches.
 
     Notes:
         Both the original object and the returned array are normally set to read-only,
@@ -36,7 +42,7 @@ def broadcast_to(self, shape, *, recursive=True, _protected=True):
     """This object broadcasted to the specified shape.
 
     Parameters:
-        shape (tuple): The shape into which the object is to be broadcast.
+        shape (tuple[int, ...]): The shape into which the object is to be broadcast.
         recursive (bool, optional): True to broadcast the derivatives as well. Otherwise,
             they are removed.
         _protected (bool, optional): False to prevent the arrays being set to readonly.
@@ -44,7 +50,7 @@ def broadcast_to(self, shape, *, recursive=True, _protected=True):
             returned array share memory with one another and with the original object.
 
     Returns:
-        The broadcasted object; self if the shape already matches.
+        Qube: The broadcasted object; self if the shape already matches.
 
     Notes:
         Both the original object and the returned array are normally set to read-only,
@@ -125,16 +131,16 @@ def broadcasted_shape(*objects, item=()):
     """The shape defined by a broadcast across the objects.
 
     Parameters:
-        *objects (Qube, array-like, int, float, None, or tuple): Zero or more array
-            objects. Values of None are assigned shape (). A list or tuple is treated as
-            the definition of an additional shape.
-        item (list or tuple, optional): A list or tuple to be appended to the shape.
-            This makes it possible to use the returned shape in the declaration of a NumPy
+        *objects (QubeLike | None): Zero or more array objects. Values of None are
+            assigned shape (). A list or tuple is treated as the definition of an
+            additional shape.
+        item (list | tuple, optional): A list or tuple to be appended to the shape. This
+            makes it possible to use the returned shape in the declaration of a NumPy
             array containing items that are not scalars.
 
     Returns:
-        The broadcast shape, comprising the maximum value of each corresponding axis, with
-        the `item` shape appended if any.
+        tuple[int, ...]: The broadcast shape, comprising the maximum value of each
+            corresponding axis, with the `item` shape appended if any.
 
     Raises:
         ValueError: If an object dimension is incompatible with the broadcast.
@@ -186,14 +192,14 @@ def broadcasted_shape(*objects, item=()):
 
 
 def broadcast(*objects, recursive=True, _protected=True):
-    """Broadcast one or objects to their common shape.
+    """Broadcast one or more objects to their common shape.
 
     Python scalars are returned unchanged because they already broadcast with anything.
 
     Parameters:
-        *objects (Qube, array-like, int, float, None, or tuple):
-            Zero or more array objects. Values of None are assigned shape (). A list or
-            tuple is treated as the definition of an additional shape.
+        *objects (QubeLike | None): Zero or more array objects. Values of None are
+            assigned shape (). A list or tuple is treated as the definition of an
+            additional shape.
         recursive (bool, optional): True to broadcast the derivatives to the same shape;
             False to strip the derivatives from the returned objects.
         _protected (bool, optional): False to prevent the arrays being set to readonly.
@@ -201,8 +207,8 @@ def broadcast(*objects, recursive=True, _protected=True):
             among the elements within each of the returned objects.
 
     Returns:
-        A tuple of objects, all broadcased to the common shape. Python scalars are
-        returned unchanged because they already broadcast with anything.
+        tuple[Any, ...]: A tuple of objects, all broadcased to the common shape. Python
+        scalars are returned unchanged because they already broadcast with anything.
 
     Raises:
         ValueError: If an object dimension is incompatible with the broadcast.

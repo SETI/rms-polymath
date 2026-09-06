@@ -1615,18 +1615,33 @@ def test_scalar_ops_reciprocal_disallows_denominators() -> None:
         a.reciprocal()
 
 
-@pytest.mark.parametrize(('symbol', 'func'),
-                         [('<' , operator.lt),
-                          ('<=', operator.le),
-                          ('>' , operator.gt),
-                          ('>=', operator.ge)])
-def test_scalar_ops_comparisons_disallow_denominators(
-        symbol: str, func: Callable[[Scalar, Scalar], object]) -> None:
-    """The ordering comparisons do not support denominators."""
+@pytest.mark.parametrize(('func', 'expected'),
+                         [(operator.lt, [[False, True ], [False, False]]),
+                          (operator.le, [[True , True ], [False, True ]]),
+                          (operator.gt, [[False, False], [True , False]]),
+                          (operator.ge, [[True , False], [True , True ]])],
+                         ids=['lt', 'le', 'gt', 'ge'])
+def test_scalar_ops_comparisons_allow_denominators(
+        func: Callable[[Scalar, Scalar], Boolean],
+        expected: list[list[bool]]) -> None:
+    """The ordering comparisons compare denominator items element by element."""
 
     a = Scalar([[1., 2.], [3., 4.]], drank=1)
-    with pytest.raises(ValueError, match=f'"{symbol}" does not support denominators'):
-        func(a, a)
+    b = Scalar([[1., 5.], [0., 4.]], drank=1)
+    result = func(a, b)
+    assert result.values.tolist() == expected
+
+
+@pytest.mark.parametrize('func', [operator.lt, operator.le, operator.gt, operator.ge],
+                         ids=['lt', 'le', 'gt', 'ge'])
+def test_scalar_ops_comparisons_fold_denominators_into_the_shape(
+        func: Callable[[Scalar, Scalar], Boolean]) -> None:
+    """A comparison of items with denominators returns a Boolean with no denominator."""
+
+    a = Scalar([[1., 2.], [3., 4.]], drank=1)
+    result = func(a, a)
+    assert result.shape == (2, 2)
+    assert result.denom == ()
 
 
 def test_scalar_ops_power_zero_without_derivatives() -> None:

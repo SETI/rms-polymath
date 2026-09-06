@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/extensions/attr_ops.py: Custom attribute operations
 ##########################################################################################
+"""Support for user-defined attributes on a PolyMath object.
+
+The single function here attaches an arbitrary named value to an object, so that
+application-specific information can travel with it. The attribute is carried along by the
+operations that copy an object.
+"""
 
 __all__ = ['add_attr']
 
@@ -22,9 +28,9 @@ def add_attr(self, name, value=None):
     beginning with "d_d" are reserved for derivatives and are never allowed.
 
     Parameters:
-        name (str): The name of the attribute, which must be a valid Python identifier
-            and must not begin with "d_d".
-        value (object, optional): The value of the attribute; None by default.
+        name (str): The name of the attribute, which must be a valid Python identifier and
+            must not begin with "d_d".
+        value (Any | None, optional): The value of the attribute; None by default.
 
     Returns:
         Qube: This object after the attribute has been added.

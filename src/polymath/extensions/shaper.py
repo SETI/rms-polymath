@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/extensions/shaper.py: re-shaping operations
 ##########################################################################################
+"""Re-shaping of the leading array axes of a PolyMath object.
+
+These functions reshape, flatten, roll, move, and swap the leading axes of an object,
+leaving its items untouched, and stack several objects into one along a new leading axis.
+Each operation is applied to the object's derivatives as well.
+"""
 
 import math
 import numpy as np
@@ -13,9 +19,9 @@ def reshape(self, shape, *, recursive=True):
     """A shallow copy of the object with a new leading shape.
 
     Parameters:
-        shape (tuple or int): A tuple defining the new leading shape. A value of -1 can
-            appear at one location in the new shape, and the size of that shape will be
-            determined based on this object's size.
+        shape (tuple[int, ...] | int): A tuple defining the new leading shape. A value of
+            -1 can appear at one location in the new shape, and the size of that shape
+            will be determined based on this object's size.
         recursive (bool, optional): True to apply the same shape to the derivatives.
             Otherwise, derivatives are deleted from the returned object.
 
@@ -118,8 +124,8 @@ def roll_axis(self, axis, start=0, *, recursive=True, rank=None):
         start (int, optional): The axis will be rolled to fall in front of this axis.
         recursive (bool, optional): True to perform the same axis roll on the derivatives.
             Otherwise, derivatives are deleted from the returned object.
-        rank (int, optional): Rank to assume for the object, which could be larger than
-            len(self.shape) because of broadcasting.
+        rank (int | None, optional): Rank to assume for the object, which could be larger
+            than len(self.shape) because of broadcasting.
 
     Returns:
         Qube: A shallow copy with the axis rolled to the new position.
@@ -173,12 +179,12 @@ def move_axis(self, source, destination, *, recursive=True, rank=None):
     """A shallow copy of the object with the specified axis moved to a new position.
 
     Parameters:
-        source (int or tuple): Axis to move or tuple of axes to move.
-        destination (int or tuple): Destination of moved axis or axes.
+        source (int | tuple[int, ...]): Axis to move or tuple of axes to move.
+        destination (int | tuple[int, ...]): Destination of moved axis or axes.
         recursive (bool, optional): True to perform the same axis move on the derivatives.
             Otherwise, derivatives are deleted from the returned object.
-        rank (int, optional): Rank to assume for the object, which could be larger than
-            len(self.shape) because of broadcasting.
+        rank (int | None, optional): Rank to assume for the object, which could be larger
+            than len(self.shape) because of broadcasting.
 
     Returns:
         Qube: A shallow copy with the specified axis moved to the new position.
@@ -237,10 +243,10 @@ def stack(*args, recursive=True):
     """Stack objects into one with a new leading axis.
 
     Parameters:
-        *args: Any number of Scalars or arguments that can be casted to Scalars. They need
-            not have the same shape, but it must be possible to cast them to the same
-            shape. A value of None is converted to a zero-valued Scalar that matches the
-            denominator shape of the other arguments.
+        *args (ScalarLike | None): Any number of Scalars or arguments that can be cast to
+            Scalars. They need not have the same shape, but it must be possible to cast
+            them to the same shape. A value of None is converted to a zero-valued Scalar
+            that matches the denominator shape of the other arguments.
         recursive (bool, optional): True to include all the derivatives. The returned
             object will have derivatives representing the union of all the derivatives
             found amongst the scalars.

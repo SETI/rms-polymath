@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/vector3.py: Vector3 subclass of PolyMath Vector
 ##########################################################################################
+"""The :class:`~polymath.Vector3` subclass, representing 3-dimensional vectors.
+
+A Vector3 is a :class:`~polymath.Vector` whose numerator shape is fixed at ``(3,)``.
+Beyond the general vector algebra, it supports the coordinate conversions used in
+geometry: spherical (right ascension and declination), cylindrical, and
+longitude/latitude, plus rotations about an arbitrary pole.
+"""
 
 import numpy as np
 import numbers
@@ -33,9 +40,8 @@ class Vector3(Vector):
         """Convert the argument to Vector3 if possible.
 
         Parameters:
-            arg (object): The object to convert to Vector3.
-            recursive (bool, optional): If True, derivatives will also be
-                converted.
+            arg (Any): The object to convert to Vector3.
+            recursive (bool, optional): If True, derivatives will also be converted.
 
         Returns:
             Vector3: The converted Vector3 object.
@@ -72,9 +78,9 @@ class Vector3(Vector):
         """Construct a Vector3 by combining three scalars.
 
         Parameters:
-            x (Scalar or convertible): First component of the vector.
-            y (Scalar or convertible): Second component of the vector.
-            z (Scalar or convertible): Third component of the vector.
+            x (ScalarLike): First component of the vector.
+            y (ScalarLike): Second component of the vector.
+            z (ScalarLike): Third component of the vector.
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
                 found among x, y and z.
@@ -132,10 +138,10 @@ class Vector3(Vector):
         """Construct a Vector3 from right ascension, declination and optional length.
 
         Parameters:
-            ra (Scalar): Right ascension in radians.
-            dec (Scalar): Declination in radians.
-            length (Scalar, optional): Length of the vector. Defaults to 1.0, producing a
-                unit vector.
+            ra (ScalarLike): Right ascension in radians.
+            dec (ScalarLike): Declination in radians.
+            length (ScalarLike, optional): Length of the vector. Defaults to 1.0,
+                producing a unit vector.
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
                 in ra, dec and length.
@@ -172,10 +178,9 @@ class Vector3(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            tuple: A tuple `(ra, dec, length)` where all three are Scalars. **ra** and
-            **dec** are in radians. **ra** is the right ascension (azimuthal angle in the
-            XY plane), **dec** is the declination (elevation angle from the XY plane), and
-            **length** is the magnitude of the vector.
+            tuple[Scalar, Scalar, Scalar]: `(ra, dec, length)` where `ra` is the right
+            ascension in radians, `dec` is the declination in radians, and `length` is the
+            magnitude of the vector.
         """
 
         (x, y, z) = self.to_scalars(recursive=recursive)
@@ -191,14 +196,13 @@ class Vector3(Vector):
         """Construct a Vector3 from cylindrical coordinates.
 
         Parameters:
-            radius (Scalar): Distance from the cylindrical axis.
-            longitude (Scalar): Longitude in radians. Zero is along the x-axis, with
-                positive values measured counterclockwise toward the y-axis.
-            z (Scalar, optional): Distance above/below the equatorial plane (positive z
-                is above the XY plane).
+            radius (ScalarLike): Distance from the cylindrical axis.
+            longitude (ScalarLike): Longitude in radians. Zero is along the **X**-axis,
+                with positive values measured counterclockwise toward the **Y**-axis.
+            z (ScalarLike, optional): Distance above the **XY** plane.
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
-                in radius, longitude and z.
+                in `radius`, `longitude`, and `z`.
 
         Returns:
             Vector3: A new Vector3 object constructed from the cylindrical coordinates.
@@ -206,7 +210,7 @@ class Vector3(Vector):
         Notes:
             Input arguments need not have the same shape, but it must be possible to cast
             them to the same shape. The coordinate system uses: x-axis as reference
-            (longitude=0), y-axis at longitude=π/2, z-axis perpendicular to the xy-plane.
+            (longitude=0), y-axis at longitude=pi/2, z-axis perpendicular to the xy-plane.
         """
 
         radius  = Scalar.as_scalar(radius, recursive=recursive)
@@ -219,16 +223,16 @@ class Vector3(Vector):
         return Vector3.from_scalars(x, y, z, recursive=recursive)
 
     def to_cylindrical(self, *, recursive=True):
-        """A tuple (radius, longitude, z) from this Vector3.
+        """A tuple `(radius, longitude, z)` from this Vector3.
 
         Parameters:
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            tuple: A tuple `(radius, longitude, z)` where all three are Scalars.
-            **radius** is the distance from the cylindrical axis (sqrt(x² + y²)),
-            **longitude** is in radians (measured from the x-axis toward the y-axis,
-            range [0, 2π)), and **z** is the distance above/below the equatorial plane.
+            tuple[Scalar, Scalar, Scalar]: `(radius, longitude, z)` where `radius` is the
+            distance from the cylindrical axis (sqrt(x**2 + y**2)), `longitude` is the
+            angle in radians from the **x**-axis toward the **y**-axis in the range [0,
+            2*pi)), and `z` is the distance above/below the equatorial plane.
         """
 
         (x, y, z) = self.to_scalars(recursive=recursive)
@@ -246,7 +250,7 @@ class Vector3(Vector):
 
         Returns:
             Scalar: The longitude in radians, measured from the X-axis toward the Y-axis.
-            The longitude is returned in the range [0, 2π) radians, measured
+            The longitude is returned in the range [0, 2*pi) radians, measured
             counterclockwise from the positive X-axis in the XY plane.
         """
 
@@ -262,7 +266,7 @@ class Vector3(Vector):
 
         Returns:
             Scalar: The latitude in radians, measured from the equatorial plane toward
-            the Z-axis. The latitude is returned in the range [-π/2, π/2] radians, where
+            the Z-axis. The latitude is returned in the range [-pi/2, pi/2] radians, where
             positive values are above the equatorial plane (positive Z) and negative
             values are below.
         """
@@ -295,9 +299,9 @@ class Vector3(Vector):
         """This Vector3 rotated about a pole vector.
 
         Parameters:
-            pole (Vector3): The pole vector about which to rotate.
-            angle (Scalar, optional): The rotation angle in radians. If None, the angle is
-                determined from the pole vector's magnitude.
+            pole (Vector3Like): The pole vector about which to rotate.
+            angle (ScalarLike | None, optional): The rotation angle in radians. If None,
+                the angle is determined from the pole vector's magnitude.
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
@@ -336,15 +340,14 @@ class Vector3(Vector):
         """The angular offset between this Vector3 and another.
 
         Parameters:
-            vector (Vector3): The vector to measure the offset from.
+            vector (Vector3Like): The vector to measure the offset from.
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            tuple: A tuple `(longitude_offset, latitude_offset)` where both are Scalars
-            in radians. These are the angular offsets needed to rotate from this vector
-            to the target vector. The first rotation is about the Y-axis
-            (longitude_offset), followed by a rotation about the X-axis
-            (latitude_offset). Positive angles follow the right-hand rule.
+            tuple[Scalar, Scalar]: `(longitude_offset, latitude_offset)`, the angular
+            offsets needed to rotate from this vector to the target vector.
+            `longitude_offset` is about the **Y**-axis, followed by `latitude_offset`
+            about the **X**-axis. Angles are in radians and follow the right-hand rule.
         """
 
         vector = Vector3.as_vector3(vector, recursive=recursive)

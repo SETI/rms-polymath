@@ -85,7 +85,11 @@ dev = [
 ]
 docs = [
   "myst-parser",
-  "sphinx>=7",
+  # Sphinx 9 is the first release whose Python domain resolves a py:class reference --
+  # which Napoleon generates for every docstring type -- to the py:data target that
+  # autodoc creates for a type alias. On Sphinx 8 and earlier every "*Like" alias in
+  # polymath.typedefs is left unresolved and the nitpicky -W build fails.
+  "sphinx>=9",
   "sphinxcontrib-mermaid",
   "sphinx-rtd-theme",
 ]

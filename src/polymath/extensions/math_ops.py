@@ -1,6 +1,14 @@
 ##########################################################################################
 # polymath/extensions/math_ops.py: Math operations
 ##########################################################################################
+"""The arithmetic and logical operators of a PolyMath object.
+
+This module defines the unary and binary operators, their in-place and reflected forms,
+the comparison operators, and the reductions such as
+:func:`~polymath.extensions.math_ops.sum` and :func:`~polymath.extensions.math_ops.mean`.
+Operations propagate units and derivatives where that is meaningful, and combine the masks
+of their operands.
+"""
 
 import numpy as np
 import numbers
@@ -52,7 +60,7 @@ def __neg__(self, *, recursive=True):
 
 
 def __abs__(self, *, recursive=True):
-    """abs(self), element-by-element absolute value.
+    """``abs(self)``, element-by-element absolute value.
 
     Parameters:
         recursive (bool, optional): True to include derivatives in return.
@@ -65,12 +73,20 @@ def __abs__(self, *, recursive=True):
 
 
 def abs(self):
-    """abs(self), element-by-element absolute value."""
+    """``abs(self)``, element-by-element absolute value.
+
+    Returns:
+        Qube: The element-by-element absolute value.
+    """
 
     return self.__abs__()
 
 def __len__(self):
-    """Number of elements along first axis."""
+    """Number of elements along first axis.
+
+    Returns:
+        int: The length of the leading axis.
+    """
 
     if self._ndims:
         return self._shape[0]
@@ -78,7 +94,11 @@ def __len__(self):
         raise TypeError(f'len of unsized {type(self).__name__} object')
 
 def len(self):
-    """Number of elements along first axis."""
+    """Number of elements along first axis.
+
+    Returns:
+        int: The length of the leading axis.
+    """
 
     return self.__len__()
 
@@ -87,13 +107,12 @@ def len(self):
 ##########################################################################################
 
 def __add__(self, /, arg, *, recursive=True):
-    """self + arg, element-by-element addition.
+    """``self + arg``, element-by-element addition.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
-            For simple scalar operations (when self._rank == 0), Python numbers are
-            handled directly for efficiency.
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a Qube
+            of the same type as self using as_this_type(). For simple scalar operations
+            (when self._rank == 0), Python numbers are handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -139,11 +158,11 @@ def __add__(self, /, arg, *, recursive=True):
 
 
 def __radd__(self, /, arg, *, recursive=True):
-    """arg + self, element-by-element addition.
+    """``arg + self``, element-by-element addition.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a Qube
+            of the same type as self using as_this_type().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -153,10 +172,10 @@ def __radd__(self, /, arg, *, recursive=True):
     return self.__add__(arg, recursive=recursive)
 
 def __iadd__(self, /, arg):
-    """self += arg, element-by-element in-place addition.
+    """``self += arg``, element-by-element in-place addition.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (QubeLike): The argument.
 
     Returns:
         Qube: self after the addition.
@@ -205,7 +224,15 @@ def __iadd__(self, /, arg):
 
 
 def _add_derivs(self, /, arg1, arg2):
-    """Dictionary of added derivatives."""
+    """Dictionary of added derivatives.
+
+    Parameters:
+        arg1 (Qube): The left operand of the addition.
+        arg2 (Qube): The right operand of the addition.
+
+    Returns:
+        dict: The derivatives of the sum, keyed by name.
+    """
 
     set1 = set(arg1._derivs.keys())
     set2 = set(arg2._derivs.keys())
@@ -228,13 +255,12 @@ def _add_derivs(self, /, arg1, arg2):
 ##########################################################################################
 
 def __sub__(self, /, arg, *, recursive=True):
-    """self - arg, element-by-element subtraction.
+    """``self - arg``, element-by-element subtraction.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
-            For simple scalar operations (when self._rank == 0), Python numbers are
-            handled directly for efficiency.
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a Qube
+            of the same type as self using as_this_type(). For simple scalar operations
+            (when self._rank == 0), Python numbers are handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -280,11 +306,11 @@ def __sub__(self, /, arg, *, recursive=True):
 
 
 def __rsub__(self, /, arg, *, recursive=True):
-    """arg - self, element-by-element subtraction.
+    """``arg - self``, element-by-element subtraction.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a Qube
+            of the same type as self using as_this_type().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -300,11 +326,11 @@ def __rsub__(self, /, arg, *, recursive=True):
 
 
 def __isub__(self, /, arg):
-    """self -= arg, element-by-element in-place subtraction.
+    """``self -= arg``, element-by-element in-place subtraction.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Qube of the same type as self using as_this_type().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a Qube
+            of the same type as self using as_this_type().
 
     Returns:
         Qube: self after the subtraction.
@@ -353,7 +379,15 @@ def __isub__(self, /, arg):
 
 
 def _sub_derivs(self, /, arg1, arg2):
-    """Dictionary of subtracted derivatives."""
+    """Dictionary of subtracted derivatives.
+
+    Parameters:
+        arg1 (Qube): The left operand of the subtraction.
+        arg2 (Qube): The right operand of the subtraction.
+
+    Returns:
+        dict: The derivatives of the difference, keyed by name.
+    """
 
     set1 = set(arg1._derivs.keys())
     set2 = set(arg2._derivs.keys())
@@ -376,13 +410,12 @@ def _sub_derivs(self, /, arg1, arg2):
 ##########################################################################################
 
 def __mul__(self, /, arg, *, recursive=True):
-    """self * arg, element-by-element multiplication.
+    """``self * arg``, element-by-element multiplication.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
-            For simple scalar operations (when self._rank == 0), Python numbers are
-            handled directly for efficiency.
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar(). For simple scalar operations (when
+            self._rank == 0), Python numbers are handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -430,11 +463,11 @@ def __mul__(self, /, arg, *, recursive=True):
 
 
 def __rmul__(self, /, arg, *, recursive=True):
-    """arg * self, element-by-element multiplication.
+    """``arg * self``, element-by-element multiplication.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -462,8 +495,8 @@ def __imul__(self, /, arg):
     """Element-by-element in-place multiplication.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the multiplication.
@@ -523,7 +556,15 @@ def __imul__(self, /, arg):
 
 
 def _mul_by_number(self, /, arg, *, recursive=True):
-    """Internal multiply op when the arg is a Python scalar."""
+    """Internal multiply op when the arg is a Python scalar.
+
+    Parameters:
+        arg (float | int | bool): The number by which to multiply this object.
+        recursive (bool, optional): True to multiply the derivatives as well.
+
+    Returns:
+        Qube: The product.
+    """
 
     obj = self._clone_new_values(recursive=False, retain_cache=True)
     obj._set_values(self._values * arg, retain_cache=True)
@@ -536,7 +577,15 @@ def _mul_by_number(self, /, arg, *, recursive=True):
 
 
 def _mul_by_scalar(self, /, arg, *, recursive=True):
-    """Internal multiply op when the arg is a Qube with nrank == 0 and no
+    """Internal multiply op when `arg` is a Qube with ``nrank == 0`` and no more than one
+    object has a denominator.
+
+    Parameters:
+        arg (Qube): The Scalar by which to multiply this object.
+        recursive (bool, optional): True to multiply the derivatives as well.
+
+    Returns:
+        Qube: The product.
     more than one object has a denominator."""
 
     # Align axes
@@ -563,7 +612,14 @@ def _mul_by_scalar(self, /, arg, *, recursive=True):
 
 
 def _mul_derivs(self, /, arg):
-    """Dictionary of multiplied derivatives."""
+    """Dictionary of multiplied derivatives.
+
+    Parameters:
+        arg (Qube): The right operand of the multiplication.
+
+    Returns:
+        dict: The derivatives of the product, keyed by name.
+    """
 
     new_derivs = {}
 
@@ -587,15 +643,14 @@ def _mul_derivs(self, /, arg):
 ##########################################################################################
 
 def __truediv__(self, /, arg, *, recursive=True):
-    """self / arg, element-by-element division.
+    """``self / arg``, element-by-element division.
 
     Cases of divide-by-zero are masked.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
-            For simple scalar operations (when self._rank == 0), Python numbers are
-            handled directly for efficiency.
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar(). For simple scalar operations (when
+            self._rank == 0), Python numbers are handled directly for efficiency.
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -644,13 +699,13 @@ def __truediv__(self, /, arg, *, recursive=True):
 
 
 def __rtruediv__(self, /, arg, *, recursive=True):
-    """arg / self, element-by-element division.
+    """``arg / self``, element-by-element division.
 
     Cases of divide-by-zero are masked.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -675,13 +730,13 @@ def __rtruediv__(self, /, arg, *, recursive=True):
 
 # Generic in-place division
 def __itruediv__(self, /, arg):
-    """self /= arg, element-by-element in-place division.
+    """``self /= arg``, element-by-element in-place division.
 
     Cases of divide-by-zero are masked.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the division.
@@ -723,7 +778,15 @@ def __itruediv__(self, /, arg):
 
 
 def _div_by_number(self, /, arg, *, recursive=True):
-    """Internal division op when the arg is a Python scalar."""
+    """Internal division op when the arg is a Python scalar.
+
+    Parameters:
+        arg (float | int | bool): The number by which to divide this object.
+        recursive (bool, optional): True to divide the derivatives as well.
+
+    Returns:
+        Qube: The quotient.
+    """
 
     obj = self._clone_new_values(recursive=False, retain_cache=True)
 
@@ -741,7 +804,15 @@ def _div_by_number(self, /, arg, *, recursive=True):
 
 
 def _div_by_scalar(self, /, arg, *, recursive):
-    """Internal division op when the arg is a Qube with rank == 0."""
+    """Internal division op when the arg is a Qube with rank == 0.
+
+    Parameters:
+        arg (Qube): The Scalar by which to divide this object.
+        recursive (bool): True to divide the derivatives as well.
+
+    Returns:
+        Qube: The quotient.
+    """
 
     # Mask out zeros
     arg = arg.mask_where_eq(0., 1.)
@@ -767,8 +838,16 @@ def _div_by_scalar(self, /, arg, *, recursive):
 def _div_derivs(self, /, arg, *, nozeros=False):
     """Dictionary of divided derivatives.
 
-    If nozeros is True, the arg is assumed not to contain any zeros, so divide-by-zero
+    If `nozeros` is True, the arg is assumed not to contain any zeros, so divide-by-zero
     errors are not checked.
+
+    Parameters:
+        arg (Qube): The right operand of the division.
+        nozeros (bool, optional): True if `arg` is known to contain no zeros, in which
+            case divide-by-zero errors are not checked.
+
+    Returns:
+        dict: The derivatives of the quotient, keyed by name.
     """
 
     new_derivs = {}
@@ -800,13 +879,13 @@ def _div_derivs(self, /, arg, *, nozeros=False):
 ##########################################################################################
 
 def __floordiv__(self, /, arg):
-    """self // arg, element-by-element floor division.
+    """``self // arg``, element-by-element floor division.
 
     Cases of divide-by-zero are masked. Derivatives are ignored.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: The result of the floor division.
@@ -846,13 +925,13 @@ def __floordiv__(self, /, arg):
 
 # Generic right floor division
 def __rfloordiv__(self, /, arg):
-    """arg // self, element-by-element floor division.
+    """``arg // self``, element-by-element floor division.
 
     Cases of divide-by-zero are masked. Derivatives are ignored.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: The result of the floor division.
@@ -872,13 +951,13 @@ def __rfloordiv__(self, /, arg):
 
 
 def __ifloordiv__(self, /, arg):
-    """self //= arg, element-by-element in-place floor division.
+    """``self //= arg``, element-by-element in-place floor division.
 
     Cases of divide-by-zero are masked. Derivatives are ignored.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the floor division.
@@ -922,7 +1001,14 @@ def __ifloordiv__(self, /, arg):
 
 
 def _floordiv_by_number(self, /, arg):
-    """Internal floor division op when the arg is a Python scalar."""
+    """Internal floor division op when the arg is a Python scalar.
+
+    Parameters:
+        arg (float | int | bool): The number by which to divide this object.
+
+    Returns:
+        Qube: The floor of the quotient.
+    """
 
     obj = self._clone_new_values(recursive=False, retain_cache=True)
 
@@ -938,6 +1024,12 @@ def _floordiv_by_scalar(self, /, arg):
     """Internal floor division op when the arg is a Qube with nrank == 0.
 
     The arg cannot have a denominator.
+
+    Parameters:
+        arg (Qube): The Scalar by which to divide this object.
+
+    Returns:
+        Qube: The floor of the quotient.
     """
 
     # Mask out zeros
@@ -961,14 +1053,14 @@ def _floordiv_by_scalar(self, /, arg):
 ##########################################################################################
 
 def __mod__(self, /, arg, *, recursive=True):
-    """self % arg, element-by-element modulus.
+    """``self % arg``, element-by-element modulus.
 
     Cases of divide-by-zero are masked. Derivatives in the numerator are supported, but
     not in the denominator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -1008,14 +1100,14 @@ def __mod__(self, /, arg, *, recursive=True):
 
 
 def __rmod__(self, /, arg, *, recursive=True):
-    """arg % self, element-by-element modulus.
+    """``arg % self``, element-by-element modulus.
 
     Cases of divide-by-zero are masked. Derivatives in the numerator are supported, but
     not in the denominator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
         recursive (bool, optional): True to include derivatives in return.
 
     Returns:
@@ -1036,14 +1128,14 @@ def __rmod__(self, /, arg, *, recursive=True):
 
 
 def __imod__(self, /, arg):
-    """self %= arg, element-by-element in-place modulus.
+    """``self %= arg``, element-by-element in-place modulus.
 
     Cases of divide-by-zero are masked. Derivatives in the numerator are supported, but
     not in the denominator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The argument. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: self after the modulus operation.
@@ -1085,7 +1177,15 @@ def __imod__(self, /, arg):
 
 
 def _mod_by_number(self, /, arg, *, recursive=True):
-    """Internal modulus op when the arg is a Python scalar."""
+    """Internal modulus op when the arg is a Python scalar.
+
+    Parameters:
+        arg (float | int | bool): The number by which to take the modulus.
+        recursive (bool, optional): True to include the derivatives in the result.
+
+    Returns:
+        Qube: The remainder.
+    """
 
     obj = self._clone_new_values(recursive=False, retain_cache=True)
 
@@ -1103,7 +1203,15 @@ def _mod_by_number(self, /, arg, *, recursive=True):
 
 
 def _mod_by_scalar(self, /, arg, *, recursive=True):
-    """Internal modulus op when the arg is a Qube with rank == 0."""
+    """Internal modulus op when the arg is a Qube with rank == 0.
+
+    Parameters:
+        arg (Qube): The Scalar by which to take the modulus.
+        recursive (bool, optional): True to include the derivatives in the result.
+
+    Returns:
+        Qube: The remainder.
+    """
 
     # Mask out zeros
     arg = arg.wod.mask_where_eq(0, 1)
@@ -1131,7 +1239,7 @@ def _mod_by_scalar(self, /, arg, *, recursive=True):
 ##########################################################################################
 
 def __pow__(self, /, arg):
-    """self ** arg, element-by-element exponentiation.
+    """``self ** arg``, element-by-element exponentiation.
 
     Derivatives are not supported.
 
@@ -1142,8 +1250,8 @@ def __pow__(self, /, arg):
     It is overridden by Scalar to obtain the normal behavior of the "**" operator.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The exponent. If not a Qube object,
-            it will be converted to a Scalar via Qube._SCALAR_CLASS.as_scalar().
+        arg (QubeLike): The exponent. If not a Qube object, it will be converted to a
+            Scalar via Qube._SCALAR_CLASS.as_scalar().
 
     Returns:
         Qube: The result of the exponentiation.
@@ -1227,7 +1335,7 @@ def __ipow__(self, /, arg):
     unit of this object beforehand.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The exponent.
+        arg (QubeLike): The exponent.
 
     Returns:
         Qube: self after the exponentiation.
@@ -1264,6 +1372,13 @@ def __ipow__(self, /, arg):
 def _compatible_arg(self, /, arg):
     """None if it is impossible for self and arg to be equal; otherwise, the argument made
     compatible with self.
+
+    Parameters:
+        arg (QubeLike): The object to be made compatible with this object.
+
+    Returns:
+        Qube | None: The argument made compatible with this object, or None if the two can
+        never be equal.
     """
 
     # If the subclasses cannot be unified, raise a ValueError
@@ -1294,10 +1409,10 @@ def _compatible_arg(self, /, arg):
 
 
 def __eq__(self, /, arg):
-    """self == arg, element by element.
+    """``self == arg``, element by element.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The exponent.
+        arg (QubeLike): The exponent.
 
     Returns:
         Boolean: True where the elements are equal.
@@ -1340,10 +1455,10 @@ def __eq__(self, /, arg):
 
 
 def __ne__(self, /, arg):
-    """self != arg, element by element.
+    """``self != arg``, element-by-element inequality.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The exponent.
+        arg (QubeLike): The exponent.
 
     Returns:
         Boolean: True where the elements are not equal.
@@ -1391,14 +1506,13 @@ def __ne__(self, /, arg):
 
 
 def __le__(self, /, arg):
-    """self <= arg, element by element.
+    """``self <= arg``, element by element.
 
-    This general method always raises ValueError. It is overriden by :meth:`Scalar.__le__`
-    and :meth:`Boolean.__le__`.
-
+    This general method always raises ValueError. It is overridden by
+    :meth:`Scalar.__le__` and :meth:`Boolean.__le__`.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (QubeLike): The argument.
 
     Returns:
         Boolean: True where the elements of self are less or equal.
@@ -1411,13 +1525,13 @@ def __le__(self, /, arg):
 
 
 def __lt__(self, /, arg):
-    """self < arg, element by element.
+    """``self < arg``, element by element.
 
-    This general method always raises ValueError. It is overriden by :meth:`Scalar.__lt__`
-    and :meth:`Boolean.__lt__`.
+    This general method always raises ValueError. It is overridden by
+    :meth:`Scalar.__lt__` and :meth:`Boolean.__lt__`.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (QubeLike): The argument.
 
     Returns:
         Boolean: True where the elements of self are less.
@@ -1430,13 +1544,13 @@ def __lt__(self, /, arg):
 
 
 def __ge__(self, /, arg):
-    """self >= arg, element by element.
+    """``self >= arg``, element by element.
 
-    This general method always raises ValueError. It is overriden by :meth:`Scalar.__ge__`
-    and :meth:`Boolean.__ge__`.
+    This general method always raises ValueError. It is overridden by
+    :meth:`Scalar.__ge__` and :meth:`Boolean.__ge__`.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (QubeLike): The argument.
 
     Returns:
         Boolean: True where the elements of self are greater or equal.
@@ -1449,13 +1563,13 @@ def __ge__(self, /, arg):
 
 
 def __gt__(self, /, arg):
-    """self > arg, element by element.
+    """``self > arg``, element by element.
 
-    This general method always raises ValueError. It is overriden by :meth:`Scalar.__gt__`
-    and :meth:`Boolean.__gt__`.
+    This general method always raises ValueError. It is overridden by
+    :meth:`Scalar.__gt__` and :meth:`Boolean.__gt__`.
 
     Parameters:
-        arg (Qube, array-like, float, int, or bool): The argument.
+        arg (QubeLike): The argument.
 
     Returns:
         Boolean: True where the elements of self are greater.
@@ -1506,7 +1620,11 @@ def __bool__(self):
 
 
 def __float__(self):
-    """This object as a single float."""
+    """This object as a single float.
+
+    Returns:
+        float: This object's single value as a Python float.
+    """
 
     if not self._is_scalar:
         raise ValueError(f'{type(self).__name__} array value cannot be converted to '
@@ -1519,7 +1637,11 @@ def __float__(self):
 
 
 def __int__(self):
-    """This object as a single int; floats always round down."""
+    """This object as a single int; floats always round down.
+
+    Returns:
+        int: This object's single value as a Python int.
+    """
 
     if not self._is_scalar:
         raise ValueError(f'{type(self).__name__} array value cannot be converted to int')
@@ -1536,13 +1658,23 @@ def __invert__(self):
     """~self, unary inversion, element by element.
 
     This is boolean "not", not bit inversion.
+
+    Returns:
+        Boolean: True where this object is zero or masked.
     """
 
     return Qube._BOOLEAN_CLASS(self._values == 0, self._mask)
 
 
 def __and__(self, /, arg):
-    """self & arg, element-by-element logical "and"."""
+    """``self & arg``, element-by-element logical "and".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Boolean: The element-by-element result.
+    """
 
     if isinstance(arg, np.ma.MaskedArray):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
@@ -1557,13 +1689,27 @@ def __and__(self, /, arg):
 
 
 def __rand__(self, /, arg):
-    """arg & self, element-by-element logical "and"."""
+    """``arg & self``, element-by-element logical "and".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Boolean: The element-by-element result.
+    """
 
     return self.__and__(arg)
 
 
 def __or__(self, /, arg):
-    """self | arg, element-by-element logical "or"."""
+    """``self | arg``, element-by-element logical "or".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Boolean: The element-by-element result.
+    """
 
     if isinstance(arg, np.ma.MaskedArray):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
@@ -1577,13 +1723,27 @@ def __or__(self, /, arg):
                                                self._mask, nrank=0)
 
 def __ror__(self, /, arg):
-    """arg | self, element-by-element logical "or"."""
+    """``arg | self``, element-by-element logical "or".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Boolean: The element-by-element result.
+    """
 
     return self.__or__(arg)
 
 
 def __xor__(self, /, arg):
-    """self | arg, element-by-element logical exclusive "or"."""
+    """``self ^ arg``, element-by-element logical "xor".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Boolean: The element-by-element result.
+    """
 
     if isinstance(arg, np.ma.MaskedArray):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
@@ -1597,13 +1757,30 @@ def __xor__(self, /, arg):
                                                self._mask, nrank=0)
 
 def __rxor__(self, /, arg):
-    """arg | self, element-by-element logical exclusive "or"."""
+    """``arg ^ self``, element-by-element logical "xor".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Boolean: The element-by-element result.
+    """
 
     return self.__xor__(arg)
 
 
 def __iand__(self, /, arg):
-    """self &= arg, element-by-element in-place logical "and"."""
+    """``self &= arg``, element-by-element in-place logical "and".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Qube: This object, modified in place.
+
+    Raises:
+        ValueError: If this object is read-only.
+    """
 
     self.require_writeable()
 
@@ -1620,7 +1797,17 @@ def __iand__(self, /, arg):
 
 
 def __ior__(self, /, arg):
-    """self &= arg, element-by-element in-place logical "or"."""
+    """``self |= arg``, element-by-element in-place logical "or".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Qube: This object, modified in place.
+
+    Raises:
+        ValueError: If this object is read-only.
+    """
 
     self.require_writeable()
 
@@ -1637,7 +1824,17 @@ def __ior__(self, /, arg):
 
 
 def __ixor__(self, /, arg):
-    """self ^= arg, element-by-element in-place logical exclusive "or"."""
+    """``self ^= arg``, element-by-element in-place logical "xor".
+
+    Parameters:
+        arg (BooleanLike): The right operand of the operation.
+
+    Returns:
+        Qube: This object, modified in place.
+
+    Raises:
+        ValueError: If this object is read-only.
+    """
 
     self.require_writeable()
 
@@ -1654,7 +1851,11 @@ def __ixor__(self, /, arg):
 
 
 def logical_not(self):
-    """The negation of this object, True where it is zero or False."""
+    """The negation of this object, True where it is zero or False.
+
+    Returns:
+        Boolean: True where this object is zero and unmasked.
+    """
 
     if self._rank:
         values = np.any(self._values, axis=tuple(range(-self._rank, 0)))
@@ -1671,20 +1872,21 @@ def any(self, axis=None, *, builtins=None, masked=None, out=None):
     """True if any of the unmasked items are nonzero.
 
     Parameters:
-        axis (int or tuple, optional): Axis or a tuple of axes. The `any` operation is
-            performed across these axes, leaving any remaining axes in the returned value.
-            If None (the default), then the any operation is performed across all axes of
-            the object.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked Boolean instead of a builtin
-            type in this case.
-        out (object, optional): Ignored. This enables "np.any(Qube)" to work.
+        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The `any`
+            operation is performed across these axes, leaving any remaining axes in the
+            returned value. If None (the default), then the any operation is performed
+            across all axes of the object.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked Boolean instead of a
+            builtin type in this case.
+        out (Any | None, optional): Ignored. This enables "np.any(Qube)" to work.
 
     Returns:
-        (Boolean or bool): Result of operation.
+        Boolean or bool: Result of operation.
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
@@ -1716,17 +1918,21 @@ def all(self, axis=None, *, builtins=None, masked=None, out=None):
     """True if all the unmasked items are nonzero.
 
     Parameters:
-        axis (int or tuple, optional): Axis or a tuple of axes. The any operation is
-            performed across these axes, leaving any remaining axes in the returned value.
-            If None (the default), then the any operation is performed across all axes of
-            the object.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked Boolean instead of a builtin
-            type in this case.
-        out (object, optional): Ignored. This enables "np.any(Qube)" to work.
+        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The any
+            operation is performed across these axes, leaving any remaining axes in the
+            returned value. If None (the default), then the any operation is performed
+            across all axes of the object.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked Boolean instead of a
+            builtin type in this case.
+        out (Any | None, optional): Ignored. This enables "np.any(Qube)" to work.
+
+    Returns:
+        Boolean | bool: True if every unmasked element is nonzero.
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
@@ -1761,13 +1967,17 @@ def any_true_or_masked(self, axis=None, *, builtins=None):
     masked. This method returns True, whereas any() returns a masked Boolean value.
 
     Parameters:
-        axis (int or tuple, optional): Axis or a tuple of axes. The any operation is
-            performed across these axes, leaving any remaining axes in the returned value.
-            If None (the default), then the any operation is performed across all axes of
-            the object.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The any
+            operation is performed across these axes, leaving any remaining axes in the
+            returned value. If None (the default), then the any operation is performed
+            across all axes of the object.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+
+    Returns:
+        Boolean | bool: True if any element is nonzero or masked.
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
@@ -1799,14 +2009,18 @@ def all_true_or_masked(self, axis=None, *, builtins=None):
     masked. This method returns True, whereas all() returns a masked Boolean value.
 
     Parameters:
-        axis (int or tuple, optional): Axis or a tuple of axes. The any operation is
-            performed across these axes, leaving any remaining axes in the returned value.
-            If None (the default), then the any operation is performed across all axes of
-            the object.
+        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The any
+            operation is performed across these axes, leaving any remaining axes in the
+            returned value. If None (the default), then the any operation is performed
+            across all axes of the object.
 
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+
+    Returns:
+        Boolean | bool: True if every element is nonzero or masked.
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
@@ -1841,7 +2055,7 @@ def reciprocal(self, *, recursive=True, nozeros=False):
     :meth:`Scalar.reciprocal`, :meth:`Vector.reciprocal`, :meth:`Matrix.reciprocal`, and
     :meth:`Quaternion.reciprocal`.
 
-    Input:
+    Parameters:
         recursive (bool, optional): True to return the derivatives of the reciprocal too;
             otherwise, derivatives are removed.
         nozeros (bool, optional): False (the default) to mask out any zero-valued items in
@@ -1858,6 +2072,9 @@ def zero(self):
     The returned object has the same denominator shape as this object.
 
     This is default behavior and may need to be overridden by some subclasses.
+
+    Returns:
+        Qube: An object of this subclass containing all zeros.
     """
 
     # Scalar case
@@ -1898,19 +2115,23 @@ def sum(self, axis=None, *, recursive=True, builtins=None, masked=None, out=None
     This method is overridden by :meth:`Boolean.sum`.
 
     Parameters:
-        axis (int or tuple, optional): An integer axis or a tuple of axes. The sum is
-            determined across these axes, leaving any remaining axes in the returned
-            value. If None (the default), then the sum is performed across all axes if the
-            object.
+        axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
+            The sum is determined across these axes, leaving any remaining axes in the
+            returned value. If None (the default), then the sum is performed across all
+            axes if the object.
         recursive (bool, optional): True to include the sums of the derivatives inside the
             returned Scalar.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked value instead of a builtin
-            type.
-        out (optional): Ignored. This enables "np.sum(Qube)" to work.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked value instead of a
+            builtin type.
+        out (Any | None, optional): Ignored. This enables "np.sum(Qube)" to work.
+
+    Returns:
+        Qube | float | int: The sum across the specified axes.
     """
 
     result = self._mean_or_sum(axis, recursive=recursive, _combine_as_mean=False)
@@ -1930,27 +2151,31 @@ def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=N
     """The mean of the unmasked values along the specified axis or axes.
 
     Parameters:
-        axis (int or tuple, optional): An integer axis or a tuple of axes. The mean is
-            determined across these axes, leaving any remaining axes in the returned
-            value. If None (the default), then the mean is performed across all axes of
-            the object.
+        axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
+            The mean is determined across these axes, leaving any remaining axes in the
+            returned value. If None (the default), then the mean is performed across all
+            axes of the object.
         recursive (bool, optional): True to include the means of the derivatives inside
             the returned Scalar.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked value instead of a builtin
-            type.
-        dtype (optional): Ignored. This enables "np.mean(Qube)" to work.
-        out (optional): Ignored. This enables "np.mean(Qube)" to work.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked value instead of a
+            builtin type.
+        dtype (Any | None, optional): Ignored. This enables "np.mean(Qube)" to work.
+        out (Any | None, optional): Ignored. This enables "np.mean(Qube)" to work.
 
     Examples:
         For an object with shape (2, 3, 2):
-        - axis=0 → result shape (3, 2)
-        - axis=1 → result shape (2, 2)
-        - axis=(0, 1) → result shape (2,)
-        - axis=None → result shape ()
+        - axis=0 -> result shape (3, 2)
+        - axis=1 -> result shape (2, 2)
+        - axis=(0, 1) -> result shape (2,)
+        - axis=None -> result shape ()
+
+    Returns:
+        Qube | float | int: The mean across the specified axes.
     """
 
     result = self._mean_or_sum(axis, recursive=recursive, _combine_as_mean=True)

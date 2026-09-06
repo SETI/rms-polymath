@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/extensions/deriv_ops.py: Derivative operations
 ##########################################################################################
+"""Management of the derivatives attached to a PolyMath object.
+
+A PolyMath object can carry named partial derivatives, each one another PolyMath object
+whose denominator shape describes the variable of differentiation. These functions insert,
+rename, and delete derivatives, and return copies of an object with or without them.
+"""
 
 from polymath.qube import Qube
 
@@ -23,24 +29,24 @@ def insert_deriv(self, key, deriv, *, override=True):
     read-only object is not prevented.
 
     Parameters:
-        key (str): The name of the derivative. Each derivative also becomes accessible
-            as an object attribute with "d_d" in front of the name. For example, the
+        key (str): The name of the derivative. Each derivative also becomes accessible as
+            an object attribute with "d_d" in front of the name. For example, the
             time-derivative of this object might be keyed by "t", in which case it can
             also be accessed as attribute "d_dt".
-        deriv (Qube): The derivative. Derivatives must have the same leading shape and
-            the same numerator as the object; denominator items are used for partial
+        deriv (Qube): The derivative. Derivatives must have the same leading shape and the
+            same numerator as the object; denominator items are used for partial
             derivatives.
-        override (bool, optional): True to allow the value of a pre-existing
-            derivative to be replaced.
+        override (bool, optional): True to allow the value of a pre-existing derivative to
+            be replaced.
 
     Returns:
         Qube: This object after the derivative has been inserted.
 
     Raises:
-        TypeError: If the derivative class is invalid or if derivatives are disallowed
-            for the object class.
-        ValueError: If the shape is invalid, or if the key already exists when
-            `override` is False.
+        TypeError: If the derivative class is invalid or if derivatives are disallowed for
+            the object class.
+        ValueError: If the shape is invalid, or if the key already exists when `override`
+            is False.
     """
 
     if not self._DERIVS_OK:
@@ -86,17 +92,17 @@ def insert_derivs(self, derivs, *, override=False):
     read-only object is not prevented.
 
     Parameters:
-        derivs (dict): The dictionary of derivatives keyed by their names.
-        override (bool, optional): True to allow the value of a pre-existing
-            derivative to be replaced.
+        derivs (dict[str, Qube]): The dictionary of derivatives keyed by their names.
+        override (bool, optional): True to allow the value of a pre-existing derivative to
+            be replaced.
 
     Returns:
         Qube: This object after the derivatives has been inserted.
 
     Raises:
         TypeError: If a derivative class is invalid.
-        ValueError: If derivatives are disallowed for the object, if a shape is
-            invalid, or if a key already exists when `override` is False.
+        ValueError: If derivatives are disallowed for the object, if a shape is invalid,
+            or if a key already exists when `override` is False.
     """
 
     # Check every insert before proceeding with any
@@ -120,8 +126,8 @@ def delete_deriv(self, key, *, override=False):
     override=True.
 
     Parameters:
-        key (str): The key of the derivative to remove. If the key does not exist,
-            the object is unchanged.
+        key (str): The key of the derivative to remove. If the key does not exist, the
+            object is unchanged.
         override (bool, optional): True to allow the deleting of derivatives from a
             read-only object.
 
@@ -148,8 +154,8 @@ def delete_derivs(self, *, override=False, preserve=None):
     Parameters:
         override (bool, optional): True to allow the deleting of derivatives from a
             read-only object.
-        preserve (list, tuple or set, optional): The names of derivatives to retain.
-            All others are removed.
+        preserve (list[str] | tuple[str, ...] | set[str] | None, optional): The names of
+            derivatives to retain. All others are removed.
 
     Raises:
         ValueError: If this object is read-only and `override` is False.
@@ -182,8 +188,8 @@ def without_derivs(self, *, preserve=None):
     A read-only object remains read-only, and is cached for later use.
 
     Parameters:
-        preserve (list, tuple, or set, optional): The names of derivatives to retain.
-            All others are removed.
+        preserve (list[str] | tuple[str, ...] | set[str] | None, optional): The names of
+            derivatives to retain. All others are removed.
 
     Returns:
         Qube: The copy, with the same subclass as self.
@@ -223,6 +229,9 @@ def wod(self):
     """A shallow clone without derivatives, cached.
 
     Read-only objects remain read-only.
+
+    Returns:
+        Qube: A shallow copy of this object without derivatives.
     """
 
     if not self._derivs:
@@ -270,7 +279,7 @@ def with_deriv(self, key, value, *, method='insert'):
     Parameters:
         key (str): The key of the derivative to insert.
         value (Qube): The value for this derivative.
-        method (str): How to insert the derivative, one of these options:`
+        method (str, optional): How to insert the derivative, one of these options:`
 
             * "`insert`": Iinsert the new derivative; raise a ValueError if a
               derivative of the same name already exists.
@@ -309,7 +318,7 @@ def rename_deriv(self, key, new_key, *, method='insert'):
     Parameters:
         key (str): The current key of the derivative.
         new_key (str): The new name of the derivative.
-        method (str): How to rename the derivative, one of these options:`
+        method (str, optional): How to rename the derivative, one of these options:`
 
             * "`insert`": Iinsert the new derivative; raise a ValueError if a
               derivative of the same name already exists.

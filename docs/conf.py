@@ -55,6 +55,14 @@ suppress_warnings = ['myst.header']
 # The suffix(es) of source filenames.
 source_suffix = ['.rst', '.md']
 
+# The docstrings wrap variable names in single backticks. Napoleon renders the name of
+# each entry in a `Parameters:` block in bold, so the default role must be `strong` for a
+# mention of that same name in the surrounding prose to match it. Double backticks mark
+# code expressions, and italics mark math symbols that are not variable names, such as
+# *x*-axis. An API symbol that should link to its own entry carries an explicit role
+# instead.
+default_role = 'strong'
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.
@@ -107,15 +115,9 @@ nitpick_ignore_regex = [
     # Napoleon splits a type such as "(bool, optional)" on the comma and looks up each
     # piece, so the trailing "optional" of every optional parameter arrives here.
     (r'py:class', r'optional'),
-    # Anything NumPy can turn into an array: a nested sequence, a scalar, an ndarray or
-    # another PolyMath object. There is no single class that expresses it.
-    (r'py:class', r'array-like'),
-    # A single number, as opposed to an array of them.
-    (r'py:class', r'scalar'),
-    # Anything convertible to a Vector, in the same sense as "array-like".
-    (r'py:class', r'vector-like'),
-    # Anything the surrounding class can convert into itself.
-    (r'py:class', r'convertible'),
+    # The sentinel a binary operator returns to defer to the other operand. It is a
+    # builtin constant rather than a class, so a py:class lookup cannot match it.
+    (r'py:class', r'NotImplemented'),
 ]
 
 # MyST-Parser settings

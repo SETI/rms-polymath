@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/extensions/masking.py: Mask construction and object mask operations
 ##########################################################################################
+"""Construction of masks and operations on the mask of a PolyMath object.
+
+A mask is a boolean array, or a single boolean applying to every element, in which True
+marks a value as invalid. These functions convert an arbitrary argument into a mask of a
+suitable shape, combine masks, count the masked and unmasked elements, and return copies
+of an object whose mask has been replaced or removed.
+"""
 
 import numpy as np
 import numbers
@@ -22,14 +29,14 @@ def _as_mask(arg, *, invert=False, masked_value=True, opstr=''):
     """This argument converted to a scalar bool or boolean Numpy array.
 
     Parameters:
-        arg: The object to convert to a mask.
+        arg (BooleanLike): The object to convert to a mask.
         invert (bool, optional): True to return the logical not of the mask.
         masked_value (bool, optional): The value to use where the input argument is
-           masked. This value is used _after_ `invert` is applied.
+            masked. This value is used _after_ `invert` is applied.
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        (bool or NumPy.ndarray): bool or boolean array suitable for us as a mask.
+        bool or NumPy.ndarray: bool or boolean array suitable for us as a mask.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -94,21 +101,21 @@ def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
     shape to use as a mask.
 
     Parameters:
-        arg: The object to convert to a mask.
-        shape (tuple): Shape of the required mask.
-        collapse (bool, optional): True to merge the extraneous axes of a mask if its
-            rank is greater than that of the given shape.
-        broadcast (bool, optional): True to broadcast this mask if its rank is less
-            than that of the given shape.
+        arg (BooleanLike): The object to convert to a mask.
+        shape (tuple[int, ...]): Shape of the required mask.
+        collapse (bool, optional): True to merge the extraneous axes of a mask if its rank
+            is greater than that of the given shape.
+        broadcast (bool, optional): True to broadcast this mask if its rank is less than
+            that of the given shape.
         invert (bool, optional): True to return the logical not of the mask.
         masked_value (bool, optional): The value to use where the input argument is
-           nmasked. This value is used _after_ `invert` is applied.
-        check (bool, optional): True to check for an array containing all False
-            values, and if so, replace it with a single value of False.
+            nmasked. This value is used _after_ `invert` is applied.
+        check (bool, optional): True to check for an array containing all False values,
+            and if so, replace it with a single value of False.
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        (bool or NumPy.ndarray): bool or boolean mask array.
+        bool or NumPy.ndarray: bool or boolean mask array.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -157,10 +164,10 @@ def or_(*masks):
     """The logical "or" of two or more masks, avoiding array operations if possible.
 
     Parameters:
-        *masks (array-like or bool): One or more boolean masks.
+        *masks (BooleanLike): One or more boolean masks.
 
     Returns:
-        (numpy.ndarray or bool): New mask array or bool.
+        numpy.ndarray or bool: New mask array or bool.
     """
 
     # Two inputs is most common
@@ -214,10 +221,10 @@ def and_(*masks):
     """The logical "and" of two or more masks, avoiding array operations if possible.
 
     Parameters:
-        *masks (array-like or bool): One or more boolean masks.
+        *masks (BooleanLike): One or more boolean masks.
 
     Returns:
-        (numpy.ndarray or bool): New mask array or bool.
+        numpy.ndarray or bool: New mask array or bool.
     """
 
     # Two inputs is most common
@@ -271,13 +278,21 @@ def and_(*masks):
 
 
 def is_all_masked(self):
-    """True if this object is entirely masked."""
+    """True if this object is entirely masked.
+
+    Returns:
+        bool: True if every element of this object is masked.
+    """
 
     return np.all(self._mask)
 
 
 def count_masked(self):
-    """The number of masked items in this object."""
+    """The number of masked items in this object.
+
+    Returns:
+        int: The number of masked elements.
+    """
 
     if isinstance(self._mask, np.ndarray):
         return np.sum(self._mask)
@@ -286,7 +301,11 @@ def count_masked(self):
 
 
 def count_unmasked(self):
-    """The number of unmasked items in this object."""
+    """The number of unmasked items in this object.
+
+    Returns:
+        int: The number of unmasked elements.
+    """
 
     if isinstance(self._mask, np.ndarray):
         return self._size - np.sum(self._mask)
@@ -295,7 +314,15 @@ def count_unmasked(self):
 
 
 def masked_single(self, *, recursive=True):
-    """An object of this subclass containing one masked value."""
+    """An object of this subclass containing one masked value.
+
+    Parameters:
+        recursive (bool, optional): True to include masked derivatives of the same names
+            as this object's derivatives.
+
+    Returns:
+        Qube: A shapeless, read-only, fully masked object.
+    """
 
     if not self._rank:
         new_value = self._default
@@ -377,10 +404,10 @@ def remask(self, mask, *, recursive=True, check=True):
     object is changing.
 
     Parameters:
-        mask (array-like or bool): The new mask to be applied to the object.
+        mask (BooleanLike): The new mask to be applied to the object.
         recursive (bool, optional): True to apply the same mask to any derivatives.
-        check (bool, optional): True to check for an array containing all False
-            values, and if so, replace it with a single value of False.
+        check (bool, optional): True to check for an array containing all False values,
+            and if so, replace it with a single value of False.
 
     Returns:
         Qube: A shallow copy of this object with a new mask.
@@ -411,10 +438,10 @@ def remask_or(self, mask, *, recursive=True, check=True):
     changing.
 
     Parameters:
-        mask (array-like or bool): The new mask to be applied to the object.
+        mask (BooleanLike): The new mask to be applied to the object.
         recursive (bool, optional): True to apply the same mask to any derivatives.
-        check (bool, optional): True to check for an array containing all False
-            values, and if so, replace it with a single value of False.
+        check (bool, optional): True to check for an array containing all False values,
+            and if so, replace it with a single value of False.
 
     Returns:
         Qube: A shallow copy of this object with a new mask.
@@ -533,25 +560,41 @@ def collapse_mask(self, *, recursive=True):
 
 
 def as_mask_where_nonzero(self):
-    """A boolean scalar or NumPy ndarray where values are nonzero and unmasked."""
+    """A boolean scalar or NumPy ndarray where values are nonzero and unmasked.
+
+    Returns:
+        numpy.ndarray | bool: True where an element is nonzero and unmasked.
+    """
 
     return (self._values != 0) & self.antimask
 
 
 def as_mask_where_zero(self):
-    """A boolean scalar or NumPy ndarray where values are zero and unmasked."""
+    """A boolean scalar or NumPy ndarray where values are zero and unmasked.
+
+    Returns:
+        numpy.ndarray | bool: True where an element is zero and unmasked.
+    """
 
     return (self._values == 0) & self.antimask
 
 
 def as_mask_where_nonzero_or_masked(self):
-    """A boolean scalar or NumPy ndarray where values are nonzero or masked."""
+    """A boolean scalar or NumPy ndarray where values are nonzero or masked.
+
+    Returns:
+        numpy.ndarray | bool: True where an element is nonzero or masked.
+    """
 
     return (self._values != 0) | self._mask
 
 
 def as_mask_where_zero_or_masked(self):
-    """A boolean scalar or NumPy ndarray where values are zero or masked."""
+    """A boolean scalar or NumPy ndarray where values are zero or masked.
+
+    Returns:
+        numpy.ndarray | bool: True where an element is zero or masked.
+    """
 
     return (self._values == 0) | self._mask
 

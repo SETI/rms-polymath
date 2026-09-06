@@ -1,6 +1,13 @@
 ################################################################################
 # polymath/extensions/tvl.py: Three-valued logic operations
 ################################################################################
+"""Three-valued logic, in which a masked value means "maybe".
+
+The ordinary comparison operators treat a masked value as undefined and return a masked
+result. The operations here treat it as a third truth value instead, so that a result is
+True or False whenever the masked elements cannot affect the answer, and masked only when
+they can.
+"""
 
 import numpy as np
 from polymath.qube import Qube
@@ -21,16 +28,17 @@ def tvl_and(self, arg, builtins=None, masked=None):
         * Masked and Masked = Masked
 
     Parameters:
-        arg (Qube or bool): The right-hand operand for the AND operation.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked value instead of a builtin
-            type.
+        arg (BooleanLike): The right-hand operand for the AND operation.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked value instead of a
+            builtin type.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "and" operation. When the
+        Boolean or bool: The result of the three-valued logic "and" operation. When the
         result is masked, the underlying boolean value may be either True or False, and
         the mask indicates indeterminacy.
     """
@@ -116,16 +124,17 @@ def tvl_or(self, arg, builtins=None, masked=None):
         * Masked or Masked = Masked
 
     Parameters:
-        arg (Qube or bool): The right-hand operand for the OR operation.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked value instead of a builtin
-            type.
+        arg (BooleanLike): The right-hand operand for the OR operation.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked value instead of a
+            builtin type.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "or" operation. When the
+        Boolean or bool: The result of the three-valued logic "or" operation. When the
         result is masked, the underlying boolean value may be either True or False, and
         the mask indicates indeterminacy.
     """
@@ -207,21 +216,22 @@ def tvl_any(self, axis=None, builtins=None, masked=None):
         * otherwise, Masked.
 
     Parameters:
-        axis (int or tuple, optional): An integer axis or a tuple of axes. The
-            any operation is performed across these axes, leaving any remaining
-            axes in the returned value. If None (the default), then the any
-            operation is performed across all axes of the object, reducing to a
-            scalar result. When axis is specified, the result shape is the original
-            shape with the specified axes removed.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked value instead of a builtin
-            type.
+        axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
+            The any operation is performed across these axes, leaving any remaining axes
+            in the returned value. If None (the default), then the any operation is
+            performed across all axes of the object, reducing to a scalar result. When
+            axis is specified, the result shape is the original shape with the specified
+            axes removed.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked value instead of a
+            builtin type.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "any" operation. The
+        Boolean or bool: The result of the three-valued logic "any" operation. The
         result is masked if any values along the specified axes are masked, unless
         an unmasked True value is found.
 
@@ -272,21 +282,22 @@ def tvl_all(self, axis=None, builtins=None, masked=None):
         * otherwise, Masked.
 
     Parameters:
-        axis (int or tuple, optional): An integer axis or a tuple of axes. The
-            all operation is performed across these axes, leaving any remaining
-            axes in the returned value. If None (the default), then the all
-            operation is performed across all axes of the object, reducing to a
-            scalar result. When axis is specified, the result shape is the original
-            shape with the specified axes removed.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
-        masked (bool, optional): The value to return if builtins is True but the returned
-            value is masked. Default is to return a masked value instead of a builtin
-            type.
+        axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
+            The all operation is performed across these axes, leaving any remaining axes
+            in the returned value. If None (the default), then the all operation is
+            performed across all axes of the object, reducing to a scalar result. When
+            axis is specified, the result shape is the original shape with the specified
+            axes removed.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
+        masked (bool | None, optional): The value to return if `builtins` is True but the
+            returned value is masked. Default is to return a masked value instead of a
+            builtin type.
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "all" operation. The
+        Boolean or bool: The result of the three-valued logic "all" operation. The
         result is masked if any values along the specified axes are masked, unless
         an unmasked False value is found.
 
@@ -334,13 +345,14 @@ def tvl_eq(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or bool): The right-hand operand for the equality comparison.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        arg (BooleanLike): The right-hand operand for the equality comparison.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic equality comparison.
+        Boolean or bool: The result of the three-valued logic equality comparison.
         When the result is masked, the underlying boolean value may be either True or
         False, and the mask indicates indeterminacy. The `builtins` parameter affects
         the return type but not the masking behavior.
@@ -356,13 +368,14 @@ def tvl_ne(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or bool): The right-hand operand for the inequality comparison.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        arg (BooleanLike): The right-hand operand for the inequality comparison.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic inequality comparison.
+        Boolean or bool: The result of the three-valued logic inequality comparison.
         When the result is masked, the underlying boolean value may be either True or
         False, and the mask indicates indeterminacy. The `builtins` parameter affects
         the return type but not the masking behavior.
@@ -378,13 +391,14 @@ def tvl_lt(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or numbers.Real): The right-hand operand for the comparison.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        arg (QubeLike): The right-hand operand for the comparison.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "less than" comparison.
+        Boolean or bool: The result of the three-valued logic "less than" comparison.
         When the result is masked, the underlying boolean value may be either True or
         False, and the mask indicates indeterminacy. The `builtins` parameter affects
         the return type but not the masking behavior.
@@ -400,13 +414,14 @@ def tvl_gt(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or numbers.Real): The right-hand operand for the comparison.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        arg (QubeLike): The right-hand operand for the comparison.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "greater than"
+        Boolean or bool: The result of the three-valued logic "greater than"
         comparison. When the result is masked, the underlying boolean value may be
         either True or False, and the mask indicates indeterminacy. The `builtins`
         parameter affects the return type but not the masking behavior.
@@ -422,13 +437,14 @@ def tvl_le(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or numbers.Real): The right-hand operand for the comparison.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        arg (QubeLike): The right-hand operand for the comparison.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "less than or equal
+        Boolean or bool: The result of the three-valued logic "less than or equal
         to" comparison. When the result is masked, the underlying boolean value may be
         either True or False, and the mask indicates indeterminacy. The `builtins`
         parameter affects the return type but not the masking behavior.
@@ -444,13 +460,14 @@ def tvl_ge(self, arg, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or numbers.Real): The right-hand operand for the comparison.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        arg (QubeLike): The right-hand operand for the comparison.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic "greater than or
+        Boolean or bool: The result of the three-valued logic "greater than or
         equal to" comparison. When the result is masked, the underlying boolean value
         may be either True or False, and the mask indicates indeterminacy. The
         `builtins` parameter affects the return type but not the masking behavior.
@@ -466,14 +483,15 @@ def _tvl_op(self, arg, comparison, builtins=None):
     value is masked.
 
     Parameters:
-        arg (Qube or numbers.Real): The right-hand operand for the operation.
-        comparison (Qube or bool): The result of the boolean comparison.
-        builtins (bool, optional): If True and the result is a single unmasked scalar, the
-            result is returned as a Python boolean instead of as an instance of Boolean.
-            Default is to use the global setting defined by Qube.prefer_builtins().
+        arg (QubeLike): The right-hand operand for the operation.
+        comparison (BooleanLike): The result of the boolean comparison.
+        builtins (bool | None, optional): If True and the result is a single unmasked
+            scalar, the result is returned as a Python boolean instead of as an instance
+            of Boolean. Default is to use the global setting defined by
+            Qube.prefer_builtins().
 
     Returns:
-        (Boolean or bool): The result of the three-valued logic operation.
+        Boolean or bool: The result of the three-valued logic operation.
     """
 
     # Return a Python bool if appropriate

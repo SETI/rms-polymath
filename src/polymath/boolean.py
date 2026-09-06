@@ -1,6 +1,13 @@
 ##########################################################################################
-# polymath/boolean.py: Boolean subclass of PolyMath base class
+# polymath/boolean.py
 ##########################################################################################
+"""The :class:`~polymath.Boolean` subclass, representing True and False values.
+
+A Boolean is a :class:`~polymath.Scalar` whose values are booleans. Arithmetic on a
+Boolean first converts it to an integer Scalar, so ``True`` behaves as one and ``False``
+as zero. Masked elements make a Boolean three-valued; see :mod:`polymath.extensions.tvl`
+for the operations that treat a masked value as "maybe" rather than as an error.
+"""
 
 import numpy as np
 
@@ -13,8 +20,8 @@ __all__ = ['Boolean']
 class Boolean(Scalar):
     """Represent boolean values in the PolyMath framework.
 
-    This class handles boolean values with masking support. Masked values are
-    considered unknown, neither True nor False.
+    This class handles boolean values with masking support. Masked values are considered
+    unknown, neither True nor False.
     """
 
     _NRANK = 0          # The number of numerator axes.
@@ -31,7 +38,7 @@ class Boolean(Scalar):
         """Convert the argument to Boolean if possible.
 
         Parameters:
-            arg (object): The object to convert to Boolean.
+            arg (Any): The object to convert to Boolean.
             recursive (bool, optional): This parameter is ignored for Boolean class but
                 included for compatibility.
 
@@ -51,7 +58,8 @@ class Boolean(Scalar):
         """An object suitable for indexing a NumPy ndarray.
 
         Returns:
-            numpy.ndarray: A boolean array with False values where masked.
+            numpy.ndarray | bool: A boolean or boolean array with False values where
+            values are False or masked.
         """
 
         return (self._values & self.antimask)
@@ -64,20 +72,20 @@ class Boolean(Scalar):
         values instead of True values.
 
         Parameters:
-            axis (int or tuple, optional): An integer axis or a tuple of axes. The sum is
-                determined across these axes, leaving any remaining axes in the returned
-                value. If None (the default), then the sum is performed across all axes of
-                the object.
+            axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of
+                axes. The sum is determined across these axes, leaving any remaining axes
+                in the returned value. If None (the default), then the sum is performed
+                across all axes of the object.
             value (bool, optional): True to count True values; False to count False
                 values.
-            builtins (bool, optional): If True and the result is a single unmasked scalar,
-                the result is returned as a Python int or float instead of as an instance
-                of Qube. Default is that specified by Qube.prefer_builtins().
+            builtins (bool | None, optional): If True and the result is a single unmasked
+                scalar, the result is returned as a Python int or float instead of as an
+                instance of Qube. Default is that specified by Qube.prefer_builtins().
             recursive (bool, optional): Ignored for class Boolean.
-            masked (bool, optional): The value to return if builtins is True but the
-                returned value is masked. Default is to return a masked value instead of a
-                builtin type.
-            out (object, optional): Ignored. Enables "np.sum(Qube)" to work.
+            masked (bool | None, optional): The value to return if `builtins` is True but
+                the returned value is masked. Default is to return a masked value instead
+                of a builtin type.
+            out (Any | None, optional): Ignored. Enables "np.sum(Qube)" to work.
 
         Returns:
             Scalar: The sum of matched values (True or False) along the specified axis or
@@ -114,8 +122,7 @@ class Boolean(Scalar):
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
-            Scalar: An integer Scalar with ones where this object is True, zeros where
-            False.
+            Scalar: Ones where this object is True, zeros where False.
         """
 
         return self.as_int()
@@ -143,51 +150,56 @@ class Boolean(Scalar):
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
-            Scalar: An integer Scalar with ones where this object is True, zeros where
-            False.
+            Scalar: Ones where this object is True, zeros where False.
         """
 
         return self.as_int()
 
     def __add__(self, /, arg, *, recursive=True):
-        """self + arg, element-by-element addition after this Boolean is converted to an
-        integer Scalar.
+        """``self + arg``, element-by-element addition after this Boolean is converted to
+        an integer Scalar.
 
         This is an override of :meth:`Qube.__add__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The sum.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_int() + arg
 
     def __radd__(self, /, arg, *, recursive=True):
-        """arg + self, element-by-element addition after this Boolean is converted to an
-        integer Scalar.
+        """``arg + self``, element-by-element addition after this Boolean is converted to
+        an integer Scalar.
 
         This is an override of :meth:`Qube.__radd__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The sum.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_int() + arg
 
     def __iadd__(self, /, arg):
-        """self += arg; in-place addition is not supported for Boolean.
+        """``self += arg``; in-place addition is not supported for Boolean.
 
         This is an override of :meth:`Qube.__iadd__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Raises:
             ValueError: Always; in-place addition is not supported for Boolean.
@@ -196,44 +208,50 @@ class Boolean(Scalar):
         Qube._raise_unsupported_op('+=', self)
 
     def __sub__(self, /, arg, *, recursive=True):
-        """self - arg, element-by-element subtraction after this Boolean is converted to
-        an integer Scalar.
+        """``self - arg``, element-by-element subtraction after this Boolean is converted
+        to an integer Scalar.
 
         This is an override of :meth:`Qube.__sub__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The difference.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_int() - arg
 
     def __rsub__(self, /, arg, *, recursive=True):
-        """arg - self, element-by-element subtraction after this Boolean is converted to
-        an integer Scalar.
+        """``arg - self``, element-by-element subtraction after this Boolean is converted
+        to an integer Scalar.
 
         This is an override of :meth:`Qube.__rsub__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The difference.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return -self.as_int() + arg
 
     def __isub__(self, /, arg):
-        """self -= arg; in-place subtraction is not supported for Boolean.
+        """``self -= arg``; in-place subtraction is not supported for Boolean.
 
         This is an override of :meth:`Qube.__isub__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Raises:
             ValueError: Always; in-place subtraction is not supported for Boolean.
@@ -242,33 +260,39 @@ class Boolean(Scalar):
         Qube._raise_unsupported_op('-=', self)
 
     def __mul__(self, /, arg, *, recursive=True):
-        """self * arg, element-by-element multiplication after this Boolean is converted
-        to an integer Scalar.
+        """``self * arg``, element-by-element multiplication after this Boolean is
+        converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__mul__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The product.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_int() * arg
 
     def __rmul__(self, /, arg, *, recursive=True):
-        """arg * self, element-by-element multiplication after this Boolean is converted
-        to an integer Scalar.
+        """``arg * self``, element-by-element multiplication after this Boolean is
+        converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__rmul__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The product.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_int() * arg
@@ -279,7 +303,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__imul__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Raises:
             ValueError: Always; in-place multiplication is not supported for Boolean.
@@ -288,33 +312,39 @@ class Boolean(Scalar):
         Qube._raise_unsupported_op('*=', self)
 
     def __truediv__(self, /, arg, *, recursive=True):
-        """self / arg, element-by-element division after this Boolean is converted to a
-        floating-point Scalar.
+        """``self / arg``, element-by-element division after this Boolean is converted to
+        a floating-point Scalar.
 
         This is an override of :meth:`Qube.__truediv__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The quotient.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_float() / arg
 
     def __rtruediv__(self, /, arg, *, recursive=True):
-        """arg / self, element-by-element division after this Boolean is converted to a
-        floating-point Scalar.
+        """``arg / self``, element-by-element division after this Boolean is converted to
+        a floating-point Scalar.
 
         This is an override of :meth:`Qube.__rtruediv__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
             recursive (bool, optional): Ignored for Boolean.
 
         Returns:
             Scalar: The quotient.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         if not isinstance(arg, Qube):
@@ -323,12 +353,12 @@ class Boolean(Scalar):
         return arg / self.as_float()
 
     def __itruediv__(self, /, arg):
-        """self /= arg; in-place division is not supported for Boolean.
+        """``self /= arg``; in-place division is not supported for Boolean.
 
         This is an override of :meth:`Qube.__itruediv__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Raises:
             ValueError: Always; in-place division is not supported for Boolean.
@@ -337,31 +367,37 @@ class Boolean(Scalar):
         Qube._raise_unsupported_op('/=', self)
 
     def __floordiv__(self, /, arg):
-        """self // arg, element-by-element floor division after this Boolean is converted
-        to an integer Scalar.
+        """``self // arg``, element-by-element floor division after this Boolean is
+        converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__floordiv__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Returns:
             Scalar: The result of the floor division.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_int() // arg
 
     def __rfloordiv__(self, /, arg):
-        """arg // self, element-by-element floor division after this Boolean is converted
-        to an integer Scalar.
+        """``arg // self``, element-by-element floor division after this Boolean is
+        converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__rfloordiv__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Returns:
             Scalar: The result of the floor division.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         if not isinstance(arg, Qube):
@@ -370,12 +406,12 @@ class Boolean(Scalar):
         return arg // self.as_int()
 
     def __ifloordiv__(self, /, arg):
-        """self //= arg; in-place division is not supported for Boolean.
+        """``self //= arg``; in-place division is not supported for Boolean.
 
         This is an override of :meth:`Qube.__ifloordiv__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Raises:
             ValueError: Always; in-place floor division is not supported for Boolean.
@@ -384,31 +420,37 @@ class Boolean(Scalar):
         Qube._raise_unsupported_op('//=', self)
 
     def __mod__(self, /, arg):
-        """self % arg, element-by-element modulus after this Boolean is converted to an
-        integer Scalar.
+        """``self % arg``, element-by-element modulus after this Boolean is converted to
+        an integer Scalar.
 
         This is an override of :meth:`Qube.__mod__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Returns:
             Scalar: The remainder.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         return self.as_int() % arg
 
     def __rmod__(self, /, arg):
-        """arg % self, element-by-element modulus after this Boolean is converted to an
-        integer Scalar.
+        """``arg % self``, element-by-element modulus after this Boolean is converted to
+        an integer Scalar.
 
         This is an override of :meth:`Qube.__rmod__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Returns:
             Scalar: The remainder.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         if not isinstance(arg, Qube):
@@ -422,7 +464,7 @@ class Boolean(Scalar):
         This is an override of :meth:`Qube.__imod__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The argument.
+            arg (Any): The argument.
 
         Raises:
             ValueError: Always; in-place modulo is not supported for Boolean.
@@ -431,16 +473,19 @@ class Boolean(Scalar):
         Qube._raise_unsupported_op('%=', self)
 
     def __pow__(self, /, arg):
-        """self ** arg, element-by-element exponentiation after this Boolean is converted
-        to an integer Scalar.
+        """``self ** arg``, element-by-element exponentiation after this Boolean is
+        converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__pow__`.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The exponent.
+            arg (Any): The exponent.
 
         Returns:
             Scalar: The result of the exponentiation.
+
+        Raises:
+            ValueError: If shapes are incompatible or `arg` has denominators.
         """
 
         arg = Scalar.as_scalar(arg)
@@ -464,7 +509,7 @@ class Boolean(Scalar):
         the result cannot be stored back into a Boolean.
 
         Parameters:
-            arg (Qube, numpy.ndarray, float, int, or bool): The exponent.
+            arg (Any): The exponent.
 
         Raises:
             ValueError: Always; in-place exponentiation is not supported for Boolean.
@@ -477,83 +522,83 @@ class Boolean(Scalar):
     ######################################################################################
 
     def __le__(self, arg, *, builtins=True):
-        """self <= arg, element-by-element "less than or equal" after this Boolean is
+        """``self <= arg``, element-by-element "less than or equal" after this Boolean is
         converted to integer Scalar.
 
         This is an override of :meth:`Qube.__le__`.
 
         Parameters:
-            arg: The scalar to compare with.
+            arg (Any): The object to compare with.
             builtins (bool, optional): If True and the result is a single unmasked scalar,
                 return a Python bool instead of a Boolean object.
 
         Returns:
-            Boolean or bool: True where this int value is less than or equal to the
+            Boolean | bool: True where this int value is less than or equal to the
             argument.
 
         Raises:
-            ValueError: If either object has denominators.
+            ValueError: If the shapes are incompatible.
         """
 
         return self.as_int().__le__(arg, builtins=builtins)
 
     def __lt__(self, arg, *, builtins=True):
-        """self < arg, element-by-element "less than" after this Boolean is converted to
-        an integer Scalar.
+        """``self < arg``, element-by-element "less than" after this Boolean is converted
+        to an integer Scalar.
 
         This is an override of :meth:`Qube.__lt__`.
 
         Parameters:
-            arg: The scalar to compare with.
+            arg (Any): The object to compare with.
             builtins (bool, optional): If True and the result is a single unmasked scalar,
                 return a Python bool instead of a Boolean object.
 
         Returns:
-            Boolean or bool: True where this int value is less than the argument.
+            Boolean | bool: True where this int value is less than the argument.
 
         Raises:
-            ValueError: If either object has denominators.
+            ValueError: If the shapes are incompatible.
         """
 
         return self.as_int().__lt__(arg, builtins=builtins)
 
     def __ge__(self, arg, *, builtins=True):
-        """self <= arg, element-by-element "greater than or equal" after this Boolean is
-        converted to integer Scalar.
+        """``self <= arg``, element-by-element "greater than or equal" after this Boolean
+        is converted to integer Scalar.
 
         This is an override of :meth:`Qube.__ge__`.
 
         Parameters:
-            arg: The scalar to compare with.
+            arg (Any): The object to compare with.
             builtins (bool, optional): If True and the result is a single unmasked scalar,
                 return a Python bool instead of a Boolean object.
 
         Returns:
-            Boolean or bool: True where this int value is greater than or equal to the
+            Boolean | bool: True where this int value is greater than or equal to the
             argument.
 
         Raises:
-            ValueError: If either object has denominators.
+            ValueError: If the shapes are incompatible.
         """
 
         return self.as_int().__ge__(arg, builtins=builtins)
 
     def __gt__(self, arg, *, builtins=True):
-        """self > arg, element-by-element "greater than" after this Boolean is converted
-        to an integer Scalar.
+        """``self > arg``, element-by-element "greater than" after this Boolean is
+        converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__gt__`.
 
         Parameters:
-            arg: The scalar to compare with.
+            arg (Any): The object to compare with.
             builtins (bool, optional): If True and the result is a single unmasked scalar,
                 return a Python bool instead of a Boolean object.
 
         Returns:
-            Boolean or bool: True where this int value is greater than the argument.
+            Boolean | bool: True where this int value is greater than the argument.
 
         Raises:
-            ValueError: If either object has denominators.
+            ValueError: If the shapes are incompatible.
         """
 
         return self.as_int().__gt__(arg, builtins=builtins)
@@ -564,7 +609,7 @@ class Boolean(Scalar):
 
 Boolean.TRUE = Boolean(True).as_readonly()
 Boolean.FALSE = Boolean(False).as_readonly()
-Boolean.MASKED = Boolean(False, True).as_readonly()
+Boolean.MASKED = Boolean(False, mask=True).as_readonly()
 
 ##########################################################################################
 # Once the load is complete, we can fill in a reference to the Boolean class

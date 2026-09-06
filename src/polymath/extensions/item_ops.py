@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/extensions/item_ops.py: item restructuring operations
 ##########################################################################################
+"""Restructuring of the item axes of a PolyMath object.
+
+The item axes of an object comprise its numerator followed by its denominator. These
+functions extract, reshape, flatten, transpose, and recombine those axes, which is how a
+derivative's denominator is manipulated and how an object is reinterpreted as a different
+PolyMath class.
+"""
 
 import math
 import numpy as np
@@ -17,9 +24,9 @@ def extract_numer(self, axis, index, classes=(), *, recursive=True):
     Parameters:
         axis (int): The item axis from which to extract a slice.
         index (int): The index value at which to extract the slice.
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include matching slices of the derivatives in
             the returned object; otherwise, the returned object will not contain
             derivatives.
@@ -66,9 +73,9 @@ def extract_denom(self, axis, index, classes=()):
     Parameters:
         axis (int): The item axis from which to extract a slice.
         index (int): The index value at which to extract the slice.
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
 
     Returns:
         Qube: An object extracted from the specified denominator axis. The shape is
@@ -132,9 +139,9 @@ def slice_numer(self, axis, index1, index2, classes=(), *, recursive=True):
         axis (int): The item axis from which to extract a slice.
         index1 (int): The starting index value at which to extract the slice.
         index2 (int): The ending index value at which to extract the slice.
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include matching slices of the derivatives in
             the returned object; otherwise, the returned object will not contain
             derivatives.
@@ -222,10 +229,10 @@ def reshape_numer(self, shape, classes=(), recursive=True):
     """This object with a new shape for numerator items.
 
     Parameters:
-        shape (tuple): The new shape for numerator items.
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        shape (tuple[int, ...]): The new shape for numerator items.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to reshape the derivatives in the same way;
             otherwise, the returned object will not contain derivatives.
 
@@ -263,9 +270,9 @@ def flatten_numer(self, classes=(), *, recursive=True):
     """This object with a new numerator shape such that nrank == 1.
 
     Parameters:
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include matching slices of the derivatives in
             the returned object; otherwise, the returned object will not contain
             derivatives.
@@ -321,7 +328,7 @@ def reshape_denom(self, shape):
     """This object with a new shape for denominator items.
 
     Parameters:
-        shape (tuple): The new denominator shape.
+        shape (tuple[int, ...]): The new denominator shape.
 
     Returns:
         Qube: The reshaped object.
@@ -351,6 +358,9 @@ def reshape_denom(self, shape):
 
 def flatten_denom(self):
     """This object with a new denominator shape such that drank == 1.
+
+    Returns:
+        Qube: A shallow copy with the denominator axes flattened into one.
     """
 
     return self.reshape_denom((self.dsize,))
@@ -365,9 +375,9 @@ def join_items(self, classes):
     Derivatives are removed.
 
     Parameters:
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...]): The class of the object returned.
+            If a list is provided, the object will be an instance of the first suitable
+            class in the list. Otherwise, a generic Qube object will be returned.
 
     Returns:
         Qube: The object with joined items.
@@ -391,9 +401,9 @@ def split_items(self, nrank, classes):
 
     Parameters:
         nrank (int): Number of numerator axes to retain.
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...]): The class of the object returned.
+            If a list is provided, the object will be an instance of the first suitable
+            class in the list. Otherwise, a generic Qube object will be returned.
 
     Returns:
         Qube: The object with split items.
@@ -413,9 +423,9 @@ def swap_items(self, classes):
     Derivatives are removed.
 
     Parameters:
-        classes (type, list, or tuple, optional): The class of the object returned. If
-            a list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...]): The class of the object returned.
+            If a list is provided, the object will be an instance of the first suitable
+            class in the list. Otherwise, a generic Qube object will be returned.
 
     Returns:
         Qube: The object with swapped items.

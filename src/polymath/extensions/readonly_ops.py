@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/extensions/readonly_ops.py: Read-only/read-write and copying operations
 ##########################################################################################
+"""Read-only and read-write state, and the copying of PolyMath objects.
+
+A read-only object is protected from modification as far as Python allows, which makes it
+safe to share the memory underlying it. These functions convert an object to read-only,
+copy an object into a writable one, and assert that an object may be modified.
+"""
 
 import numpy as np
 from polymath.qube import Qube
@@ -14,6 +20,12 @@ def _array_is_readonly(arg):
     """True if the argument is a read-only NumPy ndarray.
 
     False means that it is either a writable array or a scalar.
+
+    Parameters:
+        arg (Any): The object to test.
+
+    Returns:
+        bool: True if `arg` is a NumPy array that is not writeable.
     """
 
     if not isinstance(arg, np.ndarray):
@@ -24,7 +36,14 @@ def _array_is_readonly(arg):
 
 @staticmethod
 def _array_to_readonly(arg):
-    """Make the given argument read-only if it is a NumPy ndarray; then return it."""
+    """Make the given argument read-only if it is a NumPy ndarray; then return it.
+
+    Parameters:
+        arg (Any): The object to make read-only.
+
+    Returns:
+        Any: `arg`, with its writeable flag cleared if it is a NumPy array.
+    """
 
     if not isinstance(arg, np.ndarray):
         return arg
@@ -154,10 +173,9 @@ def copy(self, *, recursive=True, readonly=False):
     Parameters:
         recursive (bool, optional): True to copy the derivatives; False, to return an
             object without derivatives.
-        readonly (bool, optional): True to return a read-only copy, or this object if
-            it is already read-only. Otherwise, this return is guaranteed to be an
-            entirely new copy, independent of this object and suitable for
-            modification.
+        readonly (bool, optional): True to return a read-only copy, or this object if it
+            is already read-only. Otherwise, this return is guaranteed to be an entirely
+            new copy, independent of this object and suitable for modification.
 
     Returns:
         Qube: A copy of this object.
@@ -200,7 +218,11 @@ def copy(self, *, recursive=True, readonly=False):
 
 # Python-standard copy function
 def __copy__(self):
-    """An independent, writeable copy of this object."""
+    """An independent, writeable copy of this object.
+
+    Returns:
+        Qube: A deep copy of this object, writable.
+    """
 
     return self.copy(recursive=True, readonly=False)
 

@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/quaternion.py: Quaternion subclass of PolyMath base class
 ##########################################################################################
+"""The :class:`~polymath.Quaternion` subclass, representing rotations as quaternions.
+
+A Quaternion is a :class:`~polymath.Vector` whose numerator shape is fixed at ``(4,)``,
+holding one scalar part and a three-element vector part. Quaternion multiplication
+composes rotations, and this class converts between quaternions, 3x3 rotation matrices
+(:class:`~polymath.Matrix3`), and rotation vectors.
+"""
 
 import numpy as np
 
@@ -36,7 +43,7 @@ class Quaternion(Vector):
         """Convert the argument to a Quaternion if possible.
 
         Parameters:
-            arg (object): The object to convert to Quaternion.
+            arg (Any): The object to convert to Quaternion.
             recursive (bool, optional): If True, derivatives will also be converted.
 
         Returns:
@@ -64,19 +71,16 @@ class Quaternion(Vector):
         """Construct a Quaternion from separate scalar and vector components.
 
         Parameters:
-            scalar (Scalar or None): The scalar part of the quaternion. If None, the
-                associated component is filled with zeros. The scalar and vector are
-                automatically broadcast to compatible shapes.
-            vector (Vector3 or None): The vector part of the quaternion. If None, the
-                associated components are filled with zeros. The scalar and vector are
-                automatically broadcast to compatible shapes.
+            scalar (ScalarLike | None): The scalar part of the quaternion. If None, the
+                associated component is filled with zeros.
+            vector (Vector3Like | None): The vector part of the quaternion. If None, the
+                associated components are filled with zeros. The `scalar` and `vector`
+                inputs are automatically broadcasted to compatible shapes.
             recursive (bool, optional): True to include derivatives. If True, derivatives
                 from both scalar and vector are combined in the resulting quaternion.
 
         Returns:
-            Quaternion: A new Quaternion constructed from the scalar and vector parts.
-                The quaternion has shape [s, vx, vy, vz] where s is the scalar part and
-                (vx, vy, vz) are the vector components.
+            Quaternion: A new Quaternion constructed from `scalar` and `vector`.
 
         Raises:
             ValueError: If scalar and vector denominators are incompatible.
@@ -140,8 +144,7 @@ class Quaternion(Vector):
             recursive (bool, optional): If True, derivatives will also be split.
 
         Returns:
-            tuple: A tuple containing (scalar_part, vector_part) where scalar_part is a
-            Scalar and vector_part is a Vector3.
+            tuple [Scalar, Vector3]: The scalar and vector parts of this Quaternion.
         """
 
         return (self.extract_numer(0, 0, Scalar, recursive=recursive),
@@ -152,8 +155,8 @@ class Quaternion(Vector):
         """Construct a Quaternion for an angular rotation about an axis vector.
 
         Parameters:
-            angle (Scalar): The angle of rotation in radians.
-            vector (Vector3): The axis vector to rotate around.
+            angle (ScalarLike): The angle of rotation in radians.
+            vector (Vector3Like): The axis vector to rotate around.
             recursive (bool, optional): If True, derivatives will be included.
 
         Returns:
@@ -181,9 +184,8 @@ class Quaternion(Vector):
             recursive (bool, optional): If True, derivatives will be included.
 
         Returns:
-            tuple: A tuple containing (angle, unit_vector) where angle is a Scalar
-            representing the rotation angle in radians, and unit_vector is a Vector3
-            representing the rotation axis.
+            tuple [Scalar | float, Vector3]: The rotation angle in radians and the unit
+            vector around which the rotation is performed.
         """
 
         (cos_half_angle, vector) = self.to_parts(recursive=recursive)
@@ -195,8 +197,7 @@ class Quaternion(Vector):
     def conj(self, *, recursive=True):
         """The complex conjugate of this quaternion.
 
-        The conjugate of a quaternion [s, v] is [s, -v], where s is the scalar part and v
-        is the vector part.
+        The conjugate of a quaternion ``[s, v]`` is ``[s, -v]``.
 
         Parameters:
             recursive (bool, optional): If True, derivatives will also be conjugated.
@@ -230,16 +231,14 @@ class Quaternion(Vector):
             recursive (bool, optional): If True, the returned Matrix3 will contain
                 derivatives of the Quaternion. These are represented as Matrix objects,
                 not Matrix3 objects, because they are not unitary.
-            partials (bool, optional): If True, instead of returning just the
-                Matrix3, return a tuple containing the Matrix3 and its partial
-                derivatives with respect to the components of the quaternion.
+            partials (bool, optional): If True, also return the partial derivatives with
+                respect to the components of the quaternion.
 
         Returns:
-            Matrix3 or tuple: If partials is False, returns a Matrix3 representing the
-            rotation. If partials is True, returns a tuple of (Matrix3,
-            partial_derivatives) where partial_derivatives is a Matrix with numerator
-            shape (3, 3) and denominator shape (4,), representing the derivative of each
-            matrix element with respect to each quaternion component.
+            Matrix3 or tuple[Matrix3, Matrix]: The Matrix3 of the rotation, optionally
+            followed by a Matrix with numerator shape (3,3) and denominator shape (4,),
+            representing the derivative of each matrix element with respect to each
+            quaternion component.
 
         Raises:
             ValueError: If this Quaternion has denominator axes.
@@ -298,30 +297,30 @@ class Quaternion(Vector):
         obj = Matrix3(values, pmask)
 
         if (recursive and self._derivs) or partials:
-#           Before scaling, but assuming a unit quaternion...
-#             values[...,0,0] = 1. - 2.*(yy + zz)
-#             values[...,0,1] =      2.*(xy - sz)
-#             values[...,0,2] =      2.*(xz + sy)
-#             values[...,1,0] =      2.*(xy + sz)
-#             values[...,1,1] = 1. - 2.*(xx + zz)
-#             result[...,1,2] =      2.*(yz - sx)
-#             values[...,2,0] =      2.*(xz - sy)
-#             values[...,2,1] =      2.*(yz + sx)
-#             values[...,2,2] = 1. - 2.*(xx + yy)
-#
-#             dm_dq = np.zeros(self._shape + (3,3,4))
-#             dm_dq[...,0,0,:] = 2*( 0,  0,-2y,-2z)
-#             dm_dq[...,0,1,:] = 2*(-z,  y,  x, -s)
-#             dm_dq[...,0,2,:] = 2*( y,  z,  s,  x)
-#             dm_dq[...,1,0,:] = 2*( z,  y,  x,  s)
-#             dm_dq[...,1,1,:] = 2*( 0,-2x,  0,-2z)
-#             dm_dq[...,1,2,:] = 2*(-x, -s,  z,  y)
-#             dm_dq[...,2,0,:] = 2*(-y,  z, -s,  x)
-#             dm_dq[...,2,1,:] = 2*( x,  s,  z,  y)
-#             dm_dq[...,2,2,:] = 2*( 0,-2x,-2y,  0)
-#
-#           (s,x,y,z) have already been scaled by sqrt(2). Scale by another
-#           factor of sqrt(2) when done.
+            # Before scaling, but assuming a unit quaternion...
+            #   values[...,0,0] = 1. - 2.*(yy + zz)
+            #   values[...,0,1] =      2.*(xy - sz)
+            #   values[...,0,2] =      2.*(xz + sy)
+            #   values[...,1,0] =      2.*(xy + sz)
+            #   values[...,1,1] = 1. - 2.*(xx + zz)
+            #   result[...,1,2] =      2.*(yz - sx)
+            #   values[...,2,0] =      2.*(xz - sy)
+            #   values[...,2,1] =      2.*(yz + sx)
+            #   values[...,2,2] = 1. - 2.*(xx + yy)
+            #
+            #   dm_dq = np.zeros(self._shape + (3,3,4))
+            #   dm_dq[...,0,0,:] = 2*( 0,  0,-2y,-2z)
+            #   dm_dq[...,0,1,:] = 2*(-z,  y,  x, -s)
+            #   dm_dq[...,0,2,:] = 2*( y,  z,  s,  x)
+            #   dm_dq[...,1,0,:] = 2*( z,  y,  x,  s)
+            #   dm_dq[...,1,1,:] = 2*( 0,-2x,  0,-2z)
+            #   dm_dq[...,1,2,:] = 2*(-x, -s,  z,  y)
+            #   dm_dq[...,2,0,:] = 2*(-y,  z, -s,  x)
+            #   dm_dq[...,2,1,:] = 2*( x,  s,  z,  y)
+            #   dm_dq[...,2,2,:] = 2*( 0,-2x,-2y,  0)
+            #
+            # (s,x,y,z) have already been scaled by sqrt(2). Scale by another
+            # factor of sqrt(2) when done.
 
             m = np.zeros(self._shape + (3, 3, 4))
             m[..., 1, 1, 1] = m[..., 2, 2, 1] = -2 * x
@@ -345,14 +344,14 @@ class Quaternion(Vector):
 
             dm_dq = Matrix(m, pmask, drank=1)
 
-#           We also have to deal with the unit() applied to the quaternion at the
-#           begininning. Let p be the un-normalized quaternion, q the unit version.
-#               q = p / p_norm
-#           where
-#               qnorm = sqrt(q0**2 + q1**2 + a2**2 + q3**2)
-#
-#           dq0/dp0 = (p1**2 + p2**2 + p3**2) / pnorm**3
-#           dq0/dp0 = -p0*p1 / pnorm**3
+            # We also have to deal with the unit() applied to the quaternion at the
+            # begininning. Let p be the un-normalized quaternion, q the unit version.
+            #     q = p / p_norm
+            # where
+            #     qnorm = sqrt(q0**2 + q1**2 + a2**2 + q3**2)
+            #
+            # dq0/dp0 = (p1**2 + p2**2 + p3**2) / pnorm**3
+            # dq0/dp0 = -p0*p1 / pnorm**3
 
             dq_dp = np.zeros(self._shape + (4, 4))
             for i in range(4):
@@ -377,16 +376,16 @@ class Quaternion(Vector):
         """Convert a Matrix3 to a Quaternion.
 
         Parameters:
-            matrix (Matrix3): The rotation matrix to convert. The matrix should be a
-                proper rotation matrix (orthogonal with determinant +1), though the
-                method will work with any 3x3 matrix.
+            matrix (Matrix3Like): The rotation matrix to convert. The matrix should be a
+                proper rotation matrix (orthogonal with determinant +1), though the method
+                will work with any 3x3 matrix.
             recursive (bool, optional): If True, the returned Quaternion will include
                 derivatives.
 
         Returns:
             Quaternion: A quaternion representing the same rotation as the input matrix.
-                The quaternion is normalized such that quaternions q and -q represent the
-                same rotation.
+            The quaternion is normalized such that quaternions *q* and *-q* represent the
+            same rotation.
 
         Notes:
             The derivatives are exact for any matrix derivative that is tangent to the
@@ -552,8 +551,8 @@ class Quaternion(Vector):
         """The product of this quaternion and another object.
 
         Parameters:
-            arg: The object to multiply with this quaternion. If arg is a Vector3, it is
-                automatically converted to a Quaternion with zero scalar part before
+            arg (Any): The object to multiply with this quaternion. If `arg` is a Vector3,
+                it is automatically converted to a Quaternion with zero scalar part before
                 multiplication. For other Qube subclasses, the default multiplication
                 operator is used.
             recursive (bool, optional): If True, the returned object will include
@@ -563,7 +562,8 @@ class Quaternion(Vector):
             Quaternion: The product of this quaternion and the argument.
 
         Raises:
-            ValueError: If both this quaternion and arg have denominators.
+            ValueError: If both this quaternion and `arg` have denominators or if shapes
+                are incompatible.
         """
 
         # Use default operator for anything but a Qube subclass
@@ -596,7 +596,7 @@ class Quaternion(Vector):
             a_values = a_values.reshape(a._shape + b._drank * (1,) + (4,))
             b_values = np.moveaxis(b_values, -b._drank - 1, -1)
 
-        new_values = Quaternion.mul_values(a_values, b_values)
+        new_values = Quaternion._mul_values(a_values, b_values)
 
         if a._drank or b._drank:
             new_values = np.moveaxis(new_values, -1, -(a._drank + b._drank + 1))
@@ -626,7 +626,7 @@ class Quaternion(Vector):
         return obj
 
     @staticmethod
-    def mul_values(a, b):
+    def _mul_values(a, b):
         """Multiply two quaternion arrays element-wise.
 
         Parameters:
@@ -667,7 +667,7 @@ class Quaternion(Vector):
         """The product of another object and this quaternion.
 
         Parameters:
-            arg: The object to multiply with this quaternion.
+            arg (Any): The object to multiply with this quaternion.
             recursive (bool, optional): If True, the returned object will include
                 derivatives.
 
@@ -687,7 +687,7 @@ class Quaternion(Vector):
         """The result of dividing this quaternion by another object.
 
         Parameters:
-            arg: The object to divide this quaternion by.
+            arg (Any): The object to divide this quaternion by.
             recursive (bool, optional): If True, the returned object will include
                 derivatives.
 
@@ -714,8 +714,8 @@ class Quaternion(Vector):
         """The reciprocal of this quaternion.
 
         Parameters:
-            recursive (bool, optional): True to return the derivatives of the
-                reciprocal too; otherwise, derivatives are removed.
+            recursive (bool, optional): True to return the derivatives of the reciprocal
+                too; otherwise, derivatives are removed.
 
         Returns:
             Quaternion: The quaternion reciprocal (conjugate divided by norm squared).
@@ -778,9 +778,9 @@ class Quaternion(Vector):
         """Construct a Quaternion from Euler rotation angles.
 
         Parameters:
-            ai (scalar): First rotation angle in radians.
-            aj (scalar): Second rotation angle in radians.
-            ak (scalar): Third rotation angle in radians.
+            ai (ScalarLike): First rotation angle in radians.
+            aj (ScalarLike): Second rotation angle in radians.
+            ak (ScalarLike): Third rotation angle in radians.
             axes (str, optional): One of 24 axis sequences as string or encoded tuple.
 
         Returns:
@@ -801,9 +801,11 @@ class Quaternion(Vector):
                 - repetition: first and last axis are same (1) or different (0).
                 - frame: rotations are applied to static (0) or rotating (1) frame.
 
-        >>> q = quaternion_from_euler(1, 2, 3, 'ryxz')
-        >>> numpy.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])
-        True
+        Example::
+
+            >>> q = quaternion_from_euler(1, 2, 3, 'ryxz')
+            >>> numpy.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])
+            True
         """
 
         ai = Scalar.as_scalar(ai)
@@ -873,7 +875,7 @@ class Quaternion(Vector):
             axes (str, optional): One of 24 axis sequences as string or encoded tuple.
 
         Returns:
-            tuple: A tuple of three Scalars containing the Euler angles.
+            tuple[Scalar, Scalar, Scalar]: The three Euler angles.
 
         Notes:
             This method uses the to_matrix3() method, and then from_matrix3() method
@@ -887,17 +889,17 @@ class Quaternion(Vector):
         """Construct a Quaternion from Euler angles via an intermediate Matrix3.
 
         Parameters:
-            ai (scalar): First rotation angle in radians.
-            aj (scalar): Second rotation angle in radians.
-            ak (scalar): Third rotation angle in radians.
+            ai (ScalarLike): First rotation angle in radians.
+            aj (ScalarLike): Second rotation angle in radians.
+            ak (ScalarLike): Third rotation angle in radians.
             axes (str, optional): One of 24 axis sequences as string or encoded tuple.
 
         Returns:
             Quaternion: A quaternion representing the specified rotation.
 
         Notes:
-            This method uses the Matrix3.from_euler() method, and then converts
-            the result to a Quaternion.
+            This method uses the Matrix3.from_euler() method, and then converts the result
+            to a Quaternion.
         """
 
         return Quaternion.from_matrix3(Matrix3.from_euler(ai, aj, ak, axes))
