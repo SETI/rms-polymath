@@ -53,7 +53,7 @@ Apply these rules to ALL new and modified Python code. This project is a Python 
 
 ### Types
 
-- NEVER use type annotations in the src directory tree. Types of input parameters and returns should be indicated in the docstrings.
+- NEVER use type annotations in the src directory tree, with one exception. Types of input parameters and returns should be indicated in the docstrings. The exception is a property, which may carry an inline return annotation so that the rendered documentation shows the type beside the property name; a property annotated this way keeps a one-line docstring rather than a `Returns:` block.
 - Annotate all test function/method parameters and return values, including `-> None` for functions (and `__init__`) that return nothing.
 - Use modern generic syntax (`list[str]`, `dict[str, int]`, `X | None`) for Python 3.11+.
 

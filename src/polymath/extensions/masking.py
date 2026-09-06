@@ -36,7 +36,7 @@ def _as_mask(arg, *, invert=False, masked_value=True, opstr=''):
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        bool or NumPy.ndarray: bool or boolean array suitable for us as a mask.
+        MaskType: bool or boolean array suitable for us as a mask.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -115,7 +115,7 @@ def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        bool or NumPy.ndarray: bool or boolean mask array.
+        MaskType: bool or boolean mask array.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -167,7 +167,7 @@ def or_(*masks):
         *masks (BooleanLike): One or more boolean masks.
 
     Returns:
-        numpy.ndarray or bool: New mask array or bool.
+        MaskType: New mask array or bool.
     """
 
     # Two inputs is most common
@@ -224,7 +224,7 @@ def and_(*masks):
         *masks (BooleanLike): One or more boolean masks.
 
     Returns:
-        numpy.ndarray or bool: New mask array or bool.
+        MaskType: New mask array or bool.
     """
 
     # Two inputs is most common
@@ -563,7 +563,7 @@ def as_mask_where_nonzero(self):
     """A boolean scalar or NumPy ndarray where values are nonzero and unmasked.
 
     Returns:
-        numpy.ndarray | bool: True where an element is nonzero and unmasked.
+        MaskType: True where an element is nonzero and unmasked.
     """
 
     return (self._values != 0) & self.antimask
@@ -573,7 +573,7 @@ def as_mask_where_zero(self):
     """A boolean scalar or NumPy ndarray where values are zero and unmasked.
 
     Returns:
-        numpy.ndarray | bool: True where an element is zero and unmasked.
+        MaskType: True where an element is zero and unmasked.
     """
 
     return (self._values == 0) & self.antimask
@@ -583,7 +583,7 @@ def as_mask_where_nonzero_or_masked(self):
     """A boolean scalar or NumPy ndarray where values are nonzero or masked.
 
     Returns:
-        numpy.ndarray | bool: True where an element is nonzero or masked.
+        MaskType: True where an element is nonzero or masked.
     """
 
     return (self._values != 0) | self._mask
@@ -593,7 +593,7 @@ def as_mask_where_zero_or_masked(self):
     """A boolean scalar or NumPy ndarray where values are zero or masked.
 
     Returns:
-        numpy.ndarray | bool: True where an element is zero or masked.
+        MaskType: True where an element is zero or masked.
     """
 
     return (self._values == 0) | self._mask

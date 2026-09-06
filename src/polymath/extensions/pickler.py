@@ -630,7 +630,8 @@ def _encode_one_float_array(values, digits, reference):
 def _encode_floats(values, rank, digits, reference):
     """Complete encoding of a floating-point array.
 
-    A tuple is returned in one of these forms:
+    A tuple is returned in one of these forms::
+
         ('literal', array)
         ('float64', shape, fpzipped array)
         ('float32', shape, fpzipped array)

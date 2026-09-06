@@ -9,7 +9,14 @@ Welcome to the Documentation for rms-polymath!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Guides:
+
+   user_guide/user_guide
+   dev_guide/dev_guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference:
 
    module
 

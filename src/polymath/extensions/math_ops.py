@@ -25,7 +25,7 @@ __all__ = ['abs', 'all', 'all_true_or_masked', 'any', 'any_true_or_masked', 'ide
 ##########################################################################################
 
 def __pos__(self, *, recursive=True):
-    """+self, element by element.
+    """``+self``, element by element.
 
     Parameters:
         recursive (bool, optional): True to include derivatives in return.
@@ -38,7 +38,7 @@ def __pos__(self, *, recursive=True):
 
 
 def __neg__(self, *, recursive=True):
-    """-self, element-by-element negation.
+    """``-self``, element-by-element negation.
 
     Parameters:
         recursive (bool, optional): True to include derivatives in return.
@@ -82,7 +82,7 @@ def abs(self):
     return self.__abs__()
 
 def __len__(self):
-    """Number of elements along first axis.
+    """``len(self)``, the number of elements along first axis.
 
     Returns:
         int: The length of the leading axis.
@@ -2052,8 +2052,8 @@ def reciprocal(self, *, recursive=True, nozeros=False):
     """An object equivalent to the reciprocal of this object.
 
     This method is not implemented for the base class. It is overridden by
-    :meth:`Scalar.reciprocal`, :meth:`Vector.reciprocal`, :meth:`Matrix.reciprocal`, and
-    :meth:`Quaternion.reciprocal`.
+    :meth:`~polymath.Scalar.reciprocal`, :meth:`~polymath.Vector.reciprocal`,
+    :meth:`~polymath.Matrix.reciprocal`, and :meth:`~polymath.Quaternion.reciprocal`.
 
     Parameters:
         recursive (bool, optional): True to return the derivatives of the reciprocal too;
@@ -2102,8 +2102,8 @@ def zero(self):
 def identity(self):
     """An object of this subclass equivalent to the identity.
 
-    This method is overridden by :meth:`Scalar.identity`, :meth:`Matrix.identity` and
-    :meth:`Boolean.identity`
+    This method is overridden by :meth:`~polymath.Scalar.identity`,
+    :meth:`~polymath.Matrix.identity` and :meth:`~polymath.Boolean.identity`
     """
 
     _raise_unsupported_op('identity()', self)
@@ -2112,7 +2112,7 @@ def identity(self):
 def sum(self, axis=None, *, recursive=True, builtins=None, masked=None, out=None):
     """The sum of the unmasked values along the specified axis or axes.
 
-    This method is overridden by :meth:`Boolean.sum`.
+    This method is overridden by :meth:`~polymath.Boolean.sum`.
 
     Parameters:
         axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
