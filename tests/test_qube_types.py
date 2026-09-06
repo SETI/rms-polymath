@@ -182,3 +182,34 @@ def test_qube_types() -> None:
 
 
 ##########################################################################################
+
+
+def test_as_bool_converts_scalar_to_boolean() -> None:
+    """A Scalar converts to a Boolean, with zero False and everything else True."""
+
+    b = Scalar([0, 1, -2]).as_bool()
+    assert type(b) == Boolean
+    assert np.all(b.values == np.array([False, True, True]))
+
+    b = Scalar([0., 2.5]).as_bool()
+    assert type(b) == Boolean
+    assert np.all(b.values == np.array([False, True]))
+
+    b = Scalar(3).as_bool()
+    assert type(b) == Boolean
+    assert b.values == True
+
+
+def test_as_bool_preserves_mask() -> None:
+    """The mask of the source carries over to the converted Boolean."""
+
+    b = Scalar([0, 1, 2], mask=[False, True, False]).as_bool()
+    assert np.all(b.mask == np.array([False, True, False]))
+    assert np.all(b.antimask == np.array([True, False, True]))
+
+
+def test_as_bool_rejects_class_without_bools() -> None:
+    """A class that cannot hold truth values raises the documented TypeError."""
+
+    with pytest.raises(TypeError, match='Vector3 object cannot contain bools'):
+        Vector3([1., 2., 3.]).as_bool()

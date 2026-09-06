@@ -658,8 +658,7 @@ def as_bool(self, *, copy=False, builtins=False):
     if cls is Qube._SCALAR_CLASS:
         cls = Qube._BOOLEAN_CLASS
 
-    if not cls._INTS_OK:  # pragma: no cover
-        # This should never happen
+    if not cls._BOOLS_OK:
         raise TypeError(f'{cls.__name__} object cannot contain bools')
 
     values = bool(self._values) if self._is_scalar else self._values.astype(np.bool_)
