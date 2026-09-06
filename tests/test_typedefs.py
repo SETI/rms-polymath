@@ -5,6 +5,7 @@
 import ast
 import types
 import typing
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -86,12 +87,10 @@ def test_like_alias_accepts_qube(name: str) -> None:
 
 @pytest.mark.parametrize('name', sorted(LIKE_ALIASES))
 def test_like_alias_accepts_nested_sequences(name: str) -> None:
-    """Every constructor alias accepts a list or a tuple of numbers."""
+    """Every constructor alias accepts a sequence of numbers nested to any depth."""
 
     alias, _, _ = LIKE_ALIASES[name]
-    origins = [typing.get_origin(arg) for arg in typing.get_args(alias)]
-    assert origins.count(list) == 1
-    assert origins.count(tuple) == 1
+    assert typedefs._NestedSequence in typing.get_args(alias)
 
 
 @pytest.mark.parametrize('name', sorted(LIKE_ALIASES))
@@ -132,6 +131,28 @@ def test_item_alias_rejects_single_numbers(name: str) -> None:
     members = typing.get_args(alias)
     for number_type in NUMBER_TYPES:
         assert number_type not in members
+
+
+@pytest.mark.parametrize('sequence_type', [list, tuple], ids=['list', 'tuple'])
+def test_nested_sequence_of_arrays_converts(sequence_type: Callable[[Any], Any]) -> None:
+    """A sequence of arrays converts, stacked into one array of higher rank."""
+
+    rows = sequence_type([np.array([1., 2.]), np.array([3., 4.])])
+    scalar = Scalar(rows)
+    assert type(scalar) is Scalar
+    assert scalar.shape == (2, 2)
+    assert np.array_equal(np.asarray(scalar.values), [[1., 2.], [3., 4.]])
+
+
+@pytest.mark.parametrize('sequence_type', [list, tuple], ids=['list', 'tuple'])
+def test_nested_sequence_of_qubes_converts(sequence_type: Callable[[Any], Any]) -> None:
+    """A sequence of PolyMath objects converts the same way a sequence of arrays does."""
+
+    values = sequence_type([Scalar(1.), Scalar(2.)])
+    scalar = Scalar(values)
+    assert type(scalar) is Scalar
+    assert scalar.shape == (2,)
+    assert np.array_equal(np.asarray(scalar.values), [1., 2.])
 
 
 @pytest.mark.parametrize('number', [0, 1, -3, 2.5, -0.75, np.float64(0.5)])

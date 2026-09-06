@@ -20,7 +20,8 @@ types such as dictionaries and strings, but it does not restrict an argument to 
 one PolyMath class alone.
 """
 
-from typing import Any, Literal, TypeAlias
+from collections.abc import Iterator
+from typing import Any, Literal, Protocol, TypeAlias
 
 import numpy as np
 
@@ -49,11 +50,31 @@ _Array33: TypeAlias = np.ndarray[tuple[*tuple[int, ...], Literal[3], Literal[3]]
 # A boolean array
 _BoolArray : TypeAlias = np.ndarray[tuple[int, ...], np.dtype[np.bool_]]
 
-# Numeric ArrayLike type. The nested sequence is recursive, so its members are written as
-# forward references; a non-quoted alias cannot refer to itself before it is defined.
+# Numeric ArrayLike type, described by a protocol rather than by list and tuple because
+# both are invariant in their member type: a list[float] does not match a list whose
+# member type is the union below. Matching a protocol is structural instead, so a sequence
+# qualifies at any depth of nesting, however deep. A str does not qualify, because it
+# defines no __reversed__ and its __getitem__ returns another str. A member may be an
+# array or a PolyMath object as well as a number, because np.asarray() stacks a sequence
+# of them into one array of higher rank.
 _Scalar: TypeAlias = float | int | bool | np.bool_
-_ArrayLike: TypeAlias = (list['_Scalar | _ArrayLike'] |
-                         tuple['_Scalar | _ArrayLike', ...])
+
+
+class _NestedSequence(Protocol):
+    """A sequence of numbers, arrays or PolyMath objects, nested to any depth."""
+
+    def __len__(self, /) -> int: ...
+    def __getitem__(self, index: int, /) -> _SeqMember: ...
+    def __contains__(self, x: object, /) -> bool: ...
+    def __iter__(self, /) -> Iterator[_SeqMember]: ...
+    def __reversed__(self, /) -> Iterator[_SeqMember]: ...
+    def count(self, value: Any, /) -> int: ...
+    def index(self, value: Any, /) -> int: ...
+
+
+# Named after the class so that it can name the class in turn.
+_SeqMember: TypeAlias = Qube | _Scalar | _Array | _NestedSequence
+_ArrayLike: TypeAlias = _NestedSequence
 
 BooleanLike: TypeAlias = Qube | _Array | _ArrayLike | _Scalar
 """Any value convertible to a :class:`~polymath.Boolean`: a PolyMath object, a numeric
