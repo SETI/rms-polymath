@@ -2,11 +2,10 @@
 Type Annotations
 ================
 
-The PolyMath modules carry no inline type annotations. Instead, the package ships a
-``py.typed`` marker and two stub files, one for the package and one for
-:mod:`polymath.typedefs`, so a type checker such as mypy sees the signature of every
-public class, method, and property when it checks code that imports PolyMath. Nothing
-needs to be configured; installing the package is enough. Import from the package
+The PolyMath package ships a ``py.typed`` marker and two stub files, one for the package
+and one for :mod:`polymath.typedefs`, so a type checker such as mypy sees the signature of
+every public class, method, and property when it checks code that imports PolyMath.
+Nothing needs to be configured; installing the package is enough. Import from the package
 itself, as every example in this guide does. The submodules that define the classes are
 an implementation detail: an import such as one from a module named after a class is
 not supported and carries no type information.

@@ -3,9 +3,9 @@
 ##########################################################################################
 """Public type aliases naming the values that the PolyMath constructors accept.
 
-The `src` tree carries no inline annotations, so these aliases exist for the benefit of
-downstream code that does annotate. Each alias is an ordinary runtime object, so it can be
-imported and used in an annotation anywhere::
+These aliases exist for documentation and for downstream code that uses type annotations.
+Each alias is an ordinary runtime object, so it can be imported and used in an annotation
+anywhere::
 
     from polymath import Scalar, Vector3
     from polymath.typedefs import Vector3Like
