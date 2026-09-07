@@ -43,7 +43,7 @@ class Quaternion(Vector):
         """Convert the argument to a Quaternion if possible.
 
         Parameters:
-            arg (Any): The object to convert to Quaternion.
+            arg (QuaternionLike): The object to convert to Quaternion.
             recursive (bool, optional): If True, derivatives will also be converted.
 
         Returns:
@@ -75,15 +75,15 @@ class Quaternion(Vector):
                 associated component is filled with zeros.
             vector (Vector3Like | None): The vector part of the quaternion. If None, the
                 associated components are filled with zeros. The `scalar` and `vector`
-                inputs are automatically broadcasted to compatible shapes.
+                inputs are automatically broadcast to compatible shapes.
             recursive (bool, optional): True to include derivatives. If True, derivatives
-                from both scalar and vector are combined in the resulting quaternion.
+                from both `scalar` and `vector` are combined in the resulting quaternion.
 
         Returns:
             Quaternion: A new Quaternion constructed from `scalar` and `vector`.
 
         Raises:
-            ValueError: If scalar and vector denominators are incompatible.
+            ValueError: If the denominators of `scalar` and `vector` are incompatible.
         """
 
         # Fill in missing values
@@ -144,11 +144,11 @@ class Quaternion(Vector):
             recursive (bool, optional): If True, derivatives will also be split.
 
         Returns:
-            tuple [Scalar, Vector3]: The scalar and vector parts of this Quaternion.
+            tuple[Scalar, Vector3]: The scalar and vector parts of this Quaternion.
         """
 
-        return (self.extract_numer(0, 0, Scalar, recursive=recursive),
-                self.slice_numer(0, 1, 4, Vector3, recursive=recursive))
+        return (self.extract_numer(0, 0, classes=Scalar, recursive=recursive),
+                self.slice_numer(0, 1, 4, classes=Vector3, recursive=recursive))
 
     @staticmethod
     def from_rotation(angle, vector, *, recursive=True):
@@ -184,8 +184,8 @@ class Quaternion(Vector):
             recursive (bool, optional): If True, derivatives will be included.
 
         Returns:
-            tuple [Scalar | float, Vector3]: The rotation angle in radians and the unit
-            vector around which the rotation is performed.
+            tuple[Scalar, Vector3]: The rotation angle in radians and the unit vector
+            around which the rotation is performed.
         """
 
         (cos_half_angle, vector) = self.to_parts(recursive=recursive)
@@ -235,7 +235,7 @@ class Quaternion(Vector):
                 respect to the components of the quaternion.
 
         Returns:
-            Matrix3 or tuple[Matrix3, Matrix]: The Matrix3 of the rotation, optionally
+            Matrix3 | tuple[Matrix3, Matrix]: The Matrix3 of the rotation, optionally
             followed by a Matrix with numerator shape (3,3) and denominator shape (4,),
             representing the derivative of each matrix element with respect to each
             quaternion component.
@@ -383,9 +383,9 @@ class Quaternion(Vector):
                 derivatives.
 
         Returns:
-            Quaternion: A quaternion representing the same rotation as the input matrix.
-            The quaternion is normalized such that quaternions *q* and *-q* represent the
-            same rotation.
+            Quaternion: A unit quaternion representing the same rotation as the input
+            matrix. Because *q* and *-q* represent the same rotation, the sign is chosen
+            so that the component of largest magnitude is positive.
 
         Notes:
             The derivatives are exact for any matrix derivative that is tangent to the
@@ -729,7 +729,7 @@ class Quaternion(Vector):
         This method overrides :meth:`~Qube.identity` for the base class.
 
         Returns:
-            Quaternion: A read-only identity quaternion [1,0,0,0].
+            Quaternion: A read-only identity quaternion, ``[1, 0, 0, 0]``.
         """
 
         return Quaternion(np.array([1., 0., 0., 0.])).as_readonly()
@@ -781,28 +781,33 @@ class Quaternion(Vector):
             ai (ScalarLike): First rotation angle in radians.
             aj (ScalarLike): Second rotation angle in radians.
             ak (ScalarLike): Third rotation angle in radians.
-            axes (str, optional): One of 24 axis sequences as string or encoded tuple.
+            axes (str | tuple[int, int, int, int], optional): One of 24 axis sequences as
+                a string or an encoded tuple.
 
         Returns:
             Quaternion: A quaternion representing the specified rotation.
 
         Notes:
-            A triple of Euler angles can be applied/interpreted in 24 ways, which can be
-            specified using a 4-character string or encoded 4-tuple:
+            A triple of Euler angles can be applied or interpreted in 24 ways, which can
+            be specified using a four-character string or an encoded four-tuple.
 
-            * Axes 4-string*: e.g. 'sxyz' or 'ryxy'
-                - First character: rotations are applied to 's'tatic or 'r'otating frame
-                - Remaining characters: successive rotation axis 'x', 'y', or 'z'
+            A four-character string such as ``'sxyz'`` or ``'ryxy'``:
 
-            * Axes 4-tuple*: e.g. (0, 0, 0, 0) or (1, 1, 1, 1)
-                - inner axis: code of axis ('x':0, 'y':1, 'z':2) of rightmost matrix.
-                - parity: even (0) if inner axis 'x' is followed by 'y', 'y' is
-                  followed by 'z', or 'z' is followed by 'x'. Otherwise odd (1).
-                - repetition: first and last axis are same (1) or different (0).
-                - frame: rotations are applied to static (0) or rotating (1) frame.
+            * First character: rotations are applied to a static (``'s'``) or rotating
+              (``'r'``) frame.
+            * Remaining characters: successive rotation axes ``'x'``, ``'y'``, or ``'z'``.
 
-        Example::
+            A four-tuple such as ``(0, 0, 0, 0)`` or ``(1, 1, 1, 1)``:
 
+            * Inner axis: code of the axis (``'x'``: 0, ``'y'``: 1, ``'z'``: 2) of the
+              rightmost matrix.
+            * Parity: even (0) if the inner axis ``'x'`` is followed by ``'y'``, ``'y'``
+              is followed by ``'z'``, or ``'z'`` is followed by ``'x'``; otherwise odd
+              (1).
+            * Repetition: the first and last axes are the same (1) or different (0).
+            * Frame: rotations are applied to a static (0) or rotating (1) frame.
+
+        Examples:
             >>> q = Quaternion.from_euler(1, 2, 3, 'ryxz')
             >>> np.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])
             True
@@ -872,14 +877,17 @@ class Quaternion(Vector):
         """Extract Euler angles from this quaternion.
 
         Parameters:
-            axes (str, optional): One of 24 axis sequences as string or encoded tuple.
+            axes (str | tuple[int, int, int, int], optional): One of 24 axis sequences as
+                a string or an encoded tuple.
 
         Returns:
-            tuple[Scalar, Scalar, Scalar]: The three Euler angles.
+            tuple[Scalar, Scalar, Scalar]: The three Euler angles in radians, each in the
+            range 0 to 2 pi.
 
         Notes:
-            This method uses the to_matrix3() method, and then from_matrix3() method
-            on the result.
+            This method converts this quaternion to a Matrix3 using :meth:`to_matrix3`
+            and then calls :meth:`~polymath.Matrix3.to_euler` on the result. Derivatives
+            are not included.
         """
 
         return self.to_matrix3().to_euler(axes)
@@ -892,14 +900,15 @@ class Quaternion(Vector):
             ai (ScalarLike): First rotation angle in radians.
             aj (ScalarLike): Second rotation angle in radians.
             ak (ScalarLike): Third rotation angle in radians.
-            axes (str, optional): One of 24 axis sequences as string or encoded tuple.
+            axes (str | tuple[int, int, int, int], optional): One of 24 axis sequences as
+                a string or an encoded tuple.
 
         Returns:
             Quaternion: A quaternion representing the specified rotation.
 
         Notes:
-            This method uses the Matrix3.from_euler() method, and then converts the result
-            to a Quaternion.
+            This method calls :meth:`~polymath.Matrix3.from_euler` and then converts the
+            result to a Quaternion.
         """
 
         return Quaternion.from_matrix3(Matrix3.from_euler(ai, aj, ak, axes))

@@ -267,7 +267,7 @@ constructor works.
 .. code-block:: python
 
     >>> from polymath import Matrix, Vector
-    >>> Vector([1., 2., 3.]).cast(Vector3)
+    >>> Vector([1., 2., 3.]).cast(classes=Vector3)
     Vector3(1. 2. 3.)
     >>> Vector3.XAXIS.as_this_type(Vector([4., 5., 6.]))
     Vector3(4. 5. 6.)

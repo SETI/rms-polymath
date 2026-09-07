@@ -57,11 +57,11 @@ def _has_masked_array(arg):
 
 @staticmethod
 def _as_values_and_mask(arg, opstr=''):
-    """This object converted to a scalar or Numpy array with optional mask.
+    """This argument converted to a scalar or NumPy array with optional mask.
 
     Parameters:
         arg (QubeLike): The object to convert to a scalar or array.
-        opstr (str, optional): Name of operation string to include in any error message.
+        opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
         tuple[ValsType, MaskType]: (`value`, `mask`) as inferred from `arg`.
@@ -124,8 +124,8 @@ def _dtype_and_value(arg, masked_value=0, opstr=''):
 
     Returns:
         tuple[str, ValsType]: (`dtype`, `value`), where `dtype` is one of "float", "int",
-            or "bool", and `value` is the result of converting `arg` to a NumPy.ndarray,
-            float, int, or bool.
+        or "bool", and `value` is the result of converting `arg` to a numpy.ndarray,
+        float, int, or bool.
 
     Raises:
         TypeError: If the type of `arg` is invalid.
@@ -197,8 +197,7 @@ def _dtype_and_value(arg, masked_value=0, opstr=''):
 
 @staticmethod
 def _array_dtype_and_value(arg, opstr=''):
-    """Tuple (dtype, value) for a NumPy array, where dtype is "float", "int", or
-    "bool".
+    """Tuple (dtype, value) for a NumPy array; dtype is one of "float", "int", or "bool".
 
     Parameters:
         arg (numpy.ndarray): Array to interpret. It must not be a MaskedArray.
@@ -206,7 +205,7 @@ def _array_dtype_and_value(arg, opstr=''):
 
     Returns:
         tuple[str, ValsType]: (`dtype`, `value`), where `dtype` is one of "float", "int",
-        or "bool", and `value` is the result of converting `arg` to a NumPy.ndarray,
+        or "bool", and `value` is the result of converting `arg` to a numpy.ndarray,
         float, int, or bool.
 
     Raises:
@@ -246,20 +245,20 @@ def _dtype(arg):
 
 @staticmethod
 def _casted_to_dtype(arg, dtype, masked_value=0):
-    """This value casted to the specified dtype, one of "float", "int", or "bool".
+    """This value cast to the specified dtype, one of "float", "int", or "bool".
 
     An object that is already of the requested type is returned unchanged.
 
     Note that converting floats to ints is always a "floor" operation, so -1.5 -> -2.
 
     Parameters:
-        arg (QubeLike): Object to cast
-        dtype (str): dtype to cast to, one of float", "int", or "bool".
+        arg (QubeLike): Object to cast.
+        dtype (str): The dtype to cast to, one of "float", "int", or "bool".
         masked_value (float | int | bool, optional): Value to assign to a masked item in
             the case where the input argument is a Qube or MaskedArray.
 
     Returns:
-        numpy.ndarray, float, int, or bool: The result of the cast.
+        numpy.ndarray | float | int | bool: The result of the cast.
     """
 
     if isinstance(arg, (list, tuple)):
@@ -323,8 +322,10 @@ def _suitable_dtype(cls, dtype='float', opstr=''):
 
     Parameters:
         cls (type): Qube subclass.
-        dtype (str, optional): Default dtype, one of "float", "int", or "bool", to return
-            if it is compatible with the subclass.
+        dtype (str | numpy.dtype, optional): Requested dtype, one of "float", "int", or
+            "bool", or any NumPy dtype of one of those kinds. It is returned as one of
+            the three names if it is compatible with the subclass; otherwise the closest
+            compatible dtype is returned.
         opstr (str, optional): Name of the operation to include in any error message.
 
     Returns:
@@ -426,9 +427,10 @@ def _suitable_value(cls, arg, *, numer=None, denom=(), expand=True, opstr=''):
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        numpy.ndarray, float, int, or bool: The value made suitable for `cls`.
+        numpy.ndarray | float | int | bool: The value made suitable for `cls`.
 
     Raises:
+        TypeError: If the type of `arg` is invalid.
         ValueError: If `arg` is incompatible with `cls`.
     """
 
@@ -460,7 +462,7 @@ def _suitable_value(cls, arg, *, numer=None, denom=(), expand=True, opstr=''):
 ##########################################################################################
 
 def dtype(self):
-    """One of "float", "int", or "bool", depending this object's value.
+    """One of "float", "int", or "bool", depending on this object's data type.
 
     Returns:
         str: One of "float", "int", or "bool".
@@ -491,8 +493,7 @@ def as_numeric(self, *, recursive=True):
         recursive (bool, optional): True to include any derivatives; False to remove them.
 
     Returns:
-        Qube: This object if it is already numeric; a Boolean is converted to a
-        Scalar.
+        Qube: This object if it is already numeric; otherwise an integer Scalar.
     """
 
     if self.is_numeric():
@@ -582,15 +583,15 @@ def as_int(self, *, copy=False, builtins=False):
     Parameters:
         copy (bool, optional): True to ensure that a new object with an independent copy
             of the values is returned.
-        builtins (bool, optional): True to return a Python float if the returned value has
-            shape (), is unmasked, and has no derivatives.
+        builtins (bool, optional): True to return a Python int if the returned value has
+            shape () and is unmasked.
 
     Returns:
-        Qube or int: The result.
+        Qube | int: The result.
 
     Raises:
         TypeError: If this object cannot contain integers.
-   """
+    """
 
     if builtins and self._is_scalar and not self._mask:
         return int(self._values)
@@ -637,12 +638,12 @@ def as_bool(self, *, copy=False, builtins=False):
     Parameters:
         copy (bool, optional): True to ensure that a new object with an independent copy
             of the values is returned.
-        builtins (bool, optional): True to return a Python float if the returned value has
-            shape (), is unmasked, and has no derivatives.
+        builtins (bool, optional): True to return a Python bool if the returned value has
+            shape () and is unmasked.
 
     Returns:
-        Qube | bool: A copy of object converted to bools; if the values are already bools
-        and `copy` is False, this object is returned unchanged.
+        Qube | bool: A copy of this object converted to bools; if the values are already
+        bools and `copy` is False, this object is returned unchanged.
 
     Raises:
         TypeError: If this object cannot contain bools.

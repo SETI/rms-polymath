@@ -46,7 +46,7 @@ class Matrix(Qube):
         """Convert the argument to a Matrix if possible.
 
         Parameters:
-            arg (Any): The object to convert to a Matrix.
+            arg (MatrixLike): The object to convert to a Matrix.
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
@@ -60,7 +60,7 @@ class Matrix(Qube):
 
             # Convert a Vector with drank=1 to a Matrix
             if isinstance(arg, Vector) and arg._drank == 1:
-                return arg.join_items([Matrix])
+                return arg.join_items(classes=[Matrix])
 
             arg = Matrix(arg._values, arg._mask, example=arg)
             return arg if recursive else arg.wod
@@ -132,7 +132,7 @@ class Matrix(Qube):
                 [:class:`~polymath.Vector3`, :class:`~polymath.Vector`].
 
         Returns:
-            Qube: The selected row as an object in one of the specified `classes`.
+            Qube: The selected column as an object in one of the specified `classes`.
         """
 
         if not classes:
@@ -140,7 +140,7 @@ class Matrix(Qube):
 
         return self.extract_numer(1, column, recursive=recursive, classes=classes)
 
-    def column_vectors(self, recursive=True, classes=()):
+    def column_vectors(self, *, recursive=True, classes=()):
         """A tuple of Vector objects, one for each column of this Matrix.
 
         If the Matrix is M x N, then this will return N Vectors of length M. By default,
@@ -173,13 +173,13 @@ class Matrix(Qube):
         Parameters:
             axis (int): Axis index from which to extract a vector.
             indx (int): Index of the vector along this axis.
+            recursive (bool, optional): True to extract the derivatives as well.
             classes (type | list[type] | tuple[type, ...], optional): A list of the Vector
                 subclasses to return. The first valid one will be used. Default is
                 [:class:`~polymath.Vector`].
-            recursive (bool, optional): True to extract the derivatives as well.
 
         Returns:
-            Qube: One component of the Matrix as an objet in one of the specifed
+            Qube: One component of the Matrix as an object in one of the specified
             `classes`.
         """
 
@@ -200,15 +200,15 @@ class Matrix(Qube):
             Scalar: One element of the Matrix as a Scalar.
         """
 
-        vector = self.extract_numer(0, indx0, Vector, recursive=recursive)
-        return vector.extract_numer(0, indx1, Scalar, recursive=recursive)
+        vector = self.extract_numer(0, indx0, classes=Vector, recursive=recursive)
+        return vector.extract_numer(0, indx1, classes=Scalar, recursive=recursive)
 
     @staticmethod
     def from_scalars(*args, recursive=True, shape=None, classes=()):
         """Construct a Matrix or subclass by combining scalars.
 
         Parameters:
-            *args (Any): Any number of objects that can be casted to Scalars. They need
+            *args (Any): Any number of objects that can be cast to Scalars. They need
                 not have the same shape, but it must be possible to broadcast them to the
                 same shape. A value of None is converted to a zero-valued Scalar that
                 matches the denominator shape of the other arguments.
@@ -220,7 +220,7 @@ class Matrix(Qube):
                 returned.
             classes (type | list[type] | tuple[type, ...], optional): A list defining the
                 preferred class of the returned object. The first suitable class in the
-                list will be used. Default is [Matrix].
+                list will be used. Default is [:class:`~polymath.Matrix`].
 
         Returns:
             Matrix: A Matrix constructed from the given scalars.
@@ -259,7 +259,7 @@ class Matrix(Qube):
         if not classes:
             classes = [Matrix]
 
-        return vector.reshape_numer(shape, classes, recursive=recursive)
+        return vector.reshape_numer(shape, classes=classes, recursive=recursive)
 
     def is_diagonal(self, *, delta=0.):
         """A Boolean equal to True where the matrix is diagonal.
@@ -343,12 +343,8 @@ class Matrix(Qube):
         return self.transpose_numer(0, 1, recursive=recursive)
 
     @property
-    def T(self):    # noqa: N802  # mirrors the NumPy .T attribute
-        """The transpose of this matrix.
-
-        Returns:
-            Matrix: Transpose of this matrix with derivatives included.
-        """
+    def T(self) -> 'Matrix':    # noqa: N802  # mirrors the NumPy .T attribute
+        """The transpose of this matrix, with derivatives included."""
 
         return self.transpose_numer(0, 1, recursive=True)
 
@@ -473,8 +469,8 @@ class Matrix(Qube):
         """The Vector ``X`` that satisfies ``A X = B``, for this square matrix ``A``.
 
         Parameters:
-            arg (Vector | list | tuple): The Vector ``B`` in ``A X = B``. Its item shape
-                must match the size of this matrix.
+            arg (VectorLike): The Vector ``B`` in ``A X = B``. Its item shape must match
+                the size of this matrix.
             recursive (bool, optional): True to include the derivatives of the solution,
                 which are derived from those of this matrix and of `arg`.
             nozeros (bool, optional): False to mask out any matrices with a zero-valued
@@ -492,8 +488,7 @@ class Matrix(Qube):
             ValueError: If the item shape of `arg` does not match the size of this matrix.
             ValueError: If `nozeros` is True but this matrix is singular.
 
-        Examples::
-
+        Examples:
             >>> a = Matrix([[2., 0.], [0., 4.]])
             >>> a.solve(Vector([2., 4.]))
             Vector(1.0 1.0)
@@ -584,7 +579,7 @@ class Matrix(Qube):
 
             obj.insert_derivs(new_derivs)
 
-        return obj.cast(type(b))
+        return obj.cast(classes=type(b))
 
     ######################################################################################
     # Overrides of superclass operators
@@ -594,6 +589,9 @@ class Matrix(Qube):
         """Raise a TypeError; absolute value is not defined for matrices.
 
         This is an override of :meth:`Qube.__abs__`.
+
+        Raises:
+            TypeError: Always, because the operation is not defined for this class.
         """
 
         Qube._raise_unsupported_op('abs()', self)
@@ -728,8 +726,8 @@ class Matrix(Qube):
             Matrix: The matrix inverse.
 
         Raises:
-            ValueError: If the matrix is not square, has denominators, or has a
-                determinant of zero.
+            ValueError: If the matrix is not square or has denominators.
+            ValueError: If `nozeros` is True but a determinant of zero is encountered.
         """
 
         return self.inverse(recursive=recursive, nozeros=nozeros)

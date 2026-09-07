@@ -39,7 +39,7 @@ class Pair(Vector):
         """Convert the argument to Pair if possible.
 
         Parameters:
-            arg (Any): The object to convert to Pair.
+            arg (PairLike): The object to convert to Pair.
             recursive (bool, optional): If True, derivatives will also be converted.
 
         Returns:
@@ -59,11 +59,11 @@ class Pair(Vector):
 
             # Collapse a 1x2 or 2x1 Matrix down to a Pair
             if arg._numer in ((1, 2), (2, 1)):
-                return arg.flatten_numer(Pair, recursive=recursive)
+                return arg.flatten_numer(classes=Pair, recursive=recursive)
 
             # For any suitable Qube, move numerator items to the denominator
             if arg.rank > 1 and arg._numer[0] == 2:
-                arg = arg.split_items(1, Pair)
+                arg = arg.split_items(1, classes=Pair)
 
             arg = Pair(arg._values, arg._mask, example=arg)
             return arg if recursive else arg.wod
@@ -156,13 +156,13 @@ class Pair(Vector):
         return obj
 
     def rot90(self, *, recursive=True):
-        """A pair object rotated 90 degrees from the origin, ``(x,y) -> (y,-x)``.
+        """A pair object rotated 90 degrees about the origin, ``(x,y) -> (y,-x)``.
 
         Parameters:
             recursive (bool, optional): If True, derivatives will also be rotated.
 
         Returns:
-            Pair: A new Pair rotated 90 degrees counterclockwise.
+            Pair: A new Pair rotated 90 degrees clockwise.
         """
 
         # Roll the array axis to the end
@@ -187,8 +187,7 @@ class Pair(Vector):
         return obj
 
     def angle(self, *, recursive=True):
-        """The polar angle of this Pair measured from the **X**-axis toward the
-        **Y**-axis.
+        """The polar angle of this Pair, from the **X**-axis toward the **Y**-axis.
 
         The returned value will always fall between zero and 2*pi.
 
@@ -220,7 +219,7 @@ class Pair(Vector):
             Pair: A new Pair with values clipped to the specified limits.
 
         Raises:
-            ValueError: If lower or upper has more than two values.
+            ValueError: If `lower` or `upper` does not contain exactly two values.
         """
 
         # Make sure the lower limit is either None or an unmasked Pair

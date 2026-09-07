@@ -9,17 +9,21 @@ PolyMath Library
 PDS Ring-Moon Systems Node, SETI Institute
 
 PolyMath expands on the NumPy module and introduces a variety of additional data types
-and features to simplify 3-D geometry calculations. It is a product of the the [PDS
+and features to simplify 3-D geometry calculations. It is a product of the [PDS
 Ring-Moon Systems Node](https://pds-rings.seti.org). The PolyMath classes are:
 
 * :class:`Scalar`: A single zero-dimensional number.
 * :class:`Vector`: An arbitrary 1-D object.
-* :class:`Pair`: A subclass of `Vector` representing a vector with two coordinates.
-* :class:`Vector3`: A subclass of `Vector` representing a vector with three coordinates.
+* :class:`Pair`: A subclass of :class:`Vector` representing a vector with two
+  coordinates.
+* :class:`Vector3`: A subclass of :class:`Vector` representing a vector with three
+  coordinates.
 * :class:`Matrix`: An arbitrary 2-D matrix.
-* :class:`Matrix3`: A subclass of `Matrix` representing a unitary 3x3 rotation matrix.
-* :class:`Quaternion`: A subclass of `Vector` representing a 4-component quaternion.
-* :class:`Polynomial`: A subclass of `Vector` representing the coefficients of a
+* :class:`Matrix3`: A subclass of :class:`Matrix` representing a unitary 3x3 rotation
+  matrix.
+* :class:`Quaternion`: A subclass of :class:`Vector` representing a 4-component
+  quaternion.
+* :class:`Polynomial`: A subclass of :class:`Vector` representing the coefficients of a
   polynomial in one variable, in order of decreasing exponent.
 * :class:`Boolean`: A True or False value.
 * :class:`Qube`: The superclass of all of the above, supporting objects of arbitrary
@@ -55,15 +59,16 @@ PolyMath has the following additional features:
   added capabilities. For example, if an object is mostly masked, you can use the
   :meth:`~Qube.shrink` method to speed up math operations by excluding all the masked
   elements.
-* **Units**: Objects can have arbitrary units, as defined by PolyMath's `Unit` class.
+* **Units**: Objects can have arbitrary units, as defined by PolyMath's :class:`Unit`
+  class.
 * **Read-only** status: It is easy to define an object to be read-only, which will then
   prevent it from being modified further. This can be useful for preventing NumPy errors
   that can arise when multiple objects share memory (a common situation) and one of them
   gets modified by accident.
 * **Indexing**: An object can be indexed in a variety of ways that expand upon NumPy's
   indexing rules.
-* **Pickling**: Python's `pickle` module can be used to save and re-load objects in a way
-  that makes for extremely efficient storage.
+* **Pickling**: Python's :mod:`pickle` module can be used to save and re-load objects in a
+  way that makes for extremely efficient storage.
 
 PolyMath provides the mathematical underpinnings of the OOPS Library. As an illustration
 of its power, here are some examples of how OOPS uses PolyMath objects to describe a data
@@ -111,7 +116,7 @@ Math Operations
 ************************
 
 All standard mathematical operators and indexing/slicing options are defined for PolyMath
-objects, where appropriate: `+`, `-`, `*`, `/`, `%`, `//`,`**`, along with their in-place
+objects, where appropriate: `+`, `-`, `*`, `/`, `%`, `//`, `**`, along with their in-place
 variants. Equality tests `==`, `!=` are available for all objects; comparison operators
 `<`, `<=`, `>`, `>=` are supported for Scalars and Booleans. Where appropriate, methods
 such as :meth:`~Qube.abs`, :meth:`~Qube.len`, :meth:`~Qube.mean`, :meth:`~Qube.sum`,
@@ -232,14 +237,14 @@ represented by a :class:`Vector3` object.
 
 Methods :meth:`~Qube.insert_deriv`, :meth:`~Qube.insert_derivs`,
 :meth:`~Qube.delete_deriv`, :meth:`~Qube.delete_derivs`, and :meth:`~Qube.rename_deriv`
-can be used to add, remove, or modify derivatives after it has been constructed. You can
-also obtain a shallow copy of an object with one or more derivatives removed using
+can be used to add, remove, or modify derivatives after an object has been constructed.
+You can also obtain a shallow copy of an object with one or more derivatives removed using
 :meth:`~Qube.without_deriv` and :meth:`~Qube.without_derivs`. For convenience, the
 :attr:`~Qube.wod` property is equivalent to :meth:`~Qube.without_derivs`. Note that the
 presence of derivatives inside an object can slow computational performance significantly,
-so it can useful to suppress derivatives from a calculation if they are not needed. Note
-that many math functions have a `recursive` option that defaults to True; set it to False
-to ignore derivatives within the given calculation.
+so it can be useful to suppress derivatives from a calculation if they are not needed.
+Note that many math functions have a `recursive` option that defaults to True; set it to
+False to ignore derivatives within the given calculation.
 
 A number of methods are focused on modifying the numerator and denominator components of
 objects: :meth:`~Qube.extract_numer`, :meth:`~Qube.extract_denom`,
@@ -299,7 +304,7 @@ of masked values as indeterminate rather than nonexistent. These follow the rule
   because the result would be False regardless of the second value.
 * :meth:`~Qube.tvl_or` returns True if one value is True but the other is masked, because
   the result would be True regardless of the second value.
-* :meth:`~Qube.tvl_all` returns True only if and only all values are True; if any value is
+* :meth:`~Qube.tvl_all` returns True if and only if all values are True; if any value is
   False, it returns False; if the only values are True or indeterminate, its value is
   indeterminate (meaning masked).
 * :meth:`~Qube.tvl_any` returns True if any value is True; it returns False if every value
@@ -320,16 +325,16 @@ methods to construct an object with a new mask: :meth:`~Qube.mask_where`,
 Units
 ****************
 
-PolyMath objects also support embedded unit using the :class:`Unit` class. However, the
+PolyMath objects also support embedded units using the :class:`Unit` class. However, the
 internal values in a PolyMath object are always held in standard units of kilometers,
 seconds and radians, or arbitrary combinations thereof. The unit is primarily used to
 affect the appearance of numbers during input and output. The :attr:`~Qube.unit_` or
-:attr:`~Qube.units` property of any object will reveal the class:`Unit` object, or
+:attr:`~Qube.units` property of any object will reveal the :class:`Unit` object, or
 possibly None if the object is unitless.
 
 A :class:`Unit` allows for exact conversions between units. It is described by three
 integer exponents applying to dimensions of length, time, and angle. Conversion factors
-are describe by three (usually) integer values representing a numerator, denominator, and
+are described by three (usually) integer values representing a numerator, denominator, and
 an exponent on pi. For example, :attr:`Unit.DEGREE` is represented by exponents (0,0,1)
 and factors (1,180,1), indicating that the conversion factor is `pi/180`. Most other
 common units are described by class constants; see the :class:`Unit` class for details.
@@ -384,7 +389,7 @@ objects from other objects. Methods include :meth:`~Qube.copy`, :meth:`~Qube.clo
 classes, such as :meth:`Vector.from_scalars`, :meth:`Vector.to_scalar`,
 :meth:`Vector.to_scalars`, :meth:`Matrix3.twovec` (a rotation matrix defined by two
 vectors), :meth:`Matrix.row_vector`, :meth:`Matrix.row_vectors`,
-:meth:`Matrix.column_vector`, Matrix.column_vectors`, and Matrix.to_vector`.
+:meth:`Matrix.column_vector`, :meth:`Matrix.column_vectors`, and :meth:`Matrix.to_vector`.
 
 ******************
 Indexing
@@ -414,7 +419,7 @@ an object:
   where the :class:`Scalar` index are masked are not changed.
 
 * A :class:`Pair` object composed of integers can be used as an index. Each `(i,j)` value
-  is treated is the index of two consecutive axes, and the associated value is returned.
+  is treated as the index of two consecutive axes, and the associated value is returned.
   Where the :class:`Pair` is masked, a masked value is returned. Similarly, a
   :class:`Vector` with three or more integer elements is treated as the index of three or
   more consecutive axes.
@@ -425,12 +430,12 @@ an object:
   `(3,1,7,8,9)`; `A[:,B]` has shape `(6,3,1,8,9)`, and `A[...,B]` has shape `(6,7,8,3,1)`.
 
 * When multiple arrays are used for indexing at the same time, the broadcasted shape of
-  these array appears at the location of the first array-valued index. In the same example
-  as above, suppose `C` has shape `(4,)`. Then `A[B,C]` has shape `(3,4,8,9)`, `A[:,B,C]`
-  has shape `(6,3,4,9)`, and `A[:,B,:,C]` has shape `(6,3,4,8)`. Note that this behavior
-  is slightly different from how NumPy handles indexing with multiple arrays.
+  these arrays appears at the location of the first array-valued index. In the same
+  example as above, suppose `C` has shape `(4,)`. Then `A[B,C]` has shape `(3,4,8,9)`,
+  `A[:,B,C]` has shape `(6,3,4,9)`, and `A[:,B,:,C]` has shape `(6,3,4,8)`. Note that this
+  behavior is slightly different from how NumPy handles indexing with multiple arrays.
 
-Several methods can be used to convert PolyMath objects to objects than be used for
+Several methods can be used to convert PolyMath objects to objects that can be used for
 indexing NumPy arrays. You can obtain integer indices from :meth:`Scalar.as_index`,
 :meth:`Vector.as_index`, :meth:`Scalar.as_index_and_mask`, and
 :meth:`Vector.as_index_and_mask`. You can obtain boolean masks from
@@ -442,7 +447,7 @@ indexing NumPy arrays. You can obtain integer indices from :meth:`Scalar.as_inde
 Iterators
 ******************
 
-Every Polymath object can be used as an iterator, in which case it performs an iteration
+Every PolyMath object can be used as an iterator, in which case it performs an iteration
 over the object's leading axis. Alternatively, :meth:`~Qube.ndenumerate` iterates over
 every item in a multidimensional object.
 
@@ -476,14 +481,14 @@ For each object, the user can define the floating-point compression method using
 using :meth:`~Qube.set_default_pickle_digits`. The inputs to these functions are as
 follows:
 
-**digits** (`str, int, or float`): The number of digits to preserve.
+**digits** (`str | int | float`): The number of digits to preserve.
 
 * "double": preserve full precision using lossless **fpzip** compression.
 * "single": convert the array to single precision and then store it using lossless
   **fpzip** compression.
-* an number 7-16, defining the number of significant digits to preserve.
+* a number 7-16, defining the number of significant digits to preserve.
 
-**reference** (`str or float`): How to interpret a numeric value of **digits**.
+**reference** (`str | float`): How to interpret a numeric value of **digits**.
 
 * "fpzip": Use lossy **fpzip** compression, preserving the given number of digits.
 * a number: Preserve every number to the exact same absolute precision, scaling the number
@@ -502,7 +507,7 @@ generated automatically.
   furthest from zero. This option is useful for arrays that contain a limited range of
   values, such as the components of a unit vector or angles that are known to fall between
   zero and `2*pi`. In this case, it is probably not necessary to preserve the extra
-  precision in values that just happen to fall very close zero.
+  precision in values that just happen to fall very close to zero.
 * "mean": Absolute accuracy will be `10**(-digits)` times the mean of the absolute values
   in the array.
 * "median": Absolute accuracy will be `10**(-digits)` times the median of the absolute

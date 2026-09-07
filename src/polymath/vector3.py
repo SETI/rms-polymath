@@ -40,19 +40,21 @@ class Vector3(Vector):
         """Convert the argument to Vector3 if possible.
 
         Parameters:
-            arg (Any): The object to convert to Vector3.
+            arg (Vector3Like): The object to convert to Vector3.
             recursive (bool, optional): If True, derivatives will also be converted.
 
         Returns:
             Vector3: The converted Vector3 object.
 
+        Raises:
+            ValueError: If the input cannot be converted to a 3-component vector.
+
         Notes:
             Conversion is possible from: Vector objects with 3 components, 1x3 or 3x1
-            Matrix objects (which are flattened to Vector3), arrays/list/tuples with 3
-            elements, or other Qube objects with compatible shapes. For Qube objects with
-            rank > 1 where the first numerator dimension is 3, the numerator items are
-            split to create a Vector3. Raises ValueError if the input cannot be converted
-            to a 3-component vector.
+            Matrix objects (which are flattened to Vector3), arrays, lists or tuples with
+            3 elements, or other Qube objects with compatible shapes. For Qube objects
+            with rank > 1 where the first numerator dimension is 3, the numerator items
+            are split to create a Vector3.
         """
 
         if isinstance(arg, Vector3):
@@ -62,11 +64,11 @@ class Vector3(Vector):
 
             # Collapse a 1x3 or 3x1 Matrix down to a Vector
             if arg._numer in ((1, 3), (3, 1)):
-                return arg.flatten_numer(Vector3, recursive=recursive)
+                return arg.flatten_numer(classes=Vector3, recursive=recursive)
 
             # For any suitable Qube, move numerator items to the denominator
             if arg.rank > 1 and arg._numer[0] == 3:
-                arg = arg.split_items(1, Vector3)
+                arg = arg.split_items(1, classes=Vector3)
 
             arg = Vector3(arg)
             return arg if recursive else arg.wod
@@ -78,9 +80,9 @@ class Vector3(Vector):
         """Construct a Vector3 by combining three scalars.
 
         Parameters:
-            x (ScalarLike): First component of the vector.
-            y (ScalarLike): Second component of the vector.
-            z (ScalarLike): Third component of the vector.
+            x (ScalarLike | None): First component of the vector.
+            y (ScalarLike | None): Second component of the vector.
+            z (ScalarLike | None): Third component of the vector.
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
                 found among x, y and z.
@@ -231,8 +233,8 @@ class Vector3(Vector):
         Returns:
             tuple[Scalar, Scalar, Scalar]: `(radius, longitude, z)` where `radius` is the
             distance from the cylindrical axis (sqrt(x**2 + y**2)), `longitude` is the
-            angle in radians from the **x**-axis toward the **y**-axis in the range [0,
-            2*pi)), and `z` is the distance above/below the equatorial plane.
+            angle in radians from the **X**-axis toward the **Y**-axis in the range [0,
+            2*pi), and `z` is the distance above/below the equatorial plane.
         """
 
         (x, y, z) = self.to_scalars(recursive=recursive)
@@ -249,9 +251,9 @@ class Vector3(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            Scalar: The longitude in radians, measured from the X-axis toward the Y-axis.
-            The longitude is returned in the range [0, 2*pi) radians, measured
-            counterclockwise from the positive X-axis in the XY plane.
+            Scalar: The longitude in radians, measured from the **X**-axis toward the
+            **Y**-axis. The longitude is returned in the range [0, 2*pi) radians, measured
+            counterclockwise from the positive **X**-axis in the **XY** plane.
         """
 
         x = self.to_scalar(0, recursive=recursive)
@@ -266,9 +268,9 @@ class Vector3(Vector):
 
         Returns:
             Scalar: The latitude in radians, measured from the equatorial plane toward
-            the Z-axis. The latitude is returned in the range [-pi/2, pi/2] radians, where
-            positive values are above the equatorial plane (positive Z) and negative
-            values are below.
+            the **Z**-axis. The latitude is returned in the range [-pi/2, pi/2] radians,
+            where positive values are above the equatorial plane (positive **Z**) and
+            negative values are below.
         """
 
         z = self.to_scalar(2, recursive=recursive)

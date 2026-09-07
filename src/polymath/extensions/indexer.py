@@ -40,11 +40,11 @@ def __getitem__(self, indx):
         Two behaviors differ from NumPy deliberately:
 
         * Axes selected by array indices keep their position. NumPy moves them to the
-            front when the array indices are not consecutive, so ``a[:, [0,1], :, [0,1]]``
-            has shape (2,4,6) in NumPy where here it has shape (4,2,6).
+          front when the array indices are not consecutive, so ``a[:, [0,1], :, [0,1]]``
+          has shape (2,4,6) in NumPy where here it has shape (4,2,6).
         * A single boolean does not add a leading axis. ``a[True]`` has the shape of `a`,
-            where NumPy gives it shape (1,) + a.shape; ``a[False]`` gives a zero-sized
-            object either way.
+          where NumPy gives it shape (1,) + a.shape; ``a[False]`` gives a zero-sized
+          object either way.
     """
 
     # Handle indexing of a shapeless object
@@ -140,7 +140,7 @@ def __setitem__(self, indx, arg):
     derivative that this object has and `arg` does not is set to zero at those locations.
 
     Parameters:
-        indx (Any): The index, interpreted as in __getitem__().
+        indx (Any): The index, interpreted as in :meth:`~Qube.__getitem__`.
         arg (QubeLike): The replacement value, broadcastable to the shape that the index
             selects.
 

@@ -83,12 +83,12 @@ Units multiply, divide, and raise to powers to form compound units, and
     >>> Unit.as_unit('deg')
     Unit(deg)
 
-A unit is defined by its :attr:`~polymath.Unit.exponents` on distance, time, and angle and
-by a :attr:`~polymath.Unit.triple` of integers giving the exact conversion factor into
-standard units as a numerator, a denominator, and a power of pi. A degree has exponents
-``(0, 0, 1)`` and triple ``(1, 180, 1)``, meaning that the factor is pi/180. The
-constructor takes the same two tuples and an optional name, so a unit that is not
-predefined can be built.
+A unit is defined by its exponents on distance, time, and angle and by a triple of
+integers giving the exact conversion factor into standard units as a numerator, a
+denominator, and a power of pi; both are attributes of the :class:`~polymath.Unit`. A
+degree has exponents ``(0, 0, 1)`` and triple ``(1, 180, 1)``, meaning that the factor is
+pi/180. The constructor takes the same two tuples and an optional name, so a unit that is
+not predefined can be built.
 
 .. code-block:: python
 

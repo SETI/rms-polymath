@@ -560,13 +560,13 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
 
     a = Scalar([1., 2., 3.])
 
-    b = a.cast([Vector])
+    b = a.cast(classes=[Vector])
     assert a is b  # Should return self when no suitable class
 
-    b = a.cast([Scalar])
+    b = a.cast(classes=[Scalar])
     assert a is b
 
-    b = a.cast(Scalar)
+    b = a.cast(classes=Scalar)
     assert a is b
 
     # Test incompatible _NUMER
@@ -1079,7 +1079,7 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
 
     assert a is not b
 
-    assert b.readonly
+    assert not b.readonly
 
     a = Scalar([1., 2., 3.])
     readonly_mask = np.array([False, True, False])

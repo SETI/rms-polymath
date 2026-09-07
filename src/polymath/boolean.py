@@ -38,7 +38,7 @@ class Boolean(Scalar):
         """Convert the argument to Boolean if possible.
 
         Parameters:
-            arg (Any): The object to convert to Boolean.
+            arg (BooleanLike): The object to convert to Boolean.
             recursive (bool, optional): This parameter is ignored for Boolean class but
                 included for compatibility.
 
@@ -79,17 +79,18 @@ class Boolean(Scalar):
             value (bool, optional): True to count True values; False to count False
                 values.
             builtins (bool | None, optional): If True and the result is a single unmasked
-                scalar, the result is returned as a Python int or float instead of as an
-                instance of Qube. Default is that specified by Qube.prefer_builtins().
+                scalar, the result is returned as a Python int instead of as an instance
+                of Scalar. Default is the value specified by
+                :meth:`~polymath.Qube.prefer_builtins`.
             recursive (bool, optional): Ignored for class Boolean.
-            masked (bool | None, optional): The value to return if `builtins` is True but
+            masked (int | None, optional): The value to return if `builtins` is True but
                 the returned value is masked. Default is to return a masked value instead
                 of a builtin type.
-            out (Any | None, optional): Ignored. Enables "np.sum(Qube)" to work.
+            out (Any, optional): Ignored. Enables ``np.sum(Boolean)`` to work.
 
         Returns:
-            Scalar: The sum of matched values (True or False) along the specified axis or
-            axes.
+            Scalar | int: The count of matching values (True or False) along the
+            specified axis or axes.
         """
 
         if value:
@@ -202,7 +203,7 @@ class Boolean(Scalar):
             arg (Any): The argument.
 
         Raises:
-            ValueError: Always; in-place addition is not supported for Boolean.
+            TypeError: Always; in-place addition is not supported for Boolean.
         """
 
         Qube._raise_unsupported_op('+=', self)
@@ -254,7 +255,7 @@ class Boolean(Scalar):
             arg (Any): The argument.
 
         Raises:
-            ValueError: Always; in-place subtraction is not supported for Boolean.
+            TypeError: Always; in-place subtraction is not supported for Boolean.
         """
 
         Qube._raise_unsupported_op('-=', self)
@@ -298,7 +299,7 @@ class Boolean(Scalar):
         return self.as_int() * arg
 
     def __imul__(self, /, arg):
-        """In-place multiplication is not supported for Boolean.
+        """``self *= arg``; in-place multiplication is not supported for Boolean.
 
         This is an override of :meth:`Qube.__imul__`.
 
@@ -306,7 +307,7 @@ class Boolean(Scalar):
             arg (Any): The argument.
 
         Raises:
-            ValueError: Always; in-place multiplication is not supported for Boolean.
+            TypeError: Always; in-place multiplication is not supported for Boolean.
         """
 
         Qube._raise_unsupported_op('*=', self)
@@ -361,7 +362,7 @@ class Boolean(Scalar):
             arg (Any): The argument.
 
         Raises:
-            ValueError: Always; in-place division is not supported for Boolean.
+            TypeError: Always; in-place division is not supported for Boolean.
         """
 
         Qube._raise_unsupported_op('/=', self)
@@ -406,7 +407,7 @@ class Boolean(Scalar):
         return arg // self.as_int()
 
     def __ifloordiv__(self, /, arg):
-        """``self //= arg``; in-place division is not supported for Boolean.
+        """``self //= arg``; in-place floor division is not supported for Boolean.
 
         This is an override of :meth:`Qube.__ifloordiv__`.
 
@@ -414,7 +415,7 @@ class Boolean(Scalar):
             arg (Any): The argument.
 
         Raises:
-            ValueError: Always; in-place floor division is not supported for Boolean.
+            TypeError: Always; in-place floor division is not supported for Boolean.
         """
 
         Qube._raise_unsupported_op('//=', self)
@@ -459,7 +460,7 @@ class Boolean(Scalar):
         return arg % self.as_int()
 
     def __imod__(self, /, arg):
-        """Raise exception as in-place modulo is not supported for Boolean.
+        """``self %= arg``; in-place modulo is not supported for Boolean.
 
         This is an override of :meth:`Qube.__imod__`.
 
@@ -467,7 +468,7 @@ class Boolean(Scalar):
             arg (Any): The argument.
 
         Raises:
-            ValueError: Always; in-place modulo is not supported for Boolean.
+            TypeError: Always; in-place modulo is not supported for Boolean.
         """
 
         Qube._raise_unsupported_op('%=', self)
@@ -512,7 +513,7 @@ class Boolean(Scalar):
             arg (Any): The exponent.
 
         Raises:
-            ValueError: Always; in-place exponentiation is not supported for Boolean.
+            TypeError: Always; in-place exponentiation is not supported for Boolean.
         """
 
         Qube._raise_unsupported_op('**=', self)
@@ -523,7 +524,7 @@ class Boolean(Scalar):
 
     def __le__(self, arg, *, builtins=True):
         """``self <= arg``, element-by-element "less than or equal" after this Boolean is
-        converted to integer Scalar.
+        converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__le__`.
 
@@ -563,8 +564,8 @@ class Boolean(Scalar):
         return self.as_int().__lt__(arg, builtins=builtins)
 
     def __ge__(self, arg, *, builtins=True):
-        """``self <= arg``, element-by-element "greater than or equal" after this Boolean
-        is converted to integer Scalar.
+        """``self >= arg``, element-by-element "greater than or equal" after this Boolean
+        is converted to an integer Scalar.
 
         This is an override of :meth:`Qube.__ge__`.
 

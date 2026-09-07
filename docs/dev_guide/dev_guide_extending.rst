@@ -190,9 +190,9 @@ A subclass fixes the constraints on an item and adds methods. The example define
 
               if isinstance(arg, Qube):
                   if arg._numer in ((1, 4), (4, 1)):
-                      return arg.flatten_numer(Vector4, recursive=recursive)
+                      return arg.flatten_numer(classes=Vector4, recursive=recursive)
                   if arg.rank > 1 and arg._numer[0] == 4:
-                      arg = arg.split_items(1, Vector4)
+                      arg = arg.split_items(1, classes=Vector4)
                   arg = Vector4(arg._values, arg._mask, example=arg)
                   return arg if recursive else arg.wod
 

@@ -25,7 +25,7 @@ def insert_deriv(self, key, deriv, *, override=True):
     Derivatives cannot be integers. They are converted to floating-point if necessary.
 
     You cannot replace the pre-existing value of a derivative in a read-only object
-    unless you explicit set override=True. However, inserting a new derivative into a
+    unless you explicitly set `override=True`. However, inserting a new derivative into a
     read-only object is not prevented.
 
     Parameters:
@@ -88,7 +88,7 @@ def insert_derivs(self, derivs, *, override=False):
     """Insert or replace the derivatives in this object from a dictionary.
 
     You cannot replace the pre-existing values of any derivative in a read-only object
-    unless you explicit set override=True. However, inserting a new derivative into a
+    unless you explicitly set `override=True`. However, inserting a new derivative into a
     read-only object is not prevented.
 
     Parameters:
@@ -97,12 +97,13 @@ def insert_derivs(self, derivs, *, override=False):
             be replaced.
 
     Returns:
-        Qube: This object after the derivatives has been inserted.
+        Qube: This object after the derivatives have been inserted.
 
     Raises:
-        TypeError: If a derivative class is invalid.
-        ValueError: If derivatives are disallowed for the object, if a shape is invalid,
-            or if a key already exists when `override` is False.
+        TypeError: If a derivative class is invalid or if derivatives are disallowed for
+            the object class.
+        ValueError: If a shape is invalid, or if a key already exists when `override` is
+            False.
     """
 
     # Check every insert before proceeding with any
@@ -123,7 +124,7 @@ def delete_deriv(self, key, *, override=False):
     """Delete a single derivative from this object, given the key.
 
     Derivatives cannot be deleted from a read-only object without explicitly setting
-    override=True.
+    `override=True`.
 
     Parameters:
         key (str): The key of the derivative to remove. If the key does not exist, the
@@ -154,8 +155,8 @@ def delete_derivs(self, *, override=False, preserve=None):
     Parameters:
         override (bool, optional): True to allow the deleting of derivatives from a
             read-only object.
-        preserve (list[str] | tuple[str, ...] | set[str] | None, optional): The names of
-            derivatives to retain. All others are removed.
+        preserve (str | list[str] | tuple[str, ...] | set[str] | None, optional): The
+            name or names of derivatives to retain. All others are removed.
 
     Raises:
         ValueError: If this object is read-only and `override` is False.
@@ -188,8 +189,8 @@ def without_derivs(self, *, preserve=None):
     A read-only object remains read-only, and is cached for later use.
 
     Parameters:
-        preserve (list[str] | tuple[str, ...] | set[str] | None, optional): The names of
-            derivatives to retain. All others are removed.
+        preserve (str | list[str] | tuple[str, ...] | set[str] | None, optional): The
+            name or names of derivatives to retain. All others are removed.
 
     Returns:
         Qube: The copy, with the same subclass as self.
@@ -225,14 +226,8 @@ def without_derivs(self, *, preserve=None):
 
 
 @property
-def wod(self):
-    """A shallow clone without derivatives, cached.
-
-    Read-only objects remain read-only.
-
-    Returns:
-        Qube: A shallow copy of this object without derivatives.
-    """
+def wod(self) -> Qube:
+    """A cached shallow clone without derivatives; a read-only object stays read-only."""
 
     if not self._derivs:
         return self
@@ -271,27 +266,26 @@ def without_deriv(self, key):
 
 
 def with_deriv(self, key, value, *, method='insert'):
-    """A shallow copy of this object with a derivative inserted or
-    added.
+    """A shallow copy of this object with a derivative inserted or added.
 
     A read-only object remains read-only.
 
     Parameters:
         key (str): The key of the derivative to insert.
         value (Qube): The value for this derivative.
-        method (str, optional): How to insert the derivative, one of these options:`
+        method (str, optional): How to insert the derivative, one of these options:
 
-            * "`insert`": Iinsert the new derivative; raise a ValueError if a
-              derivative of the same name already exists.
-            * "`replace`":  Replace an existing derivative of the same name.
-            * "`add`": Add this derivative to an existing derivative of the same name.
+            * "insert": Insert the new derivative; raise a ValueError if a derivative of
+              the same name already exists.
+            * "replace": Replace an existing derivative of the same name.
+            * "add": Add this derivative to an existing derivative of the same name.
 
     Returns:
         Qube: The copy, with the same subclass as self.
 
     Raises:
         ValueError: If `method` is "insert" and a derivative of the given name already
-            exists.
+            exists, or if `method` is not one of the options above.
     """
 
     result = self.clone(recursive=True)
@@ -318,20 +312,21 @@ def rename_deriv(self, key, new_key, *, method='insert'):
     Parameters:
         key (str): The current key of the derivative.
         new_key (str): The new name of the derivative.
-        method (str, optional): How to rename the derivative, one of these options:`
+        method (str, optional): How to insert the renamed derivative, one of these
+            options:
 
-            * "`insert`": Iinsert the new derivative; raise a ValueError if a
-              derivative of the same name already exists.
-            * "`replace`":  Replace an existing derivative of the same name.
-            * "`add`": Add this derivative to an existing derivative of the same name.
+            * "insert": Insert the renamed derivative; raise a ValueError if a derivative
+              named `new_key` already exists.
+            * "replace": Replace an existing derivative named `new_key`.
+            * "add": Add this derivative to an existing derivative named `new_key`.
 
     Returns:
         Qube: The copy, with the same subclass as self.
 
     Raises:
         KeyError: If the `key` derivative does not exist.
-        ValueError: If `method` is "insert" and a derivative of the given name already
-            exists.
+        ValueError: If `method` is "insert" and a derivative named `new_key` already
+            exists, or if `method` is not one of the options above.
     """
 
     result = self.with_deriv(new_key, self._derivs[key], method=method)

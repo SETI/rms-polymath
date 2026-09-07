@@ -37,8 +37,8 @@ class Vector(Qube):
         """Initialize a Vector object.
 
         Parameters:
-            arg (VectorLike): The input data to construct the Vector. A Python scalar will
-                be converted to an array of shape (1,).
+            arg (VectorLike | float | int): The input data to construct the Vector. A
+                Python scalar will be converted to an array of shape (1,).
             *args (Any): Additional arguments passed to the Qube constructor.
             **kwargs (Any): Additional "keyword=value" arguments passed to the Qube
                 constructor. If `drank` is specified, the input array must have at least
@@ -59,7 +59,7 @@ class Vector(Qube):
         """Convert the argument to a Vector if possible.
 
         Parameters:
-            arg (Any): The object to convert to Vector.
+            arg (VectorLike): The object to convert to Vector.
             recursive (bool, optional): If True, derivatives will also be converted.
 
         Returns:
@@ -73,7 +73,7 @@ class Vector(Qube):
 
             # Collapse a 1xN or Nx1 MatrixN down to a Vector
             if arg._nrank == 2 and (arg._numer[0] == 1 or arg._numer[1] == 1):
-                return arg.flatten_numer(Vector, recursive=recursive)
+                return arg.flatten_numer(classes=Vector, recursive=recursive)
 
             # Convert Scalar to shape (1,)
             if arg._nrank == 0:
@@ -107,7 +107,7 @@ class Vector(Qube):
             Scalar: The component at the specified index.
         """
 
-        return self.extract_numer(0, indx, Scalar, recursive=recursive)
+        return self.extract_numer(0, indx, classes=Scalar, recursive=recursive)
 
     def to_scalars(self, *, recursive=True):
         """All the components of this Vector as a tuple of Scalars.
@@ -121,14 +121,15 @@ class Vector(Qube):
 
         results = []
         for i in range(self._numer[0]):
-            results.append(self.extract_numer(0, i, Scalar, recursive=recursive))
+            results.append(self.extract_numer(0, i, classes=Scalar,
+                                              recursive=recursive))
 
         return tuple(results)
 
     def to_pair(self, axes=(0, 1), *, recursive=True):
         """A Pair containing two selected components of this Vector.
 
-        Overrides the default method to include an 'axes' argument, which can extract any
+        Overrides the default method to include an `axes` argument, which can extract any
         two components of a Vector very efficiently.
 
         Parameters:
@@ -138,6 +139,10 @@ class Vector(Qube):
 
         Returns:
             Pair: A Pair object containing the two selected components.
+
+        Raises:
+            IndexError: If an index in `axes` is out of range or the two indices refer to
+                the same component.
         """
 
         size = self._numer[0]
@@ -223,8 +228,10 @@ class Vector(Qube):
                 index will retain their unmasked values when the index is applied.
 
         Returns:
-            tuple: A tuple containing (index, mask), where index is suitable for
-            indexing a NumPy ndarray and mask indicates which values are masked.
+            tuple[tuple[numpy.ndarray | numpy.integer, ...], MaskType]: A tuple
+            ``(index, mask)``, where `index` is suitable for indexing a NumPy ndarray and
+            `mask` indicates which values are masked. Each element of `index` is an
+            integer array, or a single integer if this object has shape ().
 
         Raises:
             TypeError: If this object contains floating-point values.
@@ -392,7 +399,7 @@ class Vector(Qube):
         result.__init__(values, mask, example=self)
         return result
 
-    def as_column(self, recursive=True):
+    def as_column(self, *, recursive=True):
         """Convert the Vector to an Nx1 column matrix.
 
         Parameters:
@@ -402,7 +409,7 @@ class Vector(Qube):
             Matrix: An Nx1 matrix representation of this Vector.
         """
 
-        return self.reshape_numer(self._numer + (1,), Qube._MATRIX_CLASS,
+        return self.reshape_numer(self._numer + (1,), classes=Qube._MATRIX_CLASS,
                                   recursive=recursive)
 
     def as_row(self, *, recursive=True):
@@ -415,7 +422,7 @@ class Vector(Qube):
             Matrix: A 1xN matrix representation of this Vector.
         """
 
-        return self.reshape_numer((1,) + self._numer, Qube._MATRIX_CLASS,
+        return self.reshape_numer((1,) + self._numer, classes=Qube._MATRIX_CLASS,
                                   recursive=recursive)
 
     def as_diagonal(self, *, recursive=True):
@@ -429,7 +436,8 @@ class Vector(Qube):
             of this Vector.
         """
 
-        return Qube.as_diagonal(self, 0, Qube._MATRIX_CLASS, recursive=recursive)
+        return Qube.as_diagonal(self, 0, classes=Qube._MATRIX_CLASS,
+                                recursive=recursive)
 
     def dot(self, arg, *, recursive=True):
         """Calculate the dot product of this vector and another.
@@ -511,8 +519,8 @@ class Vector(Qube):
             recursive (bool, optional): If True, include derivatives in the result.
 
         Returns:
-            Vector: The cross product vector. For 3-vectors, returns a Vector; for
-            2-vectors, returns a Scalar.
+            Vector | Scalar: The cross product. For 3-vectors, this is a Vector; for
+            2-vectors, it is a Scalar.
         """
 
         arg = self.as_this_type(arg, recursive=recursive, coerce=False)
@@ -548,7 +556,7 @@ class Vector(Qube):
         """
 
         arg = Vector.as_vector(arg, recursive=recursive)
-        return Qube.outer(self, arg, Qube._MATRIX_CLASS, recursive=recursive)
+        return Qube.outer(self, arg, classes=Qube._MATRIX_CLASS, recursive=recursive)
 
     def perp(self, arg, *, recursive=True):
         """The component of this vector perpendicular to another.
@@ -751,8 +759,11 @@ class Vector(Qube):
         """
 
         # Convert to this class if necessary
-        if not isinstance(arg, Qube):
-            arg = self.as_this_type(arg, recursive=recursive, coerce=False)
+        original_arg = arg
+        arg = self.as_this_type(arg, recursive=recursive, coerce=False)
+
+        # If it had no unit originally, it should not have a unit now
+        if not isinstance(original_arg, Qube):
             arg = arg.without_unit()
 
         # Validate
@@ -1092,7 +1103,7 @@ class Vector(Qube):
         Qube._raise_unsupported_op('identity()', self)
 
     def reciprocal(self, *, nozeros=False):
-        """The reciprocal of this Vector as a Jacobian..
+        """The reciprocal of this Vector as a Jacobian.
 
         This Vector must be a Jacobian, i.e., the derivative of one Vector with respect to
         another. The reciprocal is therefore the matrix inverse, the derivative of the
@@ -1105,13 +1116,15 @@ class Vector(Qube):
                 determinants. Set to True only if you know in advance that all
                 determinants are nonzero.
 
-        Raises:
-            ValueError: If the two Vectors do not have the same dimension (meaning the
-                matrix in not square).
-            ValueError: If `nozeros` is True but a determinant of zero is encountered.
-
         Returns:
             Vector: The matrix inverse of this Jacobian.
+
+        Raises:
+            TypeError: If this Vector does not have exactly one denominator axis, so that
+                it does not represent a Jacobian.
+            ValueError: If the two Vectors do not have the same dimension (meaning the
+                matrix is not square).
+            ValueError: If `nozeros` is True but a determinant of zero is encountered.
         """
 
         if self._drank != 1:

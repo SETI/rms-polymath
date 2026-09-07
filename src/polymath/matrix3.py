@@ -58,7 +58,7 @@ class Matrix3(Matrix):
         Quaternions are converted to matrices.
 
         Parameters:
-            arg (Any): The object to convert to Matrix3.
+            arg (Matrix3Like): The object to convert to Matrix3.
             recursive (bool, optional): True to include derivatives in the returned
                 result.
 
@@ -82,15 +82,15 @@ class Matrix3(Matrix):
     def twovec(vector1, axis1, vector2, axis2, *, recursive=True):
         """A rotation matrix defined by two vectors.
 
-        The returned matrix rotates to a right-handed coordinate frame having vector1
-        pointing along a specified axis (axis1=0 for X, 1 for Y, 2 for Z) and vector2
-        pointing into the half-plane defined by (axis1, axis2).
+        The returned matrix rotates to a right-handed coordinate frame having `vector1`
+        pointing along a specified axis (`axis1` = 0 for X, 1 for Y, 2 for Z) and
+        `vector2` pointing into the half-plane defined by (`axis1`, `axis2`).
 
         Parameters:
-            vector1 (VectorLike): The first vector that defines the rotation.
-            axis1 (int): The axis to which vector1 should point (0=X, 1=Y, 2=Z).
-            vector2 (VectorLike): The second vector that defines the rotation.
-            axis2 (int): The axis defining the half-plane for vector2 (0=X, 1=Y, 2=Z).
+            vector1 (Vector3Like): The first vector that defines the rotation.
+            axis1 (int): The axis to which `vector1` should point (0=X, 1=Y, 2=Z).
+            vector2 (Vector3Like): The second vector that defines the rotation.
+            axis2 (int): The axis defining the half-plane for `vector2` (0=X, 1=Y, 2=Z).
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
@@ -194,7 +194,7 @@ class Matrix3(Matrix):
             Matrix3: A rotation matrix about the X-axis.
 
         Raises:
-            ValueError: If the angle has an invalid unit
+            ValueError: If the angle has an invalid unit.
         """
 
         angle = Scalar.as_scalar(angle)
@@ -205,8 +205,8 @@ class Matrix3(Matrix):
 
         values = np.zeros(angle._shape + (3, 3))
         values[..., 1, 1] =  cos_angle
-        values[..., 1, 2] =  sin_angle
-        values[..., 2, 1] = -sin_angle
+        values[..., 1, 2] = -sin_angle
+        values[..., 2, 1] =  sin_angle
         values[..., 2, 2] =  cos_angle
         values[..., 0, 0] =  1.
 
@@ -215,8 +215,8 @@ class Matrix3(Matrix):
         if recursive and angle._derivs:
             matrix = np.zeros(angle._shape + (3, 3))
             matrix[..., 1, 1] = -sin_angle
-            matrix[..., 1, 2] =  cos_angle
-            matrix[..., 2, 1] = -cos_angle
+            matrix[..., 1, 2] = -cos_angle
+            matrix[..., 2, 1] =  cos_angle
             matrix[..., 2, 2] = -sin_angle
 
             for key, deriv in angle._derivs.items():
@@ -240,7 +240,7 @@ class Matrix3(Matrix):
             Matrix3: A rotation matrix about the Y-axis.
 
         Raises:
-            ValueError: If the angle has an invalid unit
+            ValueError: If the angle has an invalid unit.
         """
 
         angle = Scalar.as_scalar(angle)
@@ -272,7 +272,7 @@ class Matrix3(Matrix):
 
     @staticmethod
     def z_rotation(angle, *, recursive=True):
-        """A rotation matrix about Z-axis.
+        """A rotation matrix about the **Z**-axis.
 
         The returned matrix rotates a vector counterclockwise about the Z-axis by the
         specified angle in radians. The same matrix rotates a coordinate system clockwise
@@ -286,7 +286,7 @@ class Matrix3(Matrix):
             Matrix3: A rotation matrix about the Z-axis.
 
         Raises:
-            ValueError: If the angle has an invalid unit
+            ValueError: If the angle has an invalid unit.
         """
 
         angle = Scalar.as_scalar(angle)
@@ -331,6 +331,9 @@ class Matrix3(Matrix):
 
         Returns:
             Matrix3: A rotation matrix about the specified axis.
+
+        Raises:
+            ValueError: If the angle has an invalid unit.
         """
 
         axis = axis % 3
@@ -356,10 +359,10 @@ class Matrix3(Matrix):
             dec (ScalarLike): The declination of the **Z**-axis in radians.
 
         Returns:
-            Matrix3: A rotation matrix to the frame defined by (ra,dec).
+            Matrix3: A rotation matrix to the frame defined by (`ra`, `dec`).
 
         Raises:
-            ValueError: If ra or dec has an invalid unit.
+            ValueError: If `ra` or `dec` has an invalid unit.
 
         Notes:
             Derivatives are not supported.
@@ -389,7 +392,7 @@ class Matrix3(Matrix):
         """Rotate an object by this Matrix3, returning an instance of the same subclass.
 
         Parameters:
-            arg (QubeLike): The object to rotate, which can be a Vector3, Matrix3, or any
+            arg (Qube): The object to rotate, which can be a Vector3, Matrix3, or any
                 other Qube object. When rotating Matrix3 objects, ensure compatible shapes
                 for proper broadcasting. Scalars are returned unchanged.
             recursive (bool, optional): If True, the rotated derivatives are included in
@@ -401,7 +404,7 @@ class Matrix3(Matrix):
             returned unchanged.
 
         Notes:
-            The shapes of this Matrix3 and the argument are broadcasted together. For
+            The shapes of this Matrix3 and the argument are broadcast together. For
             Matrix3 objects, the matrix multiplication requires compatible shapes between
             the leading dimensions.
         """
@@ -418,10 +421,10 @@ class Matrix3(Matrix):
         """Rotate an object by the inverse of this Matrix3, returning the same subclass.
 
         Parameters:
-            arg (QubeLike): The object to rotate, which can be a Vector3, Matrix3, or any
-                other Qube object. When rotating Matrix3 objects, ensure compatible shapes
-                for proper broadcasting. Scalars are returned unchanged.
-            recursive (bool, optional): If True, the un-rotated derivatives are included
+            arg (Qube): The object to unrotate, which can be a Vector3, Matrix3, or any
+                other Qube object. When unrotating Matrix3 objects, ensure compatible
+                shapes for proper broadcasting. Scalars are returned unchanged.
+            recursive (bool, optional): If True, the unrotated derivatives are included
                 in the object returned.
 
         Returns:
@@ -430,7 +433,7 @@ class Matrix3(Matrix):
             returned unchanged.
 
         Notes:
-            The shapes of this Matrix3 and the argument are broadcasted together. For
+            The shapes of this Matrix3 and the argument are broadcast together. For
             Matrix3 objects, the matrix multiplication requires compatible shapes between
             the leading dimensions.
         """
@@ -448,15 +451,18 @@ class Matrix3(Matrix):
     ######################################################################################
 
     def __neg__(self):
-        """Raise a TypeError; "-self" is not permitted for Matrix3 objects.
+        """Raise a TypeError; ``-self`` is not permitted for Matrix3 objects.
 
         This is an override of :meth:`Qube.__neg__`.
+
+        Raises:
+            TypeError: Always, because the operation is not defined for this class.
         """
 
         Qube._raise_unsupported_op('-', self)
 
     def __add__(self, /, arg):
-        """Raise a TypeError; "self + arg" is not permitted for Matrix3 objects.
+        """Raise a TypeError; ``self + arg`` is not permitted for Matrix3 objects.
 
         This is an override of :meth:`Qube.__add__`.
 
@@ -470,7 +476,7 @@ class Matrix3(Matrix):
         Qube._raise_unsupported_op('+', self, arg)
 
     def __radd__(self, /, arg):
-        """Raise a TypeError; "arg + self" is not permitted for Matrix3 objects.
+        """Raise a TypeError; ``arg + self`` is not permitted for Matrix3 objects.
 
         This is an override of :meth:`Qube.__radd__`.
 
@@ -484,7 +490,7 @@ class Matrix3(Matrix):
         Qube._raise_unsupported_op('+', self, arg)
 
     def __iadd__(self, /, arg):
-        """Raise a TypeError; "self += arg" is not permitted for Matrix3 objects.
+        """Raise a TypeError; ``self += arg`` is not permitted for Matrix3 objects.
 
         This is an override of :meth:`Qube.__iadd__`.
 
@@ -498,7 +504,7 @@ class Matrix3(Matrix):
         Qube._raise_unsupported_op('+=', self, arg)
 
     def __sub__(self, /, arg):
-        """Raise a TypeError; "self - arg" is not permitted for Matrix3 objects.
+        """Raise a TypeError; ``self - arg`` is not permitted for Matrix3 objects.
 
         This is an override of :meth:`Qube.__sub__`.
 
@@ -512,7 +518,7 @@ class Matrix3(Matrix):
         Qube._raise_unsupported_op('-', self, arg)
 
     def __rsub__(self, /, arg):
-        """Raise a TypeError; "arg - self" is not permitted for Matrix3 objects.
+        """Raise a TypeError; ``arg - self`` is not permitted for Matrix3 objects.
 
         This is an override of :meth:`Qube.__rsub__`.
 
@@ -526,7 +532,7 @@ class Matrix3(Matrix):
         Qube._raise_unsupported_op('-', self, arg)
 
     def __isub__(self, /, arg):
-        """Raise a TypeError; "self -= arg" is not permitted for Matrix3 objects.
+        """Raise a TypeError; ``self -= arg`` is not permitted for Matrix3 objects.
 
         This is an override of :meth:`Qube.__isub__`.
 
@@ -597,7 +603,7 @@ class Matrix3(Matrix):
         try:
             arg = Matrix3.as_matrix3(arg)
         except (ValueError, TypeError):
-            Qube._raise_unsupported_op('=', self, original_arg)
+            Qube._raise_unsupported_op('*', self, original_arg)
 
         # For every other purpose, use the default multiply
         return Qube.__mul__(arg, self)
@@ -616,7 +622,7 @@ class Matrix3(Matrix):
         Raises:
             TypeError: If the type of `arg` is not supported for multiplication.
             ValueError: If `arg` is array-like and its item shape is incompatible, if the
-                object shapes are incompatible, or if this Matrix3 is not writeable.
+                object shapes are incompatible, or if this Matrix3 is not writable.
         """
 
         self.require_writeable()
@@ -690,13 +696,14 @@ class Matrix3(Matrix):
 
     @staticmethod
     def from_euler(ai, aj, ak, axes='rzxz'):
-        """Create a homogeneous rotation matrix from Euler angles and axis sequence.
+        """Create a rotation matrix from Euler angles and an axis sequence.
 
         Parameters:
-            ai (ScalarLike): First Euler angle (roll).
-            aj (ScalarLike): Second Euler angle (pitch).
-            ak (ScalarLike): Third Euler angle (yaw).
-            axes (str, optional): One of 24 axis sequences as string or encoded tuple.
+            ai (ScalarLike): First Euler angle (roll) in radians.
+            aj (ScalarLike): Second Euler angle (pitch) in radians.
+            ak (ScalarLike): Third Euler angle (yaw) in radians.
+            axes (str | tuple[int, int, int, int], optional): One of 24 axis sequences as
+                a string or an encoded tuple.
 
         Returns:
             Matrix3: A rotation matrix representing the specified Euler angles.
@@ -705,8 +712,7 @@ class Matrix3(Matrix):
             KeyError: If the axes string is not recognized.
             ValueError: If any of the angles has an invalid unit.
 
-        Examples::
-
+        Examples:
             >>> R = Matrix3.from_euler(1, 2, 3, 'syxz')
             >>> np.allclose(np.sum(R[0]), -1.34786452)
             True
@@ -783,10 +789,12 @@ class Matrix3(Matrix):
         """Convert this Matrix3 to three Euler angles given a specified axis sequence.
 
         Parameters:
-            axes (str, optional): One of 24 axis sequences as string or encoded tuple.
+            axes (str | tuple[int, int, int, int], optional): One of 24 axis sequences as
+                a string or an encoded tuple.
 
         Returns:
-            tuple[Scalar, Scalar, Scalar]: The three Euler angles (roll, pitch, yaw).
+            tuple[Scalar, Scalar, Scalar]: The three Euler angles (roll, pitch, yaw) in
+            radians, each in the range 0 to 2 pi.
 
         Raises:
             KeyError: If the axes string is not recognized.
@@ -794,8 +802,7 @@ class Matrix3(Matrix):
         Notes:
             Many Euler angle triplets can describe one matrix.
 
-        Examples::
-
+        Examples:
             >>> R0 = Matrix3.from_euler(1, 2, 3, 'syxz')
             >>> al, be, ga = R0.to_euler('syxz')
             >>> R1 = Matrix3.from_euler(al, be, ga, 'syxz')
@@ -850,7 +857,7 @@ class Matrix3(Matrix):
                 Scalar._new_from_parts(ay[0] % Matrix3._TWOPI, self._mask, nrank=0),
                 Scalar._new_from_parts(az[0] % Matrix3._TWOPI, self._mask, nrank=0))
 
-    def to_quaternion(self, recursive=True):
+    def to_quaternion(self, *, recursive=True):
         """Convert this Matrix3 to an equivalent unit Quaternion.
 
         Parameters:
@@ -876,8 +883,9 @@ class Matrix3(Matrix):
                 the returned Scalar.
             builtins (bool | None, optional): If True and the result is a single unmasked
                 scalar, the result is returned as a Python int or float instead of as an
-                instance of Qube. Default is specified by Qube.prefer_builtins().
-            out (Any | None, optional): Ignored. Enables "np.sum(Qube)" to work.
+                instance of Qube. Default is to use the global setting defined by
+                :meth:`~polymath.Qube.prefer_builtins`.
+            out (Any, optional): Ignored. This enables ``np.sum(Qube)`` to work.
 
         Raises:
             TypeError: Always raised as this method is not supported for Matrix3.
@@ -899,9 +907,10 @@ class Matrix3(Matrix):
                 inside the returned Scalar.
             builtins (bool | None, optional): If True and the result is a single unmasked
                 scalar, the result is returned as a Python int or float instead of as an
-                instance of Qube. Default is specified by Qube.prefer_builtins().
-            dtype (Any | None, optional): Ignored. Enables "np.mean(Qube)" to work.
-            out (Any | None, optional): Ignored. Enables "np.mean(Qube)" to work.
+                instance of Qube. Default is to use the global setting defined by
+                :meth:`~polymath.Qube.prefer_builtins`.
+            dtype (Any, optional): Ignored. This enables ``np.mean(Qube)`` to work.
+            out (Any, optional): Ignored. This enables ``np.mean(Qube)`` to work.
 
         Raises:
             TypeError: Always raised as this method is not supported for Matrix3.

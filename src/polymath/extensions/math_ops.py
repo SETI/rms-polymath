@@ -82,10 +82,13 @@ def abs(self):
     return self.__abs__()
 
 def __len__(self):
-    """``len(self)``, the number of elements along first axis.
+    """``len(self)``, the number of elements along the first axis.
 
     Returns:
         int: The length of the leading axis.
+
+    Raises:
+        TypeError: If this object has no leading axis.
     """
 
     if self._ndims:
@@ -94,10 +97,13 @@ def __len__(self):
         raise TypeError(f'len of unsized {type(self).__name__} object')
 
 def len(self):
-    """Number of elements along first axis.
+    """Number of elements along the first axis.
 
     Returns:
         int: The length of the leading axis.
+
+    Raises:
+        TypeError: If this object has no leading axis.
     """
 
     return self.__len__()
@@ -179,6 +185,10 @@ def __iadd__(self, /, arg):
 
     Returns:
         Qube: self after the addition.
+
+    Raises:
+        ValueError: If this object is read-only.
+        TypeError: If this object holds integers but the result does not.
     """
 
     self.require_writeable()
@@ -231,7 +241,7 @@ def _add_derivs(self, /, arg1, arg2):
         arg2 (Qube): The right operand of the addition.
 
     Returns:
-        dict: The derivatives of the sum, keyed by name.
+        dict[str, Qube]: The derivatives of the sum, keyed by name.
     """
 
     set1 = set(arg1._derivs.keys())
@@ -334,6 +344,10 @@ def __isub__(self, /, arg):
 
     Returns:
         Qube: self after the subtraction.
+
+    Raises:
+        ValueError: If this object is read-only.
+        TypeError: If this object holds integers but the result does not.
     """
 
     self.require_writeable()
@@ -386,7 +400,7 @@ def _sub_derivs(self, /, arg1, arg2):
         arg2 (Qube): The right operand of the subtraction.
 
     Returns:
-        dict: The derivatives of the difference, keyed by name.
+        dict[str, Qube]: The derivatives of the difference, keyed by name.
     """
 
     set1 = set(arg1._derivs.keys())
@@ -492,7 +506,7 @@ def __rmul__(self, /, arg, *, recursive=True):
 
 
 def __imul__(self, /, arg):
-    """Element-by-element in-place multiplication.
+    """``self *= arg``, element-by-element in-place multiplication.
 
     Parameters:
         arg (QubeLike): The argument. If not a Qube object, it will be converted to a
@@ -500,6 +514,10 @@ def __imul__(self, /, arg):
 
     Returns:
         Qube: self after the multiplication.
+
+    Raises:
+        ValueError: If this object is read-only.
+        TypeError: If this object holds integers but the result does not.
     """
 
     self.require_writeable()
@@ -586,7 +604,7 @@ def _mul_by_scalar(self, /, arg, *, recursive=True):
 
     Returns:
         Qube: The product.
-    more than one object has a denominator."""
+    """
 
     # Align axes
     self_values = self._values
@@ -618,7 +636,7 @@ def _mul_derivs(self, /, arg):
         arg (Qube): The right operand of the multiplication.
 
     Returns:
-        dict: The derivatives of the product, keyed by name.
+        dict[str, Qube]: The derivatives of the product, keyed by name.
     """
 
     new_derivs = {}
@@ -740,6 +758,10 @@ def __itruediv__(self, /, arg):
 
     Returns:
         Qube: self after the division.
+
+    Raises:
+        TypeError: If this object holds integers.
+        ValueError: If this object is read-only.
     """
 
     if not self.is_float():
@@ -804,7 +826,7 @@ def _div_by_number(self, /, arg, *, recursive=True):
 
 
 def _div_by_scalar(self, /, arg, *, recursive):
-    """Internal division op when the arg is a Qube with rank == 0.
+    """Internal division op when the arg is a Qube with ``rank == 0``.
 
     Parameters:
         arg (Qube): The Scalar by which to divide this object.
@@ -847,7 +869,7 @@ def _div_derivs(self, /, arg, *, nozeros=False):
             case divide-by-zero errors are not checked.
 
     Returns:
-        dict: The derivatives of the quotient, keyed by name.
+        dict[str, Qube]: The derivatives of the quotient, keyed by name.
     """
 
     new_derivs = {}
@@ -961,6 +983,9 @@ def __ifloordiv__(self, /, arg):
 
     Returns:
         Qube: self after the floor division.
+
+    Raises:
+        ValueError: If this object is read-only.
     """
 
     self.require_writeable()
@@ -1021,7 +1046,7 @@ def _floordiv_by_number(self, /, arg):
 
 
 def _floordiv_by_scalar(self, /, arg):
-    """Internal floor division op when the arg is a Qube with nrank == 0.
+    """Internal floor division op when the arg is a Qube with ``nrank == 0``.
 
     The arg cannot have a denominator.
 
@@ -1139,6 +1164,9 @@ def __imod__(self, /, arg):
 
     Returns:
         Qube: self after the modulus operation.
+
+    Raises:
+        ValueError: If this object is read-only.
     """
 
     self.require_writeable()
@@ -1203,7 +1231,7 @@ def _mod_by_number(self, /, arg, *, recursive=True):
 
 
 def _mod_by_scalar(self, /, arg, *, recursive=True):
-    """Internal modulus op when the arg is a Qube with rank == 0.
+    """Internal modulus op when the arg is a Qube with ``rank == 0``.
 
     Parameters:
         arg (Qube): The Scalar by which to take the modulus.
@@ -1241,13 +1269,12 @@ def _mod_by_scalar(self, /, arg, *, recursive=True):
 def __pow__(self, /, arg):
     """``self ** arg``, element-by-element exponentiation.
 
-    Derivatives are not supported.
+    This general method supports a single integer exponent between -15 and 15, which is
+    handled using repeated multiplications. It will handle any class that supports
+    ``__mul__()`` (and ``reciprocal()`` if the exponent is negative), such as Matrix
+    objects and Quaternions. Derivatives are included in the result.
 
-    This general method supports single integer exponents between -15 and 15 are handled
-    using repeated multiplications. It will handle any class that supports __mul__() (and
-    reciprocal() if the exponent is negative), such as Matrix objects and Quaternions.
-
-    It is overridden by Scalar to obtain the normal behavior of the "**" operator.
+    It is overridden by Scalar to obtain the normal behavior of the ``**`` operator.
 
     Parameters:
         arg (QubeLike): The exponent. If not a Qube object, it will be converted to a
@@ -1255,6 +1282,10 @@ def __pow__(self, /, arg):
 
     Returns:
         Qube: The result of the exponentiation.
+
+    Raises:
+        ValueError: If the exponent is outside the range -15 to 15.
+        TypeError: If the exponent is not a single integer.
     """
 
     if not isinstance(arg, numbers.Real):
@@ -1370,8 +1401,7 @@ def __ipow__(self, /, arg):
 ##########################################################################################
 
 def _compatible_arg(self, /, arg):
-    """None if it is impossible for self and arg to be equal; otherwise, the argument made
-    compatible with self.
+    """The argument made compatible with this object, or None if equality is impossible.
 
     Parameters:
         arg (QubeLike): The object to be made compatible with this object.
@@ -1415,7 +1445,8 @@ def __eq__(self, /, arg):
         arg (Any): The object to compare with `self`.
 
     Returns:
-        Boolean: True where the elements are equal.
+        Boolean | bool: True where the elements are equal. The result is a Python bool if
+        this object has shape () or if the two objects can never be equal.
     """
 
     # Try to make argument compatible
@@ -1461,7 +1492,8 @@ def __ne__(self, /, arg):
         arg (Any): The object to compare with `self`.
 
     Returns:
-        Boolean: True where the elements are not equal.
+        Boolean | bool: True where the elements are not equal. The result is a Python bool
+        if this object has shape () or if the two objects can never be equal.
     """
 
     # Try to make argument compatible
@@ -1508,7 +1540,7 @@ def __ne__(self, /, arg):
 def __le__(self, /, arg):
     """``self <= arg``, element by element.
 
-    This general method always raises ValueError. It is overridden by
+    This general method always raises TypeError. It is overridden by
     :meth:`Scalar.__le__` and :meth:`Boolean.__le__`.
 
     Parameters:
@@ -1518,7 +1550,7 @@ def __le__(self, /, arg):
         Boolean: True where the elements of self are less or equal.
 
     Raises:
-        ValueError: If the comparison is undefined.
+        TypeError: If the comparison is undefined.
     """
 
     _raise_unsupported_op("<=", self)
@@ -1527,7 +1559,7 @@ def __le__(self, /, arg):
 def __lt__(self, /, arg):
     """``self < arg``, element by element.
 
-    This general method always raises ValueError. It is overridden by
+    This general method always raises TypeError. It is overridden by
     :meth:`Scalar.__lt__` and :meth:`Boolean.__lt__`.
 
     Parameters:
@@ -1537,7 +1569,7 @@ def __lt__(self, /, arg):
         Boolean: True where the elements of self are less.
 
     Raises:
-        ValueError: If the comparison is undefined.
+        TypeError: If the comparison is undefined.
     """
 
     _raise_unsupported_op("<", self)
@@ -1546,7 +1578,7 @@ def __lt__(self, /, arg):
 def __ge__(self, /, arg):
     """``self >= arg``, element by element.
 
-    This general method always raises ValueError. It is overridden by
+    This general method always raises TypeError. It is overridden by
     :meth:`Scalar.__ge__` and :meth:`Boolean.__ge__`.
 
     Parameters:
@@ -1556,7 +1588,7 @@ def __ge__(self, /, arg):
         Boolean: True where the elements of self are greater or equal.
 
     Raises:
-        ValueError: If the comparison is undefined.
+        TypeError: If the comparison is undefined.
     """
 
     _raise_unsupported_op(">=", self)
@@ -1565,7 +1597,7 @@ def __ge__(self, /, arg):
 def __gt__(self, /, arg):
     """``self > arg``, element by element.
 
-    This general method always raises ValueError. It is overridden by
+    This general method always raises TypeError. It is overridden by
     :meth:`Scalar.__gt__` and :meth:`Boolean.__gt__`.
 
     Parameters:
@@ -1575,7 +1607,7 @@ def __gt__(self, /, arg):
         Boolean: True where the elements of self are greater.
 
     Raises:
-        ValueError: If the comparison is undefined.
+        TypeError: If the comparison is undefined.
     """
 
     _raise_unsupported_op(">", self)
@@ -1592,14 +1624,18 @@ def __bool__(self):
         using the internal attributes `_truth_if_all` and `_truth_if_any`. These
         attributes are set by the `__eq__()` and `__ne__()` methods respectively. When
         `_truth_if_all` is True (set by `__eq__()`), the result is True only if all
-        unmasked elements are True. When `_truth_if_any` is True (`set by __ne__()`), the
+        unmasked elements are True. When `_truth_if_any` is True (set by `__ne__()`), the
         result is True if any unmasked element is True. In this case, equality requires
         that every unmasked element of ``a`` and ``b`` be equal and both objects be masked
         at the same locations. Comparison of objects with ``shape == ()`` is also
         supported.
 
-        Any other if-test involving PolyMath objects requires an explict call to `all()`
+        Any other if-test involving PolyMath objects requires an explicit call to `all()`
         or `any()`.
+
+    Raises:
+        ValueError: If this object is an array not produced by ``==`` or ``!=``, or if it
+            is entirely masked.
     """
 
     if self._truth_if_all:          # this is the result of __eq__()
@@ -1623,6 +1659,9 @@ def __float__(self):
 
     Returns:
         float: This object's single value as a Python float.
+
+    Raises:
+        ValueError: If this object is an array or is masked.
     """
 
     if not self._is_scalar:
@@ -1640,6 +1679,9 @@ def __int__(self):
 
     Returns:
         int: This object's single value as a Python int.
+
+    Raises:
+        ValueError: If this object is an array or is masked.
     """
 
     if not self._is_scalar:
@@ -1654,7 +1696,7 @@ def __int__(self):
 ##########################################################################################
 
 def __invert__(self):
-    """~self, unary inversion, element by element.
+    """``~self``, unary inversion, element by element.
 
     This is boolean "not", not bit inversion.
 
@@ -1882,10 +1924,10 @@ def any(self, axis=None, *, builtins=None, masked=None, out=None):
         masked (bool | None, optional): The value to return if `builtins` is True but the
             returned value is masked. Default is to return a masked Boolean instead of a
             builtin type in this case.
-        out (Any | None, optional): Ignored. This enables ``np.any(Qube)`` to work.
+        out (Any, optional): Ignored. This enables ``np.any(Qube)`` to work.
 
     Returns:
-        Boolean or bool: Result of operation.
+        Boolean | bool: True if any unmasked element is nonzero.
     """
 
     self = Qube._BOOLEAN_CLASS.as_boolean(self)
@@ -1919,7 +1961,7 @@ def all(self, axis=None, *, builtins=None, masked=None, out=None):
     Parameters:
         axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The `all`
             operation is performed across these axes, leaving any remaining axes in the
-            returned value. If None (the default), then the any operation is performed
+            returned value. If None (the default), then the all operation is performed
             across all axes of the object.
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
@@ -1928,7 +1970,7 @@ def all(self, axis=None, *, builtins=None, masked=None, out=None):
         masked (bool | None, optional): The value to return if `builtins` is True but the
             returned value is masked. Default is to return a masked Boolean instead of a
             builtin type in this case.
-        out (Any | None, optional): Ignored. This enables ``np.all(Qube)`` to work.
+        out (Any, optional): Ignored. This enables ``np.all(Qube)`` to work.
 
     Returns:
         Boolean | bool: True if every unmasked element is nonzero.
@@ -1962,8 +2004,9 @@ def all(self, axis=None, *, builtins=None, masked=None, out=None):
 def any_true_or_masked(self, axis=None, *, builtins=None):
     """True if any of the items are nonzero or masked.
 
-    This differs from the any() method in how it handles the case of every value being
-    masked. This method returns True, whereas any() returns a masked Boolean value.
+    This differs from :meth:`~polymath.Qube.any` in how it handles the case of every
+    value being masked. This method returns True, whereas :meth:`~polymath.Qube.any`
+    returns a masked Boolean value.
 
     Parameters:
         axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The any
@@ -2004,15 +2047,15 @@ def any_true_or_masked(self, axis=None, *, builtins=None):
 def all_true_or_masked(self, axis=None, *, builtins=None):
     """True if all of the items are nonzero or masked.
 
-    This differs from the all() method in how it handles the case of every value being
-    masked. This method returns True, whereas all() returns a masked Boolean value.
+    This differs from :meth:`~polymath.Qube.all` in how it handles the case of every
+    value being masked. This method returns True, whereas :meth:`~polymath.Qube.all`
+    returns a masked Boolean value.
 
     Parameters:
-        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The any
+        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The all
             operation is performed across these axes, leaving any remaining axes in the
-            returned value. If None (the default), then the any operation is performed
+            returned value. If None (the default), then the all operation is performed
             across all axes of the object.
-
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
             of Boolean. Default is to use the global setting defined by
@@ -2060,6 +2103,9 @@ def reciprocal(self, *, recursive=True, nozeros=False):
         nozeros (bool, optional): False (the default) to mask out any zero-valued items in
             this object prior to the divide. Set to True only if you know in advance that
             this object has no zero-valued items.
+
+    Returns:
+        Qube: The reciprocal of this object.
     """
 
     _raise_unsupported_op('reciprocal()', self)
@@ -2101,8 +2147,12 @@ def zero(self):
 def identity(self):
     """An object of this subclass equivalent to the identity.
 
-    This method is overridden by :meth:`~polymath.Scalar.identity`,
-    :meth:`~polymath.Matrix.identity` and :meth:`~polymath.Boolean.identity`
+    This method is not implemented for the base class. It is overridden by
+    :meth:`~polymath.Scalar.identity`, :meth:`~polymath.Matrix.identity`, and
+    :meth:`~polymath.Boolean.identity`.
+
+    Returns:
+        Qube: The identity object.
     """
 
     _raise_unsupported_op('identity()', self)
@@ -2117,17 +2167,17 @@ def sum(self, axis=None, *, recursive=True, builtins=None, masked=None, out=None
         axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
             The sum is determined across these axes, leaving any remaining axes in the
             returned value. If None (the default), then the sum is performed across all
-            axes if the object.
+            axes of the object.
         recursive (bool, optional): True to include the sums of the derivatives inside the
             returned Scalar.
         builtins (bool | None, optional): If True and the result is a single unmasked
-            scalar, the result is returned as a Python boolean instead of as an instance
-            of Boolean. Default is to use the global setting defined by
+            scalar, the result is returned as a Python int or float instead of as an
+            instance of Scalar. Default is to use the global setting defined by
             :meth:`~polymath.Qube.prefer_builtins`.
-        masked (bool | None, optional): The value to return if `builtins` is True but the
-            returned value is masked. Default is to return a masked value instead of a
-            builtin type.
-        out (Any | None, optional): Ignored. This enables "np.sum(Qube)" to work.
+        masked (float | int | None, optional): The value to return if `builtins` is True
+            but the returned value is masked. Default is to return a masked value instead
+            of a builtin type.
+        out (Any, optional): Ignored. This enables ``np.sum(Qube)`` to work.
 
     Returns:
         Qube | float | int: The sum across the specified axes.
@@ -2157,24 +2207,25 @@ def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=N
         recursive (bool, optional): True to include the means of the derivatives inside
             the returned Scalar.
         builtins (bool | None, optional): If True and the result is a single unmasked
-            scalar, the result is returned as a Python boolean instead of as an instance
-            of Boolean. Default is to use the global setting defined by
+            scalar, the result is returned as a Python int or float instead of as an
+            instance of Scalar. Default is to use the global setting defined by
             :meth:`~polymath.Qube.prefer_builtins`.
-        masked (bool | None, optional): The value to return if `builtins` is True but the
-            returned value is masked. Default is to return a masked value instead of a
-            builtin type.
-        dtype (Any | None, optional): Ignored. This enables "np.mean(Qube)" to work.
-        out (Any | None, optional): Ignored. This enables "np.mean(Qube)" to work.
-
-    Examples:
-        For an object with shape (2, 3, 2):
-        - axis=0 -> result shape (3, 2)
-        - axis=1 -> result shape (2, 2)
-        - axis=(0, 1) -> result shape (2,)
-        - axis=None -> result shape ()
+        masked (float | int | None, optional): The value to return if `builtins` is True
+            but the returned value is masked. Default is to return a masked value instead
+            of a builtin type.
+        dtype (Any, optional): Ignored. This enables ``np.mean(Qube)`` to work.
+        out (Any, optional): Ignored. This enables ``np.mean(Qube)`` to work.
 
     Returns:
         Qube | float | int: The mean across the specified axes.
+
+    Examples:
+        For an object with shape (2, 3, 2)::
+
+            axis=0 -> result shape (3, 2)
+            axis=1 -> result shape (2, 2)
+            axis=(0, 1) -> result shape (2,)
+            axis=None -> result shape ()
     """
 
     result = self._mean_or_sum(axis, recursive=recursive, _combine_as_mean=True)

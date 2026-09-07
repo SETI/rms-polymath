@@ -83,7 +83,7 @@ class Qube:
     the numerator. As a result, the aforementioned partial derivatives can still be
     represented by a Vector3 object.
 
-    Properties:
+    Attributes:
         shape (tuple[int, ...]):
             The leading axes of the object, i.e., those that are not considered part of
             the items.
@@ -113,7 +113,7 @@ class Qube:
             The unit of the array, if any. None indicates no unit.
         derivs (dict[str, Qube]):
             A dictionary of the names and values of any derivatives, each represented by
-            additional PolyMath object.
+            an additional PolyMath object.
         readonly (bool):
             True if the object cannot (or at least should not) be modified. A determined
             user may be able to alter a read-only object, but the API makes this more
@@ -197,15 +197,15 @@ class Qube:
                 entirely read-only. Otherwise, the object will be read-writable. The
                 values are generally given in standard units of km, seconds and radians,
                 regardless of the specified unit.
-            mask (BooleanLike, optional): The mask for the object. Use None to copy the
-                mask from the example object. False (the default) leaves the object
-                un-masked.
-            derivs (dict[str, Qube], optional): Derivatives represented as PolyMath
-                objects. Use None to make a copy of the derivs attribute of the example
-                object, or {} (the default) for no derivatives. All derivatives are
-                broadcasted to the shape of the object if necessary.
-            unit (Unit | None, optional): The unit of the object. Use None to infer the
-                unit from the example object; use False to suppress the unit.
+            mask (BooleanLike | None, optional): The mask for the object. Use None to
+                copy the mask from the example object. False (the default) leaves the
+                object un-masked.
+            derivs (dict[str, Qube] | None, optional): Derivatives represented as
+                PolyMath objects. Use None to make a copy of the derivs attribute of the
+                example object, or {} (the default) for no derivatives. All derivatives
+                are broadcasted to the shape of the object if necessary.
+            unit (Unit | bool | None, optional): The unit of the object. Use None to
+                infer the unit from the example object; use False to suppress the unit.
             nrank (int | None, optional): The number of numerator axes in the returned
                 object; None to derive the rank from the input data and/or the subclass.
             drank (int | None, optional): The number of denominator axes in the returned
@@ -221,7 +221,7 @@ class Qube:
         Raises:
             TypeError: If the data type of `arg` or `mask` is invalid.
             TypeError: If `example` is not an instance of Qube.
-            ValueError: If the shape of `mask` is incompatible with object.
+            ValueError: If the shape of `mask` is incompatible with that of the object.
             TypeError: If `unit` is specified but is disallowed by the Qube subclass.
             ValueError: If `derivs` are specified but are disallowed by the Qube subclass.
             ValueError: If `nrank` is incompatible with the Qube subclass.
@@ -416,7 +416,7 @@ class Qube:
                 this object is () and it is masked.
 
         Returns:
-            Qube, float, int, bool, or None: This object's `values` attribute if its
+            Qube | float | int | bool | None: This object's `values` attribute if its
             shape is () and it is unmasked; the value of `masked` if the shape is () and
             it is masked; otherwise, this object.
         """
@@ -753,13 +753,12 @@ class Qube:
         """The default value for an object of this class, item shape and dtype.
 
         Parameters:
-            cls (type): Qube subclass.
             item (tuple[int, ...]): Shape of the items.
             drank (int): The number of denominator axes.
             dtype (str): One of "float", "int", or "bool".
 
         Returns:
-            numpy.ndarray, float, int, or bool: The value to use where masked.
+            numpy.ndarray | float | int | bool: The value to use where masked.
         """
 
         if hasattr(cls, '_DEFAULT_VALUE') and drank == 0:
@@ -773,7 +772,7 @@ class Qube:
 
     @classmethod
     def filled(cls, shape, fill=0, *, numer=None, denom=(), mask=False):
-        """Internal object of this class and shape, filled with a constant.
+        """New object of this class and shape, filled with a constant.
 
         Parameters:
             shape (tuple[int, ...]): Shape of the object.
@@ -788,7 +787,7 @@ class Qube:
             Qube: The new object.
 
         Raises:
-            ValueError: If `fill` is not compatible with the `cls`.
+            ValueError: If `fill` is not compatible with the item shape of `cls`.
         """
 
         # Create example object with shape == ()
@@ -821,18 +820,19 @@ class Qube:
         The read-only status of the object is defined by that of the given value.
 
         Parameters:
-            values (QubeLike): New values.
-            mask (BooleanLike | None, optional): New mask.
-            antimask (BooleanLike | None, optional): If provided, then only the array
+            values (numpy.ndarray | float | int | bool): New values, with the same shape
+                as the current values.
+            mask (numpy.ndarray | bool | None, optional): New mask; None to leave the
+                mask unchanged.
+            antimask (numpy.ndarray | None, optional): If provided, then only the array
                 locations associated with the antimask are modified.
-            retain_cache (bool, optional): If True, the cache values are retained except
-                for "unshrunk".
+            retain_cache (bool, optional): If True and `mask` is None, the cache values
+                are retained except for "unshrunk".
 
         Returns:
             Qube: This object, updated.
 
         Raises:
-            TypeError: If the type of `values` or `mask` is invalid.
             ValueError: If the shape of `values`, `mask`, or `antimask` is invalid.
         """
 
@@ -909,7 +909,7 @@ class Qube:
 
         Parameters:
             mask (BooleanLike): New mask.
-            antimask (BooleanLike | None, optional): If provided, then only the array
+            antimask (numpy.ndarray | None, optional): If provided, then only the array
                 locations associated with the antimask are modified.
             check (bool, optional): True to check for an array containing all False
                 values, and if so, replace it with a single value of False.
@@ -964,7 +964,7 @@ class Qube:
 
     @property
     def mvals(self) -> np.ma.MaskedArray:
-        """This object as a NumPy ma.MaskedArray."""
+        """This object as a numpy.ma.MaskedArray."""
 
         # Deal with a scalar
         if self._is_scalar:
@@ -991,7 +991,7 @@ class Qube:
 
     @property
     def mask(self) -> 'MaskType':
-        """The boolean mask of this object as a NumPy.ndarray or bool."""
+        """The boolean mask of this object as a numpy.ndarray or bool."""
         return self._mask
 
     @property
@@ -1116,8 +1116,8 @@ class Qube:
         is masked.
 
         Returns:
-            tuple[tuple[int, int], tuple[int, int]] | None: The lower and upper corner
-            indices, or None if every element is masked.
+            tuple[tuple[int, ...], tuple[int, ...]] | None: The lower and upper corner
+            indices, or None if the object has no array axes.
         """
 
         if self._ndims == 0:
@@ -1153,8 +1153,9 @@ class Qube:
         """Corners of a "hypercube" that contain all the unmasked array elements.
 
         The first tuple defines the lower coordinates of the unmasked, N-dimensional
-        region and the second defines the upper coordinates (exclusive). The value is None
-        if every element is masked.
+        region and the second defines the upper coordinates (exclusive). If every element
+        is masked, both tuples are zeros. The value is None if the object has no array
+        axes.
         """
 
         if not Qube._DISABLE_CACHE and 'corners' in self._cache:
@@ -1169,8 +1170,8 @@ class Qube:
         """A slice object based on corners specified as a tuple of indices.
 
         Parameters:
-            corners (tuple): A tuple of two index tuples, giving the lower and upper
-                corner of the region.
+            corners (tuple[tuple[int, ...], tuple[int, ...]]): A tuple of two index
+                tuples, giving the lower and upper corner of the region.
 
         Returns:
             tuple[slice, ...]: A tuple of slice objects, one for each axis.
@@ -1187,8 +1188,8 @@ class Qube:
         """Array shape based on corner indices.
 
         Parameters:
-            corners (tuple): A tuple of two index tuples, giving the lower and upper
-                corner of the region.
+            corners (tuple[tuple[int, ...], tuple[int, ...]]): A tuple of two index
+                tuples, giving the lower and upper corner of the region.
 
         Returns:
             tuple[int, ...]: The shape of the region that the corners enclose.
@@ -1201,13 +1202,8 @@ class Qube:
         return tuple(shape)
 
     @property
-    def _slicer(self):
-        """A slice object containing all the array elements inside the current corners.
-
-        Returns:
-            tuple[slice, ...]: A tuple of slice objects selecting every element inside the
-            corners.
-        """
+    def _slicer(self) -> tuple[slice, ...]:
+        """A tuple of slice objects selecting every array element inside the corners."""
 
         if not Qube._DISABLE_CACHE and 'slicer' in self._cache:
             return self._cache['slicer']
@@ -1223,19 +1219,19 @@ class Qube:
     def __repr__(self):
         """Express the value as a string.
 
-        The format of the returned string is `Class([value, value, ...], suffixes, ...)`,
-        where the quanity inside square brackets is the result of str() applied to a NumPy
-        ndarray.
+        The format of the returned string is ``Class([value, value, ...]; suffixes)``,
+        where the quantity inside square brackets is the result of str() applied to a
+        NumPy ndarray.
 
-        The suffixes are, in order...
+        The suffixes are, in order:
 
         * "denom=(shape)" if the object has a denominator;
-        * "mask" if the object has a mask
-        * the name of the unit of the object has a unit
-        * the names of all the derivatives in alphabetical order
+        * "mask" if any element of the object is masked;
+        * the name of the unit if the object has a unit;
+        * the names of all the derivatives in alphabetical order.
 
         Returns:
-            str: String representation
+            str: The string representation of this object.
         """
 
         return self.__str__()
@@ -1243,19 +1239,19 @@ class Qube:
     def __str__(self):
         """Express the value as a string.
 
-        The format of the returned string is `Class([value, value, ...], suffixes, ...)`,
-        where the quanity inside square brackets is the result of str() applied to a NumPy
-        ndarray.
+        The format of the returned string is ``Class([value, value, ...]; suffixes)``,
+        where the quantity inside square brackets is the result of str() applied to a
+        NumPy ndarray.
 
-        The suffixes are, in order...
+        The suffixes are, in order:
 
         * "denom=(shape)" if the object has a denominator;
-        * "mask" if the object has a mask
-        * the name of the unit of the object has a unit
-        * the names of all the derivatives in alphabetical order
+        * "mask" if any element of the object is masked;
+        * the name of the unit if the object has a unit;
+        * the names of all the derivatives in alphabetical order.
 
         Returns:
-            str: String representation
+            str: The string representation of this object.
         """
 
         suffix = []
@@ -1324,9 +1320,11 @@ class Qube:
                 object without derivatives.
             readonly (bool, optional): True to return a read-only object; False (the
                 default) to return something potentially writable.
-            classes (type | list[type] | tuple[type, ...], optional): A list defining the
-                preferred class of the returned object. The first suitable class in the
-                list will be used; default is [:class:`~polymath.Vector`].
+            classes (type | list[type] | tuple[type, ...], optional): A class or list
+                of classes defining the preferred class of the returned object. The first
+                suitable class in the list will be used; if none is suitable, or if the
+                list is empty (the default), the returned object is an instance of this
+                class.
 
         Returns:
             Qube: A new object constructed from the inputs and using the first suitable
@@ -1387,7 +1385,7 @@ class Qube:
         obj = Qube.__new__(cls)
         obj.__init__(new_values, new_mask, unit=new_unit, nrank=scalars[0]._nrank + 1,
                      drank=new_drank)
-        obj = obj.cast(classes)
+        obj = obj.cast(classes=classes)
 
         # Insert derivatives if necessary
         if recursive and has_derivs:
@@ -1413,6 +1411,9 @@ class Qube:
                 new_derivs[key] = Qube.from_scalars(*items, recursive=False,
                                                     readonly=readonly, classes=classes)
             obj.insert_derivs(new_derivs)
+
+        if readonly:
+            obj.as_readonly()
 
         return obj
 

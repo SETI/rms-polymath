@@ -80,8 +80,8 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
     assert rx.shape == ()
     assert rx.numer == (3, 3)
     expected = np.array([[1., 0., 0.],
-                        [0., np.cos(angle), np.sin(angle)],
-                        [0., -np.sin(angle), np.cos(angle)]])
+                        [0., np.cos(angle), -np.sin(angle)],
+                        [0., np.sin(angle), np.cos(angle)]])
     assert np.allclose(rx.vals, expected, atol=DEL)
 
     angles = np.array([0., np.pi/4, np.pi/2])
@@ -89,8 +89,8 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
     assert rx_array.shape == (3,)
     for i, angle in enumerate(angles):
         expected = np.array([[1., 0., 0.],
-                            [0., np.cos(angle), np.sin(angle)],
-                            [0., -np.sin(angle), np.cos(angle)]])
+                            [0., np.cos(angle), -np.sin(angle)],
+                            [0., np.sin(angle), np.cos(angle)]])
         assert np.allclose(rx_array.vals[i], expected, atol=DEL)
 
     ry = Matrix3.y_rotation(angle)
@@ -369,6 +369,9 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
 
     result_rmul = m2.__rmul__(m1, recursive=False)
     assert type(result_rmul) == Matrix3
+
+    with pytest.raises(TypeError, match=r'Matrix3 "\*"'):
+        m2.__rmul__('abc')
 
     v = Vector3([1., 0., 0.])
     v.insert_deriv('t', Vector3([0., 1., 0.]))

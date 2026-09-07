@@ -493,6 +493,7 @@ def test_vector_comprehensive_test_from_scalars_with_readonly_parameter() -> Non
     v123 = Vector.from_scalars(s24, s25, readonly=True)
 
     assert isinstance(v123, Vector)
+    assert v123.readonly
 
 
 ##########################################################################################

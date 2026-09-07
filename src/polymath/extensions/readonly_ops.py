@@ -25,7 +25,7 @@ def _array_is_readonly(arg):
         arg (Any): The object to test.
 
     Returns:
-        bool: True if `arg` is a NumPy array that is not writeable.
+        bool: True if `arg` is a NumPy array that is not writable.
     """
 
     if not isinstance(arg, np.ndarray):
@@ -42,7 +42,7 @@ def _array_to_readonly(arg):
         arg (Any): The object to make read-only.
 
     Returns:
-        Any: `arg`, with its writeable flag cleared if it is a NumPy array.
+        Any: `arg`, with its writable flag cleared if it is a NumPy array.
     """
 
     if not isinstance(arg, np.ndarray):
@@ -56,12 +56,11 @@ def as_readonly(self, *, recursive=True):
     """Convert this object to read-only. It is modified in place and returned.
 
     If this object is already read-only, it is returned as is. Otherwise, the internal
-    _values and _mask arrays are modified as necessary. Once this happens, the
-    internal arrays will also cease to be writable in any other object that shares
-    them.
+    value and mask arrays are modified as necessary. Once this happens, the internal
+    arrays will also cease to be writable in any other object that shares them.
 
-    Note that `as_readonly()` cannot be undone. Use `copy()` to create a writable copy
-    of a readonly object.
+    Note that :meth:`~polymath.Qube.as_readonly` cannot be undone. Use
+    :meth:`~polymath.Qube.copy` to create a writable copy of a read-only object.
 
     Parameters:
         recursive (bool, optional): True also to convert the derivatives to read-only;
@@ -97,16 +96,16 @@ def as_readonly(self, *, recursive=True):
 
 
 def match_readonly(self, arg):
-    """Convert the read-only status of this object equal to that of another.
+    """Make the read-only status of this object match that of another.
 
     Parameters:
-        arg (Qube): An existing Qube subclass.
+        arg (Qube): The object whose read-only status is to be matched.
 
     Returns:
-        Qube: This object converted to read-only.
+        Qube: This object, converted to read-only if `arg` is read-only.
 
     Raises:
-        ValueError: If this object is read-only but the `arg` is not.
+        ValueError: If this object is read-only but `arg` is not.
     """
 
     if arg._readonly:
@@ -118,14 +117,16 @@ def match_readonly(self, arg):
 
 
 def require_writeable(self, force=False):
-    """Ensure that this object is writeable.
+    """Ensure that this object is writable.
+
+    :meth:`~polymath.Qube.require_writable` is an alternative name for this method.
 
     Parameters:
         force (bool, optional): True to return a new copy if this object is read-only;
-            otherwise, if this object is not writeable, raise a ValueError.
+            otherwise, if this object is not writable, raise a ValueError.
 
     Returns:
-        Qube: This object if already writeable; otherwise a new writeable copy.
+        Qube: This object if already writable; otherwise a new writable copy.
 
     Raises:
         ValueError: If this object is read-only but `force` is False.
@@ -133,10 +134,10 @@ def require_writeable(self, force=False):
 
     if self._readonly:
         if force:
-            return self.copy(recursive=True, readonly=True)
+            return self.copy(recursive=True, readonly=False)
         raise ValueError(f'{type(self).__name__} object is read-only')
 
-    # Sometimes the array is writeable but a shared mask is not
+    # Sometimes the array is writable but a shared mask is not
     if np.shape(self._mask) and not self._mask.flags['WRITEABLE']:
         self.remask(self._mask.copy())
 
@@ -149,16 +150,16 @@ def require_writeable(self, force=False):
 
 
 def require_writable(self, force=False):
-    """Ensure that this object is writeable.
+    """Ensure that this object is writable.
 
-    DEPRECATED NAME; use require_writeable().
+    This is an alternative name for :meth:`~polymath.Qube.require_writeable`.
 
     Parameters:
         force (bool, optional): True to return a new copy if this object is read-only;
-            otherwise, if this object is not writeable, raise a ValueError.
+            otherwise, if this object is not writable, raise a ValueError.
 
     Returns:
-        Qube: This object if already writeable; otherwise a new writeable copy.
+        Qube: This object if already writable; otherwise a new writable copy.
 
     Raises:
         ValueError: If this object is read-only but `force` is False.
@@ -171,7 +172,7 @@ def copy(self, *, recursive=True, readonly=False):
     """Deep copy operation with additional options.
 
     Parameters:
-        recursive (bool, optional): True to copy the derivatives; False, to return an
+        recursive (bool, optional): True to copy the derivatives; False to return an
             object without derivatives.
         readonly (bool, optional): True to return a read-only copy; if this object is
             already read-only, the return is a shallow copy, which shares this object's
@@ -220,7 +221,7 @@ def copy(self, *, recursive=True, readonly=False):
 
 # Python-standard copy function
 def __copy__(self):
-    """An independent, writeable copy of this object.
+    """An independent, writable copy of this object.
 
     Returns:
         Qube: A deep copy of this object, writable.

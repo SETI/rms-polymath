@@ -41,6 +41,9 @@ def _disallow_denom(self, op):
 
     Parameters:
         op (str): Name of the operation to appear in the error message.
+
+    Raises:
+        ValueError: If this object has a denominator.
     """
 
     if self._drank:
@@ -48,10 +51,13 @@ def _disallow_denom(self, op):
 
 
 def _require_scalar(self, op):
-    """Raise ValueError if this object has rank > 0.
+    """Raise ValueError if this object has a numerator rank greater than zero.
 
     Parameters:
         op (str): Name of the operation to appear in the error message.
+
+    Raises:
+        ValueError: If this object has a numerator rank greater than zero.
     """
 
     if self._nrank:
@@ -65,10 +71,10 @@ def _require_axis_in_range(self, axis, rank, op, name='axis'):
         axis (int): Axis index, positive or negative.
         rank (int): Rank of an array for indexing.
         op (str): Name of the operation to appear in the error message.
-        name (str, optional): Name of axis variable.
+        name (str, optional): Name of the axis variable, for the error message.
 
     Raises:
-        ValueError: If axis < -rank or >= rank.
+        ValueError: If `axis` is less than -`rank` or greater than or equal to `rank`.
     """
 
     if axis < -rank or axis >= rank:
@@ -77,7 +83,7 @@ def _require_axis_in_range(self, axis, rank, op, name='axis'):
 
 
 def _raise_unsupported_op(op, /, obj1, obj2=None):
-    """Raise a TypeError or ValueError for unsupported operations.
+    """Raise a TypeError or ValueError for an unsupported operation.
 
     Parameters:
         op (str): Name of the operation to appear in the error message.
@@ -87,7 +93,8 @@ def _raise_unsupported_op(op, /, obj1, obj2=None):
 
     Raises:
         TypeError: If `obj2` is None or its type is unsupported.
-        ValueError: If either operand is array-like and the item shapes are incompatible.
+        ValueError: If either operand is a list, tuple or NumPy array, in which case the
+            item shapes are reported as incompatible.
     """
 
     opstr = obj1._opstr(op)
@@ -131,7 +138,7 @@ def _raise_incompatible_shape(op, /, obj1, obj2):
 
 
 def _raise_incompatible_numers(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible numerators in operation.
+    """Raise a ValueError for incompatible numerators in an operation.
 
     Parameters:
         op (str): Name of the operation to appear in the error message.
@@ -148,7 +155,7 @@ def _raise_incompatible_numers(op, /, obj1, obj2):
 
 
 def _raise_incompatible_denoms(op, /, obj1, obj2):
-    """Raise a ValueError for incompatible denominators in operation.
+    """Raise a ValueError for incompatible denominators in an operation.
 
     Parameters:
         op (str): Name of the operation to appear in the error message.

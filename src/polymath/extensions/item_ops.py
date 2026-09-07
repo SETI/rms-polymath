@@ -18,7 +18,7 @@ __all__ = ['chain', 'extract_denom', 'extract_denoms', 'extract_numer', 'flatten
            'split_items', 'swap_items', 'transpose_denom', 'transpose_numer']
 
 
-def extract_numer(self, axis, index, classes=(), *, recursive=True):
+def extract_numer(self, axis, index, *, classes=(), recursive=True):
     """Extract an object from one numerator axis.
 
     Parameters:
@@ -50,7 +50,7 @@ def extract_numer(self, axis, index, classes=(), *, recursive=True):
 
     # Construct and cast
     obj = Qube(new_values, self._mask, nrank=self._nrank-1, example=self)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
     obj._readonly = self._readonly
 
     # Slice the derivatives if necessary
@@ -62,7 +62,7 @@ def extract_numer(self, axis, index, classes=(), *, recursive=True):
     return obj
 
 
-def extract_denom(self, axis, index, classes=()):
+def extract_denom(self, axis, index, *, classes=()):
     """Extract an object from one denominator axis.
 
     Extracting from a denominator axis removes that axis from the denominator and leaves
@@ -78,8 +78,8 @@ def extract_denom(self, axis, index, classes=()):
             suitable class in the list. Otherwise, a generic Qube object will be returned.
 
     Returns:
-        Qube: An object extracted from the specified denominator axis. The shape is
-            reduced by removing the extracted axis dimension.
+        Qube: An object extracted from the specified denominator axis. Its denominator
+        lacks the extracted axis.
 
     Raises:
         ValueError: If the axis is out of range.
@@ -98,22 +98,24 @@ def extract_denom(self, axis, index, classes=()):
     # Construct and cast
     obj = Qube(new_values, self._mask, drank=self._drank - 1,
                example=self)
-    obj = obj.cast((type(self),) + classes)
+    obj = obj.cast(classes=(type(self),) + classes)
     obj._readonly = self._readonly
 
     return obj
 
 
 def extract_denoms(self):
-    """A tuple of objects extracted from one object with a 1-D denominator.
+    """A list of objects extracted from one object with a 1-D denominator.
 
-    Returns a list of objects with the same class as self, but drank = 0.
+    Each returned object has the same class as this object but no denominator. An object
+    that has no denominator is returned as the only member of the list.
 
     Returns:
-        list: A list of objects with drank = 0.
+        list[Qube]: A list of objects with drank = 0, one for each element of the
+        denominator axis.
 
     Raises:
-        ValueError: If the object does not have a 1-D denominator.
+        ValueError: If the denominator of this object has more than one axis.
     """
 
     if self._drank == 0:
@@ -132,7 +134,7 @@ def extract_denoms(self):
     return objects
 
 
-def slice_numer(self, axis, index1, index2, classes=(), *, recursive=True):
+def slice_numer(self, axis, index1, index2, *, classes=(), recursive=True):
     """Extract an object sliced from one numerator axis.
 
     Parameters:
@@ -166,7 +168,7 @@ def slice_numer(self, axis, index1, index2, classes=(), *, recursive=True):
 
     # Construct and cast
     obj = Qube(new_values, self._mask, example=self)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
     obj._readonly = self._readonly
 
     # Slice the derivatives if necessary
@@ -225,7 +227,7 @@ def transpose_numer(self, axis1=0, axis2=1, *, recursive=True):
     return obj
 
 
-def reshape_numer(self, shape, classes=(), recursive=True):
+def reshape_numer(self, shape, *, classes=(), recursive=True):
     """This object with a new shape for numerator items.
 
     Parameters:
@@ -255,33 +257,33 @@ def reshape_numer(self, shape, classes=(), recursive=True):
 
     # Construct and cast
     obj = Qube(new_values, self._mask, nrank=len(shape), example=self)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
     obj._readonly = self._readonly
 
     # Reshape the derivatives if necessary
     if recursive:
         for key, deriv in self._derivs.items():
-            obj.insert_deriv(key, deriv.reshape_numer(shape, classes, False))
+            obj.insert_deriv(key, deriv.reshape_numer(shape, classes=classes,
+                                                      recursive=False))
 
     return obj
 
 
-def flatten_numer(self, classes=(), *, recursive=True):
+def flatten_numer(self, *, classes=(), recursive=True):
     """This object with a new numerator shape such that nrank == 1.
 
     Parameters:
         classes (type | list[type] | tuple[type, ...], optional): The class of the object
             returned. If a list is provided, the object will be an instance of the first
             suitable class in the list. Otherwise, a generic Qube object will be returned.
-        recursive (bool, optional): True to include matching slices of the derivatives in
-            the returned object; otherwise, the returned object will not contain
-            derivatives.
+        recursive (bool, optional): True to flatten the derivatives in the same way;
+            otherwise, the returned object will not contain derivatives.
 
     Returns:
         Qube: The flattened object.
     """
 
-    return self.reshape_numer((self.nsize,), classes, recursive=recursive)
+    return self.reshape_numer((self.nsize,), classes=classes, recursive=recursive)
 
 ##########################################################################################
 # Denominator shaping operations
@@ -369,15 +371,16 @@ def flatten_denom(self):
 # Numerator/denominator operations
 ##########################################################################################
 
-def join_items(self, classes):
+def join_items(self, *, classes=()):
     """The object with denominator axes joined to the numerator.
 
     Derivatives are removed.
 
     Parameters:
-        classes (type | list[type] | tuple[type, ...]): The class of the object returned.
-            If a list is provided, the object will be an instance of the first suitable
-            class in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. If the list is empty (the default) or no class is
+            suitable, a generic Qube object will be returned.
 
     Returns:
         Qube: The object with joined items.
@@ -388,22 +391,23 @@ def join_items(self, classes):
 
     obj = Qube(self._values, self._mask, nrank=(self._nrank + self._drank), drank=0,
                example=self)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
     obj._readonly = self._readonly
 
     return obj
 
 
-def split_items(self, nrank, classes):
+def split_items(self, nrank, *, classes=()):
     """The object with numerator axes converted to denominator axes.
 
     Derivatives are removed.
 
     Parameters:
         nrank (int): Number of numerator axes to retain.
-        classes (type | list[type] | tuple[type, ...]): The class of the object returned.
-            If a list is provided, the object will be an instance of the first suitable
-            class in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. If the list is empty (the default) or no class is
+            suitable, a generic Qube object will be returned.
 
     Returns:
         Qube: The object with split items.
@@ -411,21 +415,22 @@ def split_items(self, nrank, classes):
 
     obj = Qube(self._values, self._mask, nrank=nrank, drank=(self._rank - nrank),
                example=self)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
     obj._readonly = self._readonly
 
     return obj
 
 
-def swap_items(self, classes):
+def swap_items(self, *, classes=()):
     """A new object with the numerator and denominator axes exchanged.
 
     Derivatives are removed.
 
     Parameters:
-        classes (type | list[type] | tuple[type, ...]): The class of the object returned.
-            If a list is provided, the object will be an instance of the first suitable
-            class in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. If the list is empty (the default) or no class is
+            suitable, a generic Qube object will be returned.
 
     Returns:
         Qube: The object with swapped items.
@@ -437,7 +442,7 @@ def swap_items(self, classes):
         new_values = np.moveaxis(new_values, -self._drank-1, -1)
 
     obj = Qube(new_values, self._mask, nrank=self._drank, drank=self._nrank, example=self)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
     obj._readonly = self._readonly
     return obj
 
@@ -456,8 +461,8 @@ def chain(self, /, arg):
         Qube: The result of the chain multiplication.
     """
 
-    left = self.flatten_denom().join_items(Qube)
-    right = arg.flatten_numer(Qube)
+    left = self.flatten_denom().join_items(classes=Qube)
+    right = arg.flatten_numer(classes=Qube)
 
     return Qube.dot(left, right, -1, 0, classes=[type(self)], recursive=False)
 

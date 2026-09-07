@@ -249,16 +249,16 @@ def test_qube_items() -> None:
     # join_items(self, classes)
     ##################################################################################
     a = Vector(np.random.randn(5,4,3,2), drank=1)
-    b = a.join_items(Matrix)
+    b = a.join_items(classes=Matrix)
     assert b.shape == (5,4)
     assert b.numer == (3,2)
     assert b.denom == ()
-    b = a.join_items((Boolean,Scalar,Matrix3,Quaternion,Matrix))
+    b = a.join_items(classes=(Boolean,Scalar,Matrix3,Quaternion,Matrix))
     assert type(b) == Matrix
     assert a.readonly == False
     assert b.readonly == False
     a = a.as_readonly()
-    b = a.join_items(Matrix)
+    b = a.join_items(classes=Matrix)
     assert a.readonly == True
     assert b.readonly == True
 
@@ -266,7 +266,7 @@ def test_qube_items() -> None:
     # swap_items(self, classes)
     ##################################################################################
     a = Vector(np.random.randn(5,4,3,2), drank=2)
-    b = a.swap_items((Boolean,Scalar,Matrix3,Quaternion,Matrix))
+    b = a.swap_items(classes=(Boolean,Scalar,Matrix3,Quaternion,Matrix))
     assert type(b) == Matrix
     assert b.shape == a.shape
     assert b.numer == a.denom
@@ -278,7 +278,7 @@ def test_qube_items() -> None:
     assert a.readonly == False
     assert b.readonly == False
     a = a.as_readonly()
-    b = a.swap_items(Matrix)
+    b = a.swap_items(classes=Matrix)
     assert a.readonly == True
     assert b.readonly == True
 

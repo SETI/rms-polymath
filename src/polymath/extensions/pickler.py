@@ -1,7 +1,7 @@
-########################################################################################
-# polymath/extensions/pickle.py
-########################################################################################
-"""This module supports the "pickling" of polymath objects.
+##########################################################################################
+# polymath/extensions/pickler.py
+##########################################################################################
+"""This module supports the "pickling" of PolyMath objects.
 
 Because objects such as backplanes can be numerous and also quite large, we provide a
 variety of methods, both lossless and lossy, for compressing them during storage. As one
@@ -29,14 +29,14 @@ For each object, the user can define the floating-point compression method using
 compression method using :meth:`~polymath.Qube.set_default_pickle_digits`. The inputs to
 these functions are as follows:
 
-**digits** (`str or int`): The number of digits to preserve.
+**digits** (`str | int`): The number of digits to preserve.
 
 * "double": preserve full precision using lossless **fpzip** compression.
 * "single": convert the array to single precision and then store it using lossless
   **fpzip** compression.
 * an integer 7-16, defining the number of significant digits to preserve.
 
-**reference** (`str or float`): How to interpret a numeric value of **digits**.
+**reference** (`str | float`): How to interpret a numeric value of **digits**.
 
 * "fpzip": Use lossy **fpzip** compression, preserving the given number of digits.
 * a number: Preserve every number to the exact same absolute precision, scaling the number
@@ -55,10 +55,10 @@ number to be generated automatically.
   from zero. This option is useful for arrays that contain a limited range of values, such
   as the components of a unit vector or angles that are known to fall between zero and
   2*pi. In this case, it is probably not necessary to preserve the extra precision in
-  values that just happen to fall very close zero.
+  values that just happen to fall very close to zero.
 * "mean": Absolute accuracy will be 10**(-digits) times the mean of the absolute values
   in the array.
-* "median": UAbsolute accuracy will be 10**(-digits) times the median of the absolute
+* "median": Absolute accuracy will be 10**(-digits) times the median of the absolute
   values in the array. This is a good choice if a minority of values in the array are very
   different from the others, such as noise spikes or undefined geometry. In such a case,
   we want the precision to be based on the more "typical" values.
@@ -109,29 +109,34 @@ def _pickle_debug(debug):
 
 
 def set_pickle_digits(self, digits='double', reference='fpzip'):
-    """Set the desired number of decimal digits of precision in the storage of this
-    object's floating-point values and their derivatives.
+    """Set the decimal digits of precision to preserve when pickling this object.
 
-    This attribute is ignored for integer and boolean values. The method will still
-    set the attribute on the object, but it will not be used during pickling of
-    integer or boolean arrays.
+    The setting applies to the floating-point values of this object and to those of its
+    derivatives. It is ignored for integer and boolean values. The method still sets the
+    attribute on the object, but it is not used during pickling of integer or boolean
+    arrays.
 
     Parameters:
-        digits (int | float | str | tuple, optional): The number of digits to preserve
-            when pickling this object. If two values are given, the second applies to any
-            derivatives. If a number is specified, this is the number of decimal digits to
-            preserve when this object is pickled. It need not be an integer. It is
-            truncated to the range supported by single and double precision.
-            Alternatively, use "double" to preserve full double precision; use "single"
-            for single precision.
+        digits (int | float | str | list | tuple | None, optional): The number of digits
+            to preserve when pickling this object. If two values are given, the second
+            applies to any derivatives. If a number is specified, this is the number of
+            decimal digits to preserve when this object is pickled. It need not be an
+            integer. It is truncated to the range supported by single and double
+            precision. Alternatively, use "double" to preserve full double precision; use
+            "single" for single precision. None is equivalent to "double".
+        reference (int | float | str | list | tuple | None, optional): A value defining
+            the number to use when assessing how many digits are preserved. If two values
+            are given, the second applies to any derivatives. If a number is specified,
+            the number of `digits` will be relative to this value. For example, if the
+            `reference=100` and `digits=8`, the absolute precision will be 1.e-6.
+            Alternatively, use one of these strings to let the precision be referenced to
+            the values in the array: "smallest", "largest", "mean", "median", "logmean",
+            or "fpzip". None is equivalent to "fpzip".
 
-        reference (int | float | str | tuple, optional): A value defining the number to
-            use when assessing how many digits are preserved. If two values are given, the
-            second applies to any derivatives. If a number is specified, the number of
-            `digits` will be relative to this value. For example, if the `reference=100`
-            and `digits=8`, the absolute precision will be 1.e-6. Alternatively, use one
-            of these strings to let the precision be referenced to the values in the
-            array: "smallest", "largest", "mean", "median", "logmean", or "fpzip".
+    Raises:
+        ValueError: If a value of `digits` is neither a number nor "single" or "double",
+            or if a value of `reference` is neither a number nor one of the recognized
+            names.
 
     Notes:
         The reference options are:
@@ -169,24 +174,32 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
 
 @staticmethod
 def set_default_pickle_digits(digits='double', reference='fpzip'):
-    """Set the default number of decimal digits of precision in the storage of
-    floating-point values and their derivatives.
+    """Set the default decimal digits of precision to preserve when pickling.
+
+    The default applies to the floating-point values and derivatives of every object that
+    has no setting of its own from :meth:`~polymath.Qube.set_pickle_digits`.
 
     Parameters:
-        digits (int | float | str | tuple, optional): The number of digits to preserve
-            when pickling this object. If two values are given, the second applies to any
-            derivatives. If a number is specified, this is the number of decimal digits to
-            preserve when this object is pickled. It need not be an integer. It is
-            truncated to the range supported by single and double precision.
-            Alternatively, use "double" to preserve full double precision; use "single"
-            for single precision.
-        reference (int | float | str | tuple, optional): A value defining the number to
-            use when assessing how many digits are preserved. If two values are given, the
-            second applies to any derivatives. If a number is specified, the number of
-            `digits` will be relative to this value. For example, if the `reference=100`
-            and `digits=8`, the precision will be 1.e-6. Alternatively, use one of these
-            strings to let the precision be referenced to the values in the array:
-            "smallest", "largest", "mean", "median", "logmean", or "fpzip".
+        digits (int | float | str | list | tuple | None, optional): The number of digits
+            to preserve when pickling an object. If two values are given, the second
+            applies to any derivatives. If a number is specified, this is the number of
+            decimal digits to preserve when an object is pickled. It need not be an
+            integer. It is truncated to the range supported by single and double
+            precision. Alternatively, use "double" to preserve full double precision; use
+            "single" for single precision. None is equivalent to "double".
+        reference (int | float | str | list | tuple | None, optional): A value defining
+            the number to use when assessing how many digits are preserved. If two values
+            are given, the second applies to any derivatives. If a number is specified,
+            the number of `digits` will be relative to this value. For example, if the
+            `reference=100` and `digits=8`, the absolute precision will be 1.e-6.
+            Alternatively, use one of these strings to let the precision be referenced to
+            the values in the array: "smallest", "largest", "mean", "median", "logmean",
+            or "fpzip". None is equivalent to "fpzip".
+
+    Raises:
+        ValueError: If a value of `digits` is neither a number nor "single" or "double",
+            or if a value of `reference` is neither a number nor one of the recognized
+            names.
 
     Notes:
         The reference options are:
@@ -214,8 +227,7 @@ def set_default_pickle_digits(digits='double', reference='fpzip'):
 
 
 def pickle_digits(self):
-    """The digits of floating-point precision to include when pickling this object and its
-    derivatives.
+    """The digits of floating-point precision to preserve when pickling this object.
 
     Returns:
         tuple[str | float | int, str | float | int]: The setting for this object and the
@@ -230,8 +242,7 @@ def pickle_digits(self):
 
 
 def pickle_reference(self):
-    """The reference value to use when determining the number of digits of floating-point
-    precision in this object and its derivatives.
+    """The reference value for the digits of precision to preserve when pickling.
 
     Returns:
         tuple[str | float | int, str | float | int]: The setting for this object and the
@@ -356,9 +367,9 @@ def _validate_pickle_reference(references):
 
     return references
 
-################################################################################
+##########################################################################################
 # Support for fpzip compression and decompression
-################################################################################
+##########################################################################################
 
 def fpzip_compress(array, digits=16, dtype=np.float64):
     """An fpzip-compressed array plus the number of bits that have been zeroed.
@@ -371,7 +382,8 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
             before compression.
 
     Returns:
-        tuple: The compressed bytes and the number of low-order mantissa bits zeroed.
+        tuple[bytes, int]: The compressed bytes and the number of low-order mantissa bits
+        zeroed.
     """
 
     array = np.require(array, dtype=dtype, requirements=['C', 'A', 'W'])
@@ -525,9 +537,9 @@ def fpzip_decompress(fpzip_bytes, shape, bits):
 
     return floats
 
-################################################################################
+##########################################################################################
 # Support for compression using integers plus an offset and scale factor
-################################################################################
+##########################################################################################
 
 def _encode_one_float_array(values, digits, reference):
     """Encode one array into a tuple for the specified digits precision.
@@ -653,13 +665,13 @@ def _encode_floats(values, rank, digits, reference):
     Parameters:
         values (numpy.ndarray): Array of values to encode.
         rank (int): Rank of the individual items in this array.
-        digits (str | float): 'float64', 'float32', or number of digits to preserve.
-        reference (str): One of 'smallest', 'largest', 'mean', 'median', 'logmean', or
-            'fpzip'.
+        digits (str | float): 'double', 'single', or the number of digits to preserve.
+        reference (str | float): One of 'smallest', 'largest', 'mean', 'median',
+            'logmean', 'fpzip', or a number.
 
     Returns:
         tuple: Encoded array in one of several formats depending on the compression method
-            used.
+        used.
     """
 
     shape = values.shape
@@ -843,9 +855,9 @@ def _decode_bools(values, shape, size):
     bools = bools[:size]
     return bools.reshape(shape)
 
-################################################################################
+##########################################################################################
 # __getstate__ and __setstate__
-################################################################################
+##########################################################################################
 
 def __getstate__(self):
     """The state is defined by a dictionary containing most of the Qube attributes.
@@ -856,7 +868,7 @@ def __getstate__(self):
 
     "PICKLE_VERSION" is added, with a value defined by the current version.
 
-    New attribute "MASK_ENCODING" is a list of the steps that have been applied to the
+    The attribute "MASK_ENCODING" is a list of the steps that have been applied to the
     mask. Each item in the list is a tuple, one of:
 
     * ('CORNERS', corners), where corners is the tuple returned by Qube._find_corners()
@@ -865,22 +877,22 @@ def __getstate__(self):
 
     The list will be empty if no compression has been applied.
 
-    New attribute "VALS_ENCODING" is a list of the steps that have been applied to the
+    The attribute "VALS_ENCODING" is a list of the steps that have been applied to the
     values. Each item in the list is a tuple, one of:
+
     * ('ALL_MASKED',) if the object is fully masked, so no values are saved.
     * ('ANTIMASKED',) if the antimask has been applied.
     * ('FLOAT', digits, reference) for any floating-point compression performed.
     * ('BOOL', shape, size) if packbits plus BZ2 compression was performed.
     * ('INT', shape) if BZ2 compression of integers was performed.
 
-    Note:
-        For floating-point arrays using lossy compression methods (e.g., when digits < 16
-        or reference != 'double'), the round-trip values may differ slightly from the
-        original due to compression precision limits. Use 'double' precision with 'fpzip'
-        reference for lossless compression.
-
     Returns:
-        dict: The encoded state of this object.
+        dict[str, Any]: The encoded state of this object.
+
+    Notes:
+        For floating-point arrays using lossy compression, which is any `digits` setting
+        other than "double", the round-trip values may differ slightly from the original
+        due to compression precision limits. Use "double" for lossless compression.
     """
 
     # Start with a shallow clone; save derivatives for later
@@ -999,16 +1011,17 @@ def __setstate__(self, state):
     """Restore the object state from a pickled dictionary.
 
     This method decodes the mask and values from their encoded forms (as stored by
-    __getstate__), handles version compatibility, and restores the object to its
-    original state.
-
-    Note: For floating-point arrays using lossy compression methods (e.g., when digits <
-    16 or reference != 'double'), the restored values may differ slightly from the
-    original due to compression precision limits. Use 'double' precision with 'fpzip'
-    reference for lossless compression.
+    :meth:`~polymath.Qube.__getstate__`), handles renamed attributes from earlier pickle
+    formats, and restores the object to its original state.
 
     Parameters:
-        state (dict[str, Any]): The state dictionary as returned by __getstate__().
+        state (dict[str, Any]): The state dictionary as returned by
+            :meth:`~polymath.Qube.__getstate__`.
+
+    Notes:
+        For floating-point arrays using lossy compression, which is any `digits` setting
+        other than "double", the restored values may differ slightly from the original
+        due to compression precision limits. Use "double" for lossless compression.
     """
 
     # Handle renamed keys

@@ -26,17 +26,17 @@ __all__ = ['and_', 'as_all_masked', 'as_mask_where_nonzero',
 
 @staticmethod
 def _as_mask(arg, *, invert=False, masked_value=True, opstr=''):
-    """This argument converted to a scalar bool or boolean Numpy array.
+    """This argument converted to a scalar bool or boolean NumPy array.
 
     Parameters:
         arg (BooleanLike): The object to convert to a mask.
         invert (bool, optional): True to return the logical not of the mask.
         masked_value (bool, optional): The value to use where the input argument is
-            masked. This value is used _after_ `invert` is applied.
+            masked. This value is used *after* `invert` is applied.
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        MaskType: bool or boolean array suitable for us as a mask.
+        MaskType: A bool or boolean array suitable for use as a mask.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -97,8 +97,7 @@ def _as_mask(arg, *, invert=False, masked_value=True, opstr=''):
 @staticmethod
 def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
                    masked_value=True, check=False, opstr=''):
-    """This argument converted to a scalar bool or boolean Numpy array of suitable
-    shape to use as a mask.
+    """This argument converted to a bool or boolean NumPy array shaped to serve as a mask.
 
     Parameters:
         arg (BooleanLike): The object to convert to a mask.
@@ -109,13 +108,13 @@ def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
             that of the given shape.
         invert (bool, optional): True to return the logical not of the mask.
         masked_value (bool, optional): The value to use where the input argument is
-            masked. This value is used _after_ `invert` is applied.
+            masked. This value is used *after* `invert` is applied.
         check (bool, optional): True to check for an array containing all False values,
             and if so, replace it with a single value of False.
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        MaskType: bool or boolean mask array.
+        MaskType: A bool or boolean mask array.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -161,13 +160,13 @@ def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
 
 @staticmethod
 def or_(*masks):
-    """The logical "or" of two or more masks, avoiding array operations if possible.
+    """The logical "or" of one or more masks, avoiding array operations if possible.
 
     Parameters:
-        *masks (BooleanLike): One or more boolean masks.
+        *masks (MaskType): One or more masks, each a bool or a boolean array.
 
     Returns:
-        MaskType: New mask array or bool.
+        MaskType: The combined mask as a new array or a bool.
     """
 
     # Two inputs is most common
@@ -218,13 +217,13 @@ def or_(*masks):
 
 @staticmethod
 def and_(*masks):
-    """The logical "and" of two or more masks, avoiding array operations if possible.
+    """The logical "and" of one or more masks, avoiding array operations if possible.
 
     Parameters:
-        *masks (BooleanLike): One or more boolean masks.
+        *masks (MaskType): One or more masks, each a bool or a boolean array.
 
     Returns:
-        MaskType: New mask array or bool.
+        MaskType: The combined mask as a new array or a bool.
     """
 
     # Two inputs is most common
@@ -341,8 +340,9 @@ def masked_single(self, *, recursive=True):
 
 
 def without_mask(self, *, recursive=True):
-    """A shallow copy of this object without its mask. Note that masked values will be
-    revealed.
+    """A shallow copy of this object without its mask.
+
+    Note that masked values will be revealed.
 
     Parameters:
         recursive (bool, optional): True to unmask any derivatives; False to strip
@@ -391,17 +391,17 @@ def as_one_masked(self, *, recursive=True):
             derivatives.
 
     Returns:
-        Qube: This object but fully masked and with shape ()
+        Qube: This object but fully masked and with shape ().
     """
 
-    return self.flatten()[0].as_all_masked()
+    return self.flatten()[0].as_all_masked(recursive=recursive)
 
 
 def remask(self, mask, *, recursive=True, check=True):
     """A shallow copy of this object with a replaced mask.
 
-    This is much quicker than masked_where(), for cases where only the mask of this
-    object is changing.
+    This is much quicker than :meth:`~polymath.Qube.mask_where`, for cases where only the
+    mask of this object is changing.
 
     Parameters:
         mask (BooleanLike): The new mask to be applied to the object.
@@ -431,11 +431,10 @@ def remask(self, mask, *, recursive=True, check=True):
 
 
 def remask_or(self, mask, *, recursive=True, check=True):
-    """A shallow copy of this object, in which the current mask is "or-ed" with the
-    given mask.
+    """A shallow copy of this object in which the given mask is "or-ed" into its mask.
 
-    This is much quicker than masked_where(), for cases where only the mask is
-    changing.
+    This is much quicker than :meth:`~polymath.Qube.mask_where`, for cases where only the
+    mask of this object is changing.
 
     Parameters:
         mask (BooleanLike): The new mask to be applied to the object.
@@ -459,14 +458,13 @@ def remask_or(self, mask, *, recursive=True, check=True):
 
     if recursive:
         for key, deriv in self._derivs.items():
-            obj.insert_deriv(key, deriv.remask(mask, recursive=False, check=False))
+            obj.insert_deriv(key, deriv.remask_or(mask, recursive=False, check=False))
 
     return obj
 
 
 def expand_mask(self, *, recursive=True):
-    """A shallow copy where a single mask value of True or False is converted to an
-    array.
+    """A shallow copy in which a single mask value of True or False becomes an array.
 
     If the object's mask is already an array, it is returned unchanged.
 
@@ -513,8 +511,7 @@ def expand_mask(self, *, recursive=True):
 
 
 def collapse_mask(self, *, recursive=True):
-    """A shallow copy where a mask entirely containing either True or False is
-    converted to a single boolean.
+    """A shallow copy in which an all-True or all-False mask array becomes a single bool.
 
     Parameters:
         recursive (bool, optional): True to collapse the mask of any derivatives.

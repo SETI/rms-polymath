@@ -307,7 +307,7 @@ def test_scalar_ops_unary_plus() -> None:
     assert b.d_dt == 2
     assert not a.readonly
     assert not b.readonly
-    assert not a.d_dt.readonly       # writeable because it is a scalar
+    assert not a.d_dt.readonly       # writable because it is a scalar
     assert b.d_dt.readonly        # readonly because of broadcast
     a = Scalar(1, derivs={'t':Scalar(2)})
     b = (1,2,3) + a

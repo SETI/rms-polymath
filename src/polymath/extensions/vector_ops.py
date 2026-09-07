@@ -118,7 +118,7 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
                                    drank=arg._drank, unit=arg._unit, example=arg)
 
     # Cast to the proper class
-    obj = obj.cast(type(arg))
+    obj = obj.cast(classes=type(arg))
 
     # Handle derivatives
     if recursive and arg._derivs:
@@ -304,7 +304,7 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
                                nrank=new_nrank, drank=new_drank,
                                unit=Unit.mul_units(arg1._unit, arg2._unit),
                                example=arg1)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and (arg1._derivs or arg2._derivs):
@@ -356,9 +356,10 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
         ValueError: If the object has denominators or if the axis is out of range.
 
     Examples:
-        For a Vector with shape (2, 3) and numer (2,):
-        - axis=-1 (default) -> result shape (2, 3), numer ()
-        - axis=0 -> result shape (2, 3), numer ()
+        For a Vector with shape (2, 3) and numer (2,)::
+
+            axis=-1 (default) -> result shape (2, 3), numer ()
+            axis=0 -> result shape (2, 3), numer ()
     """
 
     arg._disallow_denom('norm()')
@@ -381,7 +382,7 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
     # Construct the object and cast
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,
                                drank=arg._drank, unit=arg._unit, example=arg)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and arg._derivs:
@@ -404,7 +405,7 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
     arg.norm_sq(...).
 
     Parameters:
-        arg (QubeLike): The object for which to calculate the norm-squared.
+        arg (Qube): The object for which to calculate the norm-squared.
         axis (int, optional): The item axis for the norm. Default is -1.
         classes (type | list[type] | tuple[type, ...], optional): The class of the object
             returned. If a list is provided, the object will be an instance of the first
@@ -418,9 +419,10 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
         ValueError: If the object has denominators or if the axis is out of range.
 
     Examples:
-        For a Vector with shape (2, 3) and numer (2,):
-        - axis=-1 (default) -> result shape (2, 3), numer ()
-        - axis=0 -> result shape (2, 3), numer ()
+        For a Vector with shape (2, 3) and numer (2,)::
+
+            axis=-1 (default) -> result shape (2, 3), numer ()
+            axis=0 -> result shape (2, 3), numer ()
     """
 
     arg._disallow_denom('norm_sq()')
@@ -444,7 +446,7 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,
                                drank=arg._drank,
                                unit=Unit.mul_units(arg._unit, arg._unit), example=arg)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and arg._derivs:
@@ -548,7 +550,7 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
                                nrank=new_nrank, drank=new_drank,
                                unit=Unit.mul_units(arg1._unit, arg2._unit),
                                example=arg1)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and (arg1._derivs or arg2._derivs):
@@ -631,7 +633,7 @@ def _cross_2x2(a, b):
 
 
 @staticmethod
-def outer(arg1, arg2, classes=(), recursive=True):
+def outer(arg1, arg2, *, classes=(), recursive=True):
     """Calculate the outer product of two objects.
 
     The item shape of the returned object is obtained by concatenating the two
@@ -681,7 +683,7 @@ def outer(arg1, arg2, classes=(), recursive=True):
                                nrank=new_nrank, drank=new_drank,
                                unit=Unit.mul_units(arg1._unit, arg2._unit),
                                example=arg1)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and (arg1._derivs or arg2._derivs):
@@ -711,7 +713,7 @@ def outer(arg1, arg2, classes=(), recursive=True):
 
 
 @staticmethod
-def as_diagonal(arg, axis, classes=(), recursive=True):
+def as_diagonal(arg, axis, *, classes=(), recursive=True):
     """A copy with one axis converted to a diagonal across two.
 
     Note: This is a static method. Call it as Qube.as_diagonal(arg, axis, ...) rather than
@@ -762,12 +764,13 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
     # Construct and cast
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank + 1,
                                drank=arg._drank, unit=arg._unit, example=arg)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Diagonalize the derivatives if necessary
     if recursive:
         for key, deriv in arg._derivs.items():
-            obj.insert_deriv(key, Qube.as_diagonal(deriv, axis, classes, False))
+            obj.insert_deriv(key, Qube.as_diagonal(deriv, axis, classes=classes,
+                                                   recursive=False))
 
     return obj
 
@@ -775,9 +778,10 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
 def rms(self):
     """Calculate the root-mean-square values of all items as a Scalar.
 
-    The RMS is computed across all item dimensions (numerator dimensions) for each
-    array element. For a Vector with shape (n,) and numer (3,), this computes
-    sqrt(sum(vals^2) / 3) for each of the n elements.
+    The RMS is computed across all item dimensions, numerator and denominator alike, for
+    each array element. For a Vector with shape (n,) and numer (3,), this computes
+    sqrt(sum(vals**2) / 3) for each of the n elements. The mask is preserved; the unit and
+    derivatives are not.
 
     Useful for looking at the overall magnitude of the differences between two objects.
 
@@ -790,4 +794,4 @@ def rms(self):
 
     return Qube._SCALAR_CLASS(np.sqrt(sum_sq / self.isize), self._mask)
 
-################################################################################
+##########################################################################################

@@ -95,8 +95,9 @@ def as_this_type(self, arg, *, recursive=True, coerce=True, op=''):
     If the object is already of the correct class and type, it is returned unchanged.
 
     Parameters:
-        arg (QubeLike): The object to the class of this object. If the argument is a
-            scalar or NumPy ndarray, a new instance of this object's class is created.
+        arg (QubeLike): The object to convert to the class of this object. If the
+            argument is a scalar or NumPy ndarray, a new instance of this object's class
+            is created.
         recursive (bool, optional): True to convert the derivatives as well.
         coerce (bool, optional): True to coerce the data type silently; False to leave the
             data type unchanged.
@@ -104,6 +105,9 @@ def as_this_type(self, arg, *, recursive=True, coerce=True, op=''):
 
     Returns:
         Qube: The argument converted to the type of this object.
+
+    Raises:
+        ValueError: If the numerator of `arg` is incompatible with that of this object.
     """
 
     # If the classes already match, we might return the argument as is
@@ -224,12 +228,13 @@ def _castable_to(self, cls):
     return cls._BOOLS_OK
 
 
-def cast(self, classes):
-    """A shallow copy of this object casted to another Qube subclass.
+def cast(self, *, classes=()):
+    """A shallow copy of this object cast to another Qube subclass.
 
     Parameters:
-        classes (type | list[type] | tuple[type, ...]): A Qube subclass or list of
-            subclasses. The object will be casted to the first suitable class in the list.
+        classes (type | list[type] | tuple[type, ...], optional): A Qube subclass or
+            list of subclasses. The object will be cast to the first suitable class in
+            the list. If the list is empty (the default), the object is returned as is.
 
     Returns:
         Qube: A shallow copy of this object. If the object is already of the selected

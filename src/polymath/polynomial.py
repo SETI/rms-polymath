@@ -24,12 +24,13 @@ class Polynomial(Vector):
     This is a Vector subclass in which the elements are interpreted as the coefficients of
     a polynomial in a single variable x. Coefficients appear in order of decreasing
     exponent. For example:
-    - [a, b, c] represents a*x^2 + b*x + c
-    - [a, b] represents a*x + b
-    - [a] represents the constant a
 
-    Mathematical operations, polynomial root-solving are supported. Coefficients
-    can have derivatives and these can be used to determine derivatives of the values or
+    * ``[a, b, c]`` represents ``a*x**2 + b*x + c``
+    * ``[a, b]`` represents ``a*x + b``
+    * ``[a]`` represents the constant ``a``
+
+    Mathematical operations and polynomial root-solving are supported. Coefficients can
+    have derivatives, and these can be used to determine derivatives of the values or
     roots.
     """
 
@@ -80,12 +81,7 @@ class Polynomial(Vector):
 
     @property
     def order(self) -> int:
-        """The order of the polynomial, i.e., the largest exponent.
-
-        Returns:
-            int:
-        """
-
+        """The order of the polynomial, i.e., the largest exponent."""
         return self.item[-self._drank - 1] - 1
 
     @staticmethod
@@ -93,7 +89,7 @@ class Polynomial(Vector):
         """A shallow copy of the given object as class Polynomial.
 
         Parameters:
-            arg (Any): Object to convert to Polynomial.
+            arg (VectorLike): Object to convert to Polynomial.
             recursive (bool, optional): True to include derivatives in the conversion.
 
         Returns:
@@ -176,8 +172,8 @@ class Polynomial(Vector):
     def set_order(self, order, *, recursive=True):
         """This Polynomial expressed with exactly this order.
 
-        Extra polynomial coefficients are filled with zeros. If this Polynomial exceeds
-        this order requested, raise an exception.
+        Extra leading polynomial coefficients are filled with zeros. If the order of this
+        Polynomial exceeds the order requested, a ValueError is raised.
 
         Parameters:
             order (int): Exact order of the Polynomial.
@@ -275,7 +271,7 @@ class Polynomial(Vector):
         """Add another polynomial to this polynomial in-place.
 
         Parameters:
-            arg (Any): The polynomial to add to this polynomial.
+            arg (Any): The polynomial or scalar to add to this polynomial.
 
         Returns:
             Polynomial: This polynomial modified in-place.
@@ -349,7 +345,7 @@ class Polynomial(Vector):
         """Subtract another polynomial from this polynomial in-place.
 
         Parameters:
-            arg (QubeLike): The polynomial to subtract from this polynomial.
+            arg (Any): The polynomial or scalar to subtract from this polynomial.
 
         Returns:
             Polynomial: This polynomial modified in-place.
@@ -401,9 +397,8 @@ class Polynomial(Vector):
             Polynomial: The product of the polynomials.
 
         Raises:
-            ValueError: If the polynomials have incompatible denominators. This occurs
-                when self._drank != arg._drank and both are non-zero. For example, a
-                polynomial with drank=1 cannot be multiplied by a polynomial with drank=2.
+            ValueError: If `arg` is a Polynomial whose number of denominator axes differs
+                from that of this polynomial.
         """
 
         # Support for Polynomial multiplication
@@ -482,6 +477,7 @@ class Polynomial(Vector):
         Returns:
             Polynomial: The product of the polynomials.
         """
+
         return self.__mul__(arg)
 
     def __imul__(self, arg):
@@ -537,10 +533,8 @@ class Polynomial(Vector):
     def __pow__(self, arg):
         """Raise this polynomial to the specified power.
 
-        Uses repeated squaring algorithm for efficient computation.
-
         Parameters:
-            arg (Any): The exponent (must be a non-negative integer).
+            arg (int | float): The exponent, which must have a non-negative integer value.
 
         Returns:
             Polynomial: This polynomial raised to the specified power.
@@ -578,7 +572,7 @@ class Polynomial(Vector):
             arg (Any): The polynomial to compare with this polynomial.
 
         Returns:
-            bool: True if the polynomials are equal, False otherwise.
+            Boolean: True where the polynomials are equal, False otherwise.
         """
 
         arg = Polynomial.as_polynomial(arg).at_least_order(self.order)
@@ -592,7 +586,7 @@ class Polynomial(Vector):
             arg (Any): The polynomial to compare with this polynomial.
 
         Returns:
-            bool: True if the polynomials are not equal, False otherwise.
+            Boolean: True where the polynomials are not equal, False otherwise.
         """
 
         arg = Polynomial.as_polynomial(arg).at_least_order(self.order)
@@ -603,12 +597,12 @@ class Polynomial(Vector):
     # Special Polynomial operations
     ######################################################################################
 
-    def deriv(self, recursive=True):
+    def deriv(self, *, recursive=True):
         """The first derivative of this Polynomial.
 
         Parameters:
-            recursive (bool, optional): True to evaluate derivatives as well. Defaults to
-                True.
+            recursive (bool, optional): True to include the derivatives of the
+                coefficients in the result.
 
         Returns:
             Polynomial: The derivative polynomial.
@@ -629,13 +623,12 @@ class Polynomial(Vector):
 
         return result
 
-    def eval(self, x, recursive=True):
+    def eval(self, x, *, recursive=True):
         """Evaluate the polynomial at `x`.
 
         Parameters:
             x (ScalarLike): Scalar at which to evaluate this Polynomial.
-            recursive (bool, optional): True to evaluate derivatives as well. Defaults to
-                True.
+            recursive (bool, optional): True to evaluate derivatives as well.
 
         Returns:
             Scalar: The Polynomial values.
@@ -714,18 +707,18 @@ class Polynomial(Vector):
 
         return Qube.dot(self, x_powers, 0, 0, classes=[Scalar], recursive=recursive)
 
-    def roots(self, recursive=True):
+    def roots(self, *, recursive=True):
         """Find the roots of the polynomial.
 
         Parameters:
             recursive (bool, optional): True to evaluate derivatives at the roots as well.
 
         Returns:
-            Scalar: The roots. This has the same shape as self but an extra leading axis
-                matching the order of the polynomial. The leading index selects among the
-                roots of the polynomial. Roots appear in increasing order and without any
-                duplicates. Complex roots are masked. If fewer real roots exist, the set
-                of roots is padded at the end with masked values.
+            Scalar: The roots. This has the same shape as this object but with an extra
+            leading axis of length matching the order of the polynomial. The leading index
+            selects among the roots of the polynomial. Roots appear in increasing order
+            and without any duplicates. Complex roots are masked. If fewer real roots
+            exist, the set of roots is padded at the end with masked values.
 
         Raises:
             ValueError: If the polynomial is of order zero.

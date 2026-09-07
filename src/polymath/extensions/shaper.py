@@ -20,14 +20,13 @@ def reshape(self, shape, *, recursive=True):
 
     Parameters:
         shape (tuple[int, ...] | int): A tuple defining the new leading shape. A value of
-            -1 can appear at one location in the new shape, and the size of that shape
-            will be determined based on this object's size.
+            -1 can appear at one location in the new shape, and the size of that axis is
+            then inferred from this object's size.
         recursive (bool, optional): True to apply the same shape to the derivatives.
             Otherwise, derivatives are deleted from the returned object.
 
     Returns:
-        Qube: A shallow copy with the new shape. If the shape is unchanged, this object is
-            returned without modification. The read-only status is preserved.
+        Qube: A shallow copy with the new shape. The read-only status is preserved.
 
     Raises:
         ValueError: If the new shape is incompatible with the current shape.
@@ -243,20 +242,20 @@ def stack(*args, recursive=True):
     """Stack objects into one with a new leading axis.
 
     Parameters:
-        *args (ScalarLike | None): Any number of Scalars or arguments that can be cast to
-            Scalars. They need not have the same shape, but it must be possible to cast
-            them to the same shape. A value of None is converted to a zero-valued Scalar
-            that matches the denominator shape of the other arguments.
+        *args (QubeLike | None): Any number of PolyMath objects or values that can be
+            converted to them. They need not have the same shape, but it must be possible
+            to broadcast them to the same shape. A value of None is converted to a
+            zero-valued object that matches the item shape of the other arguments.
         recursive (bool, optional): True to include all the derivatives. The returned
             object will have derivatives representing the union of all the derivatives
-            found amongst the scalars.
+            found amongst the arguments.
 
     Returns:
-        Qube: A stacked object with a new leading axis.
+        Qube: A stacked object with a new leading axis, of the same class as the
+        arguments.
 
     Raises:
-        TypeError: If an unexpected keyword argument is provided.
-        ValueError: If the arguments have incompatible denominators.
+        ValueError: If the arguments have incompatible denominators or units.
     """
 
     args = list(args)
