@@ -47,23 +47,23 @@ these functions are as follows:
 The remaining options for **reference** provide a variety of ways to allow a reference
 number to be generated automatically.
 
-* "smallest": Absolute accuracy will be 10**(-digits) times the non-zero array value
+* "smallest": Absolute accuracy will be ``10**(-digits)`` times the non-zero array value
   closest to zero. This option guarantees that every value will preserve at least the
   requested number of digits. This is reasonable if you expect all values to fall within a
   similar dynamic range.
-* "largest": Absolute accuracy will be 10**(-digits) times the value in the array furthest
-  from zero. This option is useful for arrays that contain a limited range of values, such
-  as the components of a unit vector or angles that are known to fall between zero and
-  2*pi. In this case, it is probably not necessary to preserve the extra precision in
-  values that just happen to fall very close to zero.
-* "mean": Absolute accuracy will be 10**(-digits) times the mean of the absolute values
-  in the array.
-* "median": Absolute accuracy will be 10**(-digits) times the median of the absolute
+* "largest": Absolute accuracy will be ``10**(-digits)`` times the value in the array
+  furthest from zero. This option is useful for arrays that contain a limited range of
+  values, such as the components of a unit vector or angles that are known to fall between
+  zero and 2*pi. In this case, it is probably not necessary to preserve the extra
+  precision in values that just happen to fall very close to zero.
+* "mean": Absolute accuracy will be ``10**(-digits)`` times the mean of the absolute
+  values in the array.
+* "median": Absolute accuracy will be ``10**(-digits)`` times the median of the absolute
   values in the array. This is a good choice if a minority of values in the array are very
   different from the others, such as noise spikes or undefined geometry. In such a case,
   we want the precision to be based on the more "typical" values.
-* "logmean": Absolute accuracy will be 10**(-digits) times the log-mean of the absolute
-  values in the array.
+* "logmean": Absolute accuracy will be ``10**(-digits)`` times the log-mean of the
+  absolute values in the array.
 """
 
 import bz2

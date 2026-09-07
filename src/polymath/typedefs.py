@@ -79,49 +79,50 @@ _ArrayLike: TypeAlias = _NestedSequence
 
 BooleanLike: TypeAlias = Qube | _Array | _ArrayLike | _Scalar
 """Any value convertible to a :class:`~polymath.Boolean`: a PolyMath object, a numeric
-array, a nested sequence of numbers, or a single number."""
+array, a nested list or tuple of numbers, or a single number."""
 
 ScalarLike: TypeAlias = Qube | _Array | _ArrayLike | _Scalar
 """Any value convertible to a :class:`~polymath.Scalar`: a PolyMath object, a numeric
-array, a nested sequence of numbers, or a single number."""
+array, a nested list or tuple of numbers, or a single number."""
 
 PairLike: TypeAlias = Qube | _Array2 | _ArrayLike | float | int
 """Any value convertible to a :class:`~polymath.Pair`: a PolyMath object, a numeric array
-whose last axis has length two, or a nested sequence of numbers. As a special case, a
-single value becomes a Pair with the value repeated."""
+whose last axis has length two, or a nested list or tuple of numbers. As a special case,
+a single value becomes a Pair with the value repeated."""
 
 VectorLike: TypeAlias = Qube | _Array1D | _ArrayLike
 """Any value convertible to a :class:`~polymath.Vector`: a PolyMath object, a numeric
-array of one or more axes, or a nested sequence of numbers."""
+array of one or more axes, or a nested list or tuple of numbers."""
 
 Vector3Like: TypeAlias = Qube | _Array3 | _ArrayLike
 """Any value convertible to a :class:`~polymath.Vector3`: a PolyMath object, a numeric
-array whose last axis has length three, or a nested sequence of numbers."""
+array whose last axis has length three, or a nested list or tuple of numbers."""
 
 MatrixLike: TypeAlias = Qube | _Array2D | _ArrayLike
 """Any value convertible to a :class:`~polymath.Matrix`: a PolyMath object, a numeric
-array of two or more axes, or a nested sequence of numbers."""
+array of two or more axes, or a nested list or tuple of numbers."""
 
 Matrix3Like: TypeAlias = Qube | _Array33 | _ArrayLike
 """Any value convertible to a :class:`~polymath.Matrix3`: a PolyMath object, a numeric
-array whose last two axes each have length three, or a nested sequence of numbers."""
+array whose last two axes each have length three, or a nested list or tuple of
+numbers."""
 
 QuaternionLike: TypeAlias = Qube | _Array4 | _ArrayLike
 """Any value convertible to a :class:`~polymath.Quaternion`: a PolyMath object, a numeric
-array whose last axis has length four, or a nested sequence of numbers."""
+array whose last axis has length four, or a nested list or tuple of numbers."""
 
 QubeLike: TypeAlias = Qube | _Array | _ArrayLike | _Scalar
 """Any value convertible to a :class:`~polymath.Qube` subclass: a PolyMath object, a
-numeric array, a nested sequence of numbers, or a single number."""
+numeric array, a nested list or tuple of numbers, or a single number."""
 
 ValsType: TypeAlias = _Scalar | _Array
-"""Any value that might occupy the `.vals` attribute if a Qube."""
+"""Any value that might occupy the `.vals` attribute of a Qube."""
 
 MaskType: TypeAlias = bool | np.bool_ | _BoolArray
-"""Any value that might occupy the `.mask` attribute if a Qube."""
+"""Any value that might occupy the `.mask` attribute of a Qube."""
 
 IntValsType: TypeAlias = int | _IntArray
-"""Any value that might occupy the `.vals` attribute if a Qube and must also be integral.
+"""Any value that might occupy the `.vals` attribute of a Qube and must also be integral.
 """
 
 ##########################################################################################
