@@ -484,7 +484,7 @@ def is_numeric(self):
                 and self._values.dtype.kind == 'b')
 
 
-def as_numeric(self, *, recursive=True):
+def as_numeric(self, recursive=True):
     """A numeric version of this object.
 
     Booleans are converted to Scalars.

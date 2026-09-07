@@ -312,7 +312,7 @@ def count_unmasked(self):
     return 0 if self._mask else self._size
 
 
-def masked_single(self, *, recursive=True):
+def masked_single(self, recursive=True):
     """An object of this subclass containing one masked value.
 
     Parameters:
@@ -339,7 +339,7 @@ def masked_single(self, *, recursive=True):
     return obj
 
 
-def without_mask(self, *, recursive=True):
+def without_mask(self, recursive=True):
     """A shallow copy of this object without its mask.
 
     Note that masked values will be revealed.
@@ -362,7 +362,7 @@ def without_mask(self, *, recursive=True):
     return obj
 
 
-def as_all_masked(self, *, recursive=True):
+def as_all_masked(self, recursive=True):
     """A shallow copy of this object with everything masked.
 
     Parameters:
@@ -383,7 +383,7 @@ def as_all_masked(self, *, recursive=True):
     return obj
 
 
-def as_one_masked(self, *, recursive=True):
+def as_one_masked(self, recursive=True):
     """This object reduced to shape () and masked.
 
     Parameters:
@@ -463,7 +463,7 @@ def remask_or(self, mask, *, recursive=True, check=True):
     return obj
 
 
-def expand_mask(self, *, recursive=True):
+def expand_mask(self, recursive=True):
     """A shallow copy in which a single mask value of True or False becomes an array.
 
     If the object's mask is already an array, it is returned unchanged.
@@ -510,7 +510,7 @@ def expand_mask(self, *, recursive=True):
     return obj
 
 
-def collapse_mask(self, *, recursive=True):
+def collapse_mask(self, recursive=True):
     """A shallow copy in which an all-True or all-False mask array becomes a single bool.
 
     Parameters:

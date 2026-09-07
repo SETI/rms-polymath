@@ -114,7 +114,7 @@ class Boolean(Scalar):
     # Arithmetic operators
     ######################################################################################
 
-    def __pos__(self, *, recursive=True):
+    def __pos__(self, recursive=True):
         """The integer equivalent of this Boolean.
 
         This is an override of :meth:`Qube.__pos__`.
@@ -128,7 +128,7 @@ class Boolean(Scalar):
 
         return self.as_int()
 
-    def __neg__(self, *, recursive=True):
+    def __neg__(self, recursive=True):
         """The negated integer equivalent of this Boolean.
 
         This is an override of :meth:`Qube.__neg__`.
@@ -142,7 +142,7 @@ class Boolean(Scalar):
 
         return -self.as_int()
 
-    def __abs__(self, *, recursive=True):
+    def __abs__(self, recursive=True):
         """The absolute value of this Boolean as an integer.
 
         This is an override of :meth:`Qube.__abs__`.

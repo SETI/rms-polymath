@@ -52,7 +52,7 @@ def _array_to_readonly(arg):
     return arg
 
 
-def as_readonly(self, *, recursive=True):
+def as_readonly(self, recursive=True):
     """Convert this object to read-only. It is modified in place and returned.
 
     If this object is already read-only, it is returned as is. Otherwise, the internal

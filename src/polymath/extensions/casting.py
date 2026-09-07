@@ -228,7 +228,7 @@ def _castable_to(self, cls):
     return cls._BOOLS_OK
 
 
-def cast(self, *, classes=()):
+def cast(self, classes=()):
     """A shallow copy of this object cast to another Qube subclass.
 
     Parameters:

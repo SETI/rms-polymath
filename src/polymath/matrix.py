@@ -329,7 +329,7 @@ class Matrix(Qube):
 
         return Boolean(compare)
 
-    def transpose(self, *, recursive=True):
+    def transpose(self, recursive=True):
         """The transpose of this matrix.
 
         Parameters:

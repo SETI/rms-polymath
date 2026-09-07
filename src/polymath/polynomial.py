@@ -108,7 +108,7 @@ class Polynomial(Vector):
         else:
             return Polynomial(vector.wod)
 
-    def as_vector(self, *, recursive=True):
+    def as_vector(self, recursive=True):
         """A shallow copy of this Polynomial as class Vector.
 
         Parameters:
@@ -192,7 +192,7 @@ class Polynomial(Vector):
 
         return self.at_least_order(order, recursive=recursive)
 
-    def invert_line(self, *, recursive=True):
+    def invert_line(self, recursive=True):
         """The inversion of this linear polynomial.
 
         If this polynomial represents ``y = a*x + b``, then the inverse polynomial
@@ -597,7 +597,7 @@ class Polynomial(Vector):
     # Special Polynomial operations
     ######################################################################################
 
-    def deriv(self, *, recursive=True):
+    def deriv(self, recursive=True):
         """The first derivative of this Polynomial.
 
         Parameters:
@@ -707,7 +707,7 @@ class Polynomial(Vector):
 
         return Qube.dot(self, x_powers, 0, 0, classes=[Scalar], recursive=recursive)
 
-    def roots(self, *, recursive=True):
+    def roots(self, recursive=True):
         """Find the roots of the polynomial.
 
         Parameters:

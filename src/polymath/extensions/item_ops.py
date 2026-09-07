@@ -371,7 +371,7 @@ def flatten_denom(self):
 # Numerator/denominator operations
 ##########################################################################################
 
-def join_items(self, *, classes=()):
+def join_items(self, classes=()):
     """The object with denominator axes joined to the numerator.
 
     Derivatives are removed.
@@ -421,7 +421,7 @@ def split_items(self, nrank, *, classes=()):
     return obj
 
 
-def swap_items(self, *, classes=()):
+def swap_items(self, classes=()):
     """A new object with the numerator and denominator axes exchanged.
 
     Derivatives are removed.

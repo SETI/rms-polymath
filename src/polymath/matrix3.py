@@ -857,7 +857,7 @@ class Matrix3(Matrix):
                 Scalar._new_from_parts(ay[0] % Matrix3._TWOPI, self._mask, nrank=0),
                 Scalar._new_from_parts(az[0] % Matrix3._TWOPI, self._mask, nrank=0))
 
-    def to_quaternion(self, *, recursive=True):
+    def to_quaternion(self, recursive=True):
         """Convert this Matrix3 to an equivalent unit Quaternion.
 
         Parameters:

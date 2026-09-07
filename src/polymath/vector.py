@@ -109,7 +109,7 @@ class Vector(Qube):
 
         return self.extract_numer(0, indx, classes=Scalar, recursive=recursive)
 
-    def to_scalars(self, *, recursive=True):
+    def to_scalars(self, recursive=True):
         """All the components of this Vector as a tuple of Scalars.
 
         Parameters:
@@ -399,7 +399,7 @@ class Vector(Qube):
         result.__init__(values, mask, example=self)
         return result
 
-    def as_column(self, *, recursive=True):
+    def as_column(self, recursive=True):
         """Convert the Vector to an Nx1 column matrix.
 
         Parameters:
@@ -412,7 +412,7 @@ class Vector(Qube):
         return self.reshape_numer(self._numer + (1,), classes=Qube._MATRIX_CLASS,
                                   recursive=recursive)
 
-    def as_row(self, *, recursive=True):
+    def as_row(self, recursive=True):
         """Convert the Vector to a 1xN row matrix.
 
         Parameters:
@@ -425,7 +425,7 @@ class Vector(Qube):
         return self.reshape_numer((1,) + self._numer, classes=Qube._MATRIX_CLASS,
                                   recursive=recursive)
 
-    def as_diagonal(self, *, recursive=True):
+    def as_diagonal(self, recursive=True):
         """Convert the vector to a diagonal matrix.
 
         Parameters:
@@ -453,7 +453,7 @@ class Vector(Qube):
         arg = self.as_this_type(arg, recursive=recursive, coerce=False)
         return Qube.dot(self, arg, 0, 0, classes=[Scalar], recursive=recursive)
 
-    def norm(self, *, recursive=True):
+    def norm(self, recursive=True):
         """Calculate the Euclidean length (magnitude) of this Vector.
 
         Parameters:
@@ -465,7 +465,7 @@ class Vector(Qube):
 
         return Qube.norm(self, 0, classes=[Scalar], recursive=recursive)
 
-    def norm_sq(self, *, recursive=True):
+    def norm_sq(self, recursive=True):
         """Calculate the squared length of this Vector.
 
         Parameters:
@@ -477,7 +477,7 @@ class Vector(Qube):
 
         return Qube.norm_sq(self, 0, classes=[Scalar], recursive=recursive)
 
-    def unit(self, *, recursive=True):
+    def unit(self, recursive=True):
         """Convert this vector to a unit vector (normalized to length 1).
 
         Parameters:
@@ -625,7 +625,7 @@ class Vector(Qube):
 
         return angle
 
-    def cross_product_as_matrix(self, *, recursive=True):
+    def cross_product_as_matrix(self, recursive=True):
         """Convert to a Matrix whose multiply equals a cross product with this vector.
 
         This method creates a 3x3 antisymmetric matrix that, when multiplied with another
@@ -1081,7 +1081,7 @@ class Vector(Qube):
     # Overrides of superclass operators
     ############################################################################
 
-    def __abs__(self, *, recursive=True):
+    def __abs__(self, recursive=True):
         """The Euclidean norm of this Vector.
 
         Parameters:

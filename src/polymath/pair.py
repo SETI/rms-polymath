@@ -122,7 +122,7 @@ class Pair(Vector):
         return Qube.from_scalars(x, y, recursive=recursive, readonly=readonly,
                                  classes=[Pair])
 
-    def swapxy(self, *, recursive=True):
+    def swapxy(self, recursive=True):
         """A pair object in which the first and second values are switched.
 
         Parameters:
@@ -155,7 +155,7 @@ class Pair(Vector):
 
         return obj
 
-    def rot90(self, *, recursive=True):
+    def rot90(self, recursive=True):
         """A pair object rotated 90 degrees about the origin, ``(x,y) -> (y,-x)``.
 
         Parameters:
@@ -186,7 +186,7 @@ class Pair(Vector):
 
         return obj
 
-    def angle(self, *, recursive=True):
+    def angle(self, recursive=True):
         """The polar angle of this Pair, from the **X**-axis toward the **Y**-axis.
 
         The returned value will always fall between zero and 2*pi.

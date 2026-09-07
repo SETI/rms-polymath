@@ -316,7 +316,7 @@ class Scalar(Qube):
 
         return result
 
-    def frac(self, *, recursive=True):
+    def frac(self, recursive=True):
         """An object containing the fractional components of all values.
 
         The returned object is an instance of the same subclass as this object.
@@ -352,7 +352,7 @@ class Scalar(Qube):
 
         return obj
 
-    def sin(self, *, recursive=True):
+    def sin(self, recursive=True):
         """The sine of each value.
 
         Parameters:
@@ -381,7 +381,7 @@ class Scalar(Qube):
 
         return obj
 
-    def cos(self, *, recursive=True):
+    def cos(self, recursive=True):
         """The cosine of each value.
 
         Parameters:
@@ -410,7 +410,7 @@ class Scalar(Qube):
 
         return obj
 
-    def tan(self, *, recursive=True):
+    def tan(self, recursive=True):
         """The tangent of each value.
 
         Parameters:
@@ -561,7 +561,7 @@ class Scalar(Qube):
 
         return obj
 
-    def arctan(self, *, recursive=True):
+    def arctan(self, recursive=True):
         """The arctangent of each value.
 
         Parameters:
@@ -1736,7 +1736,7 @@ class Scalar(Qube):
     # Other operators
     ######################################################################################
 
-    def __abs__(self, *, recursive=True):
+    def __abs__(self, recursive=True):
         """``abs(self)``, element-by-element absolute value.
 
         This is an override of :meth:`Qube.__abs__`.
@@ -1762,7 +1762,7 @@ class Scalar(Qube):
 
         return obj
 
-    def abs(self, *, recursive=True):
+    def abs(self, recursive=True):
         """Element-by-element absolute value.
 
         Parameters:
@@ -1776,7 +1776,7 @@ class Scalar(Qube):
 
         return self.__abs__(recursive=recursive)
 
-    def _power_0(self, *, recursive=True):
+    def _power_0(self, recursive=True):
         """This scalar raised to the power of 0.
 
         Parameters:
@@ -1795,7 +1795,7 @@ class Scalar(Qube):
                                                 mask=deriv._mask))
         return x
 
-    def _power_1(self, *, recursive=True):
+    def _power_1(self, recursive=True):
         """This scalar raised to the power of 1.
 
         Parameters:
@@ -1807,7 +1807,7 @@ class Scalar(Qube):
 
         return self if recursive else self.wod
 
-    def _power_2(self, *, recursive=True):
+    def _power_2(self, recursive=True):
         """This scalar raised to the power of 2.
 
         Parameters:
@@ -1827,7 +1827,7 @@ class Scalar(Qube):
 
         return result
 
-    def _power_3(self, *, recursive=True):
+    def _power_3(self, recursive=True):
         """This scalar raised to the power of 3.
 
         Parameters:
@@ -1849,7 +1849,7 @@ class Scalar(Qube):
 
         return result
 
-    def _power_4(self, *, recursive=True):
+    def _power_4(self, recursive=True):
         """This scalar raised to the power of 4.
 
         Parameters:
@@ -1871,7 +1871,7 @@ class Scalar(Qube):
 
         return result
 
-    def _power_neg_1(self, *, recursive=True):
+    def _power_neg_1(self, recursive=True):
         """This scalar raised to the power of -1.
 
         Parameters:
@@ -1883,7 +1883,7 @@ class Scalar(Qube):
 
         return self.reciprocal(recursive=recursive)
 
-    def _power_half(self, *, recursive=True):
+    def _power_half(self, recursive=True):
         """This scalar raised to the power of 1/2.
 
         Parameters:
@@ -1895,7 +1895,7 @@ class Scalar(Qube):
 
         return self.sqrt(recursive=recursive)
 
-    def _power_neg_half(self, *, recursive=True):
+    def _power_neg_half(self, recursive=True):
         """This scalar raised to the power of -1/2.
 
         Parameters:

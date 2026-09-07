@@ -54,7 +54,7 @@ def reshape(self, shape, *, recursive=True):
     return obj
 
 
-def flatten(self, *, recursive=True):
+def flatten(self, recursive=True):
     """A shallow copy of the object flattened to one dimension.
 
     Parameters:

@@ -24,7 +24,7 @@ __all__ = ['abs', 'all', 'all_true_or_masked', 'any', 'any_true_or_masked', 'ide
 # Unary operators
 ##########################################################################################
 
-def __pos__(self, *, recursive=True):
+def __pos__(self, recursive=True):
     """``+self``, element by element.
 
     Parameters:
@@ -37,7 +37,7 @@ def __pos__(self, *, recursive=True):
     return self.clone(recursive=recursive)
 
 
-def __neg__(self, *, recursive=True):
+def __neg__(self, recursive=True):
     """``-self``, element-by-element negation.
 
     Parameters:
@@ -59,7 +59,7 @@ def __neg__(self, *, recursive=True):
     return obj
 
 
-def __abs__(self, *, recursive=True):
+def __abs__(self, recursive=True):
     """``abs(self)``, element-by-element absolute value.
 
     Parameters:

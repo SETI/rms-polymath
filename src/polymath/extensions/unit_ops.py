@@ -45,7 +45,7 @@ def set_unit(self, unit, *, override=False):
     self._cache.clear()
 
 
-def without_unit(self, *, recursive=True):
+def without_unit(self, recursive=True):
     """A shallow copy of this object without units.
 
     A read-only object remains read-only. If `recursive` is True, derivatives are also
@@ -74,7 +74,7 @@ def without_unit(self, *, recursive=True):
     return obj
 
 
-def into_unit(self, *, recursive=False):
+def into_unit(self, recursive=False):
     """The values property of this object, converted to its unit.
 
     This method converts values from standard units (kilometers, seconds, radians) to

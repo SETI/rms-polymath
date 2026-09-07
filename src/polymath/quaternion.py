@@ -137,7 +137,7 @@ class Quaternion(Vector):
 
         return obj
 
-    def to_parts(self, *, recursive=True):
+    def to_parts(self, recursive=True):
         """Split the Quaternion into its scalar and vector components.
 
         Parameters:
@@ -177,7 +177,7 @@ class Quaternion(Vector):
         vector = (half_angle.sin() / vector.norm()) * vector
         return Quaternion.from_parts(scalar, vector)
 
-    def to_rotation(self, *, recursive=True):
+    def to_rotation(self, recursive=True):
         """Extract the rotation angle and unit vector defined by this Quaternion.
 
         Parameters:
@@ -194,7 +194,7 @@ class Quaternion(Vector):
 
         return (angle, vector/sin_half_angle)
 
-    def conj(self, *, recursive=True):
+    def conj(self, recursive=True):
         """The complex conjugate of this quaternion.
 
         The conjugate of a quaternion ``[s, v]`` is ``[s, -v]``.
@@ -710,7 +710,7 @@ class Quaternion(Vector):
         # Multiply by the reciprocal
         return self.__mul__(arg.reciprocal(recursive=recursive), recursive=recursive)
 
-    def reciprocal(self, *, recursive=True):
+    def reciprocal(self, recursive=True):
         """The reciprocal of this quaternion.
 
         Parameters:

@@ -173,7 +173,7 @@ class Vector3(Vector):
         else:
             return Scalar.as_scalar(length, recursive=recursive) * result
 
-    def to_ra_dec_length(self, *, recursive=True):
+    def to_ra_dec_length(self, recursive=True):
         """A tuple (ra, dec, length) derived from this Vector3.
 
         Parameters:
@@ -224,7 +224,7 @@ class Vector3(Vector):
 
         return Vector3.from_scalars(x, y, z, recursive=recursive)
 
-    def to_cylindrical(self, *, recursive=True):
+    def to_cylindrical(self, recursive=True):
         """A tuple `(radius, longitude, z)` from this Vector3.
 
         Parameters:
@@ -244,7 +244,7 @@ class Vector3(Vector):
 
         return (radius, longitude, z)
 
-    def longitude(self, *, recursive=True):
+    def longitude(self, recursive=True):
         """The longitude (azimuthal angle) of this Vector3.
 
         Parameters:
@@ -260,7 +260,7 @@ class Vector3(Vector):
         y = self.to_scalar(1, recursive=recursive)
         return y.arctan2(x) % Scalar.TWOPI
 
-    def latitude(self, *, recursive=True):
+    def latitude(self, recursive=True):
         """The latitude (elevation angle) of this Vector3.
 
         Parameters:
