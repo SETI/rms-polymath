@@ -64,11 +64,11 @@ def _shape_args(alias: Any) -> tuple[Any, ...]:
 
 
 def test_all_names_every_public_alias() -> None:
-    """The public names are exactly the eleven aliases, and each is a union."""
+    """The public names are exactly the twelve aliases, and each is a union."""
 
-    expected = ['BooleanLike', 'MaskType', 'Matrix3Like', 'MatrixLike', 'PairLike',
-                'QuaternionLike', 'QubeLike', 'ScalarLike', 'ValsType', 'Vector3Like',
-                'VectorLike']
+    expected = ['BooleanLike', 'IntValsType', 'MaskType', 'Matrix3Like', 'MatrixLike',
+                'PairLike', 'QuaternionLike', 'QubeLike', 'ScalarLike', 'ValsType',
+                'Vector3Like', 'VectorLike']
     assert typedefs.__all__ == expected
 
     public_unions = sorted(name for name in dir(typedefs)

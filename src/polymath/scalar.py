@@ -168,8 +168,7 @@ class Scalar(Qube):
                 applied.
 
         Returns:
-            tuple[numpy.ndarray | int, numpy.ndarray | bool]: The integer index and
-            the boolean mask.
+            tuple[IntValsType, MaskType]: The integer index and the boolean mask.
 
         Raises:
             IndexError: If this object contains floating-point values.
@@ -688,7 +687,7 @@ class Scalar(Qube):
                 the returned object.
             check (bool, optional): True to mask out the locations of any values <= 0
                 before taking the log. If False, a ValueError will be raised any value <=
-                0 is encountered. ``Check=True`` is slightly faster if we already know at
+                0 is encountered. ``check=True`` is slightly faster if we already know at
                 the time of the call that all input values are valid. Defaults to True.
 
         Returns:
@@ -1562,7 +1561,7 @@ class Scalar(Qube):
     ######################################################################################
 
     def __le__(self, arg, *, builtins=True):
-        """`self <= arg`, element-by-element "less than or equal".
+        """``self <= arg``, element-by-element "less than or equal".
 
         This is an override of :meth:`Qube.__le__`.
 
@@ -1575,10 +1574,13 @@ class Scalar(Qube):
             Boolean or bool: True where this scalar is less than or equal to the argument.
 
         Raises:
+            ValueError: If either object has denominators.
             ValueError: If the shapes or units are incompatible.
         """
 
         arg = Scalar.as_scalar(arg)
+        self._disallow_denom('<=')
+        arg._disallow_denom('<=')
         self._require_compatible_units(arg)
         compare = (self._values <= arg._values)
 
@@ -1595,7 +1597,7 @@ class Scalar(Qube):
         return result
 
     def __lt__(self, arg, *, builtins=True):
-        """`self < arg`, element-by-element "less than".
+        """``self < arg``, element-by-element "less than".
 
         This is an override of :meth:`Qube.__lt__`.
 
@@ -1608,10 +1610,13 @@ class Scalar(Qube):
             Boolean or bool: True where this scalar is less than the argument.
 
         Raises:
+            ValueError: If either object has denominators.
             ValueError: If the shapes or units are incompatible.
         """
 
         arg = Scalar.as_scalar(arg)
+        self._disallow_denom('<')
+        arg._disallow_denom('<')
         self._require_compatible_units(arg)
         compare = (self._values < arg._values)
 
@@ -1628,7 +1633,7 @@ class Scalar(Qube):
         return result
 
     def __ge__(self, arg, *, builtins=True):
-        """`self >= arg`, element-by-element "less than or equal".
+        """``self >= arg``, element-by-element "greater than or equal".
 
         This is an override of :meth:`Qube.__ge__`.
 
@@ -1642,10 +1647,13 @@ class Scalar(Qube):
             argument.
 
         Raises:
+            ValueError: If either object has denominators.
             ValueError: If the shapes or units are incompatible.
         """
 
         arg = Scalar.as_scalar(arg)
+        self._disallow_denom('>=')
+        arg._disallow_denom('>=')
         self._require_compatible_units(arg)
         compare = (self._values >= arg._values)
 
@@ -1662,7 +1670,7 @@ class Scalar(Qube):
         return result
 
     def __gt__(self, arg, *, builtins=True):
-        """`self > arg`, element-by-element "greater than".
+        """``self > arg``, element-by-element "greater than".
 
         This is an override of :meth:`Qube.__gt__`.
 
@@ -1675,10 +1683,13 @@ class Scalar(Qube):
             Boolean or bool: True where this scalar is greater than the argument.
 
         Raises:
+            ValueError: If either object has denominators.
             ValueError: If the shapes or units are incompatible.
         """
 
         arg = Scalar.as_scalar(arg)
+        self._disallow_denom('>')
+        arg._disallow_denom('>')
         self._require_compatible_units(arg)
         compare = (self._values > arg._values)
 

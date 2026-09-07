@@ -27,9 +27,9 @@ import numpy as np
 
 from polymath import Qube
 
-__all__ = ['BooleanLike', 'MaskType', 'Matrix3Like', 'MatrixLike', 'PairLike',
-           'QuaternionLike', 'QubeLike', 'ScalarLike', 'ValsType', 'Vector3Like',
-           'VectorLike']
+__all__ = ['BooleanLike', 'IntValsType', 'MaskType', 'Matrix3Like', 'MatrixLike',
+           'PairLike', 'QuaternionLike', 'QubeLike', 'ScalarLike', 'ValsType',
+           'Vector3Like', 'VectorLike']
 
 # Float arrays with the specified lower limit on dimensions and/or trailing axes
 _Array  : TypeAlias = np.ndarray[tuple[int, ...],
@@ -47,8 +47,9 @@ _Array4 : TypeAlias = np.ndarray[tuple[*tuple[int, ...], Literal[4]],
 _Array33: TypeAlias = np.ndarray[tuple[*tuple[int, ...], Literal[3], Literal[3]],
                                  np.dtype[np.number[Any] | np.bool_]]
 
-# A boolean array
-_BoolArray : TypeAlias = np.ndarray[tuple[int, ...], np.dtype[np.bool_]]
+# Typed arrays
+_BoolArray: TypeAlias = np.ndarray[tuple[int, ...], np.dtype[np.bool_]]
+_IntArray : TypeAlias = np.ndarray[tuple[int, ...], np.dtype[np.integer[Any]]]
 
 # Numeric ArrayLike type, described by a protocol rather than by list and tuple because
 # both are invariant in their member type: a list[float] does not match a list whose
@@ -118,5 +119,9 @@ ValsType: TypeAlias = _Scalar | _Array
 
 MaskType: TypeAlias = bool | np.bool_ | _BoolArray
 """Any value that might occupy the `.mask` attribute if a Qube."""
+
+IntValsType: TypeAlias = int | _IntArray
+"""Any value that might occupy the `.vals` attribute if a Qube and must also be integral.
+"""
 
 ##########################################################################################

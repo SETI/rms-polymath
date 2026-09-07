@@ -39,7 +39,8 @@ def shrink(self, antimask):
             to be discarded. A scalar True or False applies to the entire object.
 
     Returns:
-        Qube: A shrunken, read-only version of this object.
+        Qube: A shrunken, read-only version of this object, of the same class as `self`.
+        If no shrinking is needed, `self` is returned.
     """
 
     # For testing only...

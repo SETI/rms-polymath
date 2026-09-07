@@ -176,7 +176,8 @@ def _zero_sized_result(self, axis):
     """A zero-sized result obtained by collapsing one or more axes.
 
     Parameters:
-        axis (int | tuple[int, ...]): The axis or axes to collapse.
+        axis (int | tuple[int, ...] | None): The axis or axes to collapse; None to
+            collapse every axis.
 
     Returns:
         Qube: A zero-sized result with the specified axes collapsed.

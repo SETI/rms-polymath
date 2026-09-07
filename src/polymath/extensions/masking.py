@@ -109,7 +109,7 @@ def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
             that of the given shape.
         invert (bool, optional): True to return the logical not of the mask.
         masked_value (bool, optional): The value to use where the input argument is
-            nmasked. This value is used _after_ `invert` is applied.
+            masked. This value is used _after_ `invert` is applied.
         check (bool, optional): True to check for an array containing all False values,
             and if so, replace it with a single value of False.
         opstr (str, optional): Name of operation to include in any error message.

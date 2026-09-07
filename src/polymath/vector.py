@@ -132,7 +132,7 @@ class Vector(Qube):
         two components of a Vector very efficiently.
 
         Parameters:
-            axes (tuple[int, ...], optional): Indices of the two components to extract,
+            axes (tuple[int, int], optional): Indices of the two components to extract,
                 positive or negative.
             recursive (bool, optional): If True, include derivatives in the result.
 
@@ -735,7 +735,7 @@ class Vector(Qube):
 
         return obj
 
-    def element_div(self, arg, recursive=True):
+    def element_div(self, arg, *, recursive=True):
         """Perform element-by-element division of two vectors.
 
         Parameters:
@@ -817,7 +817,7 @@ class Vector(Qube):
 
         return obj
 
-    def vector_scale(self, factor, recursive=True):
+    def vector_scale(self, factor, *, recursive=True):
         """Stretch this Vector along a direction defined by a scaling vector.
 
         Components of the vector perpendicular to the scaling vector are unchanged. The
@@ -841,7 +841,7 @@ class Vector(Qube):
         else:
             return self.wod + (projected.norm() - 1) * projected
 
-    def vector_unscale(self, factor, recursive=True):
+    def vector_unscale(self, factor, *, recursive=True):
         """Un-stretch this Vector along a direction defined by a scaling vector.
 
         Components of the vector perpendicular to the scaling vector are unchanged.
@@ -910,7 +910,7 @@ class Vector(Qube):
 
         return cls(data, mask)
 
-    def mask_where_component_le(self, axis, limit, replace=None, remask=True):
+    def mask_where_component_le(self, axis, limit, *, replace=None, remask=True):
         """A copy with masked values where a component is <= a limit.
 
         Creates a copy of this object where values of a specified component that
@@ -934,7 +934,7 @@ class Vector(Qube):
         scalar = self.to_scalar(axis)
         return self.mask_where(scalar <= limit, replace=replace, remask=remask)
 
-    def mask_where_component_ge(self, axis, limit, replace=None, remask=True):
+    def mask_where_component_ge(self, axis, limit, *, replace=None, remask=True):
         """A copy with masked values where a component is >= a limit.
 
         Creates a copy of this object where values of a specified component that
@@ -958,7 +958,7 @@ class Vector(Qube):
         scalar = self.to_scalar(axis)
         return self.mask_where(scalar >= limit, replace=replace, remask=remask)
 
-    def mask_where_component_lt(self, axis, limit, replace=None, remask=True):
+    def mask_where_component_lt(self, axis, limit, *, replace=None, remask=True):
         """A copy with masked values where a component is < a limit.
 
         Creates a copy of this object where values of a specified component that
@@ -981,7 +981,7 @@ class Vector(Qube):
         scalar = self.to_scalar(axis)
         return self.mask_where(scalar < limit, replace=replace, remask=remask)
 
-    def mask_where_component_gt(self, axis, limit, replace=None, remask=True):
+    def mask_where_component_gt(self, axis, limit, *, replace=None, remask=True):
         """A copy with masked values where a component is > a limit.
 
         Creates a copy of this object where values of a specified component that
@@ -1005,7 +1005,7 @@ class Vector(Qube):
         scalar = self.to_scalar(axis)
         return self.mask_where(scalar > limit, replace=replace, remask=remask)
 
-    def clip_component(self, axis, lower, upper, remask=False):
+    def clip_component(self, axis, lower, upper, *, remask=False):
         """A copy with component values clipped to specified range.
 
         Creates a copy of this object where values of a specified component that are
@@ -1014,10 +1014,10 @@ class Vector(Qube):
 
         Parameters:
             axis (int): The index of the component to use for comparison.
-            lower (ScalarLike): The lower limit for clipping; None to ignore. This can be
-                a single scalar or a Scalar object of the same shape as the object.
-            upper (ScalarLike): The upper limit for clipping; None to ignore. This can be
-                a single scalar or a Scalar object of the same shape as the object.
+            lower (ScalarLike | None): The lower limit for clipping; None to ignore. This
+                can be a single scalar or a Scalar object of the same shape as the object.
+            upper (ScalarLike | None): The upper limit for clipping; None to ignore. This
+                can be a single scalar or a Scalar object of the same shape as the object.
             remask (bool, optional): True to mask the clipped values in the object's mask;
                 False to replace the values but leave them unmasked.
 
@@ -1070,7 +1070,7 @@ class Vector(Qube):
     # Overrides of superclass operators
     ############################################################################
 
-    def __abs__(self, recursive=True):
+    def __abs__(self, *, recursive=True):
         """The Euclidean norm of this Vector.
 
         Parameters:
@@ -1091,7 +1091,7 @@ class Vector(Qube):
 
         Qube._raise_unsupported_op('identity()', self)
 
-    def reciprocal(self, nozeros=False):
+    def reciprocal(self, *, nozeros=False):
         """The reciprocal of this Vector as a Jacobian..
 
         This Vector must be a Jacobian, i.e., the derivative of one Vector with respect to

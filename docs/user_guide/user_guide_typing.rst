@@ -47,6 +47,9 @@ is broader than the class itself.
    * - :data:`~polymath.typedefs.MaskType`
      - Anything the :attr:`~polymath.Qube.mask` property can return: a boolean or a
        boolean NumPy array.
+   * - :data:`~polymath.typedefs.IntValsType`
+     - The integral subset of :data:`~polymath.typedefs.ValsType`: an integer or an
+       integer NumPy array.
 
 Using an Alias
 ==============

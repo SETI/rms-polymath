@@ -553,8 +553,9 @@ class Matrix3(Matrix):
             Qube: The result of the multiplication.
 
         Raises:
-            ValueError: If multiplication with the given `arg` type is not supported or if
-                shapes are incompatible.
+            TypeError: If the type of `arg` is not supported for multiplication.
+            ValueError: If `arg` is array-like and its item shape is incompatible, or if
+                the object shapes are incompatible.
         """
 
         # Convert arg to a Scalar if necessary
@@ -586,8 +587,9 @@ class Matrix3(Matrix):
             Qube: The result of the multiplication.
 
         Raises:
-            ValueError: If multiplication with the given `arg` type is not supported or if
-                shapes are incompatible.
+            TypeError: If the type of `arg` is not supported for multiplication.
+            ValueError: If `arg` is array-like and its item shape is incompatible, or if
+                the object shapes are incompatible.
         """
 
         # Attempt a conversion to Matrix3
@@ -612,8 +614,9 @@ class Matrix3(Matrix):
             Matrix3: This object overwritten, the result of the multiplication.
 
         Raises:
-            ValueError: If `arg` cannot be converted to a Matrix3, if shapes are
-                incompatible, or if this Matrix3 is not writeable.
+            TypeError: If the type of `arg` is not supported for multiplication.
+            ValueError: If `arg` is array-like and its item shape is incompatible, if the
+                object shapes are incompatible, or if this Matrix3 is not writeable.
         """
 
         self.require_writeable()

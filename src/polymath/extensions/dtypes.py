@@ -527,7 +527,7 @@ def as_float(self, *, recursive=True, copy=False, builtins=False):
             shape (), is unmasked, and has no derivatives.
 
     Returns:
-        Qube: The result.
+        Qube | float: The result.
 
     Raises:
         TypeError: If this object cannot contain floats.
@@ -641,8 +641,8 @@ def as_bool(self, *, copy=False, builtins=False):
             shape (), is unmasked, and has no derivatives.
 
     Returns:
-        Qube: A copy of object converted to bools; if the values are already bools and
-            `copy` is False, this object is returned unchanged.
+        Qube | bool: A copy of object converted to bools; if the values are already bools
+        and `copy` is False, this object is returned unchanged.
 
     Raises:
         TypeError: If this object cannot contain bools.

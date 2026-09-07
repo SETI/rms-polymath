@@ -309,8 +309,9 @@ def as_size_zero(self, axis=0, *, recursive=True):
     """A shallow, read-only copy of this object with size zero.
 
     Parameters:
-        axis (int, optional): The axis index (positive or negative) to collapse to length
-            zero; the other axes are left unchanged. Use None for an object of shape (0,).
+        axis (int | None, optional): The axis index (positive or negative) to collapse to
+            length zero; the other axes are left unchanged. Use None for an object of
+            shape (0,).
         recursive (bool, optional): True to include the derivatives, each also reduced to
             size zero.
 

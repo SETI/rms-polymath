@@ -1615,33 +1615,32 @@ def test_scalar_ops_reciprocal_disallows_denominators() -> None:
         a.reciprocal()
 
 
-@pytest.mark.parametrize(('func', 'expected'),
-                         [(operator.lt, [[False, True ], [False, False]]),
-                          (operator.le, [[True , True ], [False, True ]]),
-                          (operator.gt, [[False, False], [True , False]]),
-                          (operator.ge, [[True , False], [True , True ]])],
+@pytest.mark.parametrize(('func', 'symbol'),
+                         [(operator.lt, '<'), (operator.le, '<='),
+                          (operator.gt, '>'), (operator.ge, '>=')],
                          ids=['lt', 'le', 'gt', 'ge'])
-def test_scalar_ops_comparisons_allow_denominators(
-        func: Callable[[Scalar, Scalar], Boolean],
-        expected: list[list[bool]]) -> None:
-    """The ordering comparisons compare denominator items element by element."""
+def test_scalar_ops_comparisons_disallow_a_denominator_on_the_left(
+        func: Callable[[Scalar, Scalar], Boolean], symbol: str) -> None:
+    """The ordering comparisons reject a denominator in the left operand."""
 
     a = Scalar([[1., 2.], [3., 4.]], drank=1)
+    b = Scalar([1., 2.])
+    with pytest.raises(ValueError, match=f'Scalar "{symbol}" does not support denom'):
+        func(a, b)
+
+
+@pytest.mark.parametrize(('func', 'symbol'),
+                         [(operator.lt, '<'), (operator.le, '<='),
+                          (operator.gt, '>'), (operator.ge, '>=')],
+                         ids=['lt', 'le', 'gt', 'ge'])
+def test_scalar_ops_comparisons_disallow_a_denominator_on_the_right(
+        func: Callable[[Scalar, Scalar], Boolean], symbol: str) -> None:
+    """The ordering comparisons reject a denominator in the right operand."""
+
+    a = Scalar([1., 2.])
     b = Scalar([[1., 5.], [0., 4.]], drank=1)
-    result = func(a, b)
-    assert result.values.tolist() == expected
-
-
-@pytest.mark.parametrize('func', [operator.lt, operator.le, operator.gt, operator.ge],
-                         ids=['lt', 'le', 'gt', 'ge'])
-def test_scalar_ops_comparisons_fold_denominators_into_the_shape(
-        func: Callable[[Scalar, Scalar], Boolean]) -> None:
-    """A comparison of items with denominators returns a Boolean with no denominator."""
-
-    a = Scalar([[1., 2.], [3., 4.]], drank=1)
-    result = func(a, a)
-    assert result.shape == (2, 2)
-    assert result.denom == ()
+    with pytest.raises(ValueError, match=f'Scalar "{symbol}" does not support denom'):
+        func(a, b)
 
 
 def test_scalar_ops_power_zero_without_derivatives() -> None:

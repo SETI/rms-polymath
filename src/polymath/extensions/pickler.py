@@ -218,9 +218,9 @@ def pickle_digits(self):
     derivatives.
 
     Returns:
-        tuple[str | float | int, str | float | int]: The setting for this object and
-        the one for its derivatives, each either "double", "single", or a number of
-        digits roughly in the range 7-16.
+        tuple[str | float | int, str | float | int]: The setting for this object and the
+        one for its derivatives, each either "double", "single", or a number of digits
+        roughly in the range 7-16.
     """
 
     if not hasattr(self, '_pickle_digits') or self._pickle_digits is None:
@@ -234,9 +234,9 @@ def pickle_reference(self):
     precision in this object and its derivatives.
 
     Returns:
-        tuple[str | float | int, str | float | int]: The setting for this object and
-        the one for its derivatives, each either "fpzip", "smallest", "largest",
-        "mean", "median", "logmean", or a number.
+        tuple[str | float | int, str | float | int]: The setting for this object and the
+        one for its derivatives, each either "fpzip", "smallest", "largest", "mean",
+        "median", "logmean", or a number.
     """
 
     if (not hasattr(self, '_pickle_reference')
@@ -635,8 +635,11 @@ def _encode_floats(values, rank, digits, reference):
     A tuple is returned in one of these forms::
 
         ('literal', array)
-        ('float64', shape, fpzipped array)
-        ('float32', shape, fpzipped array)
+        ('float64', shape, zeroed bits, fpzipped array)
+        ('float32', shape, zeroed bits, fpzipped array)
+        ('fpzip', shape, zeroed bits, fpzipped array)
+            where:
+                zeroed bits is the number of low-order mantissa bits discarded
         ('constant', shape, single value)
         ('scaled', shape, dtype, nbytes, scale_factor, offset, bz-compressed
                    unsigned ints)

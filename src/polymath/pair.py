@@ -256,8 +256,8 @@ class Pair(Vector):
 
         # Clip...
         result = self
-        result = result.clip_component(0, lower0, upper0, remask)
-        result = result.clip_component(1, lower1, upper1, remask)
+        result = result.clip_component(0, lower0, upper0, remask=remask)
+        result = result.clip_component(1, lower1, upper1, remask=remask)
         return result
 
 ##########################################################################################

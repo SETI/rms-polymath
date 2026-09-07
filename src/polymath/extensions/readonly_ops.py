@@ -173,20 +173,22 @@ def copy(self, *, recursive=True, readonly=False):
     Parameters:
         recursive (bool, optional): True to copy the derivatives; False, to return an
             object without derivatives.
-        readonly (bool, optional): True to return a read-only copy, or this object if it
-            is already read-only. Otherwise, this return is guaranteed to be an entirely
-            new copy, independent of this object and suitable for modification.
+        readonly (bool, optional): True to return a read-only copy; if this object is
+            already read-only, the return is a shallow copy, which shares this object's
+            arrays rather than duplicating them. Otherwise, this return is guaranteed to
+            be an entirely new copy, independent of this object and suitable for
+            modification.
 
     Returns:
         Qube: A copy of this object.
     """
 
+    # Copying a readonly object is easy, because nothing in it can be modified
+    if self._readonly and readonly:
+        return self.clone(recursive=recursive)
+
     # Create a shallow copy
     obj = self.clone(recursive=False)
-
-    # Copying a readonly object is easy
-    if self._readonly and readonly:
-        return obj
 
     # Copy the values
     if self._is_array:

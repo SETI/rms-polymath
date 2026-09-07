@@ -1412,7 +1412,7 @@ def __eq__(self, /, arg):
     """``self == arg``, element by element.
 
     Parameters:
-        arg (QubeLike): The exponent.
+        arg (Any): The object to compare with `self`.
 
     Returns:
         Boolean: True where the elements are equal.
@@ -1458,7 +1458,7 @@ def __ne__(self, /, arg):
     """``self != arg``, element-by-element inequality.
 
     Parameters:
-        arg (QubeLike): The exponent.
+        arg (Any): The object to compare with `self`.
 
     Returns:
         Boolean: True where the elements are not equal.
@@ -1512,7 +1512,7 @@ def __le__(self, /, arg):
     :meth:`Scalar.__le__` and :meth:`Boolean.__le__`.
 
     Parameters:
-        arg (QubeLike): The argument.
+        arg (Any): The object to compare with `self`.
 
     Returns:
         Boolean: True where the elements of self are less or equal.
@@ -1531,7 +1531,7 @@ def __lt__(self, /, arg):
     :meth:`Scalar.__lt__` and :meth:`Boolean.__lt__`.
 
     Parameters:
-        arg (QubeLike): The argument.
+        arg (Any): The object to compare with `self`.
 
     Returns:
         Boolean: True where the elements of self are less.
@@ -1550,7 +1550,7 @@ def __ge__(self, /, arg):
     :meth:`Scalar.__ge__` and :meth:`Boolean.__ge__`.
 
     Parameters:
-        arg (QubeLike): The argument.
+        arg (Any): The object to compare with `self`.
 
     Returns:
         Boolean: True where the elements of self are greater or equal.
@@ -1569,7 +1569,7 @@ def __gt__(self, /, arg):
     :meth:`Scalar.__gt__` and :meth:`Boolean.__gt__`.
 
     Parameters:
-        arg (QubeLike): The argument.
+        arg (Any): The object to compare with `self`.
 
     Returns:
         Boolean: True where the elements of self are greater.
@@ -1582,25 +1582,24 @@ def __gt__(self, /, arg):
 
 
 def __bool__(self):
-    """True if nonzero, otherwise False, element by element.
-
-    This method also supports "if a == b: ..." and "if a != b: ..." statements using the
-    internal attributes _truth_if_all and _truth_if_any. These attributes are set by
-    the __eq__() and __ne__() methods respectively. When _truth_if_all is True (set by
-    __eq__()), the result is True only if all unmasked elements are True. When
-    _truth_if_any is True (set by __ne__()), the result is True if any unmasked element
-    is True.
-
-    In this case, equality requires that every unmasked element of a and b be equal and
-    both objects be masked at the same locations.
-
-    Comparison of objects of shape () is also supported.
-
-    Any other if-test involving PolyMath objects requires an explict call to all() or
-    any().
+    """True if nonzero, otherwise False.
 
     Returns:
-        Boolean: True where the elements of self are nonzero or True.
+        bool: True if the elements of self are nonzero or True.
+
+    Notes:
+        This method also supports ``if a == b: ...`` and ``if a != b: ...`` statements
+        using the internal attributes `_truth_if_all` and `_truth_if_any`. These
+        attributes are set by the `__eq__()` and `__ne__()` methods respectively. When
+        `_truth_if_all` is True (set by `__eq__()`), the result is True only if all
+        unmasked elements are True. When `_truth_if_any` is True (`set by __ne__()`), the
+        result is True if any unmasked element is True. In this case, equality requires
+        that every unmasked element of ``a`` and ``b`` be equal and both objects be masked
+        at the same locations. Comparison of objects with ``shape == ()`` is also
+        supported.
+
+        Any other if-test involving PolyMath objects requires an explict call to `all()`
+        or `any()`.
     """
 
     if self._truth_if_all:          # this is the result of __eq__()
@@ -1879,11 +1878,11 @@ def any(self, axis=None, *, builtins=None, masked=None, out=None):
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
             of Boolean. Default is to use the global setting defined by
-            Qube.prefer_builtins().
+            :meth:`~polymath.Qube.prefer_builtins`.
         masked (bool | None, optional): The value to return if `builtins` is True but the
             returned value is masked. Default is to return a masked Boolean instead of a
             builtin type in this case.
-        out (Any | None, optional): Ignored. This enables "np.any(Qube)" to work.
+        out (Any | None, optional): Ignored. This enables ``np.any(Qube)`` to work.
 
     Returns:
         Boolean or bool: Result of operation.
@@ -1918,18 +1917,18 @@ def all(self, axis=None, *, builtins=None, masked=None, out=None):
     """True if all the unmasked items are nonzero.
 
     Parameters:
-        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The any
+        axis (int | tuple[int, ...] | None, optional): Axis or a tuple of axes. The `all`
             operation is performed across these axes, leaving any remaining axes in the
             returned value. If None (the default), then the any operation is performed
             across all axes of the object.
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
             of Boolean. Default is to use the global setting defined by
-            Qube.prefer_builtins().
+            :meth:`~polymath.Qube.prefer_builtins`.
         masked (bool | None, optional): The value to return if `builtins` is True but the
             returned value is masked. Default is to return a masked Boolean instead of a
             builtin type in this case.
-        out (Any | None, optional): Ignored. This enables "np.any(Qube)" to work.
+        out (Any | None, optional): Ignored. This enables ``np.all(Qube)`` to work.
 
     Returns:
         Boolean | bool: True if every unmasked element is nonzero.
@@ -1974,7 +1973,7 @@ def any_true_or_masked(self, axis=None, *, builtins=None):
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
             of Boolean. Default is to use the global setting defined by
-            Qube.prefer_builtins().
+            :meth:`~polymath.Qube.prefer_builtins`.
 
     Returns:
         Boolean | bool: True if any element is nonzero or masked.
@@ -2017,7 +2016,7 @@ def all_true_or_masked(self, axis=None, *, builtins=None):
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
             of Boolean. Default is to use the global setting defined by
-            Qube.prefer_builtins().
+            :meth:`~polymath.Qube.prefer_builtins`.
 
     Returns:
         Boolean | bool: True if every element is nonzero or masked.
@@ -2124,7 +2123,7 @@ def sum(self, axis=None, *, recursive=True, builtins=None, masked=None, out=None
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
             of Boolean. Default is to use the global setting defined by
-            Qube.prefer_builtins().
+            :meth:`~polymath.Qube.prefer_builtins`.
         masked (bool | None, optional): The value to return if `builtins` is True but the
             returned value is masked. Default is to return a masked value instead of a
             builtin type.
@@ -2160,7 +2159,7 @@ def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=N
         builtins (bool | None, optional): If True and the result is a single unmasked
             scalar, the result is returned as a Python boolean instead of as an instance
             of Boolean. Default is to use the global setting defined by
-            Qube.prefer_builtins().
+            :meth:`~polymath.Qube.prefer_builtins`.
         masked (bool | None, optional): The value to return if `builtins` is True but the
             returned value is masked. Default is to return a masked value instead of a
             builtin type.

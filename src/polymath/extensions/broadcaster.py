@@ -127,6 +127,7 @@ def broadcast_to(self, shape, *, recursive=True, _protected=True):
     return obj
 
 
+@staticmethod
 def broadcasted_shape(*objects, item=()):
     """The shape defined by a broadcast across the objects.
 
@@ -191,6 +192,7 @@ def broadcasted_shape(*objects, item=()):
     return tuple(new_shape) + tuple(item)
 
 
+@staticmethod
 def broadcast(*objects, recursive=True, _protected=True):
     """Broadcast one or more objects to their common shape.
 

@@ -900,8 +900,7 @@ class Qube:
         This means "unshrunk" will be deleted from the cache if present.
         """
 
-        if 'unshrunk' in self._cache:
-            del self._cache['unshrunk']
+        _ = self._cache.pop('unshrunk', None)
 
     def _set_mask(self, mask, *, antimask=None, check=False):
         """Low-level method to update the mask of an array.
@@ -1150,12 +1149,12 @@ class Qube:
         return (tuple(lower), tuple(upper))
 
     @property
-    def corners(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
+    def corners(self) -> tuple[tuple[int, ...], tuple[int, ...]] | None:
         """Corners of a "hypercube" that contain all the unmasked array elements.
 
-        The first tuple defines the lower coordinates of the unmasked region and the
-        second defines the upper coordinates. The value is None if every element is
-        masked.
+        The first tuple defines the lower coordinates of the unmasked, N-dimensional
+        region and the second defines the upper coordinates (exclusive). The value is None
+        if every element is masked.
         """
 
         if not Qube._DISABLE_CACHE and 'corners' in self._cache:

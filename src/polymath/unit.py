@@ -1191,7 +1191,7 @@ class Unit:
         """Get the name of this Unit object.
 
         Returns:
-            str | dict or None: The name of this Unit object.
+            str: The name of this Unit object.
         """
 
         name = self.name or self.create_name()

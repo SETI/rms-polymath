@@ -803,8 +803,8 @@ class Quaternion(Vector):
 
         Example::
 
-            >>> q = quaternion_from_euler(1, 2, 3, 'ryxz')
-            >>> numpy.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])
+            >>> q = Quaternion.from_euler(1, 2, 3, 'ryxz')
+            >>> np.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])
             True
         """
 
