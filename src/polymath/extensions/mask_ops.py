@@ -27,7 +27,7 @@ def mask_where(self, mask, replace=None, *, remask=True, recursive=True):
 
     Parameters:
         mask (BooleanLike): The mask to apply as a boolean array.
-        replace (Any | None, optional): A single replacement value or an object of the
+        replace (Any, optional): A single replacement value or an object of the
             same shape and class as this object, containing replacement values. These are
             inserted into the returned object at every masked location. Use None to leave
             values unchanged.
@@ -186,7 +186,7 @@ def mask_where_eq(self, match, replace=None, *, remask=True):
 
     Parameters:
         match (Any): The item value to match.
-        replace (Any | None, optional): A single replacement value or an object of the
+        replace (Any, optional): A single replacement value or an object of the
             same shape and class as this object, containing replacement values. These are
             inserted into the returned object at every masked location. Use None to leave
             values unchanged.
@@ -209,7 +209,7 @@ def mask_where_ne(self, match, replace=None, *, remask=True):
 
     Parameters:
         match (Any): The item value to match.
-        replace (Any | None, optional): A single replacement value or an object of the
+        replace (Any, optional): A single replacement value or an object of the
             same shape and class as this object, containing replacement values. These are
             inserted into the returned object at every masked location. Use None to leave
             values unchanged.
@@ -266,7 +266,7 @@ def mask_where_le(self, limit, replace=None, *, remask=True):
 
     Parameters:
         limit (Any): The limiting value.
-        replace (Any | None, optional): A single replacement value or an object of the
+        replace (Any, optional): A single replacement value or an object of the
             same shape and class as this object, containing replacement values. These are
             inserted into the returned object at every masked location. Use None to leave
             values unchanged.
@@ -294,7 +294,7 @@ def mask_where_ge(self, limit, replace=None, *, remask=True):
 
     Parameters:
         limit (Any): The limiting value.
-        replace (Any | None, optional): A single replacement value or an object of the
+        replace (Any, optional): A single replacement value or an object of the
             same shape and class as this object, containing replacement values. These are
             inserted into the returned object at every masked location. Use None to leave
             values unchanged.
@@ -322,7 +322,7 @@ def mask_where_lt(self, limit, replace=None, *, remask=True):
 
     Parameters:
         limit (Any): The limiting value.
-        replace (Any | None, optional): A single replacement value or an object of the
+        replace (Any, optional): A single replacement value or an object of the
             same shape and class as this object, containing replacement values. These are
             inserted into the returned object at every masked location. Use None to leave
             values unchanged.
@@ -350,7 +350,7 @@ def mask_where_gt(self, limit, replace=None, *, remask=True):
 
     Parameters:
         limit (Any): The limiting value.
-        replace (Any | None, optional): A single replacement value or an object of the
+        replace (Any, optional): A single replacement value or an object of the
             same shape and class as this object, containing replacement values. These are
             inserted into the returned object at every masked location. Use None to leave
             values unchanged.

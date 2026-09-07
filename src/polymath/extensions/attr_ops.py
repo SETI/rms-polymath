@@ -30,7 +30,7 @@ def add_attr(self, name, value=None):
     Parameters:
         name (str): The name of the attribute, which must be a valid Python identifier and
             must not begin with "d_d".
-        value (Any | None, optional): The value of the attribute; None by default.
+        value (Any, optional): The value of the attribute; None by default.
 
     Returns:
         Qube: This object after the attribute has been added.
