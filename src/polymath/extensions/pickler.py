@@ -29,23 +29,30 @@ For each object, the user can define the floating-point compression method using
 compression method using :meth:`~polymath.Qube.set_default_pickle_digits`. The inputs to
 these functions are as follows:
 
-**digits** (`str | int`): The number of digits to preserve.
+`digits` (*str | int | float*): The number of digits to preserve.
 
 * "double": preserve full precision using lossless **fpzip** compression.
 * "single": convert the array to single precision and then store it using lossless
   **fpzip** compression.
-* an integer 7-16, defining the number of significant digits to preserve.
+* an integer or float defining the number of significant digits to preserve.
 
-**reference** (`str | float`): How to interpret a numeric value of **digits**.
+`reference` (*str | int | float*): How to interpret a numeric value of `digits`.
 
-* "fpzip": Use lossy **fpzip** compression, preserving the given number of digits.
+* "fpzip": Use lossy **fpzip** compression, preserving the given number of `digits`.
 * a number: Preserve every number to the exact same absolute precision, scaling the number
-  of **digits** by this value. For example, if **digits** = 8 and **reference** = 100,
-  all values will be rounded to the nearest 1.e-6 before storage. This method uses option
-  3 above, where values are converted to integers for storage.
+  of `digits` by this value. For example, if `digits=8` and `reference=100`, all values
+  will be rounded to the nearest 1.e-6 before storage. This method uses the third option
+  above. Internally, values are scaled to the required precision and then converted to
+  integers for storage.
 
-The remaining options for **reference** provide a variety of ways to allow a reference
-number to be generated automatically.
+Alternatively, it is possible to specify different compression rules for an object and its
+derivatives. In this case, the values of `digits` and `reference` can be defined as a
+tuple of two values, of which the first refers to the object and the second refers to its
+derivatives. Note that it is also possible to specify these parameters for each derivative
+value directly.
+
+The remaining options for `reference` provide a variety of ways to allow a reference value
+to be generated automatically.
 
 * "smallest": Absolute accuracy will be ``10**(-digits)`` times the non-zero array value
   closest to zero. This option guarantees that every value will preserve at least the
@@ -96,6 +103,7 @@ _SINGLE_DIGITS = np.log10(2**23)    # 6.92
 _DOUBLE_DIGITS = np.log10(2**52)    # 15.65
 _LOG10_BIT = np.log10(2.)
 
+
 @staticmethod
 def _pickle_debug(debug):
     """Enable or disable the printing of pickle diagnostics.
@@ -117,29 +125,24 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
     arrays.
 
     Parameters:
-        digits (int | float | str | list | tuple | None, optional): The number of digits
-            to preserve when pickling this object. If two values are given, the second
-            applies to any derivatives. If a number is specified, this is the number of
-            decimal digits to preserve when this object is pickled. It need not be an
-            integer. It is truncated to the range supported by single and double
-            precision. Alternatively, use "double" to preserve full double precision; use
-            "single" for single precision. None is equivalent to "double".
-        reference (int | float | str | list | tuple | None, optional): A value defining
-            the number to use when assessing how many digits are preserved. If two values
-            are given, the second applies to any derivatives. If a number is specified,
-            the number of `digits` will be relative to this value. For example, if the
-            `reference=100` and `digits=8`, the absolute precision will be 1.e-6.
-            Alternatively, use one of these strings to let the precision be referenced to
-            the values in the array: "smallest", "largest", "mean", "median", "logmean",
-            or "fpzip". None is equivalent to "fpzip".
+        digits (int | float | str | tuple, optional): The number of digits to preserve
+            when pickling this object. If a tuple of two values is given, the second
+            applies to any derivatives. An *int* or *float* defines the number of decimal
+            digits to preserve when this object is pickled, which need not be integral.
+            Alternatively, use "double" to preserve full double precision; use "single"
+            for single precision. The default is "double".
+        reference (int | float | str | tuple, optional): The number relative to which the
+            number of `digits` is referenced. For example, if `reference=100` and
+            `digits=8`, the absolute precision will be 1.e-6. Alternatively, use one of
+            these strings to let the `reference` be derived from the values in the array:
+            "smallest", "largest", "mean", "median", "logmean", or "fpzip"; these are
+            defined below. The default is "fpzip".
 
     Raises:
-        ValueError: If a value of `digits` is neither a number nor "single" or "double",
-            or if a value of `reference` is neither a number nor one of the recognized
-            names.
+        ValueError: If either `digits` or `reference` is not a recognized value.
 
     Notes:
-        The reference options are:
+        The `reference` string options are:
 
             * "smallest": Reference precision to the value closest to zero. This option
               guarantees that the requested number of digits are preserved for every
@@ -147,13 +150,14 @@ def set_pickle_digits(self, digits='double', reference='fpzip'):
             * "largest": Reference precision to the value furthest from zero; this is a
               good choice for values that are known to have a limited range that includes
               zero, e.g., the components of a unit vector, or an angle between zero and
-              two pi.
+              2*pi.
             * "mean": Reference the mean absolute value.
             * "median": Reference the median absolute value. This is a good choice if a
               minority of values are very different from the others, but those values
               should not dominate the precision determination.
             * "logmean": Reference the mean of the log of absolute values.
-            * "fpzip": Employ fpzip compression.
+            * "fpzip": Employ **fpzip** compression. This option preserves the requested
+              number of digits regardless of the magnitude of each value.
     """
 
     reference = _validate_pickle_reference(reference)
@@ -180,29 +184,24 @@ def set_default_pickle_digits(digits='double', reference='fpzip'):
     has no setting of its own from :meth:`~polymath.Qube.set_pickle_digits`.
 
     Parameters:
-        digits (int | float | str | list | tuple | None, optional): The number of digits
-            to preserve when pickling an object. If two values are given, the second
-            applies to any derivatives. If a number is specified, this is the number of
-            decimal digits to preserve when an object is pickled. It need not be an
-            integer. It is truncated to the range supported by single and double
-            precision. Alternatively, use "double" to preserve full double precision; use
-            "single" for single precision. None is equivalent to "double".
-        reference (int | float | str | list | tuple | None, optional): A value defining
-            the number to use when assessing how many digits are preserved. If two values
-            are given, the second applies to any derivatives. If a number is specified,
-            the number of `digits` will be relative to this value. For example, if the
-            `reference=100` and `digits=8`, the absolute precision will be 1.e-6.
-            Alternatively, use one of these strings to let the precision be referenced to
-            the values in the array: "smallest", "largest", "mean", "median", "logmean",
-            or "fpzip". None is equivalent to "fpzip".
+        digits (int | float | str | tuple, optional): The number of digits to preserve
+            when pickling this object. If a tuple of two values is given, the second
+            applies to any derivatives. An *int* or *float* defines the number of decimal
+            digits to preserve when this object is pickled, which need not be integral.
+            Alternatively, use "double" to preserve full double precision; use "single"
+            for single precision. The default is "double".
+        reference (int | float | str | tuple, optional): The number relative to which the
+            number of `digits` is referenced. For example, if `reference=100` and
+            `digits=8`, the absolute precision will be 1.e-6. Alternatively, use one of
+            these strings to let the `reference` be derived from the values in the array:
+            "smallest", "largest", "mean", "median", "logmean", or "fpzip"; these are
+            defined below. The default is "fpzip".
 
     Raises:
-        ValueError: If a value of `digits` is neither a number nor "single" or "double",
-            or if a value of `reference` is neither a number nor one of the recognized
-            names.
+        ValueError: If either `digits` or `reference` is not a recognized value.
 
     Notes:
-        The reference options are:
+        The `reference` string options are:
 
             * "smallest": Reference precision to the value closest to zero. This option
               guarantees that the requested number of digits are preserved for every
@@ -210,13 +209,14 @@ def set_default_pickle_digits(digits='double', reference='fpzip'):
             * "largest": Reference precision to the value furthest from zero; this is a
               good choice for values that are known to have a limited range that includes
               zero, e.g., the components of a unit vector, or an angle between zero and
-              two pi.
+              2*pi.
             * "mean": Reference the mean absolute value.
             * "median": Reference the median absolute value. This is a good choice if a
               minority of values are very different from the others, but those values
               should not dominate the precision determination.
             * "logmean": Reference the mean of the log of absolute values.
-            * "fpzip": Employ fpzip compression.
+            * "fpzip": Employ **fpzip** compression. This option preserves the requested
+              number of digits regardless of the magnitude of each value.
     """
 
     global _DEFAULT_PICKLE_DIGITS, _DEFAULT_PICKLE_REFERENCE
@@ -232,7 +232,7 @@ def pickle_digits(self):
     Returns:
         tuple[str | float | int, str | float | int]: The setting for this object and the
         one for its derivatives, each either "double", "single", or a number of digits
-        roughly in the range 7-16.
+        roughly in the range 7 to 16.
     """
 
     if not hasattr(self, '_pickle_digits') or self._pickle_digits is None:
@@ -286,93 +286,106 @@ def _validate_pickle_digits(digits, reference):
     """Validate and return the pickle digit values.
 
     Parameters:
-        digits (int | float | str | list | tuple | None): A single value, or one value for
-            an object and a second for its derivatives. Each value is a number of decimal
-            digits, "single", or "double". Use None for "double". Values beyond the first
-            two are ignored.
-        reference (tuple): The validated pickle reference values, as returned by
-            _validate_pickle_reference().
+        digits (int | float | str | tuple[int | float | str, int | float | str]):
+            A single value or two values, one for an object and the second for its
+            derivatives. Each value defines the number of decimal digits to preserve; it
+            need not be integral. Alternatively, you can specify the number of digits
+            using the string "single" or "double". The default is "double".
+        reference (tuple[int | float | str, int | float | str]): The validated pickle
+            reference values, as returned by
+            :func:`~polymath.extensions.pickler._validate_pickle_reference`.
 
     Returns:
-        tuple: The validated digit values. A number of digits is truncated to the range
-        that single and double precision can represent, unless the reference value that
-        applies to it is itself a number.
+        tuple[int | float | str, int | float | str]: The validated `digits` values. For
+        **fpzip** compression, the number of digits is truncated to the range
+        corresponding to single and double precision, roughly 7 to 16.
 
     Raises:
-        ValueError: If a value is neither a number nor "single" or "double".
-        ValueError: If a value is a number but `reference` provides no value to match it.
+        ValueError: If the type or value of `digits` is not recognized.
     """
 
-    if digits is None:
-        digits = 'double'
-
+    # Make sure it's a tuple
     if isinstance(digits, list):
         digits = tuple(digits)
-
+    elif not digits:
+        digits = ()
     elif not isinstance(digits, tuple):
         digits = (digits, digits)
+
+    # Make sure length is 2; fill in default
+    if len(digits) == 0:
+        digits = ('double', 'double')
+    elif len(digits) == 1:
+        digits = 2 * digits
 
     new_digits = []
     for k, digit in enumerate(digits[:2]):
         if isinstance(digit, numbers.Real):
-            if k >= len(reference):
-                raise ValueError(f'missing pickle reference for digits: {digit!r}')
-            if not isinstance(reference[k], numbers.Real):
+            if reference[k] == 'fpzip':
                 digit = min(max(_SINGLE_DIGITS, float(digit)), _DOUBLE_DIGITS)
-
-        # The alternatives are a tuple rather than a set so that an unhashable value
-        # compares unequal instead of raising a TypeError
-        elif digit not in ('single', 'double'):
-            raise ValueError(f'invalid pickle digits: {digit!r}')
+        elif isinstance(digit, str):
+            if digit not in {'single', 'double'}:
+                raise ValueError(f'invalid pickle digits value "{digits}"')
+        else:
+            raise ValueError(f'invalid pickle digits {digit!r}')
 
         new_digits.append(digit)
 
     return tuple(new_digits)
 
 
-def _validate_pickle_reference(references):
+def _validate_pickle_reference(reference):
     """Validate and return the pickle reference values.
 
     Parameters:
-        references (int | float | str | list | tuple | None): A single value, or one value
-            for an object and a second for its derivatives. Each value is a number or one
-            of "smallest", "largest", "mean", "median", "logmean", or "fpzip". Use None
-            for "fpzip". Values beyond the first two are ignored.
+        reference (int | float | str | tuple[int | float | str, int | float | str]):
+            A single value or two values, one for an object and a second for its
+            derivatives. Each value defines the number relative to which numeric precision
+            is assessed. Use "smallest", "largest", "mean", "median", or "logmean" to
+            force the reference value(s) to be derived from the data. Alternatively, use
+            "fpzip" to employ **fpzip** compression. The default is "fpzip".
 
     Returns:
-        tuple: The validated reference values.
+        tuple[int | float | str, int | float | str]: The validated reference values.
 
     Raises:
-        ValueError: If a value is neither a number nor one of the recognized names.
+        ValueError: If the type or value of `reference` is not recognized.
     """
 
-    if references is None:
-        references = 'fpzip'
+    # Make sure it's a tuple
+    if isinstance(reference, list):
+        reference = tuple(reference)
+    elif not reference:
+        reference = ()
+    elif not isinstance(reference, tuple):
+        reference = (reference, reference)
 
-    if isinstance(references, list):
-        references = tuple(references)
+    # Make sure length is 2; fill in default
+    if len(reference) == 0:
+        reference = ('fpzip', 'fpzip')
+    elif len(reference) == 1:
+        reference = 2 * reference
+    else:
+        reference = reference[:2]  # truncate extraneous values
 
-    elif not isinstance(references, tuple):
-        references = (references, references)
+    for ref in reference:
+        if isinstance(ref, numbers.Real):
+            if ref == 0.:
+                raise ValueError('pickle reference value cannot be zero')
+        elif isinstance(ref, str):
+            if ref not in {'smallest', 'largest', 'mean', 'median', 'logmean', 'fpzip'}:
+                raise ValueError(f'invalid pickle reference value "{ref}"')
+        else:
+            raise ValueError(f'invalid pickle reference {ref!r}')
 
-    references = references[:2]
-    for reference in references:
-
-        # The alternatives are a tuple rather than a set so that an unhashable value
-        # compares unequal instead of raising a TypeError
-        if (not isinstance(reference, numbers.Real)
-                and reference not in ('smallest', 'largest', 'mean', 'median', 'logmean',
-                                      'fpzip')):
-            raise ValueError(f'invalid pickle reference {reference!r}')
-
-    return references
+    return reference
 
 ##########################################################################################
 # Support for fpzip compression and decompression
 ##########################################################################################
 
 def fpzip_compress(array, digits=16, dtype=np.float64):
-    """An fpzip-compressed array plus the number of bits that have been zeroed.
+    """An **fpzip**-compressed array plus the number of bits that have been zeroed.
 
     Parameters:
         array (numpy.ndarray): The floating-point array to compress.
@@ -395,8 +408,8 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
     #
     # The library ... allows specifying how many bits of precision to retain by truncating
     # each floating-point value and discarding the least significant bits; the remaining
-    # bits are compressed losslessly.  The precision is limited to integers 2-32 for
-    # floats. For doubles, precisions 4-64 are supported in increments of two bits.  The
+    # bits are compressed losslessly. The precision is limited to integers 2-32 for
+    # floats. For doubles, precisions 4-64 are supported in increments of two bits. The
     # decompressed data is returned in full precision with any truncated bits zeroed.
     #
     # Experimentation shows that the number of truncated bits is 64-precision for double
@@ -479,7 +492,7 @@ def fpzip_compress(array, digits=16, dtype=np.float64):
 
 
 def fpzip_decompress(fpzip_bytes, shape, bits):
-    """An fpzip-decompressed array with compensation for any compression bias.
+    """An **fpzip**-decompressed array with compensation for any compression bias.
 
     Parameters:
         fpzip_bytes (bytes): The compressed array as returned by
