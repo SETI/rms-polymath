@@ -551,10 +551,10 @@ class Quaternion(Vector):
         """The product of this quaternion and another object.
 
         Parameters:
-            arg (Any): The object to multiply with this quaternion. If `arg` is a Vector3,
-                it is automatically converted to a Quaternion with zero scalar part before
-                multiplication. For other Qube subclasses, the default multiplication
-                operator is used.
+            arg (QubeLike): The object to multiply with this quaternion. If `arg` is a
+                Vector3, it is automatically converted to a Quaternion with zero scalar
+                part before multiplication. For other Qube subclasses, the default
+                multiplication operator is used.
             recursive (bool, optional): If True, the returned object will include
                 derivatives.
 
@@ -603,8 +603,7 @@ class Quaternion(Vector):
 
         # Construct object
         obj = Qube.__new__(type(self))
-        obj.__init__(new_values, Qube.or_(a._mask, b._mask),
-                     drank=a._drank + b._drank)
+        obj.__init__(new_values, Qube.or_(a._mask, b._mask), drank=a._drank + b._drank)
 
         # Construct the derivatives if necessary
         if recursive:
@@ -729,7 +728,7 @@ class Quaternion(Vector):
         This method overrides :meth:`~Qube.identity` for the base class.
 
         Returns:
-            Quaternion: A read-only identity quaternion, ``[1, 0, 0, 0]``.
+            Quaternion: A read-only identity quaternion, [1, 0, 0, 0].
         """
 
         return Quaternion(np.array([1., 0., 0., 0.])).as_readonly()
@@ -791,25 +790,25 @@ class Quaternion(Vector):
             A triple of Euler angles can be applied or interpreted in 24 ways, which can
             be specified using a four-character string or an encoded four-tuple.
 
-            A four-character string such as ``'sxyz'`` or ``'ryxy'``:
+            A four-character string such as "sxyz" or "ryxy":
 
-            * First character: rotations are applied to a static (``'s'``) or rotating
-              (``'r'``) frame.
-            * Remaining characters: successive rotation axes ``'x'``, ``'y'``, or ``'z'``.
+            * First character: rotations are applied to a static ("s") or rotating ("r")
+              frame.
+            * Remaining characters: successive rotation axes "x", "y", or "z".
 
-            A four-tuple such as ``(0, 0, 0, 0)`` or ``(1, 1, 1, 1)``:
+            A four-tuple such as (0, 0, 0, 0) or (1, 1, 1, 1):
 
-            * Inner axis: code of the axis (``'x'``: 0, ``'y'``: 1, ``'z'``: 2) of the
-              rightmost matrix.
-            * Parity: even (0) if the inner axis ``'x'`` is followed by ``'y'``, ``'y'``
-              is followed by ``'z'``, or ``'z'`` is followed by ``'x'``; otherwise odd
-              (1).
+            * Inner axis: code of the axis ("x": 0, "y": 1, "z": 2) of the rightmost
+              matrix.
+            * Parity: even (0) if the inner axis "x" is followed by "y", "y" is followed
+              by "z", or "z" is followed by "x"; otherwise odd (1).
             * Repetition: the first and last axes are the same (1) or different (0).
             * Frame: rotations are applied to a static (0) or rotating (1) frame.
 
-        Examples:
-            >>> q = Quaternion.from_euler(1, 2, 3, 'ryxz')
-            >>> np.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])
+        Examples::
+
+            >>> q = Quaternion.from_euler(1, 2, 3, "ryxz")
+            >>> np.allclose(q.vals, [0.435953, 0.310622, -0.718287, 0.444435])
             True
         """
 
@@ -882,7 +881,7 @@ class Quaternion(Vector):
 
         Returns:
             tuple[Scalar, Scalar, Scalar]: The three Euler angles in radians, each in the
-            range 0 to 2 pi.
+            range 0 to 2*pi.
 
         Notes:
             This method converts this quaternion to a Matrix3 using :meth:`to_matrix3`

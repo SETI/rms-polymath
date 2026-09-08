@@ -779,9 +779,9 @@ def rms(self):
     """Calculate the root-mean-square values of all items as a Scalar.
 
     The RMS is computed across all item dimensions, numerator and denominator alike, for
-    each array element. For a Vector with shape (n,) and numer (3,), this computes
-    sqrt(sum(vals**2) / 3) for each of the n elements. The mask is preserved; the unit and
-    derivatives are not.
+    each array element. For a Vector with shape `(n,)` and numer `(3,)`, this computes
+    ``sqrt(sum(vals**2) / 3)`` for each of the `n` elements. The mask is preserved; the
+    unit and derivatives are not.
 
     Useful for looking at the overall magnitude of the differences between two objects.
 

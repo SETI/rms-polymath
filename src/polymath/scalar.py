@@ -179,7 +179,6 @@ class Scalar(Qube):
         if self.is_float():
             raise IndexError('Scalar.as_index_and_mask() does not allow floating-point '
                              'indexing')
-
         self._disallow_denom('as_index_and_mask()')
         self._require_unitless('as_index_and_mask()')
 
@@ -192,7 +191,6 @@ class Scalar(Qube):
 
         # If purging...
         if purge:
-
             # If all masked...
             if Qube.is_one_true(self._mask):
                 return ((), False)
@@ -257,7 +255,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.int() does not support denominators')
-
         self._require_unitless('int()')
 
         # For compatibility with Vector.int, where the first arg is the shape
@@ -267,7 +264,6 @@ class Scalar(Qube):
             top = top[0]
 
         if top is not None:
-
             # Convert to int; be sure it's a copy before modifying
             if self.is_int():
                 copied = self.copy()
@@ -303,7 +299,6 @@ class Scalar(Qube):
             result = self.wod.as_int()
             if clip:
                 result = result.mask_where_lt(0, replace=0, remask=remask)
-
             elif remask:
                 result = result.mask_where_lt(0, remask=remask)
 
@@ -335,7 +330,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.frac() does not support denominators')
-
         self._require_unitless('frac()')
 
         # Convert to fractional values
@@ -345,8 +339,7 @@ class Scalar(Qube):
             new_values = self._values % 1.
 
         # Construct a new copy
-        obj = type(self)._new_from_parts(new_values, self._mask, nrank=0,
-                                         example=self)
+        obj = type(self)._new_from_parts(new_values, self._mask, nrank=0, example=self)
         if recursive and self._derivs:
             obj.insert_derivs(self._derivs)
 
@@ -368,7 +361,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.sin() does not support denominators')
-
         self._require_angle('sin()')
 
         obj = Scalar._new_from_parts(np.sin(self._values), self._mask, nrank=0,
@@ -397,7 +389,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.cos() does not support denominators')
-
         self._require_angle('cos()')
 
         obj = Scalar._new_from_parts(np.cos(self._values), self._mask, nrank=0,
@@ -426,7 +417,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.tan() does not support denominators')
-
         self._require_angle('tan()')
 
         obj = Scalar._new_from_parts(np.tan(self._values), self._mask, nrank=0,
@@ -447,7 +437,7 @@ class Scalar(Qube):
                 inside the returned object.
             check (bool, optional): True to mask out the locations of any values outside
                 the domain [-1,1]. If False, a ValueError will be raised if any value is
-                encountered where the arcsine is undefined. ``check=False`` is slightly
+                encountered where the arcsine is undefined. `check=False` is slightly
                 faster if we already know at the time of the call that all input values
                 are valid.
 
@@ -478,9 +468,8 @@ class Scalar(Qube):
                 temp_values = self._values
                 temp_mask = self._mask
 
-            obj = Scalar._new_from_parts(np.arcsin(temp_values), temp_mask,
-                                         nrank=0, example=self)
-
+            obj = Scalar._new_from_parts(np.arcsin(temp_values), temp_mask, nrank=0,
+                                         example=self)
         else:
             with warnings.catch_warnings():
                 warnings.filterwarnings('error')
@@ -490,8 +479,7 @@ class Scalar(Qube):
                     raise ValueError('Scalar.arcsin() of value outside domain (-1,1)'
                                      ) from err
 
-            obj = Scalar._new_from_parts(func_values, self._mask, nrank=0,
-                                         example=self)
+            obj = Scalar._new_from_parts(func_values, self._mask, nrank=0, example=self)
 
         if recursive and self._derivs:
             factor = (1. - self.wod**2)**(-0.5)
@@ -508,7 +496,7 @@ class Scalar(Qube):
                 inside the returned object.
             check (bool, optional): True to mask out the locations of any values outside
                 the domain [-1,1]. If False, a ValueError will be raised if any value is
-                encountered where the arccosine is undefined. ``check=False`` is slightly
+                encountered where the arccosine is undefined. `check=False` is slightly
                 faster if we already know at the time of the call that all input values
                 are valid.
 
@@ -539,9 +527,8 @@ class Scalar(Qube):
                 temp_values = self._values
                 temp_mask = self._mask
 
-            obj = Scalar._new_from_parts(np.arccos(temp_values), temp_mask,
-                                         nrank=0, example=self)
-
+            obj = Scalar._new_from_parts(np.arccos(temp_values), temp_mask, nrank=0,
+                                         example=self)
         else:
             with warnings.catch_warnings():
                 warnings.filterwarnings('error')
@@ -551,8 +538,7 @@ class Scalar(Qube):
                     raise ValueError('Scalar.arccos() of value outside domain (-1,1)'
                                      ) from err
 
-            obj = Scalar._new_from_parts(func_values, self._mask, nrank=0,
-                                         example=self)
+            obj = Scalar._new_from_parts(func_values, self._mask, nrank=0, example=self)
 
         if recursive and self._derivs:
             factor = -(1. - self.wod**2)**(-0.5)
@@ -562,14 +548,14 @@ class Scalar(Qube):
         return obj
 
     def arctan(self, recursive=True):
-        """The arctangent of each value.
+        """The arctangent of this value.
 
         Parameters:
             recursive (bool, optional): True to include the derivatives of the arctangent
                 inside the returned object.
 
         Returns:
-            Scalar: The arctangent values.
+            Scalar: The arctangent of `self`.
 
         Raises:
             ValueError: If this object has denominators.
@@ -577,7 +563,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.arctan() does not support denominators')
-
         self._require_unitless('arctan()')
 
         obj = Scalar._new_from_parts(np.arctan(self._values), self._mask, nrank=0,
@@ -591,12 +576,12 @@ class Scalar(Qube):
         return obj
 
     def arctan2(self, arg, *, recursive=True):
-        """The four-quadrant value of ``arctan2(y,x)``, where this object is **y**.
+        """The four-quadrant value of ``arctan2(y,x)``, where this object is ``y``.
 
         If this object is read-only, the returned object will also be read-only.
 
         Parameters:
-            arg (ScalarLike): The **x** argument to ``arctan2()``.
+            arg (ScalarLike): The ``x`` in ``y.arctan2(x)``.
             recursive (bool, optional): True to include the derivatives of the arctangent
                 inside the returned object. This is the result of merging the derivatives
                 in both this object and the argument object.
@@ -616,8 +601,7 @@ class Scalar(Qube):
             raise ValueError('Scalar.arctan2() does not support denominators')
 
         obj = Scalar._new_from_parts(np.arctan2(y._values, x._values),
-                                     Qube.or_(x._mask, y._mask), nrank=0,
-                                     example=x)
+                                     Qube.or_(x._mask, y._mask), nrank=0, example=x)
 
         if recursive and (x._derivs or y._derivs):
             denom_inv = (x.wod**2 + y.wod**2).reciprocal()
@@ -647,8 +631,8 @@ class Scalar(Qube):
                 inside the returned object.
             check (bool, optional): True to mask out the locations of any values < 0
                 before taking the square root. If False, a ValueError will be raised if
-                any negative value is encountered. ``check=False`` is slightly faster if
-                we already know at the time of the call that all input values are valid.
+                any negative value is encountered. `check=False` is slightly faster if we
+                already know at the time of the call that all input values are valid.
 
         Returns:
             Scalar: The square root values.
@@ -664,7 +648,6 @@ class Scalar(Qube):
         if check:
             no_negs = self.mask_where_lt(0., replace=1.)
             sqrt_vals = np.sqrt(no_negs._values)
-
         else:
             no_negs = self
             with warnings.catch_warnings():
@@ -675,8 +658,7 @@ class Scalar(Qube):
                     raise ValueError('Scalar.sqrt() of negative value') from err
 
         obj = Scalar._new_from_parts(sqrt_vals, no_negs._mask, nrank=0,
-                                     unit=Unit.sqrt_unit(no_negs._unit),
-                                     example=no_negs)
+                                     unit=Unit.sqrt_unit(no_negs._unit), example=no_negs)
 
         if recursive and no_negs._derivs:
             factor = 0.5 / obj
@@ -695,7 +677,7 @@ class Scalar(Qube):
                 the returned object.
             check (bool, optional): True to mask out the locations of any values <= 0
                 before taking the log. If False, a ValueError will be raised if any value
-                <= 0 is encountered. ``check=False`` is slightly faster if we already know
+                <= 0 is encountered. `check=False` is slightly faster if we already know
                 at the time of the call that all input values are valid.
 
         Returns:
@@ -721,8 +703,7 @@ class Scalar(Qube):
                 except RuntimeWarning as err:
                     raise ValueError('Scalar.log() of non-positive value') from err
 
-        obj = Scalar._new_from_parts(log_values, no_negs._mask, nrank=0,
-                                     example=no_negs)
+        obj = Scalar._new_from_parts(log_values, no_negs._mask, nrank=0, example=no_negs)
 
         if recursive and no_negs._derivs:
             for key, deriv in self._derivs.items():
@@ -740,7 +721,7 @@ class Scalar(Qube):
                 inside the returned object.
             check (bool, optional): True to mask out the locations of any values that will
                 overflow to infinity. If False, a ValueError will be raised if any value
-                overflows. ``check=False`` is slightly faster if we already know at the
+                overflows. `check=False` is slightly faster if we already know at the
                 time of the call that all input values are valid.
 
         Returns:
@@ -753,13 +734,11 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.exp() does not support denominators')
-
         self._require_unitless('exp()')
 
         if check:
             no_oflow = self.mask_where_gt(_EXP_CUTOFF, replace=_EXP_CUTOFF)
             exp_values = np.exp(no_oflow._values)
-
         else:
             no_oflow = self
             with warnings.catch_warnings():
@@ -797,14 +776,12 @@ class Scalar(Qube):
         """
 
         result = Scalar(np.sign(self._values), mask=self._mask)
-
         if not zeros:
             result[result == 0] = 1
 
         # Convert result to a Python int if necessary
         if builtins is None:
             builtins = Qube.prefer_builtins()
-
         if builtins:
             return result.as_builtin(masked=masked)
 
@@ -907,7 +884,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.max() does not support denominators')
-
         self._check_axis(axis, 'max()')         # make sure axis input is valid
 
         if self._size == 0:
@@ -931,9 +907,9 @@ class Scalar(Qube):
             max_values = np.max(np.where(self._mask, min_possible, self._values),
                                 axis=axis)
 
-            # Deal with completely masked items. Here, use the max of the
-            # unmasked values. This object is only partially masked, so a reduction over
-            # every axis cannot be masked and `mask` is always an array here.
+            # Deal with completely masked items. Here, use the max of the unmasked values.
+            # This object is only partially masked, so a reduction over every axis cannot
+            # be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_values = np.max(self._values, axis=axis)
@@ -941,8 +917,8 @@ class Scalar(Qube):
             else:
                 mask = False
 
-            result = Scalar._new_from_parts(max_values, mask, nrank=0,
-                                            unit=self._unit, example=self)
+            result = Scalar._new_from_parts(max_values, mask, nrank=0, unit=self._unit,
+                                            example=self)
 
         # Convert result to a Python type if necessary
         if builtins is None:
@@ -979,7 +955,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.min() does not support denominators')
-
         self._check_axis(axis, 'min()')         # make sure axis input is valid
 
         if self._size == 0:
@@ -1003,9 +978,9 @@ class Scalar(Qube):
             min_values = np.min(np.where(self._mask, max_possible, self._values),
                                 axis=axis)
 
-            # Deal with completely masked items. Here, use the min of the
-            # unmasked values. This object is only partially masked, so a reduction over
-            # every axis cannot be masked and `mask` is always an array here.
+            # Deal with completely masked items. Here, use the min of the unmasked values.
+            # This object is only partially masked, so a reduction over every axis cannot
+            # be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_values = np.min(self._values, axis=axis)
@@ -1013,8 +988,8 @@ class Scalar(Qube):
             else:
                 mask = False
 
-            result = Scalar._new_from_parts(min_values, mask, nrank=0,
-                                            unit=self._unit, example=self)
+            result = Scalar._new_from_parts(min_values, mask, nrank=0, unit=self._unit,
+                                            example=self)
 
         # Convert result to a Python type if necessary
         if builtins is None:
@@ -1057,9 +1032,7 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.argmax() does not support denominators')
-
         self._check_axis(axis, 'argmax()')      # make sure axis input is valid
-
         if self._shape == ():
             raise ValueError('no Scalar.argmax() for object with shape ()')
 
@@ -1081,8 +1054,8 @@ class Scalar(Qube):
                                axis=axis)
 
             # Deal with completely masked items. Here, use the argmax of the unmasked
-            # values. This object is only partially masked, so a reduction over every
-            # axis cannot be masked and `mask` is always an array here.
+            # values. This object is only partially masked, so a reduction over every axis
+            # cannot be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_argmax = np.argmax(self._values, axis=axis)
@@ -1130,9 +1103,7 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.argmin() does not support denominators')
-
         self._check_axis(axis, 'argmin()')      # make sure axis input is valid
-
         if self._shape == ():
             raise ValueError('no Scalar.argmin() for object with shape ()')
 
@@ -1148,15 +1119,14 @@ class Scalar(Qube):
             result = Scalar(np.argmin(self._values, axis=axis), mask=True)
 
         # In this case, the values and mask are both arrays
-
         else:
             max_possible = Scalar._maxval(self._values.dtype)   # largest possible value
             argmin = np.argmin(np.where(self._mask, max_possible, self._values),
                                axis=axis)
 
             # Deal with completely masked items. Here, use the argmin of the unmasked
-            # values. This object is only partially masked, so a reduction over every
-            # axis cannot be masked and `mask` is always an array here.
+            # values. This object is only partially masked, so a reduction over every axis
+            # cannot be masked and `mask` is always an array here.
             mask = np.all(self._mask, axis=axis)
             if np.any(mask):
                 alt_argmin = np.argmin(self._values, axis=axis)
@@ -1230,8 +1200,8 @@ class Scalar(Qube):
         mask = scalars[0]._mask
 
         for scalar in scalars[1:]:
-            # Take the new item where it is larger and unmasked, and wherever the
-            # running result is masked
+            # Take the new item where it is larger and unmasked, and wherever the running
+            # result is masked
             take = Qube.or_(Qube.and_(scalar._values > values, scalar.antimask), mask)
 
             if Qube.is_one_false(take):
@@ -1253,7 +1223,6 @@ class Scalar(Qube):
                 mask = np.where(take, scalar._mask, mask)
 
         result = Scalar(values, mask, unit=scalars[0]._unit)
-
         result._clear_cache()
         return result
 
@@ -1312,8 +1281,8 @@ class Scalar(Qube):
         mask = scalars[0]._mask
 
         for scalar in scalars[1:]:
-            # Take the new item where it is smaller and unmasked, and wherever the
-            # running result is masked
+            # Take the new item where it is smaller and unmasked, and wherever the running
+            # result is masked
             take = Qube.or_(Qube.and_(scalar._values < values, scalar.antimask), mask)
 
             if Qube.is_one_false(take):
@@ -1364,7 +1333,6 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.median() does not support denominators')
-
         self._check_axis(axis, 'median()')      # make sure axis input is valid
 
         if self._size == 0:
@@ -1374,13 +1342,11 @@ class Scalar(Qube):
             result = self.wod.as_float()
 
         elif not np.any(self._mask):
-            result = Scalar(np.median(self._values, axis=axis), mask=False,
-                            example=self)
+            result = Scalar(np.median(self._values, axis=axis), mask=False, example=self)
 
         # If all masked, use the unmasked values but leave the result masked
         elif np.all(self._mask):
-            result = Scalar(np.median(self._values, axis=axis), mask=True,
-                            example=self)
+            result = Scalar(np.median(self._values, axis=axis), mask=True, example=self)
 
         elif axis is None:
             result = Scalar(np.median(self._values[self.antimask]), mask=False,
@@ -1465,16 +1431,13 @@ class Scalar(Qube):
 
         if self._drank:
             raise ValueError('Scalar.sort() does not support denominators')
-
         self._check_axis(axis, 'sort()')        # make sure axis input is valid
 
         if self._size == 0:
             return self.wod._zero_sized_result(axis)
 
         if not np.any(self._mask):
-            result = Scalar(np.sort(self._values, axis=axis), mask=False,
-                            unit=self._unit)
-
+            result = Scalar(np.sort(self._values, axis=axis), mask=False, unit=self._unit)
         else:
             max_possible = Scalar._maxval(self._values.dtype)
             new_values = self._values.copy()
@@ -1534,7 +1497,6 @@ class Scalar(Qube):
                     denom_inv_mask = denom._mask
                 except (ZeroDivisionError, RuntimeWarning) as err:
                     raise ValueError('divide by zero in Scalar.reciprocal()') from err
-
         else:
             denom = self.mask_where_eq(0, replace=1)
             denom_inv_values = 1. / denom._values
@@ -1842,8 +1804,7 @@ class Scalar(Qube):
                         unit=Unit.unit_power(self._unit, 3))
 
         if recursive and self._derivs:
-            factor = Scalar(3. * x_sq, self._mask,
-                            unit=Unit.unit_power(self._unit, 2))
+            factor = Scalar(3. * x_sq, self._mask, unit=Unit.unit_power(self._unit, 2))
             for key, deriv in self._derivs.items():
                 result.insert_deriv(key, factor * deriv)
 
@@ -1860,8 +1821,7 @@ class Scalar(Qube):
         """
 
         x_sq = self._values * self._values
-        result = Scalar(x_sq * x_sq, self._mask,
-                        unit=Unit.unit_power(self._unit, 4))
+        result = Scalar(x_sq * x_sq, self._mask, unit=Unit.unit_power(self._unit, 4))
 
         if recursive and self._derivs:
             factor = Scalar(4. * x_sq * self._values, self._mask,

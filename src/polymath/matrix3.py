@@ -83,14 +83,15 @@ class Matrix3(Matrix):
         """A rotation matrix defined by two vectors.
 
         The returned matrix rotates to a right-handed coordinate frame having `vector1`
-        pointing along a specified axis (`axis1` = 0 for X, 1 for Y, 2 for Z) and
+        pointing along a specified axis (`axis1` = 0 for *X*, 1 for *Y*, 2 for *Z*) and
         `vector2` pointing into the half-plane defined by (`axis1`, `axis2`).
 
         Parameters:
             vector1 (Vector3Like): The first vector that defines the rotation.
-            axis1 (int): The axis to which `vector1` should point (0=X, 1=Y, 2=Z).
+            axis1 (int): The axis to which `vector1` should point (0=*X*, 1=*Y*, 2=*Z*).
             vector2 (Vector3Like): The second vector that defines the rotation.
-            axis2 (int): The axis defining the half-plane for `vector2` (0=X, 1=Y, 2=Z).
+            axis2 (int): The axis defining the half-plane for `vector2` (0=*X*, 1=*Y*,
+                2=*Z*).
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
@@ -180,9 +181,9 @@ class Matrix3(Matrix):
 
     @staticmethod
     def x_rotation(angle, *, recursive=True):
-        """A rotation matrix about the **X**-axis.
+        """A rotation matrix about the *X*-axis.
 
-        The returned matrix rotates a vector counterclockwise about the X-axis by the
+        The returned matrix rotates a vector counterclockwise about the *X*-axis by the
         specified angle in radians. The same matrix rotates a coordinate system clockwise
         by the same angle.
 
@@ -191,7 +192,7 @@ class Matrix3(Matrix):
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
-            Matrix3: A rotation matrix about the X-axis.
+            Matrix3: A rotation matrix about the *X*-axis.
 
         Raises:
             ValueError: If the angle has an invalid unit.
@@ -226,9 +227,9 @@ class Matrix3(Matrix):
 
     @staticmethod
     def y_rotation(angle, *, recursive=True):
-        """A rotation matrix about the **Y**-axis.
+        """A rotation matrix about the *Y*-axis.
 
-        The returned matrix rotates a vector counterclockwise about the Y-axis by the
+        The returned matrix rotates a vector counterclockwise about the *Y*-axis by the
         specified angle in radians. The same matrix rotates a coordinate system clockwise
         by the same angle.
 
@@ -237,7 +238,7 @@ class Matrix3(Matrix):
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
-            Matrix3: A rotation matrix about the Y-axis.
+            Matrix3: A rotation matrix about the *Y*-axis.
 
         Raises:
             ValueError: If the angle has an invalid unit.
@@ -272,9 +273,9 @@ class Matrix3(Matrix):
 
     @staticmethod
     def z_rotation(angle, *, recursive=True):
-        """A rotation matrix about the **Z**-axis.
+        """A rotation matrix about the *Z*-axis.
 
-        The returned matrix rotates a vector counterclockwise about the Z-axis by the
+        The returned matrix rotates a vector counterclockwise about the *Z*-axis by the
         specified angle in radians. The same matrix rotates a coordinate system clockwise
         by the same angle.
 
@@ -283,7 +284,7 @@ class Matrix3(Matrix):
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
-            Matrix3: A rotation matrix about the Z-axis.
+            Matrix3: A rotation matrix about the *Z*-axis.
 
         Raises:
             ValueError: If the angle has an invalid unit.
@@ -321,12 +322,12 @@ class Matrix3(Matrix):
         """A rotation matrix about one of the three primary axes.
 
         The returned matrix rotates a vector counterclockwise by the specified angle about
-        the specified axis (0 for **X**, 1 for **Y**, 2 for **Z**). The same matrix
-        rotates a coordinate system clockwise by the same angle.
+        the specified axis (0 for *X*, 1 for *Y*, 2 for *Z*). The same matrix rotates a
+        coordinate system clockwise by the same angle.
 
         Parameters:
             angle (ScalarLike): The rotation angle in radians.
-            axis (int, optional): The axis to rotate around (0=X, 1=Y, 2=Z).
+            axis (int, optional): The axis to rotate around (0=*X*, 1=*Y*, 2=*Z*).
             recursive (bool, optional): True to include derivatives in the result.
 
         Returns:
@@ -350,13 +351,13 @@ class Matrix3(Matrix):
     def pole_rotation(ra, dec):
         """Create a rotation matrix to a frame defined by right ascension and declination.
 
-        The returned matrix rotates coordinates into a frame where the **Z**-axis is
-        defined by `(ra, dec)` and the **X**-axis points along the new equatorial plane's
+        The returned matrix rotates coordinates into a frame where the *Z*-axis is
+        defined by `(ra, dec)` and the *X*-axis points along the new equatorial plane's
         ascending node on the original equator.
 
         Parameters:
-            ra (ScalarLike): The right ascension of the **Z**-axis in radians.
-            dec (ScalarLike): The declination of the **Z**-axis in radians.
+            ra (ScalarLike): The right ascension of the *Z*-axis in radians.
+            dec (ScalarLike): The declination of the *Z*-axis in radians.
 
         Returns:
             Matrix3: A rotation matrix to the frame defined by (`ra`, `dec`).

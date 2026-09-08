@@ -129,7 +129,7 @@ class Pair(Vector):
             recursive (bool, optional): If True, derivatives will also be swapped.
 
         Returns:
-            Pair: A new Pair with **x** and **y** values swapped.
+            Pair: A new Pair with *X* and *Y* values swapped.
         """
 
         if not recursive:
@@ -187,7 +187,7 @@ class Pair(Vector):
         return obj
 
     def angle(self, recursive=True):
-        """The polar angle of this Pair, from the **X**-axis toward the **Y**-axis.
+        """The polar angle of this Pair, from the *X*-axis toward the *Y*-axis.
 
         The returned value will always fall between zero and 2*pi.
 
