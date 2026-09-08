@@ -22,7 +22,7 @@
 #   --mypy                 Run mypy only
 #   --pytest               Run pytest only
 #   --pyroma               Run pyroma only
-#   --stubtest             Run stubtest only (checks the .pyi stubs)
+#   --stubtest             Run stubtest only (checks __init__.pyi and typedefs.pyi)
 #   --bandit               Run bandit only
 #   --vulture              Run vulture only
 #   --sphinx               Run Sphinx build only
@@ -48,10 +48,10 @@
 #     ENABLE_RUFF_CHECK   (default: true)
 #     ENABLE_RUFF_FORMAT  (default: false)
 #     ENABLE_FLAKE8_CONT  continuation-line indent, E12x/E13x (default: true)
-#     ENABLE_MYPY         (default: false)
+#     ENABLE_MYPY         mypy on tests/ only (default: true)
 #     ENABLE_PYTEST       (default: true)
 #     ENABLE_PYROMA       (default: true)
-#     ENABLE_STUBTEST     .pyi stubs match the runtime API (default: true)
+#     ENABLE_STUBTEST     the two .pyi stubs match the runtime API (default: true)
 #     ENABLE_BANDIT       (default: false)
 #     ENABLE_VULTURE      (default: false)
 #     ENABLE_SPHINX       (default: true)
@@ -102,7 +102,7 @@ SCOPE_SPECIFIED=false
 : "${ENABLE_RUFF_CHECK:=true}"
 : "${ENABLE_RUFF_FORMAT:=false}"
 : "${ENABLE_FLAKE8_CONT:=true}"
-: "${ENABLE_MYPY:=false}"
+: "${ENABLE_MYPY:=true}"
 : "${ENABLE_PYTEST:=true}"
 : "${ENABLE_PYROMA:=true}"
 : "${ENABLE_STUBTEST:=true}"
@@ -418,7 +418,7 @@ run_code_checks() {
     fi
 
     if [ "$RUN_MYPY" = true ] && [ "$ENABLE_MYPY" = true ]; then
-        print_info "Running mypy..."
+        print_info "Running mypy (tests/ only; src/ is deliberately unannotated)..."
         if MYPYPATH=src python -m mypy tests; then
             print_success "Mypy passed"
         else
@@ -454,8 +454,8 @@ run_code_checks() {
     fi
 
     if [ "$RUN_STUBTEST" = true ] && [ "$ENABLE_STUBTEST" = true ]; then
-        print_info "Running stubtest (.pyi stubs vs the runtime API)..."
-        if python -m mypy.stubtest polymath --mypy-config-file pyproject.toml; then
+        print_info "Running stubtest (__init__.pyi and typedefs.pyi vs the runtime API)..."
+        if python -m mypy.stubtest polymath --mypy-config-file pyproject.toml --allowlist .stubtest-allowlist; then
             print_success "Stubtest passed"
         else
             print_error "Stubtest failed"

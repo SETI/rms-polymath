@@ -254,7 +254,7 @@ def test_vector_cross_product_as_matrix_supports_a_denominator() -> None:
 
     # Each denominator column is the cross-product matrix of that column of the input
     for j in range(2):
-        column = Vector(v.values[:, j])
+        column = Vector(np.asarray(v.values)[:, j])
         assert np.all(result.values[..., j] == column.cross_product_as_matrix().values)
 
 

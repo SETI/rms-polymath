@@ -3,8 +3,11 @@
 ##########################################################################################
 
 import warnings
+from typing import Any
+
 import numpy as np
 import pytest
+from numpy.ma import MaskedArray
 
 from polymath import Scalar, Pair, Vector, Matrix, Boolean, Qube
 
@@ -12,11 +15,11 @@ from polymath import Scalar, Pair, Vector, Matrix, Boolean, Qube
 def test_indices_an_unmasked_scalar() -> None:
     """An unmasked Scalar."""
 
-    def make_masked(orig, mask_list):
+    def make_masked(orig: MaskedArray, mask_list: Any) -> MaskedArray:
         ret = orig.copy()
         ret[np.array(mask_list)] = np.ma.masked
         return ret
-    def extract(a, indices):
+    def extract(a: MaskedArray, indices: Any) -> MaskedArray:
         ret = []
         for index in indices:
             ret.append(a[index])
@@ -28,7 +31,7 @@ def test_indices_an_unmasked_scalar() -> None:
             result = np.ma.array(ret)
 
         return result
-    def compare_a_b_1d(a, b, class_):
+    def compare_a_b_1d(a: Qube, b: MaskedArray, class_: type[Qube]) -> None:
         """Input a is a Qube subclass made from MaskedArray b, at least 1-D."""
 
         # Traditional indexing
@@ -64,7 +67,7 @@ def test_indices_an_unmasked_scalar() -> None:
         assert a[Boolean(False)].shape == (0,) + a.shape[1:]
         assert a[Boolean.MASKED].shape == (1,) + a.shape[1:]
         assert a[Boolean.MASKED].mask == True
-    def compare_a_b_2d(a, b, class_):
+    def compare_a_b_2d(a: Qube, b: MaskedArray, class_: type[Qube]) -> None:
         """Input a is a Qube subclass made from MaskedArray b, at least 2-D."""
 
         assert a[Pair((1,1))] == b[1,1]
@@ -76,7 +79,7 @@ def test_indices_an_unmasked_scalar() -> None:
         assert a[Pair(((1,1),(2,2),(3,3)),(True,False,False))] == make_masked(extract(b, ((1,1),(2,2),(3,3))), [0])
         assert a[Pair(((1,1),(2,2),(3,3)),(False,True,False))] == make_masked(extract(b, ((1,1),(2,2),(3,3))), [1])
         assert a[Pair(((1,1),(2,2),(3,3)),(False,False,True))] == make_masked(extract(b, ((1,1),(2,2),(3,3))), [2])
-    def compare_a_b_3d(a, b, class_):
+    def compare_a_b_3d(a: Qube, b: MaskedArray, class_: type[Qube]) -> None:
         """Input a is a Qube subclass made from MaskedArray b, at least 3-D.
         """
 
@@ -112,7 +115,7 @@ def test_indices_an_unmasked_scalar() -> None:
 
         indx = (Scalar([1,2],True), Ellipsis, Scalar([0,1],True))
         assert np.all(a[indx].mask == True)
-    def check_derivs_1d(c):
+    def check_derivs_1d(c: Qube) -> None:
         """Alternative ways of indexing a 1-D derivative."""
 
         assert c[1].d_dt == c.d_dt[1]
@@ -133,7 +136,7 @@ def test_indices_an_unmasked_scalar() -> None:
         assert c[:].d_dxy == c.d_dxy
         assert c[...].d_dxy == c.d_dxy
         assert c[::-1].d_dxy == c.d_dxy[::-1]
-    def check_derivs_2d(c, ellipses=True):
+    def check_derivs_2d(c: Qube, ellipses: bool = True) -> None:
         """Alternative ways of indexing a 2-D derivative."""
 
         assert c[1,0].d_dt == c.d_dt[1,0]
@@ -166,7 +169,7 @@ def test_indices_an_unmasked_scalar() -> None:
         assert c[Pair((-1,0))].d_dt == c.d_dt.vals[-1,0]
         assert c[Pair([(1,3),(2,3),(3,3),(4,3)])].d_dt == c.d_dt[1:5,3]
 
-    b = np.ma.arange(10)
+    b: Any = np.ma.arange(10)
     a = Scalar(b.data, False)
     c = a.copy()
     c.insert_deriv('t', Scalar([5,4,3,2,1,0,9,8,7,6]))
@@ -657,7 +660,7 @@ def test_indices_masked_index_when_every_element_of_the_axis_is_used() -> None:
     index = Scalar([0, 1, 2, 0], [False, False, False, True])
     result = a[index]
 
-    assert list(result.mask) == [False, False, False, True]
+    assert list(np.asarray(result.mask)) == [False, False, False, True]
     assert result.values[0] == 10.
     assert result.values[1] == 11.
     assert result.values[2] == 12.
@@ -670,7 +673,7 @@ def test_indices_masked_index_avoids_the_elements_the_index_selects() -> None:
     index = Scalar([1, 2, 1], [False, False, True])
     result = a[index]
 
-    assert list(result.mask) == [False, False, True]
+    assert list(np.asarray(result.mask)) == [False, False, True]
     assert result.values[0] == 11.
     assert result.values[1] == 12.
     # The value under the mask is unspecified, but it must not alias an element that the

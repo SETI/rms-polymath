@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/unit.py
 ##########################################################################################
+"""The :class:`~polymath.Unit` class, which gives a PolyMath object physical units.
+
+A Unit records the exponents of distance, time, and angle, together with the factor that
+converts a value into the standard units of kilometers, seconds, and radians. The values
+inside a PolyMath object are always held in those standard units; a Unit affects only how
+numbers are interpreted on input and presented on output.
+"""
 
 from collections import defaultdict
 import functools
@@ -22,12 +29,12 @@ class Unit:
     Attributes:
         exponents (tuple[int, int, int]): The exponents on dimensions of length, time, and
             angle, respectively.
-        triple (tuple[int, int, int]): Three integers representing the exact factor that
-            to multiply a value in this unit by to a value in standard units involving
+        triple (tuple[int, int, int]): Three integers representing the exact factor by
+            which to multiply a value in this unit to obtain a value in standard units
             (km, seconds, and radians). This factor is represented by three numbers,
             (**numer**, **denom**, and **expo**), where the exact factor equals
             (`numer/denom * pi**expo`).
-        name (str, dict or None): An optional name for this unit. Alternatively, a name
+        name (str | dict | None): An optional name for this unit. Alternatively, a name
             can be defined by a dictionary keyed by unit names, returning exponents. For
             example, the name "km/s" can be given by `{"km":1, "s":-1}`.
 
@@ -58,8 +65,8 @@ class Unit:
                 * [2] The exponent on pi that should multiply the numerator of this
                   factor.
 
-            name (str or dict, optional): The name of the unit. It is represented by a
-                string or by a dictionary of unit exponents keyed by the unit names.
+            name (str | dict | None, optional): The name of the unit. It is represented by
+                a string or by a dictionary of unit exponents keyed by the unit names.
 
         Notes:
             For example, a unit of degrees would have a triple (1,180,1). This defines a
@@ -95,11 +102,13 @@ class Unit:
         self.name = name
 
     @property
-    def from_unit_factor(self):
+    def from_unit_factor(self) -> float:
+        """The factor that converts a value from this unit to default units."""
         return self.factor
 
     @property
-    def into_unit_factor(self):
+    def into_unit_factor(self) -> float:
+        """The factor that converts a value from default units into this unit."""
         return self.factor_inv
 
     @staticmethod
@@ -107,14 +116,15 @@ class Unit:
         """Convert the given argument to a Unit object.
 
         Parameters:
-            arg: The argument to convert. Can be an object of class Unit, one of the
-                standard unit names, or None.
+            arg (Unit | str | None): The argument to convert. Can be an object of class
+                Unit, one of the standard unit names, or None.
 
         Returns:
-            Unit or None: The converted Unit object, or None if arg is None.
+            Unit | None: The converted Unit object, or None if `arg` is None.
 
         Raises:
-            ValueError: If the argument is not a recognized unit.
+            KeyError: If `arg` is a string that is not a recognized unit name.
+            TypeError: If `arg` is not a type that can be converted to Unit.
         """
 
         if arg is None:
@@ -124,15 +134,15 @@ class Unit:
         elif isinstance(arg, Unit):
             return arg
         else:
-            raise ValueError('not a recognized unit: ' + str(arg))
+            raise TypeError(f'not a recognized unit: {arg!r}')
 
     @staticmethod
     def can_match(first, second):
-        """Check if the unit can match.
+        """Check if two units can match.
 
         Parameters:
-            first (Unit or None): The first unit object.
-            second (Unit or None): The second unit object.
+            first (Unit | None): The first unit object.
+            second (Unit | None): The second unit object.
 
         Returns:
             bool: True if the units can match, meaning that either they have the same
@@ -149,8 +159,8 @@ class Unit:
         """Raise a ValueError if the arguments are not compatible units.
 
         Parameters:
-            first (Unit or None): The first unit object.
-            second (Unit or None): The second unit object.
+            first (Unit | None): The first unit object.
+            second (Unit | None): The second unit object.
             info (str, optional): Info to embed into the error message.
 
         Raises:
@@ -166,8 +176,8 @@ class Unit:
         """Check if the units match.
 
         Parameters:
-            first (Unit or None): The first unit object.
-            second (Unit or None): The second unit object.
+            first (Unit | None): The first unit object.
+            second (Unit | None): The second unit object.
 
         Returns:
             bool: True if the units match, meaning that they have the same exponents.
@@ -186,12 +196,12 @@ class Unit:
         """Raise a ValueError if the units are not the same.
 
         Parameters:
-            first (Unit or None): The first unit object.
-            second (Unit or None): The second unit object.
+            first (Unit | None): The first unit object.
+            second (Unit | None): The second unit object.
             info (str, optional): Info to embed into the error message.
 
         Raises:
-            ValueError: If the units are not compatible.
+            ValueError: If the units do not match.
         """
 
         if not Unit.do_match(first, second):
@@ -203,7 +213,7 @@ class Unit:
         """Check if the argument could be used as an angle.
 
         Parameters:
-            arg (Unit or None): The unit object to check.
+            arg (Unit | None): The unit object to check.
 
         Returns:
             bool: True if the argument could be used as an angle.
@@ -218,7 +228,7 @@ class Unit:
         """Raise a ValueError if the argument could not be used as an angle.
 
         Parameters:
-            arg (Unit or None): The unit object to check.
+            arg (Unit | None): The unit object to check.
             info (str, optional): Info to embed into the error message.
 
         Raises:
@@ -231,10 +241,10 @@ class Unit:
 
     @staticmethod
     def is_unitless(arg):
-        """True if the argument is unitless.
+        """Check if the argument is unitless.
 
         Parameters:
-            arg (Unit or None): The unit object to check.
+            arg (Unit | None): The unit object to check.
 
         Returns:
             bool: True if the argument is unitless.
@@ -249,7 +259,7 @@ class Unit:
         """Raise a ValueError if the argument is not unitless.
 
         Parameters:
-            arg (Unit or None): The unit object to check.
+            arg (Unit | None): The unit object to check.
             info (str, optional): Info to embed into the error message.
 
         Raises:
@@ -263,43 +273,41 @@ class Unit:
         raise ValueError(f'{info_}unit is not permitted: {arg}')
 
     def from_this(self, value):
-        """Convert a scalar or numpy array in this unit to a standard unit.
+        """Convert values in this unit to a standard unit.
 
         Parameters:
-            value (scalar or numpy.ndarray): The value to convert from this unit to
-                standard units of km, seconds and radians.
+            value (Any): The value to convert from this unit to standard units of km,
+                seconds and radians.
 
         Returns:
-            scalar or numpy.ndarray: The value converted to a standard unit.
+            Any: The `value` converted to a standard unit.
         """
 
         return self.factor * value
 
     def into_this(self, value):
-        """Convert a scalar or numpy array from a standard unit to this unit.
+        """Convert values from a standard unit to this unit.
 
         Parameters:
-            value (scalar or numpy.ndarray): The value to convert from a standard unit
-                to this unit.
+            value (Any): The value to convert from a standard unit to this unit.
 
         Returns:
-            scalar or numpy.ndarray: The converted value in this unit.
+            Any: The converted `value` in this unit.
         """
 
         return self.factor_inv * value
 
     @staticmethod
     def from_unit(unit, value):
-        """Convert a scalar or numpy array in the given unit to a standard unit.
+        """Convert values in the given unit to a standard unit.
 
         Parameters:
-            unit (Unit or None): The unit to convert from.
-            value (scalar or numpy.ndarray): The value to convert.
+            unit (Unit | None): The unit to convert from.
+            value (Any): The value to convert.
 
         Returns:
-            scalar or numpy.ndarray: The `value` converted from the given `unit` to
-                standard units involving km, seconds and radians. If `unit` is None,
-                `value` is returned untouched.
+            Any: The `value` converted from the given `unit` to standard units involving
+            km, seconds and radians. If `unit` is None, `value` is returned untouched.
         """
 
         if unit is None:
@@ -309,16 +317,15 @@ class Unit:
 
     @staticmethod
     def into_unit(unit, value):
-        """Convert a scalar or numpy array from a standard unit to given unit.
+        """Convert values from a standard unit to given unit.
 
         Parameters:
-            unit (Unit or None): The unit to convert to.
-            value (scalar or numpy.ndarray): The value to convert.
+            unit (Unit | None): The unit to convert to.
+            value (Any): The value to convert.
 
         Returns:
-            scalar or numpy.ndarray: The `value` in standard units involving km, seconds
-                and radians converted to the given `unit`. If `unit` is None, `value` is
-                returned untouched.
+            Any: The `value` in standard units involving km, seconds and radians converted
+            to the given `unit`. If `unit` is None, `value` is returned untouched.
         """
 
         if unit is None:
@@ -327,18 +334,18 @@ class Unit:
         return unit.factor_inv * value
 
     def convert(self, value, unit, info=''):
-        """Convert the unit of a scalar or NumPy array.
+        """Convert the unit of one or more values.
 
         The value is assumed to be in this unit, and it is returned in the new unit
         specified. Conversions are exact whenever possible.
 
         Parameters:
-            value (scalar or numpy.ndarray): The value to convert.
-            unit (Unit or None): The target unit. If None, converts to unitless.
+            value (Any): The value to convert.
+            unit (Unit | None): The target unit. If None, converts to unitless.
             info (str, optional): Info to embed into the error message.
 
         Returns:
-            scalar or numpy.ndarray: The converted value in the target unit.
+            Any: The converted value in the target unit.
 
         Raises:
             ValueError: If the units are incompatible for conversion.
@@ -365,15 +372,15 @@ class Unit:
     ######################################################################################
 
     def __mul__(self, arg):
-        """Multiply this Unit object by another Unit object or scalar.
+        """Multiply this Unit object by a Unit object or a scale factor.
 
         Parameters:
-            arg (Unit, None, or numbers.Real): The object to multiply by.
+            arg (Unit | float | int | None): The object to multiply this Unit by, another
+                Unit or a scale factor. None is treated as unitless.
 
         Returns:
-            Unit: The product of the unit multiplication. If the type of `arg` is not
-            supported, NotImplemented is returned instead, so that Python falls back on
-            the reflected operation of `arg`.
+            Unit | NotImplemented: The product of the unit multiplication if possible;
+            otherwise, the NotImplemented sentinel.
 
         Raises:
             TypeError: If neither operand supports the multiplication.
@@ -397,24 +404,32 @@ class Unit:
         return NotImplemented
 
     def __rmul__(self, arg):
-        return self.__mul__(arg)
-
-    def __div__(self, arg):
-        return self.__truediv__(arg)
-
-    def __rdiv__(self, arg):
-        return self.__rtruediv__(arg)
-
-    def __truediv__(self, arg):
-        """Divide this Unit object by another Unit object or scalar.
+        """Right-multiply this Unit object by a Unit object or a scale factor.
 
         Parameters:
-            arg (Unit, None, or numbers.Real): The object to divide by.
+            arg (Unit | float | int | None): The object to multiply this Unit by, another
+                Unit or a scale factor. None is treated as unitless.
 
         Returns:
-            Unit: The quotient of the unit division. If the type of `arg` is not
-            supported, NotImplemented is returned instead, so that Python falls back on
-            the reflected operation of `arg`.
+            Unit | NotImplemented: The product of the unit multiplication if possible;
+            otherwise, the NotImplemented sentinel.
+
+        Raises:
+            TypeError: If neither operand supports the multiplication.
+        """
+
+        return self.__mul__(arg)
+
+    def __truediv__(self, arg):
+        """Divide this Unit object by another Unit or a scale factor.
+
+        Parameters:
+            arg (Unit | float | int | None): The object to divide by, another Unit or a
+                scale factor. None is treated as unitless.
+
+        Returns:
+            Unit | NotImplemented: The quotient of the unit division if possible;
+            otherwise, the NotImplemented sentinel.
 
         Raises:
             TypeError: If neither operand supports the division.
@@ -437,16 +452,32 @@ class Unit:
 
         return NotImplemented
 
-    def __rtruediv__(self, arg):
-        """Divide a scalar by this Unit object.
+    def __div__(self, arg):
+        """Divide this Unit object by another Unit or a scale factor.
 
         Parameters:
-            arg (None or numbers.Real): The scalar to divide.
+            arg (Unit | float | int | None): The object to divide by, another Unit or a
+                scale factor. None is treated as unitless.
 
         Returns:
-            Unit: The reciprocal of this Unit object multiplied by arg. If the type of
-            `arg` is not supported, NotImplemented is returned instead, so that Python
-            falls back on the reflected operation of `arg`.
+            Unit | NotImplemented: The quotient of the unit division if possible;
+            otherwise, the NotImplemented sentinel.
+
+        Raises:
+            TypeError: If neither operand supports the division.
+        """
+
+        return self.__truediv__(arg)
+
+    def __rtruediv__(self, arg):
+        """Divide a scalar by this Unit.
+
+        Parameters:
+            arg (float | int | None): The scalar to divide.
+
+        Returns:
+            Unit | NotImplemented: The reciprocal of this Unit object multiplied by `arg`
+            if possible; otherwise, the NotImplemented sentinel.
 
         Raises:
             TypeError: If neither operand supports the division.
@@ -460,17 +491,34 @@ class Unit:
 
         return NotImplemented
 
+    def __rdiv__(self, arg):
+        """Divide a scalar by this Unit.
+
+        Parameters:
+            arg (float | int | None): The scalar to divide.
+
+        Returns:
+            Unit | NotImplemented: The reciprocal of this Unit object multiplied by `arg`
+            if possible; otherwise, the NotImplemented sentinel.
+
+        Raises:
+            TypeError: If neither operand supports the division.
+        """
+
+        return self.__rtruediv__(arg)
+
     def __pow__(self, power):
         """Raise this Unit object to the specified power.
 
         Parameters:
-            power (int or float): The exponent. Must be an integer or half-integer.
+            power (int | float): The exponent. Must be an integer or half-integer.
 
         Returns:
             Unit: This Unit object raised to the specified power.
 
         Raises:
-            ValueError: If the power is not an integer or half-integer.
+            ValueError: If the power is not an integer or half-integer, or if the Unit
+                cannot be raised to a half-integer power.
         """
 
         ipower = int(power)
@@ -504,7 +552,7 @@ class Unit:
         """The square root of this Unit object.
 
         Returns:
-            Unit: The square root of this Unit object.
+            Unit: The square root of this Unit.
 
         Raises:
             ValueError: If the exponents are not even numbers.
@@ -540,11 +588,11 @@ class Unit:
         """Multiply two Unit objects.
 
         Parameters:
-            arg1 (Unit or None): The first Unit object.
-            arg2 (Unit or None): The second Unit object.
+            arg1 (Unit | None): The first Unit object.
+            arg2 (Unit | None): The second Unit object.
 
         Returns:
-            Unit or None: The product of the two Unit objects, or None if both arguments
+            Unit | None: The product of the two Unit objects, or None if both arguments
             are None.
         """
 
@@ -560,11 +608,11 @@ class Unit:
         """Divide two Unit objects.
 
         Parameters:
-            arg1 (Unit or None): The numerator Unit object.
-            arg2 (Unit or None): The denominator Unit object.
+            arg1 (Unit | None): The numerator Unit object.
+            arg2 (Unit | None): The denominator Unit object.
 
         Returns:
-            Unit or None: The quotient of the two Unit objects, or None if both arguments
+            Unit | None: The quotient of the two Unit objects, or None if both arguments
             are None.
         """
 
@@ -581,10 +629,10 @@ class Unit:
         """The square root of a Unit object.
 
         Parameters:
-            unit (Unit or None): The Unit object to take the square root of.
+            unit (Unit | None): The Unit object to take the square root of.
 
         Returns:
-            Unit or None: The square root of the Unit object, or None if unit is None.
+            Unit | None: The square root of the Unit object, or None if `unit` is None.
 
         Raises:
             ValueError: If the exponents are not even numbers.
@@ -600,11 +648,11 @@ class Unit:
         """Raise a Unit object to the specified power.
 
         Parameters:
-            unit (Unit or None): The Unit object to raise to a power.
-            power (int or float): The exponent. Must be an integer or half-integer.
+            unit (Unit | None): The Unit object to raise to a power.
+            power (int | float): The exponent. Must be an integer or half-integer.
 
         Returns:
-            Unit or None: The Unit object raised to the specified power, or None if unit
+            Unit | None: The Unit object raised to the specified power, or None if `unit`
             is None.
 
         Raises:
@@ -624,7 +672,8 @@ class Unit:
         """Check if this Unit object equals another.
 
         Parameters:
-            arg (Unit or None): The Unit object to compare with.
+            arg (Any): The object to compare with. Any object that is not a Unit compares
+                unequal.
 
         Returns:
             bool: True if the Unit objects are equal, False otherwise.
@@ -639,7 +688,8 @@ class Unit:
         """Check if this Unit object does not equal another.
 
         Parameters:
-            arg (Unit or None): The Unit object to compare with.
+            arg (Any): The object to compare with. Any object that is not a Unit compares
+                unequal.
 
         Returns:
             bool: True if the Unit objects are not equal, False otherwise.
@@ -655,6 +705,12 @@ class Unit:
     ######################################################################################
 
     def __copy__(self):
+        """A shallow copy of this Unit.
+
+        Returns:
+            Unit: A new Unit with the same exponents, triple, and name.
+        """
+
         return Unit(self.exponents, self.triple, self.name)
 
     def copy(self):
@@ -693,12 +749,12 @@ class Unit:
         """Multiply two unit names.
 
         Parameters:
-            name1 (str, dict, or None): The first unit name.
-            name2 (str, dict, or None): The second unit name.
+            name1 (str | dict | None): The first unit name.
+            name2 (str | dict | None): The second unit name.
 
         Returns:
-            str or dict or None: The product of the two unit names, or None if both
-            arguments are None.
+            dict | None: The product of the two unit names, or None if either argument is
+            None.
         """
 
         if name1 is None or name2 is None:
@@ -726,12 +782,12 @@ class Unit:
         """Divide two unit names.
 
         Parameters:
-            name1 (str, dict, or None): The numerator unit name.
-            name2 (str, dict, or None): The denominator unit name.
+            name1 (str | dict | None): The numerator unit name.
+            name2 (str | dict | None): The denominator unit name.
 
         Returns:
-            str or dict or None: The quotient of the two unit names, or None if both
-            arguments are None.
+            dict | None: The quotient of the two unit names, or None if either argument
+            is None.
         """
 
         if name1 is None or name2 is None:
@@ -759,11 +815,11 @@ class Unit:
         """Raise a unit name to the specified power.
 
         Parameters:
-            name (str, dict, or None): The unit name to raise to a power.
-            power (int or float): The exponent.
+            name (str | dict | None): The unit name to raise to a power.
+            power (int | float): The exponent.
 
         Returns:
-            dict or None: The unit name raised to the specified power. The result is None
+            dict | None: The unit name raised to the specified power. The result is None
             if `name` is None, and also if the power would give any name a non-integer
             exponent, because no name written in these units can express the result. A
             unit left unnamed this way derives a name from its dimensions instead.
@@ -801,7 +857,7 @@ class Unit:
         """Convert a unit expression string to a dictionary.
 
         Parameters:
-            expr (str or dict): The unit expression string to convert. It can contain "**"
+            expr (str | dict): The unit expression string to convert. It can contain "**"
                 for exponentiation, "*" for multiply, and "/" for divide. It can contain
                 nested substrings inside parentheses.
 
@@ -817,7 +873,11 @@ class Unit:
         """
 
         def parse_group():
-            """Parse tokens up to the end or the next ")" and return their exponents."""
+            """Parse tokens up to the end or the next ")" and return their exponents.
+
+            Returns:
+                dict: The exponents of each unit name found in the group.
+            """
 
             nonlocal pos
 
@@ -877,19 +937,24 @@ class Unit:
         """Convert a unit name dictionary to a string.
 
         Parameters:
-            namedict (dict or None): The unit name dictionary to convert.
+            namedict (str | dict): The unit name dictionary to convert. A string is
+                returned unchanged.
 
         Returns:
-            str: A string representation of the unit name, or empty string if namedict is
-            None.
-
-        Notes:
-            This method contains nested helper functions for ordering keys and
-            concatenating units.
+            str: A string representation of the unit name, or an empty string if
+            `namedict` is empty.
         """
 
         def order_keys(namelist):
-            """Internal method to order the units sensibly."""
+            """Internal method to order the units sensibly.
+
+            Parameters:
+                namelist (list[str]): The unit names to sort.
+
+            Returns:
+                list[str]: The names ordered with the coefficient first, then distances,
+                then angles, then times, then the remaining names alphabetically.
+            """
 
             sorted_ = []
 
@@ -938,7 +1003,17 @@ class Unit:
             return sorted_
 
         def cat_units(namelist, negate=False):
-            """A string of names and exponents."""
+            """A string of names and exponents.
+
+            Parameters:
+                namelist (list[str]): The unit names to concatenate.
+                negate (bool, optional): True to negate each exponent, as required for the
+                    denominator of a ratio.
+
+            Returns:
+                str: The names joined by "*", each with its exponent where that is not
+                one.
+            """
 
             unitlist = []
             for key in namelist:
@@ -991,7 +1066,7 @@ class Unit:
         """Create a name for this Unit object based on its exponents.
 
         Returns:
-            str or dict: A name for this Unit object.
+            str | dict: A name for this Unit object.
         """
 
         # Return the internal name, if defined
@@ -1015,7 +1090,7 @@ class Unit:
                 conversion factor.
 
         Returns:
-            str or dict: The name, either a string or a dictionary of exponents keyed by
+            str | dict: The name, either a string or a dictionary of exponents keyed by
             unit name.
         """
 
@@ -1105,7 +1180,7 @@ class Unit:
         """Get the name of this Unit object.
 
         Returns:
-            str or dict or None: The name of this Unit object.
+            str: The name of this Unit object.
         """
 
         name = self.name or self.create_name()
@@ -1115,7 +1190,10 @@ class Unit:
         """Set the name of this Unit object.
 
         Parameters:
-            name (str or dict): The new name for this Unit object.
+            name (str | dict): The new name for this Unit object.
+
+        Returns:
+            Unit: This object, with the new name applied.
         """
 
         self.name = name
@@ -1144,7 +1222,7 @@ Unit.MICRONS     = Unit((1, 0, 0), (1, 1000000000, 0), 'microns')
 
 Unit.S           = Unit((0, 1, 0), (    1,    1, 0), 's')
 Unit.SEC         = Unit((0, 1, 0), (    1,    1, 0), 'sec')
-Unit.SECOND      = Unit((0, 1, 0), (    1,    1, 0), 'second ')
+Unit.SECOND      = Unit((0, 1, 0), (    1,    1, 0), 'second')
 Unit.SECONDS     = Unit((0, 1, 0), (    1,    1, 0), 'seconds')
 Unit.MIN         = Unit((0, 1, 0), (   60,    1, 0), 'min')
 Unit.MINUTE      = Unit((0, 1, 0), (   60,    1, 0), 'minute')
@@ -1206,7 +1284,5 @@ Unit._STANDARD_LIST = ([Unit.UNITLESS] +
 for _unit in Unit._STANDARD_LIST:
     Unit._NAME_TO_UNIT[_unit.name] = _unit
     Unit._TUPLES_TO_UNIT[(_unit.exponents, _unit.triple)] = _unit
-
-del _unit
 
 ##########################################################################################

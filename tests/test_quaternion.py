@@ -10,10 +10,10 @@
 import numpy as np
 import pytest
 
-from polymath import Matrix, Matrix3, Quaternion, Scalar, Vector, Vector3
+from polymath import Matrix, Matrix3, Quaternion, Qube, Scalar, Vector, Vector3
 
 
-def assert_rms_less_than(diff, threshold):
+def assert_rms_less_than(diff: Qube, threshold: float) -> None:
     """Helper method to assert RMS value is less than threshold, handling masked Scalars."""
     rms_val = diff.rms()
     # Extract numeric value if rms returns a Scalar

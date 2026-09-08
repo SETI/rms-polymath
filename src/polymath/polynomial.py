@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/polynomial.py: Polynomial subclass of Vector
 ##########################################################################################
+"""The :class:`~polymath.Polynomial` subclass, representing polynomials of one variable.
+
+A Polynomial is a :class:`~polymath.Vector` whose components are the coefficients of a
+polynomial, ordered from the highest power down to the constant term. This class evaluates
+polynomials, differentiates them, and finds their roots.
+"""
 
 import numpy as np
 
@@ -18,12 +24,13 @@ class Polynomial(Vector):
     This is a Vector subclass in which the elements are interpreted as the coefficients of
     a polynomial in a single variable x. Coefficients appear in order of decreasing
     exponent. For example:
-    - [a, b, c] represents a*x^2 + b*x + c
-    - [a, b] represents a*x + b
-    - [a] represents the constant a
 
-    Mathematical operations, polynomial root-solving are supported. Coefficients
-    can have derivatives and these can be used to determine derivatives of the values or
+    * ``[a, b, c]`` represents ``a*x**2 + b*x + c``
+    * ``[a, b]`` represents ``a*x + b``
+    * ``[a]`` represents the constant ``a``
+
+    Mathematical operations and polynomial root-solving are supported. Coefficients can
+    have derivatives, and these can be used to determine derivatives of the values or
     roots.
     """
 
@@ -33,9 +40,8 @@ class Polynomial(Vector):
         """Initialize a Polynomial object.
 
         Parameters:
-            *args: Arguments to pass to the Vector constructor. If a single argument is a
-                subclass of Vector, it is quickly converted to class Polynomial.
-            **kwargs: Keyword arguments to pass to the Vector constructor.
+            *args (Any): Arguments to pass to the Vector constructor.
+            **kwargs (Any): Keyword arguments to pass to the Vector constructor.
 
         Notes:
             If a single argument is a subclass of Vector, it is quickly converted to class
@@ -74,13 +80,8 @@ class Polynomial(Vector):
             super().__init__(*args, **kwargs)
 
     @property
-    def order(self):
-        """The order of the polynomial, i.e., the largest exponent.
-
-        Returns:
-            int: The order of the polynomial.
-        """
-
+    def order(self) -> int:
+        """The order of the polynomial, i.e., the largest exponent."""
         return self.item[-self._drank - 1] - 1
 
     @staticmethod
@@ -88,7 +89,7 @@ class Polynomial(Vector):
         """A shallow copy of the given object as class Polynomial.
 
         Parameters:
-            arg: Object to convert to Polynomial.
+            arg (VectorLike): Object to convert to Polynomial.
             recursive (bool, optional): True to include derivatives in the conversion.
 
         Returns:
@@ -107,7 +108,7 @@ class Polynomial(Vector):
         else:
             return Polynomial(vector.wod)
 
-    def as_vector(self, *, recursive=True):
+    def as_vector(self, recursive=True):
         """A shallow copy of this Polynomial as class Vector.
 
         Parameters:
@@ -171,8 +172,8 @@ class Polynomial(Vector):
     def set_order(self, order, *, recursive=True):
         """This Polynomial expressed with exactly this order.
 
-        Extra polynomial coefficients are filled with zeros. If this Polynomial exceeds
-        this order requested, raise an exception.
+        Extra leading polynomial coefficients are filled with zeros. If the order of this
+        Polynomial exceeds the order requested, a ValueError is raised.
 
         Parameters:
             order (int): Exact order of the Polynomial.
@@ -191,25 +192,26 @@ class Polynomial(Vector):
 
         return self.at_least_order(order, recursive=recursive)
 
-    def invert_line(self, *, recursive=True):
+    def invert_line(self, recursive=True):
         """The inversion of this linear polynomial.
 
-        If this polynomial represents y = a*x + b, then the inverse polynomial
-        represents x = (y - b) / a = (1/a)*y - b/a.
+        If this polynomial represents ``y = a*x + b``, then the inverse polynomial
+        represents ``x = (y - b) / a = (1/a)*y - b/a``.
 
         Parameters:
             recursive (bool, optional): True to include derivatives in the conversion.
 
         Returns:
             Polynomial: The inverted linear polynomial. Any element whose leading
-            coefficient a is zero is masked.
+            coefficient ``a`` is zero is masked.
 
         Raises:
             ValueError: If the polynomial is not first-order.
 
         Notes:
             Derivatives are propagated by the chain rule, so the derivatives of the
-            returned coefficients are d(1/a) = -da/a**2 and d(-b/a) = -db/a + b*da/a**2.
+            returned coefficients are ``d(1/a) = -da/a**2`` and
+            ``d(-b/a) = -db/a + b*da/a**2``.
         """
 
         if self.order != 1:
@@ -243,7 +245,7 @@ class Polynomial(Vector):
         """Add this polynomial to another polynomial or scalar.
 
         Parameters:
-            arg: The polynomial or scalar to add to this polynomial.
+            arg (Any): The polynomial or scalar to add to this polynomial.
 
         Returns:
             Polynomial: The sum of the polynomials.
@@ -257,7 +259,7 @@ class Polynomial(Vector):
         """Add this polynomial to another polynomial or scalar (right addition).
 
         Parameters:
-            arg: The polynomial or scalar to add to this polynomial.
+            arg (Any): The polynomial or scalar to add to this polynomial.
 
         Returns:
             Polynomial: The sum of the polynomials.
@@ -269,7 +271,7 @@ class Polynomial(Vector):
         """Add another polynomial to this polynomial in-place.
 
         Parameters:
-            arg: The polynomial to add to this polynomial.
+            arg (Any): The polynomial or scalar to add to this polynomial.
 
         Returns:
             Polynomial: This polynomial modified in-place.
@@ -315,7 +317,7 @@ class Polynomial(Vector):
         """Subtract another polynomial or scalar from this polynomial.
 
         Parameters:
-            arg: The polynomial or scalar to subtract from this polynomial.
+            arg (Any): The polynomial or scalar to subtract from this polynomial.
 
         Returns:
             Polynomial: The difference of the polynomials.
@@ -329,7 +331,7 @@ class Polynomial(Vector):
         """Subtract this polynomial from another polynomial or scalar.
 
         Parameters:
-            arg: The polynomial or scalar from which to subtract this polynomial.
+            arg (Any): The polynomial or scalar from which to subtract this polynomial.
 
         Returns:
             Polynomial: The difference of the polynomials.
@@ -343,7 +345,7 @@ class Polynomial(Vector):
         """Subtract another polynomial from this polynomial in-place.
 
         Parameters:
-            arg: The polynomial to subtract from this polynomial.
+            arg (Any): The polynomial or scalar to subtract from this polynomial.
 
         Returns:
             Polynomial: This polynomial modified in-place.
@@ -389,16 +391,14 @@ class Polynomial(Vector):
         """Multiply this polynomial by another polynomial or scalar.
 
         Parameters:
-            arg: The polynomial or scalar to multiply with this polynomial.
+            arg (Any): The polynomial or scalar to multiply with this polynomial.
 
         Returns:
             Polynomial: The product of the polynomials.
 
         Raises:
-            ValueError: If the polynomials have incompatible denominators. This
-                occurs when self._drank != arg._drank and both are non-zero. For example,
-                a polynomial with drank=1 cannot be multiplied by a polynomial with
-                drank=2.
+            ValueError: If `arg` is a Polynomial whose number of denominator axes differs
+                from that of this polynomial.
         """
 
         # Support for Polynomial multiplication
@@ -472,18 +472,19 @@ class Polynomial(Vector):
         """Multiply another polynomial or scalar by this polynomial.
 
         Parameters:
-            arg: The polynomial or scalar to multiply with this polynomial.
+            arg (Any): The polynomial or scalar to multiply with this polynomial.
 
         Returns:
             Polynomial: The product of the polynomials.
         """
+
         return self.__mul__(arg)
 
     def __imul__(self, arg):
         """Multiply this polynomial by another polynomial or scalar in-place.
 
         Parameters:
-            arg: The polynomial or scalar to multiply with this polynomial.
+            arg (Any): The polynomial or scalar to multiply with this polynomial.
 
         Returns:
             Polynomial: This polynomial modified in-place.
@@ -500,7 +501,7 @@ class Polynomial(Vector):
         """Divide this polynomial by another polynomial or scalar.
 
         Parameters:
-            arg: The polynomial or scalar by which to divide this polynomial.
+            arg (Any): The polynomial or scalar by which to divide this polynomial.
 
         Returns:
             Polynomial: The quotient of the polynomials.
@@ -516,7 +517,7 @@ class Polynomial(Vector):
         """Divide this polynomial by another polynomial or scalar in-place.
 
         Parameters:
-            arg: The polynomial or scalar by which to divide this polynomial.
+            arg (Any): The polynomial or scalar by which to divide this polynomial.
 
         Returns:
             Polynomial: This polynomial modified in-place.
@@ -532,10 +533,8 @@ class Polynomial(Vector):
     def __pow__(self, arg):
         """Raise this polynomial to the specified power.
 
-        Uses repeated squaring algorithm for efficient computation.
-
         Parameters:
-            arg: The exponent (must be a non-negative integer).
+            arg (int | float): The exponent, which must have a non-negative integer value.
 
         Returns:
             Polynomial: This polynomial raised to the specified power.
@@ -570,10 +569,10 @@ class Polynomial(Vector):
         """Check if this polynomial equals another polynomial.
 
         Parameters:
-            arg: The polynomial to compare with this polynomial.
+            arg (Any): The polynomial to compare with this polynomial.
 
         Returns:
-            bool: True if the polynomials are equal, False otherwise.
+            Boolean: True where the polynomials are equal, False otherwise.
         """
 
         arg = Polynomial.as_polynomial(arg).at_least_order(self.order)
@@ -584,10 +583,10 @@ class Polynomial(Vector):
         """Check if this polynomial does not equal another polynomial.
 
         Parameters:
-            arg: The polynomial to compare with this polynomial.
+            arg (Any): The polynomial to compare with this polynomial.
 
         Returns:
-            bool: True if the polynomials are not equal, False otherwise.
+            Boolean: True where the polynomials are not equal, False otherwise.
         """
 
         arg = Polynomial.as_polynomial(arg).at_least_order(self.order)
@@ -602,8 +601,8 @@ class Polynomial(Vector):
         """The first derivative of this Polynomial.
 
         Parameters:
-            recursive (bool, optional): True to evaluate derivatives as well.
-                Defaults to True.
+            recursive (bool, optional): True to include the derivatives of the
+                coefficients in the result.
 
         Returns:
             Polynomial: The derivative polynomial.
@@ -624,18 +623,15 @@ class Polynomial(Vector):
 
         return result
 
-    def eval(self, x, recursive=True):
-        """Evaluate the polynomial at x.
+    def eval(self, x, *, recursive=True):
+        """Evaluate the polynomial at `x`.
 
         Parameters:
-            x: Scalar at which to evaluate the Polynomial.
+            x (ScalarLike): Scalar at which to evaluate this Polynomial.
             recursive (bool, optional): True to evaluate derivatives as well.
-                Defaults to True.
 
         Returns:
-            Scalar: A Scalar of values. The shapes of self and x are broadcasted
-                together following NumPy broadcasting rules. If self has shape (m, n) and
-                x has shape (p,), the result will have the broadcasted shape.
+            Scalar: The Polynomial values.
         """
 
         if self.order == 0:
@@ -715,15 +711,14 @@ class Polynomial(Vector):
         """Find the roots of the polynomial.
 
         Parameters:
-            recursive (bool, optional): True to evaluate derivatives at the roots
-                as well. Defaults to True.
+            recursive (bool, optional): True to evaluate derivatives at the roots as well.
 
         Returns:
-            Scalar: A Scalar of roots. This has the same shape as self but an extra
-                leading axis matching the order of the polynomial. The leading index
-                selects among the roots of the polynomial. Roots appear in increasing
-                order and without any duplicates. Complex roots are masked. If fewer real
-                roots exist, the set of roots is padded at the end with masked values.
+            Scalar: The roots. This has the same shape as this object but with an extra
+            leading axis of length matching the order of the polynomial. The leading index
+            selects among the roots of the polynomial. Roots appear in increasing order
+            and without any duplicates. Complex roots are masked. If fewer real roots
+            exist, the set of roots is padded at the end with masked values.
 
         Raises:
             ValueError: If the polynomial is of order zero.
@@ -778,14 +773,14 @@ class Polynomial(Vector):
             coefficients[all_zeros, 0] = 1.
             poly_mask |= all_zeros
 
-#     N = len(p)
-#     if N > 1:
-#         # build companion matrix and find its eigenvalues (the roots)
-#         A = diag(np.ones((N-2,), p.dtype), -1)
-#         A[0,:] = -p[1:] / p[0]
-#         roots = np.linalg.eigvals(A)
-#     else:
-#         roots = np.array([])
+    # N = len(p)
+    # if N > 1:
+    #     # build companion matrix and find its eigenvalues (the roots)
+    #     A = diag(np.ones((N-2,), p.dtype), -1)
+    #     A[0,:] = -p[1:] / p[0]
+    #     roots = np.linalg.eigvals(A)
+    # else:
+    #     roots = np.array([])
 
         # Shift coefficients till the leading coefficient is nonzero
         shifts = (coefficients[..., 0] == 0.)

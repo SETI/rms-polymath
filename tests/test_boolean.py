@@ -139,9 +139,9 @@ def test_boolean_zeros() -> None:
     assert np.all(a.vals == True)
     assert np.all(a.mask == [[0,1],[0,0]])
     with pytest.raises(ValueError):
-        Boolean.ones(7, (2,3), numer=(3,))
+        Boolean.ones(7, (2,3), numer=(3,))  # type: ignore[arg-type]  # deliberately the wrong type
     with pytest.raises(ValueError):
-        Boolean.ones(7, (2,3), denom=(3,))
+        Boolean.ones(7, (2,3), denom=(3,))  # type: ignore[arg-type]  # deliberately the wrong type
 
     ##################################################################################
     # as_boolean

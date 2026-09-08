@@ -31,8 +31,8 @@ def test_vector_as_diagonal_check_an_array_of_matrices_some_masked() -> None:
     b = a.as_diagonal()
     for i in range(4):
         for j in range(4):
-            aa = a.extract_numer(0, i, Scalar)
-            bb = b.extract_numer(0, i, Vector).extract_numer(0, j, Scalar)
+            aa = a.extract_numer(0, i, classes=Scalar)
+            bb = b.extract_numer(0, i, classes=Vector).extract_numer(0, j, classes=Scalar)
 
             if i == j:
                 assert bb == aa

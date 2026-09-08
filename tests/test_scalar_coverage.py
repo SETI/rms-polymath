@@ -3,16 +3,18 @@
 # Comprehensive coverage tests for scalar.py to achieve >90% coverage
 ##########################################################################################
 
+import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 import numpy as np
 import pytest
-import warnings
-from contextlib import contextmanager
 
 from polymath import Scalar, Vector, Boolean, Qube, Unit
 
 
 @contextmanager
-def prefer_builtins(value):
+def prefer_builtins(value: bool) -> Iterator[None]:
     """Context manager to temporarily set Qube.prefer_builtins() flag."""
     old_value = Qube.prefer_builtins()
     try:
@@ -81,12 +83,12 @@ def test_scalar_coverage_test_invalid_dtype() -> None:
 
     a = Scalar([1, 2, 3], mask=True)
     idx, mask = a.as_index_and_mask(purge=True)
-    assert len(idx) == 0
+    assert len(np.asarray(idx)) == 0
 
     a = Scalar([1, 2, 3])
     a = a.mask_where_eq(2)
     idx, mask = a.as_index_and_mask(purge=True)
-    assert len(idx) == 2
+    assert len(np.asarray(idx)) == 2
 
     a = Scalar([1, 2, 3], mask=True)
     idx, mask = a.as_index_and_mask(masked=999)

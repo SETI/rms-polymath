@@ -393,7 +393,7 @@ def test_qube_ext_item_ops_simple_case_join_1_d_denominator_to_numerator() -> No
     a = Vector(np.arange(9).reshape(3, 3), drank=1)  # shape (), numer (3,), denom (3,)
     assert a.numer == (3,)
     assert a.denom == (3,)
-    b = a.join_items(Matrix)
+    b = a.join_items(classes=Matrix)
     assert b.shape == ()  # Shape is preserved
     assert b.numer == (3, 3)  # numer and denom are joined
     assert b.denom == ()
@@ -410,7 +410,7 @@ def test_qube_ext_item_ops_complex_n_d_case_join_with_shape_for_shape_2_numer_3_
     ##################################################################################
 
     a = Vector(np.arange(12).reshape(2, 3, 2), drank=1)  # shape (2,), numer (3,), denom (2,)
-    b = a.join_items(Matrix)
+    b = a.join_items(classes=Matrix)
     assert b.shape == (2,)  # Shape is preserved
     assert b.numer == (3, 2)  # numer and denom are joined
     assert b.denom == ()
@@ -426,7 +426,7 @@ def test_qube_ext_item_ops_test_with_classes_parameter_list() -> None:
     ##################################################################################
 
     a = Vector(np.arange(9).reshape(3, 3), drank=1)
-    b = a.join_items((Boolean, Scalar, Matrix3, Matrix))
+    b = a.join_items(classes=(Boolean, Scalar, Matrix3, Matrix))
 
     assert type(b) == Matrix3
 
@@ -441,7 +441,7 @@ def test_qube_ext_item_ops_test_with_drank_0_should_return_without_derivatives()
     ##################################################################################
 
     a = Vector([1., 2., 3.])
-    b = a.join_items(Matrix)
+    b = a.join_items(classes=Matrix)
     assert a.wod == b  # Should return without derivatives
 
     ##################################################################################
@@ -459,7 +459,7 @@ def test_qube_ext_item_ops_simple_case_split_numerator_to_denominator_use_matrix
     ##################################################################################
 
     a = Matrix(np.arange(24).reshape(2, 3, 4))  # shape (2,), numer (3, 4), denom ()
-    b = a.split_items(1, Matrix)  # Keep first 1 numer axis, rest become denom
+    b = a.split_items(1, classes=Matrix)  # Keep first 1 numer axis, rest become denom
     assert b.shape == (2,)
     assert b.numer == (3,)  # First numer axis
     assert b.denom == (4,)  # Remaining becomes denom
@@ -477,7 +477,7 @@ def test_qube_ext_item_ops_complex_n_d_case_split_with_shape_use_matrix_which_ha
     ##################################################################################
 
     a = Matrix(np.arange(24).reshape(2, 3, 4))  # shape (2,), numer (3, 4)
-    b = a.split_items(1, Vector)  # Keep first 1 numer axis, rest become denom
+    b = a.split_items(1, classes=Vector)  # Keep first 1 numer axis, rest become denom
     assert b.shape == (2,)
     assert b.numer == (3,)  # First numer axis
     assert b.denom == (4,)  # Remaining becomes denom
@@ -493,7 +493,7 @@ def test_qube_ext_item_ops_test_with_classes_parameter_use_matrix_which_has_nran
     ##################################################################################
 
     a = Matrix(np.arange(24).reshape(2, 3, 4))  # shape (2,), numer (3, 4)
-    b = a.split_items(1, (Boolean, Scalar, Vector3, Vector))
+    b = a.split_items(1, classes=(Boolean, Scalar, Vector3, Vector))
 
     assert isinstance(b, Qube)
 
@@ -514,7 +514,7 @@ def test_qube_ext_item_ops_simple_case_swap_numerator_and_denominator() -> None:
     a = Vector(np.arange(9).reshape(3, 3), drank=1)  # shape (), numer (3,), denom (3,)
     assert a.numer == (3,)
     assert a.denom == (3,)
-    b = a.swap_items(Matrix)
+    b = a.swap_items(classes=Matrix)
     assert b.shape == ()  # Shape is preserved
     assert b.numer == (3,)  # Swapped from denom
     assert b.denom == (3,)  # Swapped from numer
@@ -532,7 +532,7 @@ def test_qube_ext_item_ops_complex_n_d_case_swap_with_different_sizes() -> None:
     ##################################################################################
 
     a = Vector(np.arange(24).reshape(2, 3, 4), drank=1)  # shape (2,), numer (3,), denom (4,)
-    b = a.swap_items(Matrix)
+    b = a.swap_items(classes=Matrix)
     assert b.shape == (2,)
     assert b.numer == (4,)  # Swapped from denom
     assert b.denom == (3,)  # Swapped from numer
@@ -548,7 +548,7 @@ def test_qube_ext_item_ops_test_with_classes_parameter() -> None:
     ##################################################################################
 
     a = Vector(np.arange(9).reshape(3, 3), drank=1)
-    b = a.swap_items((Boolean, Scalar, Matrix3, Matrix))
+    b = a.swap_items(classes=(Boolean, Scalar, Matrix3, Matrix))
 
     assert isinstance(b, Qube)
 

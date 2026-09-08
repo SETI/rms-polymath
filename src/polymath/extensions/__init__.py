@@ -1,6 +1,17 @@
-################################################################################
+##########################################################################################
 # polymath/extensions/__init__.py
-################################################################################
+##########################################################################################
+"""Bind the methods defined throughout this subpackage onto :class:`~polymath.Qube`.
+
+Only what defines a PolyMath object lives in :mod:`polymath.qube`; everything else is
+written as a plain function in one of the modules here and attached to the class by this
+module. Importing it is therefore a prerequisite for using any PolyMath class, and
+:mod:`polymath` imports it before any subclass module, because each subclass builds
+read-only constants as it loads and those constructions call the bound methods.
+
+No module in this subpackage may import a subclass at module level, for the same reason.
+Class references such as ``Qube._SCALAR_CLASS`` are provided for that purpose.
+"""
 
 from polymath.qube import Qube
 
@@ -291,4 +302,4 @@ Qube._require_compatible_units = unit_ops._require_compatible_units
 # This module exports no names of its own; it binds the extension methods onto Qube.
 __all__ = []
 
-################################################################################
+##########################################################################################

@@ -68,4 +68,45 @@ def test_qube_readonly() -> None:
     assert (a.d_dm.values[0,0,0,0] != 42)
 
 
+def test_qube_readonly_copy_of_a_readonly_object_keeps_the_derivatives() -> None:
+    """A read-only copy of a read-only object retains its derivatives when recursive."""
+
+    np.random.seed(1729)
+
+    a = Vector(np.random.randn(5, 3))
+    a.insert_deriv('m', Vector(np.random.randn(5, 3, 2), drank=1))
+    a = a.as_readonly()
+
+    b = a.copy(readonly=True, recursive=True)
+    assert 'm' in b.derivs
+    assert b.d_dm.readonly
+    assert b.readonly
+
+
+def test_qube_readonly_copy_of_a_readonly_object_can_drop_the_derivatives() -> None:
+    """A read-only copy of a read-only object omits its derivatives when not recursive."""
+
+    np.random.seed(1730)
+
+    a = Vector(np.random.randn(5, 3))
+    a.insert_deriv('m', Vector(np.random.randn(5, 3, 2), drank=1))
+    a = a.as_readonly()
+
+    b = a.copy(readonly=True, recursive=False)
+    assert not b.derivs
+    assert b.readonly
+
+
+def test_qube_readonly_copy_of_a_readonly_object_shares_its_array() -> None:
+    """A read-only copy of a read-only object is shallow, sharing the original array."""
+
+    np.random.seed(1731)
+
+    a = Scalar(np.random.randn(5)).as_readonly()
+    b = a.copy(readonly=True)
+
+    assert b.values is a.values
+    assert b is not a
+
+
 ##########################################################################################

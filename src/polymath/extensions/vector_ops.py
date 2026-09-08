@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/extensions/vector_ops.py: vector operations
 ##########################################################################################
+"""Vector and matrix products of PolyMath objects.
+
+These functions implement the dot, cross, and outer products, the norm and its square, and
+the root-mean-square, each operating on a chosen pair of item axes. They are defined here
+rather than on :class:`~polymath.Vector` because they apply to any object whose item axes
+have suitable lengths.
+"""
 
 import math
 import numpy as np
@@ -18,10 +25,10 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
 
     Parameters:
         arg (Qube): The object for which to calculate the mean or sum.
-        axis (int or tuple, optional): An integer axis or a tuple of axes. The mean is
-            determined across these axes, leaving any remaining axes in the returned
-            value. If None (the default), then the mean is performed across all axes of
-            the object.
+        axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
+            The mean is determined across these axes, leaving any remaining axes in the
+            returned value. If None (the default), then the mean is performed across all
+            axes of the object.
         recursive (bool, optional): True to include derivatives in the returned object.
         _combine_as_mean (bool, optional): True to combine as a mean; False to combine as
             a sum.
@@ -111,7 +118,7 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
                                    drank=arg._drank, unit=arg._unit, example=arg)
 
     # Cast to the proper class
-    obj = obj.cast(type(arg))
+    obj = obj.cast(classes=type(arg))
 
     # Handle derivatives
     if recursive and arg._derivs:
@@ -130,7 +137,7 @@ def _check_axis(arg, axis, op):
 
     Parameters:
         arg (Qube): The object to check the axis for.
-        axis: The axis to validate.
+        axis (int | tuple[int, ...] | None): The axis to validate.
         op (str): The operation name for error messages.
 
     Raises:
@@ -169,7 +176,8 @@ def _zero_sized_result(self, axis):
     """A zero-sized result obtained by collapsing one or more axes.
 
     Parameters:
-        axis (int or tuple, optional): The axis or axes to collapse.
+        axis (int | tuple[int, ...] | None): The axis or axes to collapse; None to
+            collapse every axis.
 
     Returns:
         Qube: A zero-sized result with the specified axes collapsed.
@@ -207,9 +215,9 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         arg2 (Qube): The second operand as a subclass of Qube.
         axis1 (int, optional): The item axis of arg1 for the dot product. Default is -1.
         axis2 (int, optional): The item axis of arg2 for the dot product. Default is 0.
-        classes (type, list, or tuple, optional): The class of the object returned. If a
-            list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
     Returns:
@@ -296,7 +304,7 @@ def dot(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
                                nrank=new_nrank, drank=new_drank,
                                unit=Unit.mul_units(arg1._unit, arg2._unit),
                                example=arg1)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and (arg1._derivs or arg2._derivs):
@@ -336,22 +344,22 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
     Parameters:
         arg (Qube): The object for which to calculate the norm.
         axis (int, optional): The numerator axis for the norm. Defaults to -1.
-        classes (type, list, or tuple, optional): The class of the object returned. If a
-            list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
     Returns:
         Qube: The norm of the object along the specified axis.
 
     Raises:
-        ValueError: If the object has denominators or if the axis is out of
-            range.
+        ValueError: If the object has denominators or if the axis is out of range.
 
     Examples:
-        For a Vector with shape (2, 3) and numer (2,):
-        - axis=-1 (default) → result shape (2, 3), numer ()
-        - axis=0 → result shape (2, 3), numer ()
+        For a Vector with shape (2, 3) and numer (2,)::
+
+            axis=-1 (default) -> result shape (2, 3), numer ()
+            axis=0 -> result shape (2, 3), numer ()
     """
 
     arg._disallow_denom('norm()')
@@ -374,7 +382,7 @@ def norm(arg, axis=-1, *, classes=(), recursive=True):
     # Construct the object and cast
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,
                                drank=arg._drank, unit=arg._unit, example=arg)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and arg._derivs:
@@ -397,11 +405,11 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
     arg.norm_sq(...).
 
     Parameters:
-        arg: The object for which to calculate the norm-squared.
+        arg (Qube): The object for which to calculate the norm-squared.
         axis (int, optional): The item axis for the norm. Default is -1.
-        classes (type, list, or tuple, optional): The class of the object returned. If a
-            list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
     Returns:
@@ -411,9 +419,10 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
         ValueError: If the object has denominators or if the axis is out of range.
 
     Examples:
-        For a Vector with shape (2, 3) and numer (2,):
-        - axis=-1 (default) → result shape (2, 3), numer ()
-        - axis=0 → result shape (2, 3), numer ()
+        For a Vector with shape (2, 3) and numer (2,)::
+
+            axis=-1 (default) -> result shape (2, 3), numer ()
+            axis=0 -> result shape (2, 3), numer ()
     """
 
     arg._disallow_denom('norm_sq()')
@@ -437,7 +446,7 @@ def norm_sq(arg, axis=-1, *, classes=(), recursive=True):
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank-1,
                                drank=arg._drank,
                                unit=Unit.mul_units(arg._unit, arg._unit), example=arg)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and arg._derivs:
@@ -465,17 +474,17 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
         arg2 (Qube): The second operand.
         axis1 (int, optional): The item axis of the first object. Defaults to -1.
         axis2 (int, optional): The item axis of the second object. Defaults to 0.
-        classes (type, list, or tuple, optional): The class of the object returned. If a
-            list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
     Returns:
         Qube: The cross product of the two objects.
 
     Raises:
-        ValueError: If both objects have denominators, if axes are out of range,
-            or if axis lengths are incompatible.
+        ValueError: If both objects have denominators, if axes are out of range, or if
+            axis lengths are incompatible.
     """
 
     # At most one object can have a denominator.
@@ -541,7 +550,7 @@ def cross(arg1, arg2, axis1=-1, axis2=0, *, classes=(), recursive=True):
                                nrank=new_nrank, drank=new_drank,
                                unit=Unit.mul_units(arg1._unit, arg2._unit),
                                example=arg1)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and (arg1._derivs or arg2._derivs):
@@ -624,7 +633,7 @@ def _cross_2x2(a, b):
 
 
 @staticmethod
-def outer(arg1, arg2, classes=(), recursive=True):
+def outer(arg1, arg2, *, classes=(), recursive=True):
     """Calculate the outer product of two objects.
 
     The item shape of the returned object is obtained by concatenating the two
@@ -637,9 +646,9 @@ def outer(arg1, arg2, classes=(), recursive=True):
     Parameters:
         arg1 (Qube): The first operand.
         arg2 (Qube): The second operand.
-        classes (type, list, or tuple, optional): The class of the object returned. If a
-            list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
     Returns:
@@ -674,7 +683,7 @@ def outer(arg1, arg2, classes=(), recursive=True):
                                nrank=new_nrank, drank=new_drank,
                                unit=Unit.mul_units(arg1._unit, arg2._unit),
                                example=arg1)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Insert derivatives if necessary
     if recursive and (arg1._derivs or arg2._derivs):
@@ -704,7 +713,7 @@ def outer(arg1, arg2, classes=(), recursive=True):
 
 
 @staticmethod
-def as_diagonal(arg, axis, classes=(), recursive=True):
+def as_diagonal(arg, axis, *, classes=(), recursive=True):
     """A copy with one axis converted to a diagonal across two.
 
     Note: This is a static method. Call it as Qube.as_diagonal(arg, axis, ...) rather than
@@ -713,9 +722,9 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
     Parameters:
         arg (Qube): The object to convert.
         axis (int): The item axis to convert to two.
-        classes (type, list, or tuple, optional): The class of the object returned. If a
-            list is provided, the object will be an instance of the first suitable class
-            in the list. Otherwise, a generic Qube object will be returned.
+        classes (type | list[type] | tuple[type, ...], optional): The class of the object
+            returned. If a list is provided, the object will be an instance of the first
+            suitable class in the list. Otherwise, a generic Qube object will be returned.
         recursive (bool, optional): True to include derivatives in the returned object.
 
     Returns:
@@ -755,12 +764,13 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
     # Construct and cast
     obj = Qube._new_from_parts(new_values, arg._mask, nrank=arg._nrank + 1,
                                drank=arg._drank, unit=arg._unit, example=arg)
-    obj = obj.cast(classes)
+    obj = obj.cast(classes=classes)
 
     # Diagonalize the derivatives if necessary
     if recursive:
         for key, deriv in arg._derivs.items():
-            obj.insert_deriv(key, Qube.as_diagonal(deriv, axis, classes, False))
+            obj.insert_deriv(key, Qube.as_diagonal(deriv, axis, classes=classes,
+                                                   recursive=False))
 
     return obj
 
@@ -768,9 +778,10 @@ def as_diagonal(arg, axis, classes=(), recursive=True):
 def rms(self):
     """Calculate the root-mean-square values of all items as a Scalar.
 
-    The RMS is computed across all item dimensions (numerator dimensions) for each
-    array element. For a Vector with shape (n,) and numer (3,), this computes
-    sqrt(sum(vals^2) / 3) for each of the n elements.
+    The RMS is computed across all item dimensions, numerator and denominator alike, for
+    each array element. For a Vector with shape (n,) and numer (3,), this computes
+    sqrt(sum(vals**2) / 3) for each of the n elements. The mask is preserved; the unit and
+    derivatives are not.
 
     Useful for looking at the overall magnitude of the differences between two objects.
 
@@ -783,4 +794,4 @@ def rms(self):
 
     return Qube._SCALAR_CLASS(np.sqrt(sum_sq / self.isize), self._mask)
 
-################################################################################
+##########################################################################################

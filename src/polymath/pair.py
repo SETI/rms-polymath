@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/pair.py: Pair subclass of PolyMath Vector
 ##########################################################################################
+"""The :class:`~polymath.Pair` subclass, representing coordinate pairs and 2-vectors.
+
+A Pair is a :class:`~polymath.Vector` whose numerator shape is fixed at ``(2,)``. It adds
+the operations that are natural in two dimensions: swapping the components, rotating by 90
+degrees, measuring a polar angle, and converting to and from a pair of Scalars.
+"""
 
 import numpy as np
 import numbers
@@ -33,7 +39,7 @@ class Pair(Vector):
         """Convert the argument to Pair if possible.
 
         Parameters:
-            arg (object): The object to convert to Pair.
+            arg (PairLike): The object to convert to Pair.
             recursive (bool, optional): If True, derivatives will also be converted.
 
         Returns:
@@ -53,11 +59,11 @@ class Pair(Vector):
 
             # Collapse a 1x2 or 2x1 Matrix down to a Pair
             if arg._numer in ((1, 2), (2, 1)):
-                return arg.flatten_numer(Pair, recursive=recursive)
+                return arg.flatten_numer(classes=Pair, recursive=recursive)
 
             # For any suitable Qube, move numerator items to the denominator
             if arg.rank > 1 and arg._numer[0] == 2:
-                arg = arg.split_items(1, Pair)
+                arg = arg.split_items(1, classes=Pair)
 
             arg = Pair(arg._values, arg._mask, example=arg)
             return arg if recursive else arg.wod
@@ -74,8 +80,8 @@ class Pair(Vector):
         """Construct a Pair by combining two scalars.
 
         Parameters:
-            x (Scalar or convertible): First component of the pair.
-            y (Scalar or convertible): Second component of the pair.
+            x (ScalarLike | None): First component of the pair.
+            y (ScalarLike | None): Second component of the pair.
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
                 found amongst the scalars.
@@ -83,12 +89,12 @@ class Pair(Vector):
                 something potentially writable.
 
         Returns:
-            Pair: A new Pair object constructed from the two scalars.
+            Pair: A new Pair constructed from the two scalars.
 
         Notes:
             Input arguments need not have the same shape, but it must be possible to cast
             them to the same shape. A value of None is converted to a zero-valued Scalar
-            that matches the denominator shape of the other arguments.
+            that matches the denominator shape of the other argument.
         """
 
         # Convert all non-None args to Scalars
@@ -116,14 +122,14 @@ class Pair(Vector):
         return Qube.from_scalars(x, y, recursive=recursive, readonly=readonly,
                                  classes=[Pair])
 
-    def swapxy(self, *, recursive=True):
+    def swapxy(self, recursive=True):
         """A pair object in which the first and second values are switched.
 
         Parameters:
             recursive (bool, optional): If True, derivatives will also be swapped.
 
         Returns:
-            Pair: A new Pair with x and y values swapped.
+            Pair: A new Pair with **x** and **y** values swapped.
         """
 
         if not recursive:
@@ -149,14 +155,14 @@ class Pair(Vector):
 
         return obj
 
-    def rot90(self, *, recursive=True):
-        """A pair object rotated 90 degrees from the origin, (x,y) -> (y,-x).
+    def rot90(self, recursive=True):
+        """A pair object rotated 90 degrees about the origin, ``(x,y) -> (y,-x)``.
 
         Parameters:
             recursive (bool, optional): If True, derivatives will also be rotated.
 
         Returns:
-            Pair: A new Pair rotated 90 degrees counterclockwise.
+            Pair: A new Pair rotated 90 degrees clockwise.
         """
 
         # Roll the array axis to the end
@@ -180,8 +186,8 @@ class Pair(Vector):
 
         return obj
 
-    def angle(self, *, recursive=True):
-        """The polar angle of this Pair measured from the X-axis toward the Y-axis.
+    def angle(self, recursive=True):
+        """The polar angle of this Pair, from the **X**-axis toward the **Y**-axis.
 
         The returned value will always fall between zero and 2*pi.
 
@@ -189,7 +195,7 @@ class Pair(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            Scalar: The angle in radians, between 0 and 2π.
+            Scalar: The angle in radians, between 0 and 2*pi.
         """
 
         (x, y) = self.to_scalars(recursive=recursive)
@@ -202,18 +208,18 @@ class Pair(Vector):
         and upper limits.
 
         Parameters:
-            lower (Pair or None): Coordinates of the lower limit. None or masked value to
-                ignore.
-            upper (Pair or None): Coordinates of the upper limit (inclusive). None or a
-                masked value to ignore.
-            remask (bool, optional): True to keep the mask; False to replace the
-                values but make them unmasked.
+            lower (PairLike | None): Coordinates of the lower limit. None or a masked
+                value to ignore the lower limit.
+            upper (PairLike | None): Coordinates of the upper limit (inclusive). None or a
+                masked value to ignore the upper limit.
+            remask (bool, optional): True to keep the mask; False to replace the values
+                but make them unmasked.
 
         Returns:
             Pair: A new Pair with values clipped to the specified limits.
 
         Raises:
-            ValueError: If lower or upper has more than two values.
+            ValueError: If `lower` or `upper` does not contain exactly two values.
         """
 
         # Make sure the lower limit is either None or an unmasked Pair
@@ -249,8 +255,8 @@ class Pair(Vector):
 
         # Clip...
         result = self
-        result = result.clip_component(0, lower0, upper0, remask)
-        result = result.clip_component(1, lower1, upper1, remask)
+        result = result.clip_component(0, lower0, upper0, remask=remask)
+        result = result.clip_component(1, lower1, upper1, remask=remask)
         return result
 
 ##########################################################################################

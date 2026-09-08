@@ -15,7 +15,7 @@ def test_qube_cast_to_the_same_class_returns_the_object() -> None:
 
     a = Vector3(np.random.randn(5, 3))
 
-    assert a.cast(Vector3) is a
+    assert a.cast(classes=Vector3) is a
 
 
 def test_qube_cast_to_an_incompatible_class_returns_the_object() -> None:
@@ -25,7 +25,7 @@ def test_qube_cast_to_an_incompatible_class_returns_the_object() -> None:
 
     a = Vector3(np.random.randn(5, 3))
 
-    assert a.cast(Matrix3) is a
+    assert a.cast(classes=Matrix3) is a
 
 
 def test_qube_cast_selects_the_first_suitable_class() -> None:
@@ -34,7 +34,7 @@ def test_qube_cast_selects_the_first_suitable_class() -> None:
     np.random.seed(6011)
 
     a = Vector(np.random.randn(5, 3))
-    b = a.cast((Matrix3, Vector3, Vector))
+    b = a.cast(classes=(Matrix3, Vector3, Vector))
 
     assert type(b) is Vector3
 
@@ -47,7 +47,7 @@ def test_qube_cast_preserves_the_values_and_the_mask() -> None:
     values = np.random.randn(5, 3)
     mask = np.array([True, False, False, True, False])
     a = Vector(values, mask)
-    b = a.cast(Vector3)
+    b = a.cast(classes=Vector3)
 
     assert np.all(b.values == values)
     assert np.all(b.mask == mask)
@@ -61,7 +61,7 @@ def test_qube_cast_preserves_the_unit() -> None:
     np.random.seed(6011)
 
     a = Vector(np.random.randn(5, 3), unit=Unit.KM)
-    b = a.cast(Vector3)
+    b = a.cast(classes=Vector3)
 
     assert b.unit_ == Unit.KM
 
@@ -74,7 +74,7 @@ def test_qube_cast_preserves_the_derivatives() -> None:
     deriv = np.random.randn(5, 3)
     a = Vector(np.random.randn(5, 3))
     a.insert_deriv('t', Vector(deriv))
-    b = a.cast(Vector3)
+    b = a.cast(classes=Vector3)
 
     assert ('t' in b.derivs)
     assert np.all(b.d_dt.values == deriv)
@@ -87,7 +87,7 @@ def test_qube_cast_preserves_readonly_status() -> None:
 
     a = Vector(np.random.randn(5, 3)).as_readonly()
 
-    assert a.cast(Vector3).readonly
+    assert a.cast(classes=Vector3).readonly
 
 
 def test_qube_cast_of_a_writable_object_is_writable() -> None:
@@ -97,14 +97,14 @@ def test_qube_cast_of_a_writable_object_is_writable() -> None:
 
     a = Vector(np.random.randn(5, 3))
 
-    assert not a.cast(Vector3).readonly
+    assert not a.cast(classes=Vector3).readonly
 
 
 def test_qube_cast_coerces_an_integer_object_to_a_float_class() -> None:
     """A class that disallows integers receives the values coerced to floats."""
 
     a = Vector(np.arange(6).reshape(2, 3))
-    b = a.cast(Vector3)
+    b = a.cast(classes=Vector3)
 
     assert type(b) is Vector3
     assert b.is_float()
@@ -118,7 +118,7 @@ def test_qube_cast_to_a_class_without_derivatives_is_rejected() -> None:
     a.insert_deriv('t', Scalar([3., 4.]))
 
     with pytest.raises(ValueError, match='derivatives are disallowed'):
-        a.cast(Boolean)
+        a.cast(classes=Boolean)
 
 
 def test_qube_cast_does_not_alter_the_source() -> None:
@@ -128,7 +128,7 @@ def test_qube_cast_does_not_alter_the_source() -> None:
 
     a = Vector(np.random.randn(5, 3))
     a.insert_deriv('t', Vector(np.random.randn(5, 3)))
-    a.cast(Vector3)
+    a.cast(classes=Vector3)
 
     assert type(a) is Vector
     assert ('t' in a.derivs)
@@ -141,7 +141,7 @@ def test_qube_cast_of_a_rank_zero_object_to_scalar() -> None:
 
     values = np.random.randn(5)
     a = Qube._new_from_parts(values, False, nrank=0)
-    b = a.cast(Scalar)
+    b = a.cast(classes=Scalar)
 
     assert type(b) is Scalar
     assert np.all(b.values == values)

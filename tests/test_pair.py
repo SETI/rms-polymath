@@ -198,7 +198,7 @@ def test_pair_test_basic_construction() -> None:
 
     p23 = Pair.from_scalars(1., 2., readonly=True)
     assert type(p23) == Pair
-    # readonly may not be set by Qube.from_scalars, but parameter is accepted
+    assert p23.readonly
 
     p24 = Pair([1., 2.])
     p24_swapped = p24.swapxy()

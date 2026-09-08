@@ -2,6 +2,8 @@
 # tests/test_matrix3_deriv_class.py: Tests of the class used for a Matrix3 derivative
 ##########################################################################################
 
+from typing import cast
+
 import numpy as np
 
 from polymath import Matrix, Matrix3, Qube, Scalar, Vector, Vector3
@@ -19,7 +21,7 @@ def _with_deriv(matrix: Matrix3, values: np.ndarray) -> Matrix3:
 
     obj = matrix.copy()
     obj.insert_deriv('t', Matrix(values))
-    return obj
+    return cast(Matrix3, obj)
 
 
 def test_matrix3_deriv_class_is_matrix() -> None:

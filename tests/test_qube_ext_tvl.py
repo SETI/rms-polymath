@@ -2,6 +2,8 @@
 # tests/test_qube_ext_tvl.py
 ##########################################################################################
 
+from collections.abc import Iterator
+
 import numpy as np
 import pytest
 import numpy.ma as ma
@@ -10,7 +12,7 @@ from polymath import Qube, Scalar, Boolean
 
 
 @pytest.fixture(autouse=True)
-def _setup_teardown():
+def _setup_teardown() -> Iterator[None]:
     """Replaces the original setUp and tearDown methods."""
     Qube.prefer_builtins(False)
     yield

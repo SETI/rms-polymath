@@ -3,6 +3,8 @@
 # Unit tests for Qube vector operations
 ##########################################################################################
 
+from typing import cast
+
 import numpy as np
 import pytest
 
@@ -716,7 +718,8 @@ def test_qube_ext_vector_ops_test_limit_from_qube_line_465_when_limit_numer_is_t
         # This might be defensive code for future types
 
 
-def _reference_dot(arg1, arg2, axis1=-1, axis2=0):
+def _reference_dot(arg1: Qube, arg2: Qube, axis1: int = -1,
+                   axis2: int = 0) -> np.ndarray:
     """The dot product computed by broadcasting the numerator axes and contracting."""
 
     a1 = axis1 if axis1 >= 0 else axis1 + arg1._nrank
@@ -730,8 +733,9 @@ def _reference_dot(arg1, arg2, axis1=-1, axis2=0):
     array2 = arg2._values.reshape(arg2._shape + (arg1._nrank - 1) * (1,)
                                   + arg2._numer + arg1._drank * (1,) + arg2._denom)
 
-    return np.einsum('...i,...i->...', np.moveaxis(array1, k1, -1),
-                     np.moveaxis(array2, k2, -1))
+    return cast(np.ndarray, np.einsum('...i,...i->...',
+                                      np.moveaxis(array1, k1, -1),
+                                      np.moveaxis(array2, k2, -1)))
 
 
 def test_qube_ext_vector_ops_dot_of_two_matrices() -> None:

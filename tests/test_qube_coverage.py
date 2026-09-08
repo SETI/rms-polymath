@@ -21,7 +21,7 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
     np.random.seed(98765)
 
     with pytest.raises(TypeError):
-        _ = Scalar(1., example="not a qube")
+        _ = Scalar(1., example="not a qube")  # type: ignore[arg-type]  # deliberately the wrong type
 
     # Test derivatives disallowed
     # Need a class that disallows derivatives
@@ -138,7 +138,7 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
 
     try:
         a = Scalar([1., 2., 3.])
-        a.insert_deriv('t', "not a qube")
+        a.insert_deriv('t', "not a qube")  # type: ignore[arg-type]  # wrong type on purpose
     except TypeError:
         pass  # Expected
 
@@ -426,7 +426,7 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
     a = Scalar([1., 2., 3.])
     a.insert_deriv('t', Scalar([0.1, 0.2, 0.3]))
 
-    name = a.unique_deriv_name('t', object())  # object has no derivs
+    name = a.unique_deriv_name('t', object())  # type: ignore[arg-type]  # no derivs
 
     assert name != 't'
 
@@ -560,13 +560,13 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
 
     a = Scalar([1., 2., 3.])
 
-    b = a.cast([Vector])
+    b = a.cast(classes=[Vector])
     assert a is b  # Should return self when no suitable class
 
-    b = a.cast([Scalar])
+    b = a.cast(classes=[Scalar])
     assert a is b
 
-    b = a.cast(Scalar)
+    b = a.cast(classes=Scalar)
     assert a is b
 
     # Test incompatible _NUMER
@@ -1079,7 +1079,7 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
 
     assert a is not b
 
-    assert b.readonly
+    assert not b.readonly
 
     a = Scalar([1., 2., 3.])
     readonly_mask = np.array([False, True, False])
@@ -1567,10 +1567,10 @@ def test_qube_or_with_three_or_more_masks() -> None:
     b = np.array([False, True, False])
 
     assert Qube.or_(a, b, False) is not True
-    assert list(Qube.or_(a, b, False)) == [True, True, False]
+    assert list(np.asarray(Qube.or_(a, b, False))) == [True, True, False]
     assert Qube.or_(a, b, True) is True
     assert Qube.or_(False, False, False) is False
-    assert list(Qube.or_(a, a, a)) == [True, False, False]
+    assert list(np.asarray(Qube.or_(a, a, a))) == [True, False, False]
 
 
 def test_qube_and_with_three_or_more_masks() -> None:
@@ -1579,10 +1579,10 @@ def test_qube_and_with_three_or_more_masks() -> None:
     a = np.array([True, True, False])
     b = np.array([True, False, True])
 
-    assert list(Qube.and_(a, b, True)) == [True, False, False]
+    assert list(np.asarray(Qube.and_(a, b, True))) == [True, False, False]
     assert Qube.and_(a, b, False) is False
     assert Qube.and_(True, True, True) is True
-    assert list(Qube.and_(a, a, a)) == [True, True, False]
+    assert list(np.asarray(Qube.and_(a, a, a))) == [True, True, False]
 
 
 def test_qube_an_explicit_numerator_rank_of_zero_is_honored() -> None:

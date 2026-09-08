@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/extensions/unit_ops.py: Unit operations
 ##########################################################################################
+"""Attachment and interpretation of the units of a PolyMath object.
+
+The values inside an object are always held in standard units of kilometers, seconds, and
+radians. These functions attach a :class:`~polymath.Unit` to an object, remove it, convert
+the object's values into it for display, and confirm that the units of two operands can be
+combined.
+"""
 
 from polymath.qube import Qube
 from polymath.unit import Unit
@@ -12,12 +19,15 @@ def set_unit(self, unit, *, override=False):
     """Set the unit of this object.
 
     Parameters:
-        unit (Unit or None): The new unit.
+        unit (Unit | str | None): The new unit, given as a Unit, a standard unit name, or
+            None for no unit.
         override (bool, optional): If True, the unit can be modified on a read-only
             object.
 
     Raises:
-        ValueError: If this object is read-only and `override` is False.
+        TypeError: If this class does not permit units and `unit` is not unitless.
+        ValueError: If this object is read-only and `override` is False, or if `unit` is
+            not compatible with the current unit of this object.
     """
 
     if not self._UNITS_OK:
@@ -35,15 +45,15 @@ def set_unit(self, unit, *, override=False):
     self._cache.clear()
 
 
-def without_unit(self, *, recursive=True):
+def without_unit(self, recursive=True):
     """A shallow copy of this object without units.
 
-    A read-only object remains read-only. If recursive is True, derivatives are also
+    A read-only object remains read-only. If `recursive` is True, derivatives are also
     stripped of their units.
 
     Parameters:
-        recursive (bool, optional): True to include derivatives with their units
-            stripped; False to omit all derivatives.
+        recursive (bool, optional): True to include derivatives with their units stripped;
+            False to omit all derivatives.
 
     Returns:
         Qube: A shallow copy of this object with the unit stripped.
@@ -64,23 +74,23 @@ def without_unit(self, *, recursive=True):
     return obj
 
 
-def into_unit(self, *, recursive=False):
+def into_unit(self, recursive=False):
     """The values property of this object, converted to its unit.
 
-    This method converts values from standard units (kilometers, seconds, radians)
-    to this object's specified unit. For example, if the object has unit=Unit.M
-    (meters) and the internal values are in kilometers (standard units), this
-    method converts from km to m by multiplying by 1000.
+    This method converts values from standard units (kilometers, seconds, radians) to
+    this object's specified unit. For example, if the object has ``unit=Unit.M`` (meters)
+    and the internal values are in kilometers (standard units), this method converts from
+    km to m by multiplying by 1000.
 
     Parameters:
         recursive (bool, optional): If True, also return the derivatives converted to
             their units.
 
     Returns:
-        (numpy.ndarray, float, int, bool, or tuple): The values attribute of this
-        object, converted from standard units to this object's unit. If `recursive`
-        is True, it returns a tuple (`values`, `derivs`), where `derivs` is a
-        dictionary of the derivative values converted to their units.
+        numpy.ndarray | float | int | bool | tuple: The values attribute of this object,
+        converted from standard units to this object's unit. If `recursive` is True, it
+        returns a tuple (`values`, `derivs`), where `derivs` is a dictionary of the
+        derivative values converted to their units.
 
     Examples:
         >>> a = Scalar([1.0, 2.0, 3.0], unit=Unit.M)  # values in km (standard)
@@ -103,16 +113,16 @@ def into_unit(self, *, recursive=False):
 
 
 def confirm_unit(self, unit):
-    """Raises a ValueError if the unit is not compatible with this object.
+    """Raise a ValueError if the unit is not compatible with this object.
 
     Parameters:
-        unit (Unit or None): The new unit.
+        unit (Unit | None): The unit to check.
 
     Returns:
         Qube: This object.
 
     Raises:
-        ValueError: If this object has a unit that are incompatible with the new unit.
+        ValueError: If this object has a unit that is incompatible with `unit`.
     """
 
     if not Unit.can_match(self._unit, unit):
@@ -123,7 +133,11 @@ def confirm_unit(self, unit):
 
 
 def is_unitless(self):
-    """True if this object is unitless."""
+    """True if this object is unitless.
+
+    Returns:
+        bool: True if this object has no unit or a unitless unit.
+    """
 
     return Unit.is_unitless(self._unit)
 
@@ -132,7 +146,7 @@ def _require_unitless(self, op=''):
     """Raise a ValueError if this object is not unitless.
 
     Parameters:
-        info (str, optional): An info string to embed into the error message.
+        op (str, optional): Operation name to embed into the error message.
 
     Raises:
         ValueError: If units are present.
@@ -145,8 +159,7 @@ def _require_unitless(self, op=''):
 
 
 def _require_angle(self, op=''):
-    """Raise a ValueError if this object is not either unitless or has a dimension of
-    angle.
+    """Raise a ValueError if this object is neither unitless nor an angle.
 
     Parameters:
         op (str, optional): Operation name to embed into the error message.
@@ -165,7 +178,11 @@ def _require_compatible_units(self, arg, op=''):
     """Raise a ValueError if these objects do not have compatible units.
 
     Parameters:
+        arg (QubeLike): The object whose unit must be compatible with this object's unit.
         op (str, optional): Operation name to embed into the error message.
+
+    Returns:
+        bool: True if the units are compatible.
 
     Raises:
         ValueError: If units are not compatible.

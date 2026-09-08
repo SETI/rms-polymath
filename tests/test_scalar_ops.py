@@ -307,7 +307,7 @@ def test_scalar_ops_unary_plus() -> None:
     assert b.d_dt == 2
     assert not a.readonly
     assert not b.readonly
-    assert not a.d_dt.readonly       # writeable because it is a scalar
+    assert not a.d_dt.readonly       # writable because it is a scalar
     assert b.d_dt.readonly        # readonly because of broadcast
     a = Scalar(1, derivs={'t':Scalar(2)})
     b = (1,2,3) + a
@@ -1615,18 +1615,32 @@ def test_scalar_ops_reciprocal_disallows_denominators() -> None:
         a.reciprocal()
 
 
-@pytest.mark.parametrize(('symbol', 'func'),
-                         [('<' , operator.lt),
-                          ('<=', operator.le),
-                          ('>' , operator.gt),
-                          ('>=', operator.ge)])
-def test_scalar_ops_comparisons_disallow_denominators(
-        symbol: str, func: Callable[[Scalar, Scalar], object]) -> None:
-    """The ordering comparisons do not support denominators."""
+@pytest.mark.parametrize(('func', 'symbol'),
+                         [(operator.lt, '<'), (operator.le, '<='),
+                          (operator.gt, '>'), (operator.ge, '>=')],
+                         ids=['lt', 'le', 'gt', 'ge'])
+def test_scalar_ops_comparisons_disallow_a_denominator_on_the_left(
+        func: Callable[[Scalar, Scalar], Boolean], symbol: str) -> None:
+    """The ordering comparisons reject a denominator in the left operand."""
 
     a = Scalar([[1., 2.], [3., 4.]], drank=1)
-    with pytest.raises(ValueError, match=f'"{symbol}" does not support denominators'):
-        func(a, a)
+    b = Scalar([1., 2.])
+    with pytest.raises(ValueError, match=f'Scalar "{symbol}" does not support denom'):
+        func(a, b)
+
+
+@pytest.mark.parametrize(('func', 'symbol'),
+                         [(operator.lt, '<'), (operator.le, '<='),
+                          (operator.gt, '>'), (operator.ge, '>=')],
+                         ids=['lt', 'le', 'gt', 'ge'])
+def test_scalar_ops_comparisons_disallow_a_denominator_on_the_right(
+        func: Callable[[Scalar, Scalar], Boolean], symbol: str) -> None:
+    """The ordering comparisons reject a denominator in the right operand."""
+
+    a = Scalar([1., 2.])
+    b = Scalar([[1., 5.], [0., 4.]], drank=1)
+    with pytest.raises(ValueError, match=f'Scalar "{symbol}" does not support denom'):
+        func(a, b)
 
 
 def test_scalar_ops_power_zero_without_derivatives() -> None:

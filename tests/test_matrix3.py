@@ -6,8 +6,7 @@
 import numpy as np
 import pytest
 
-from polymath import Matrix3, Matrix, Vector, Vector3, Scalar, Quaternion
-from polymath.unit import Unit
+from polymath import Matrix3, Matrix, Vector, Vector3, Scalar, Quaternion, Unit
 
 
 def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() -> None:
@@ -81,8 +80,8 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
     assert rx.shape == ()
     assert rx.numer == (3, 3)
     expected = np.array([[1., 0., 0.],
-                        [0., np.cos(angle), np.sin(angle)],
-                        [0., -np.sin(angle), np.cos(angle)]])
+                        [0., np.cos(angle), -np.sin(angle)],
+                        [0., np.sin(angle), np.cos(angle)]])
     assert np.allclose(rx.vals, expected, atol=DEL)
 
     angles = np.array([0., np.pi/4, np.pi/2])
@@ -90,8 +89,8 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
     assert rx_array.shape == (3,)
     for i, angle in enumerate(angles):
         expected = np.array([[1., 0., 0.],
-                            [0., np.cos(angle), np.sin(angle)],
-                            [0., -np.sin(angle), np.cos(angle)]])
+                            [0., np.cos(angle), -np.sin(angle)],
+                            [0., np.sin(angle), np.cos(angle)]])
         assert np.allclose(rx_array.vals[i], expected, atol=DEL)
 
     ry = Matrix3.y_rotation(angle)
@@ -293,7 +292,7 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
     assert m2.shape == m.shape
 
     with pytest.raises(TypeError):
-        Matrix3(np.eye(3), unit='km')
+        Matrix3(np.eye(3), unit='km')  # type: ignore[arg-type]  # deliberately the wrong type
 
     m = Matrix3.zeros((2, 2), dtype='int')
     assert m.vals.dtype.kind == 'f'
@@ -345,7 +344,7 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
 
     m_write = Matrix3.x_rotation(np.pi/4).copy()
     with pytest.raises((ValueError, TypeError)):
-        (lambda: m_write.__imul__("invalid"))()
+        (lambda: m_write.__imul__("invalid"))()  # type: ignore[arg-type]  # deliberately the wrong type
 
     m_readonly = Matrix3.IDENTITY
     with pytest.raises(ValueError):
@@ -370,6 +369,9 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
 
     result_rmul = m2.__rmul__(m1, recursive=False)
     assert type(result_rmul) == Matrix3
+
+    with pytest.raises(TypeError, match=r'Matrix3 "\*"'):
+        m2.__rmul__('abc')
 
     v = Vector3([1., 0., 0.])
     v.insert_deriv('t', Vector3([0., 1., 0.]))

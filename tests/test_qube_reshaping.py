@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from polymath import Pair, Qube, Matrix, Scalar, Vector, Vector3
+from polymath import Boolean, Pair, Qube, Matrix, Scalar, Unit, Vector, Vector3
 
 
 def test_qube_reshaping_reshape_self_shape_recursive_true() -> None:
@@ -626,7 +626,6 @@ def test_qube_reshaping_stack_with_units() -> None:
 
     np.random.seed(2292)
 
-    from polymath.unit import Unit
     a = Scalar([1., 2., 3.], unit=Unit.KM)
     b = Scalar([4., 5., 6.], unit=Unit.KM)
     c = Qube.stack(a, b)
@@ -694,7 +693,6 @@ def test_qube_reshaping_test_stack_with_bool_arg_logic_bool_arg_is_none_or_not_q
 
     np.random.seed(2292)
 
-    from polymath.boolean import Boolean
     a = Boolean([True, False, True])
     b = Boolean([False, True, False])
     c = Qube.stack(a, b)

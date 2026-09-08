@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/extensions/masking.py: Mask construction and object mask operations
 ##########################################################################################
+"""Construction of masks and operations on the mask of a PolyMath object.
+
+A mask is a boolean array, or a single boolean applying to every element, in which True
+marks a value as invalid. These functions convert an arbitrary argument into a mask of a
+suitable shape, combine masks, count the masked and unmasked elements, and return copies
+of an object whose mask has been replaced or removed.
+"""
 
 import numpy as np
 import numbers
@@ -19,17 +26,17 @@ __all__ = ['and_', 'as_all_masked', 'as_mask_where_nonzero',
 
 @staticmethod
 def _as_mask(arg, *, invert=False, masked_value=True, opstr=''):
-    """This argument converted to a scalar bool or boolean Numpy array.
+    """This argument converted to a scalar bool or boolean NumPy array.
 
     Parameters:
-        arg: The object to convert to a mask.
+        arg (BooleanLike): The object to convert to a mask.
         invert (bool, optional): True to return the logical not of the mask.
         masked_value (bool, optional): The value to use where the input argument is
-           masked. This value is used _after_ `invert` is applied.
+            masked. This value is used *after* `invert` is applied.
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        (bool or NumPy.ndarray): bool or boolean array suitable for us as a mask.
+        MaskType: A bool or boolean array suitable for use as a mask.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -90,25 +97,24 @@ def _as_mask(arg, *, invert=False, masked_value=True, opstr=''):
 @staticmethod
 def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
                    masked_value=True, check=False, opstr=''):
-    """This argument converted to a scalar bool or boolean Numpy array of suitable
-    shape to use as a mask.
+    """This argument converted to a bool or boolean NumPy array shaped to serve as a mask.
 
     Parameters:
-        arg: The object to convert to a mask.
-        shape (tuple): Shape of the required mask.
-        collapse (bool, optional): True to merge the extraneous axes of a mask if its
-            rank is greater than that of the given shape.
-        broadcast (bool, optional): True to broadcast this mask if its rank is less
-            than that of the given shape.
+        arg (BooleanLike): The object to convert to a mask.
+        shape (tuple[int, ...]): Shape of the required mask.
+        collapse (bool, optional): True to merge the extraneous axes of a mask if its rank
+            is greater than that of the given shape.
+        broadcast (bool, optional): True to broadcast this mask if its rank is less than
+            that of the given shape.
         invert (bool, optional): True to return the logical not of the mask.
         masked_value (bool, optional): The value to use where the input argument is
-           nmasked. This value is used _after_ `invert` is applied.
-        check (bool, optional): True to check for an array containing all False
-            values, and if so, replace it with a single value of False.
+            masked. This value is used *after* `invert` is applied.
+        check (bool, optional): True to check for an array containing all False values,
+            and if so, replace it with a single value of False.
         opstr (str, optional): Name of operation to include in any error message.
 
     Returns:
-        (bool or NumPy.ndarray): bool or boolean mask array.
+        MaskType: A bool or boolean mask array.
 
     Raises:
         TypeError: If the data type of `arg` is invalid for a mask.
@@ -154,13 +160,13 @@ def _suitable_mask(arg, shape, *, collapse=False, broadcast=False, invert=False,
 
 @staticmethod
 def or_(*masks):
-    """The logical "or" of two or more masks, avoiding array operations if possible.
+    """The logical "or" of one or more masks, avoiding array operations if possible.
 
     Parameters:
-        *masks (array-like or bool): One or more boolean masks.
+        *masks (MaskType): One or more masks, each a bool or a boolean array.
 
     Returns:
-        (numpy.ndarray or bool): New mask array or bool.
+        MaskType: The combined mask as a new array or a bool.
     """
 
     # Two inputs is most common
@@ -211,13 +217,13 @@ def or_(*masks):
 
 @staticmethod
 def and_(*masks):
-    """The logical "and" of two or more masks, avoiding array operations if possible.
+    """The logical "and" of one or more masks, avoiding array operations if possible.
 
     Parameters:
-        *masks (array-like or bool): One or more boolean masks.
+        *masks (MaskType): One or more masks, each a bool or a boolean array.
 
     Returns:
-        (numpy.ndarray or bool): New mask array or bool.
+        MaskType: The combined mask as a new array or a bool.
     """
 
     # Two inputs is most common
@@ -271,13 +277,21 @@ def and_(*masks):
 
 
 def is_all_masked(self):
-    """True if this object is entirely masked."""
+    """True if this object is entirely masked.
+
+    Returns:
+        bool: True if every element of this object is masked.
+    """
 
     return np.all(self._mask)
 
 
 def count_masked(self):
-    """The number of masked items in this object."""
+    """The number of masked items in this object.
+
+    Returns:
+        int: The number of masked elements.
+    """
 
     if isinstance(self._mask, np.ndarray):
         return np.sum(self._mask)
@@ -286,7 +300,11 @@ def count_masked(self):
 
 
 def count_unmasked(self):
-    """The number of unmasked items in this object."""
+    """The number of unmasked items in this object.
+
+    Returns:
+        int: The number of unmasked elements.
+    """
 
     if isinstance(self._mask, np.ndarray):
         return self._size - np.sum(self._mask)
@@ -294,8 +312,16 @@ def count_unmasked(self):
     return 0 if self._mask else self._size
 
 
-def masked_single(self, *, recursive=True):
-    """An object of this subclass containing one masked value."""
+def masked_single(self, recursive=True):
+    """An object of this subclass containing one masked value.
+
+    Parameters:
+        recursive (bool, optional): True to include masked derivatives of the same names
+            as this object's derivatives.
+
+    Returns:
+        Qube: A shapeless, read-only, fully masked object.
+    """
 
     if not self._rank:
         new_value = self._default
@@ -313,9 +339,10 @@ def masked_single(self, *, recursive=True):
     return obj
 
 
-def without_mask(self, *, recursive=True):
-    """A shallow copy of this object without its mask. Note that masked values will be
-    revealed.
+def without_mask(self, recursive=True):
+    """A shallow copy of this object without its mask.
+
+    Note that masked values will be revealed.
 
     Parameters:
         recursive (bool, optional): True to unmask any derivatives; False to strip
@@ -335,7 +362,7 @@ def without_mask(self, *, recursive=True):
     return obj
 
 
-def as_all_masked(self, *, recursive=True):
+def as_all_masked(self, recursive=True):
     """A shallow copy of this object with everything masked.
 
     Parameters:
@@ -356,7 +383,7 @@ def as_all_masked(self, *, recursive=True):
     return obj
 
 
-def as_one_masked(self, *, recursive=True):
+def as_one_masked(self, recursive=True):
     """This object reduced to shape () and masked.
 
     Parameters:
@@ -364,23 +391,23 @@ def as_one_masked(self, *, recursive=True):
             derivatives.
 
     Returns:
-        Qube: This object but fully masked and with shape ()
+        Qube: This object but fully masked and with shape ().
     """
 
-    return self.flatten()[0].as_all_masked()
+    return self.flatten()[0].as_all_masked(recursive=recursive)
 
 
 def remask(self, mask, *, recursive=True, check=True):
     """A shallow copy of this object with a replaced mask.
 
-    This is much quicker than masked_where(), for cases where only the mask of this
-    object is changing.
+    This is much quicker than :meth:`~polymath.Qube.mask_where`, for cases where only the
+    mask of this object is changing.
 
     Parameters:
-        mask (array-like or bool): The new mask to be applied to the object.
+        mask (BooleanLike): The new mask to be applied to the object.
         recursive (bool, optional): True to apply the same mask to any derivatives.
-        check (bool, optional): True to check for an array containing all False
-            values, and if so, replace it with a single value of False.
+        check (bool, optional): True to check for an array containing all False values,
+            and if so, replace it with a single value of False.
 
     Returns:
         Qube: A shallow copy of this object with a new mask.
@@ -404,17 +431,16 @@ def remask(self, mask, *, recursive=True, check=True):
 
 
 def remask_or(self, mask, *, recursive=True, check=True):
-    """A shallow copy of this object, in which the current mask is "or-ed" with the
-    given mask.
+    """A shallow copy of this object in which the given mask is "or-ed" into its mask.
 
-    This is much quicker than masked_where(), for cases where only the mask is
-    changing.
+    This is much quicker than :meth:`~polymath.Qube.mask_where`, for cases where only the
+    mask of this object is changing.
 
     Parameters:
-        mask (array-like or bool): The new mask to be applied to the object.
+        mask (BooleanLike): The new mask to be applied to the object.
         recursive (bool, optional): True to apply the same mask to any derivatives.
-        check (bool, optional): True to check for an array containing all False
-            values, and if so, replace it with a single value of False.
+        check (bool, optional): True to check for an array containing all False values,
+            and if so, replace it with a single value of False.
 
     Returns:
         Qube: A shallow copy of this object with a new mask.
@@ -432,14 +458,13 @@ def remask_or(self, mask, *, recursive=True, check=True):
 
     if recursive:
         for key, deriv in self._derivs.items():
-            obj.insert_deriv(key, deriv.remask(mask, recursive=False, check=False))
+            obj.insert_deriv(key, deriv.remask_or(mask, recursive=False, check=False))
 
     return obj
 
 
-def expand_mask(self, *, recursive=True):
-    """A shallow copy where a single mask value of True or False is converted to an
-    array.
+def expand_mask(self, recursive=True):
+    """A shallow copy in which a single mask value of True or False becomes an array.
 
     If the object's mask is already an array, it is returned unchanged.
 
@@ -485,9 +510,8 @@ def expand_mask(self, *, recursive=True):
     return obj
 
 
-def collapse_mask(self, *, recursive=True):
-    """A shallow copy where a mask entirely containing either True or False is
-    converted to a single boolean.
+def collapse_mask(self, recursive=True):
+    """A shallow copy in which an all-True or all-False mask array becomes a single bool.
 
     Parameters:
         recursive (bool, optional): True to collapse the mask of any derivatives.
@@ -533,25 +557,41 @@ def collapse_mask(self, *, recursive=True):
 
 
 def as_mask_where_nonzero(self):
-    """A boolean scalar or NumPy ndarray where values are nonzero and unmasked."""
+    """A boolean scalar or NumPy ndarray where values are nonzero and unmasked.
+
+    Returns:
+        MaskType: True where an element is nonzero and unmasked.
+    """
 
     return (self._values != 0) & self.antimask
 
 
 def as_mask_where_zero(self):
-    """A boolean scalar or NumPy ndarray where values are zero and unmasked."""
+    """A boolean scalar or NumPy ndarray where values are zero and unmasked.
+
+    Returns:
+        MaskType: True where an element is zero and unmasked.
+    """
 
     return (self._values == 0) & self.antimask
 
 
 def as_mask_where_nonzero_or_masked(self):
-    """A boolean scalar or NumPy ndarray where values are nonzero or masked."""
+    """A boolean scalar or NumPy ndarray where values are nonzero or masked.
+
+    Returns:
+        MaskType: True where an element is nonzero or masked.
+    """
 
     return (self._values != 0) | self._mask
 
 
 def as_mask_where_zero_or_masked(self):
-    """A boolean scalar or NumPy ndarray where values are zero or masked."""
+    """A boolean scalar or NumPy ndarray where values are zero or masked.
+
+    Returns:
+        MaskType: True where an element is zero or masked.
+    """
 
     return (self._values == 0) | self._mask
 

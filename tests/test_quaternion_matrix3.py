@@ -171,7 +171,8 @@ def test_quaternion_matrix3_from_matrix3_derivative_round_trip() -> None:
     # The derivative of a rotation is orthogonal to the quaternion; a parallel
     # component leaves the matrix unchanged and so cannot be recovered
     da_dt = np.random.randn(N,4)
-    da_dt -= np.sum(da_dt * a.values, axis=-1)[:,np.newaxis] * a.values
+    a_values = np.asarray(a.values)
+    da_dt -= np.sum(da_dt * a_values, axis=-1)[:,np.newaxis] * a_values
     a.insert_deriv('t', Quaternion(da_dt))
 
     b = Quaternion.from_matrix3(a.to_matrix3(recursive=True))

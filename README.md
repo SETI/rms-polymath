@@ -53,6 +53,30 @@ from polymath import (Boolean, Matrix, Matrix3, Pair, Quaternion, Qube, Scalar, 
                       Vector, Vector3)
 ```
 
+# Type Annotations
+
+PolyMath ships type stubs and a `py.typed` marker, so a type checker such as mypy
+understands the signatures of every class. The
+`polymath.typedefs`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#module-polymath.typedefs)
+module supplements the stubs with aliases naming what each constructor accepts, for use in
+your own annotations:
+
+```python
+from polymath import Scalar, Vector3
+from polymath.typedefs import Vector3Like
+
+def speed(velocity: Vector3Like) -> Scalar:
+    return Vector3.as_vector3(velocity).norm()
+```
+
+`ScalarLike` accepts anything that `Scalar` converts: a number, a nested sequence, a NumPy
+array, or any PolyMath object. `BooleanLike`, `PairLike`, `VectorLike`, `Vector3Like`,
+`MatrixLike`, `Matrix3Like`, `QuaternionLike`, and `QubeLike` do the same for the other
+classes, and `ValsType` and `MaskType` name what the `values` and `mask` properties return.
+Each alias is an ordinary runtime object, so it can be imported and used anywhere. See the
+[User Guide](https://rms-polymath.readthedocs.io/en/latest/user_guide/user_guide_typing.html)
+for details.
+
 # Features
 
 The PolyMath classes are:
@@ -779,6 +803,8 @@ Information on contributing to this package can be found in the
 # Links
 
 * [Documentation](https://rms-polymath.readthedocs.io)
+* [User Guide](https://rms-polymath.readthedocs.io/en/latest/user_guide/user_guide.html)
+* [Developer Guide](https://rms-polymath.readthedocs.io/en/latest/dev_guide/dev_guide.html)
 * [Repository](https://github.com/SETI/rms-polymath)
 * [Issue tracker](https://github.com/SETI/rms-polymath/issues)
 * [PyPi](https://pypi.org/project/rms-polymath)

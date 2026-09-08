@@ -2,6 +2,8 @@
 # tests/test_qube._dentity.py
 ##########################################################################################
 
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -11,7 +13,7 @@ from polymath import Boolean, Matrix, Matrix3, Pair, Quaternion, Scalar, Vector,
 def test_qube_identity() -> None:
     """Exercise qube identity."""
 
-    a = Scalar((1,2,3))
+    a: Any = Scalar((1,2,3))
     assert a.identity() == 1
     assert type(a.identity()) == Scalar
     assert type(a.identity().values) == int

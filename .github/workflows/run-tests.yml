@@ -29,7 +29,7 @@ jobs:
 
       # Ruff is the linter of record for every rule it implements.
       # TODO Add `ruff format --check src tests` once the source has been
-      # reformatted; mypy stays off while src is deliberately unannotated.
+      # reformatted.
       - name: Ruff
         run: |
           ruff check src tests
@@ -42,15 +42,25 @@ jobs:
         run: |
           flake8 --select=E12,E13 src tests
 
+      # Every module under tests/ is checked. src/ is deliberately unannotated and
+      # carries no stub of its own, so mypy is kept off it by the excludes and the
+      # overrides in pyproject.toml; this step matches `--mypy` in
+      # scripts/run-all-checks.sh.
+      - name: Mypy
+        run: |
+          MYPYPATH=src mypy tests
+
       - name: Pyroma
         run: |
           pyroma .
 
-      # The published .pyi stubs must keep describing the runtime API, which is assembled
-      # dynamically: most of Qube's methods are bound on at import time.
+      # The two published stubs, __init__.pyi and typedefs.pyi, must keep describing the
+      # runtime API, which is assembled dynamically: most of Qube's methods are bound on
+      # at import time. The allowlist accepts only the deliberate absence of stubs for
+      # the internal modules.
       - name: Stubtest
         run: |
-          python -m mypy.stubtest polymath --mypy-config-file pyproject.toml
+          python -m mypy.stubtest polymath --mypy-config-file pyproject.toml --allowlist .stubtest-allowlist
 
       # -W makes warnings errors; docs/conf.py sets nitpicky = True, so a
       # cross-reference with no target fails the build too.

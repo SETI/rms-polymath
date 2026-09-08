@@ -1,6 +1,12 @@
 ##########################################################################################
 # polymath/extensions/indexer.py: indexing operations
 ##########################################################################################
+"""Indexing of PolyMath objects, supporting ``object[indx]`` and ``object[indx] = arg``.
+
+Indexing applies to the leading array axes of an object, leaving its items intact. Beyond
+what NumPy accepts, an index may itself be a PolyMath object: a :class:`~polymath.Boolean`
+selects where it is True, and a masked index selects nothing at the masked locations.
+"""
 
 import numpy as np
 import numbers
@@ -12,7 +18,7 @@ __all__ = []
 
 
 def __getitem__(self, indx):
-    """self[indx], returning the selected subset of this object.
+    """``self[indx]``, returning the selected subset of this object.
 
     Indexing follows NumPy's rules, applied to the leading shape only; the item axes are
     never indexed. It is extended in two ways: a masked index value selects a masked
@@ -20,26 +26,25 @@ def __getitem__(self, indx):
     than raising.
 
     Parameters:
-        indx (object or tuple): The index, which may combine integers, slices, Ellipsis,
-            None, boolean arrays, integer arrays, and Scalar, Boolean or Vector objects.
+        indx (Any): The index, which may combine integers, slices, Ellipsis, None, boolean
+            arrays, integer arrays, and Scalar, Boolean or Vector objects.
 
     Returns:
         Qube: The selected subset, with the same subclass as this object. Derivatives are
         indexed the same way.
 
     Raises:
-        IndexError: If the index is malformed, has too many terms, or is
-            floating-point.
+        IndexError: If the index is malformed, has too many terms, or is floating-point.
 
     Notes:
         Two behaviors differ from NumPy deliberately:
 
         * Axes selected by array indices keep their position. NumPy moves them to the
-            front when the array indices are not consecutive, so ``a[:, [0,1], :, [0,1]]``
-            has shape (2,4,6) in NumPy where here it has shape (4,2,6).
+          front when the array indices are not consecutive, so ``a[:, [0,1], :, [0,1]]``
+          has shape (2,4,6) in NumPy where here it has shape (4,2,6).
         * A single boolean does not add a leading axis. ``a[True]`` has the shape of `a`,
-            where NumPy gives it shape (1,) + a.shape; ``a[False]`` gives a zero-sized
-            object either way.
+          where NumPy gives it shape (1,) + a.shape; ``a[False]`` gives a zero-sized
+          object either way.
     """
 
     # Handle indexing of a shapeless object
@@ -126,7 +131,7 @@ def __getitem__(self, indx):
 
 
 def __setitem__(self, indx, arg):
-    """self[indx] = arg, replacing the selected subset of this object.
+    """``self[indx] = arg``, replacing the selected subset of this object.
 
     The index is interpreted exactly as it is by :meth:`~Qube.__getitem__`, including the
     two departures from NumPy described there. Locations where the index itself is masked
@@ -135,13 +140,12 @@ def __setitem__(self, indx, arg):
     derivative that this object has and `arg` does not is set to zero at those locations.
 
     Parameters:
-        indx (object or tuple): The index, interpreted as in __getitem__().
-        arg (Qube, array-like, float, int, or bool): The replacement value, broadcastable
-            to the shape that the index selects.
+        indx (Any): The index, interpreted as in :meth:`~Qube.__getitem__`.
+        arg (QubeLike): The replacement value, broadcastable to the shape that the index
+            selects.
 
     Raises:
-        IndexError: If the index is malformed, has too many terms, or is
-            floating-point.
+        IndexError: If the index is malformed, has too many terms, or is floating-point.
         ValueError: If this object is read-only, or if `arg` cannot be broadcast to the
             selected shape.
     """
@@ -297,7 +301,7 @@ def _prep_index(self, indx):
     """Prepare the index for this object.
 
     Parameters:
-        indx (object or tuple): Index to prepare.
+        indx (Any): Index to prepare.
 
     Returns:
         tuple: A tuple containing (pre_index, post_mask, has_ellipsis, moved_to_front,
@@ -568,7 +572,7 @@ def _prep_scalar_index(self, indx):
     None.
 
     Parameters:
-        indx (object or tuple): Index to prepare.
+        indx (Any): Index to prepare.
 
     Returns:
         tuple: A tuple containing (masked, size_zero, shape_before, shape_after) where:
@@ -640,9 +644,9 @@ def _unused_index(index_vals, mask_vals, axis_length):
     element that the index also selects for real.
 
     Parameters:
-        index_vals (numpy.ndarray): Index values, already reduced to the range
-            [0, `axis_length`).
-        mask_vals (numpy.ndarray or bool): The mask on `index_vals`. At least one value
+        index_vals (numpy.ndarray): Index values, already reduced to the range [0,
+            `axis_length`).
+        mask_vals (numpy.ndarray | bool): The mask on `index_vals`. At least one value
             must be masked.
         axis_length (int): The length of the axis being indexed.
 

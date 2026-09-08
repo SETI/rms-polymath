@@ -1,6 +1,13 @@
 ##########################################################################################
 # polymath/extensions/casting.py: Value tests and conversions between Qube subclasses
 ##########################################################################################
+"""Tests of single values and conversions between PolyMath classes.
+
+Two kinds of operation are collected here. The first identifies a lone value, as opposed
+to an array, and recognizes a single boolean True or False. The second converts an object
+to another :class:`~polymath.Qube` subclass whose item shape is compatible, and builds the
+constant and size-zero variants of an object.
+"""
 
 import numpy as np
 import numbers
@@ -12,7 +19,14 @@ __all__ = ['as_all_constant', 'as_one_bool', 'as_size_zero', 'as_this_type', 'ca
 
 @staticmethod
 def as_one_bool(value):
-    """Convert a single value to a bool; leave other values unchanged."""
+    """Convert a single value to a bool; leave other values unchanged.
+
+    Parameters:
+        value (Any): The value to convert.
+
+    Returns:
+        Any: A Python bool if `value` is not a NumPy array; otherwise `value` unchanged.
+    """
 
     if not isinstance(value, np.ndarray):
         return bool(value)
@@ -22,7 +36,14 @@ def as_one_bool(value):
 
 @staticmethod
 def is_one_true(value):
-    """True if the value is a single boolean True."""
+    """True if the value is a single boolean True.
+
+    Parameters:
+        value (Any): The value to test.
+
+    Returns:
+        bool: True if `value` is a Python or NumPy boolean equal to True.
+    """
 
     if isinstance(value, (bool, np.bool_)):
         return bool(value)
@@ -32,7 +53,14 @@ def is_one_true(value):
 
 @staticmethod
 def is_one_false(value):
-    """True if the value is a single boolean False."""
+    """True if the value is a single boolean False.
+
+    Parameters:
+        value (Any): The value to test.
+
+    Returns:
+        bool: True if `value` is a Python or NumPy boolean equal to False.
+    """
 
     if isinstance(value, (bool, np.bool_)):
         return not bool(value)
@@ -42,7 +70,14 @@ def is_one_false(value):
 
 @staticmethod
 def _is_one_value(value):
-    """True if the value is a Python numeric or a NumPy numeric scalar."""
+    """True if the value is a Python numeric or a NumPy numeric scalar.
+
+    Parameters:
+        value (Any): The value to test.
+
+    Returns:
+        bool: True if `value` is a single number rather than an array or sequence.
+    """
 
     if isinstance(value, _NUMERIC_TYPES):
         return True
@@ -60,16 +95,19 @@ def as_this_type(self, arg, *, recursive=True, coerce=True, op=''):
     If the object is already of the correct class and type, it is returned unchanged.
 
     Parameters:
-        arg (array-like, float, int, or bool): The object to the class of this object.
-            If the argument is a scalar or NumPy ndarray, a new instance of this
-            object's class is created.
+        arg (QubeLike): The object to convert to the class of this object. If the
+            argument is a scalar or NumPy ndarray, a new instance of this object's class
+            is created.
         recursive (bool, optional): True to convert the derivatives as well.
-        coerce (bool, optional): True to coerce the data type silently; False to leave
-            the data type unchanged.
+        coerce (bool, optional): True to coerce the data type silently; False to leave the
+            data type unchanged.
         op (str, optional): Name of operator to use in an error message.
 
     Returns:
         Qube: The argument converted to the type of this object.
+
+    Raises:
+        ValueError: If the numerator of `arg` is incompatible with that of this object.
     """
 
     # If the classes already match, we might return the argument as is
@@ -147,11 +185,11 @@ def _deriv_classes(classes):
     substitute, which replaces it here.
 
     Parameters:
-        classes (type, list, or tuple): One class or a list of candidate classes, as
-            :meth:`cast` accepts.
+        classes (type | list[type] | tuple[type, ...]): One class or a list of candidate
+            classes, as :meth:`cast` accepts.
 
     Returns:
-        tuple: The candidate classes for a derivative, in the same order.
+        tuple[type, ...]: The candidate classes for a derivative, in the same order.
     """
 
     if isinstance(classes, type):
@@ -190,12 +228,13 @@ def _castable_to(self, cls):
     return cls._BOOLS_OK
 
 
-def cast(self, classes):
-    """A shallow copy of this object casted to another Qube subclass.
+def cast(self, classes=()):
+    """A shallow copy of this object cast to another Qube subclass.
 
     Parameters:
-        classes (type or list): A Qube subclass or list of subclasses. The object
-            will be casted to the first suitable class in the list.
+        classes (type | list[type] | tuple[type, ...], optional): A Qube subclass or
+            list of subclasses. The object will be cast to the first suitable class in
+            the list. If the list is empty (the default), the object is returned as is.
 
     Returns:
         Qube: A shallow copy of this object. If the object is already of the selected
@@ -245,9 +284,11 @@ def as_all_constant(self, constant=None, *, recursive=True):
     Derivatives are all set to zero. The mask is unchanged.
 
     Parameters:
-        constant (array-like, float, int, or bool, optional): The constant value for
-            each item. This must have the same shape as this object's items. Use None
-            for values of zero appropriate to the Qube subclass.
+        constant (QubeLike | None, optional): The constant value for each item. This must
+            have the same shape as this object's items. Use None for values of zero
+            appropriate to the Qube subclass.
+        recursive (bool, optional): True to include the derivatives, each also set to a
+            constant value of zero.
 
     Returns:
         Qube: A shallow copy of this object with constant values.
@@ -273,9 +314,11 @@ def as_size_zero(self, axis=0, *, recursive=True):
     """A shallow, read-only copy of this object with size zero.
 
     Parameters:
-        axis (int, optional): The axis index (positive or negative) to collapse to
+        axis (int | None, optional): The axis index (positive or negative) to collapse to
             length zero; the other axes are left unchanged. Use None for an object of
             shape (0,).
+        recursive (bool, optional): True to include the derivatives, each also reduced to
+            size zero.
 
     Returns:
         Qube: A shallow copy of this object with size zero.

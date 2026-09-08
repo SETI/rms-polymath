@@ -14,11 +14,11 @@ def test_vector_reciprocal_print_np_abs_diffs_max_the_tolerance_is_set_by_float6
     np.random.seed(4912)
     vec = Pair([[1,0],[0,2]], drank=1)
     inverse = vec.reciprocal()
-    assert np.all(inverse == [[1,0],[0,0.5]])
+    assert inverse == [[1,0],[0,0.5]]
     assert type(inverse) is type(vec)
     vec = Vector3([[0,1,0],[0,0,2],[4,0,0]], drank=1)
     inverse = vec.reciprocal()
-    assert np.all(inverse == [[0,0,0.25],[1,0,0],[0,0.5,0]])
+    assert inverse == [[0,0,0.25],[1,0,0],[0,0.5,0]]
     assert type(inverse) is type(vec)
     N = 100
     vec = Vector(np.random.randn(N,4,4), drank=1)

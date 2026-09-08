@@ -1,6 +1,12 @@
-################################################################################
+##########################################################################################
 # polymath/extensions/iterator.py: iterator over Qube objects
-################################################################################
+##########################################################################################
+"""Iteration over the elements of a PolyMath object.
+
+Iterating over an object walks its leading axis, yielding one object per index, in the
+same way that iterating over a NumPy array does. The classes here also provide iteration
+over every element of a multidimensional object, with or without the accompanying index.
+"""
 
 import itertools
 import numpy as np
@@ -15,7 +21,7 @@ class QubeIterator:
     similar to how NumPy arrays can be iterated.
 
     Attributes:
-        obj (list or Qube): The object to iterate over.
+        obj (list | Qube): The object to iterate over.
         stop (int): The number of elements to iterate through.
         index (int): The current iteration position.
     """
@@ -70,9 +76,10 @@ class QubeNDIterator:
     returning both the index tuple and the value at that index.
 
     Attributes:
-        obj (numpy.ndarray): The object to iterate over.
-        shape (tuple): The shape of the object.
-        iterator (iterator): The underlying iterator.
+        obj (numpy.ndarray | Qube): The object to iterate over.
+        shape (tuple[int, ...]): The shape of the object.
+        iterator (Iterator | None): The underlying iterator over index tuples; None until
+            iteration begins.
     """
 
     def __init__(self, obj):
@@ -105,7 +112,8 @@ class QubeNDIterator:
         """The next item in the iteration.
 
         Returns:
-            tuple: A tuple containing (index_tuple, item_at_index).
+            tuple[tuple[int, ...], Qube]: A tuple containing the index tuple and the item
+            at that index.
 
         Raises:
             StopIteration: When iteration is complete.
@@ -128,13 +136,13 @@ def __iter__(self):
 def ndenumerate(self):
     """Iterate across all axes of this object.
 
-    This method provides an iterator that returns tuples containing the index
-    and the corresponding item at that index.
+    This method provides an iterator that returns tuples containing the index and the
+    corresponding item at that index.
 
     Returns:
-        QubeNDIterator: An iterator yielding (index_tuple, item_at_index) pairs.
+        QubeNDIterator: An iterator yielding (index tuple, item) pairs.
     """
 
     return QubeNDIterator(obj=self)
 
-################################################################################
+##########################################################################################

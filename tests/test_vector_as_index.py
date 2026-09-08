@@ -74,10 +74,10 @@ def test_vector_as_index_array_to_test_for_indexing() -> None:
     vec = Vector([1,2,3], True)
     assert vec.as_index_and_mask(purge=True) == ((), False)
     indx, mask = vec.as_index_and_mask(purge=False)
-    assert indx == (1,2,3)
+    assert tuple(int(i) for i in indx) == (1,2,3)
     assert mask == True
     indx, mask = vec.as_index_and_mask(purge=False, masked=0)
-    assert indx == (0,0,0)
+    assert tuple(int(i) for i in indx) == (0,0,0)
     assert mask == True
     vals = np.arange(9).reshape(3,3)
     vec = Vector(vals, [False, False, True])

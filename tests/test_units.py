@@ -136,8 +136,11 @@ def test_units_test_basic_initialization() -> None:
     u = Unit.KM
     assert Unit.as_unit(u) == u
 
-    with pytest.raises(ValueError):
-        Unit.as_unit(123)
+    with pytest.raises(TypeError, match='not a recognized unit'):
+        Unit.as_unit(123)  # type: ignore[arg-type]  # deliberately the wrong type
+
+    with pytest.raises(KeyError):
+        Unit.as_unit('furlong')
 
     ##################################################################################
     # can_match(first, second)
@@ -704,7 +707,7 @@ def test_units_test_basic_initialization() -> None:
     assert result == {}
 
     with pytest.raises(ValueError):
-        Unit.name_to_dict(123)
+        Unit.name_to_dict(123)  # type: ignore[arg-type]  # deliberately the wrong type
 
     with pytest.raises(ValueError, match='unexpected "5"'):
         Unit.name_to_dict('5')
@@ -1548,7 +1551,7 @@ def test_units_name_to_dict_rejects_a_non_string() -> None:
     """name_to_dict() reports an argument that is neither a string nor a dictionary."""
 
     with pytest.raises(ValueError, match='unit is not a string: "123"'):
-        Unit.name_to_dict(123)
+        Unit.name_to_dict(123)  # type: ignore[arg-type]  # deliberately the wrong type
 
 
 def test_units_name_to_dict_rejects_a_missing_operand() -> None:
@@ -1630,3 +1633,9 @@ def test_units_unsupported_operand_raises_type_error(operation: Callable[[], obj
 
     with pytest.raises(TypeError, match=message):
         operation()
+
+
+def test_second_name() -> None:
+    """The name of Unit.SECOND is exactly "second", with no trailing space."""
+
+    assert Unit.SECOND.name == 'second'

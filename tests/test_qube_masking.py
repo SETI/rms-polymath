@@ -164,4 +164,28 @@ def test_qube_masking() -> None:
     assert Boolean(a.clip([7,6,5,4,3,2],upper,remask=False).mask) == False
 
 
+def test_remask_or_ors_derivative_masks() -> None:
+    """remask_or() or-s the mask into each derivative rather than replacing it."""
+
+    a = Scalar([1., 2., 3.])
+    a.insert_deriv('t', Scalar([4., 5., 6.]))
+    a = a.mask_where_eq(2.)
+    assert a.d_dt.mask[1]
+    b = a.remask_or([False, False, True])
+    assert np.array_equal(b.mask, [False, True, True])
+    assert np.array_equal(b.d_dt.mask, [False, True, True])
+
+
+def test_as_one_masked_recursive() -> None:
+    """as_one_masked() keeps derivatives only when recursive is True."""
+
+    a = Scalar([1., 2., 3.])
+    a.insert_deriv('t', Scalar([4., 5., 6.]))
+    b = a.as_one_masked()
+    assert b.shape == ()
+    assert b.mask
+    assert b.d_dt.mask
+    c = a.as_one_masked(recursive=False)
+    assert c.derivs == {}
+
 ##########################################################################################
