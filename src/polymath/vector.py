@@ -121,8 +121,7 @@ class Vector(Qube):
 
         results = []
         for i in range(self._numer[0]):
-            results.append(self.extract_numer(0, i, classes=Scalar,
-                                              recursive=recursive))
+            results.append(self.extract_numer(0, i, classes=Scalar, recursive=recursive))
 
         return tuple(results)
 
@@ -229,7 +228,7 @@ class Vector(Qube):
 
         Returns:
             tuple[tuple[numpy.ndarray | numpy.integer, ...], MaskType]: A tuple
-            ``(index, mask)``, where `index` is suitable for indexing a NumPy ndarray and
+            `(index, mask)`, where `index` is suitable for indexing a NumPy ndarray and
             `mask` indicates which values are masked. Each element of `index` is an
             integer array, or a single integer if this object has shape ().
 
@@ -432,8 +431,8 @@ class Vector(Qube):
             recursive (bool, optional): If True, include derivatives in the result.
 
         Returns:
-            Matrix: A diagonal matrix where the diagonal elements are the components
-            of this Vector.
+            Matrix: A diagonal matrix where the diagonal elements are the components of
+            this Vector.
         """
 
         return Qube.as_diagonal(self, 0, classes=Qube._MATRIX_CLASS,
@@ -615,8 +614,8 @@ class Vector(Qube):
 
         # This is the separation angle:
         #   angle = 2 * arcsin(|a-b| / 2)
-        # However, this formula becomes less accurate for angles near pi. For
-        # these angles, we reverse b and calculate the supplementary angle.
+        # However, this formula becomes less accurate for angles near pi. For these
+        # angles, we reverse b and calculate the supplementary angle.
         sign = a.dot(b).sign().mask_where_eq(0, 1, remask=False)
         b = b * sign
 
@@ -721,10 +720,8 @@ class Vector(Qube):
         # Construct the object
         obj = Qube.__new__(type(self))
         obj.__init__(self_values * arg_values, Qube.or_(self._mask, arg._mask),
-                     derivs={},
-                     unit=Unit.mul_units(self._unit, arg._unit),
-                     drank=self._drank + arg._drank,
-                     example=self)
+                     derivs={}, unit=Unit.mul_units(self._unit, arg._unit),
+                     drank=self._drank + arg._drank, example=self)
 
         # Insert derivatives if necessary
         if recursive:
@@ -795,8 +792,7 @@ class Vector(Qube):
         # Construct the ratio object
         obj = Qube.__new__(type(self))
         obj.__init__(self._values / divisor, Qube.or_(self._mask, divisor_mask),
-                     drank=self.drank,
-                     unit=Unit.div_units(self._unit, arg._unit))
+                     drank=self.drank, unit=Unit.div_units(self._unit, arg._unit))
 
         # Insert the derivatives if necessary
         if recursive:
@@ -832,8 +828,8 @@ class Vector(Qube):
         """Stretch this Vector along a direction defined by a scaling vector.
 
         Components of the vector perpendicular to the scaling vector are unchanged. The
-        scaling amount is determined by the magnitude of the scaling vector. The vector
-        is scaled by adding (projected.norm() - 1) * projected where projected is the
+        scaling amount is determined by the magnitude of the scaling vector. The vector is
+        scaled by adding (projected.norm() - 1) * projected where projected is the
         projection of this vector onto the unit vector in the direction of the scaling
         vector.
 
@@ -855,8 +851,8 @@ class Vector(Qube):
     def vector_unscale(self, factor, *, recursive=True):
         """Un-stretch this Vector along a direction defined by a scaling vector.
 
-        Components of the vector perpendicular to the scaling vector are unchanged.
-        The un-scaling amount is determined by the magnitude of the scaling vector.
+        Components of the vector perpendicular to the scaling vector are unchanged. The
+        un-scaling amount is determined by the magnitude of the scaling vector.
 
         Parameters:
             factor (Vector): A Vector defining the direction and magnitude of the scaling.

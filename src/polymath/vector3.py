@@ -199,9 +199,9 @@ class Vector3(Vector):
 
         Parameters:
             radius (ScalarLike): Distance from the cylindrical axis.
-            longitude (ScalarLike): Longitude in radians. Zero is along the **X**-axis,
-                with positive values measured counterclockwise toward the **Y**-axis.
-            z (ScalarLike, optional): Distance above the **XY** plane.
+            longitude (ScalarLike): Longitude in radians. Zero is along the *X*-axis,
+                with positive values measured counterclockwise toward the *Y*-axis.
+            z (ScalarLike, optional): Distance above the *XY* plane.
             recursive (bool, optional): True to include all the derivatives. The returned
                 object will have derivatives representing the union of all the derivatives
                 in `radius`, `longitude`, and `z`.
@@ -232,9 +232,9 @@ class Vector3(Vector):
 
         Returns:
             tuple[Scalar, Scalar, Scalar]: `(radius, longitude, z)` where `radius` is the
-            distance from the cylindrical axis (sqrt(x**2 + y**2)), `longitude` is the
-            angle in radians from the **X**-axis toward the **Y**-axis in the range [0,
-            2*pi), and `z` is the distance above/below the equatorial plane.
+            distance from the cylindrical axis ``(sqrt(x**2 + y**2))``, `longitude` is the
+            angle in radians from the *X*-axis toward the *Y*-axis in the range [0, 2*pi),
+            and `z` is the distance above/below the equatorial plane.
         """
 
         (x, y, z) = self.to_scalars(recursive=recursive)
@@ -251,9 +251,9 @@ class Vector3(Vector):
             recursive (bool, optional): True to include the derivatives.
 
         Returns:
-            Scalar: The longitude in radians, measured from the **X**-axis toward the
-            **Y**-axis. The longitude is returned in the range [0, 2*pi) radians, measured
-            counterclockwise from the positive **X**-axis in the **XY** plane.
+            Scalar: The longitude in radians, measured from the *X*-axis toward the
+            *Y*-axis. The longitude is returned in the range [0, 2*pi) radians, measured
+            counterclockwise from the positive *X*-axis in the *XY* plane.
         """
 
         x = self.to_scalar(0, recursive=recursive)
@@ -268,8 +268,8 @@ class Vector3(Vector):
 
         Returns:
             Scalar: The latitude in radians, measured from the equatorial plane toward
-            the **Z**-axis. The latitude is returned in the range [-pi/2, pi/2] radians,
-            where positive values are above the equatorial plane (positive **Z**) and
+            the *Z*-axis. The latitude is returned in the range [-pi/2, pi/2] radians,
+            where positive values are above the equatorial plane (positive *Z*) and
             negative values are below.
         """
 
@@ -348,8 +348,8 @@ class Vector3(Vector):
         Returns:
             tuple[Scalar, Scalar]: `(longitude_offset, latitude_offset)`, the angular
             offsets needed to rotate from this vector to the target vector.
-            `longitude_offset` is about the **Y**-axis, followed by `latitude_offset`
-            about the **X**-axis. Angles are in radians and follow the right-hand rule.
+            `longitude_offset` is about the *Y*-axis, followed by `latitude_offset`
+            about the *X*-axis. Angles are in radians and follow the right-hand rule.
         """
 
         vector = Vector3.as_vector3(vector, recursive=recursive)
