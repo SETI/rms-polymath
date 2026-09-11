@@ -38,8 +38,6 @@ class Matrix(Qube):
     _UNITS_OK = True    # True to allow units; False to disallow them.
     _DERIVS_OK = True   # True to allow derivatives and denominators; False to disallow.
 
-    _DEBUG = False      # Set to True for some debugging tasks
-    _DELTA = np.finfo(float).eps * 3     # Cutoff used in unary()
 
     @staticmethod
     def as_matrix(arg, *, recursive=True):
@@ -415,55 +413,6 @@ class Matrix(Qube):
             obj.insert_derivs(new_derivs)
 
         return obj
-
-    def unitary(self):
-        """The nearest unitary matrix as a Matrix3.
-
-        This method only works for 3x3 matrices. It uses the algorithm from
-        https://wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
-
-        Returns:
-            Matrix3: The nearest unitary (orthogonal) matrix.
-
-        Raises:
-            ValueError: If the matrix has denominators or is not 3x3.
-        """
-
-        # Algorithm from
-        #    https://wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
-        max_iters = 10      # Adequate iterations unless convergence is failing
-
-        m0 = self.wod
-        if m0._drank:
-            raise ValueError(f'{type(self).__name__}.unitary() does not support '
-                             'denominators')
-
-        if m0._numer != (3, 3):
-            raise ValueError(f'{type(self).__name__}.unitary() requires 3x3 matrix as '
-                             'input')
-
-        # Iterate...
-        m0 = Matrix(m0)     # can't do certain math operations on Matrix3 subclass
-        next_m = m0
-        for i in range(max_iters):
-            m = next_m
-            next_m = 2. * m0 * (m.inverse() * m0 + m0.T * m).inverse()
-            rms = Qube.rms(next_m * next_m.T - Matrix.IDENTITY3)
-
-            if Matrix._DEBUG:
-                sorted_ = np.sort(rms._values.ravel())
-                print(i, sorted_[-4:])
-
-            if rms.max() <= Matrix._DELTA:
-                break
-
-        new_mask = (rms._values > Matrix._DELTA)
-        if not np.any(new_mask):
-            new_mask = self._mask
-        elif not Qube.is_one_false(self._mask):
-            new_mask |= self._mask
-
-        return Qube._MATRIX3_CLASS(next_m._values, new_mask)
 
     def solve(self, arg, *, recursive=True, nozeros=False):
         """The Vector ``X`` that satisfies ``A X = B``, for this square matrix ``A``.

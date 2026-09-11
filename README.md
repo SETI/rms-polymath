@@ -309,14 +309,19 @@ to another object. Methods
 `z_rotation()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.z_rotation),
 `axis_rotation()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.axis_rotation),
 `pole_rotation()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.pole_rotation),
-`from_euler()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.from_euler),
 and
-`unitary()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.unitary)
+`from_euler()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.from_euler)
 are convenient, alternative ways to define a rotation matrix. Use
 `to_euler()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.to_euler)
 and
 `to_quaternion()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.to_quaternion)
 to reverse these definitions.
+`precision()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.precision)
+reports how far each matrix departs from being a rotation,
+`mask_non_unitary()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.mask_non_unitary)
+masks those that stray too far, and
+`to_unitary()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Matrix3.to_unitary)
+replaces each matrix by the nearest exact rotation matrix.
 
 `Quaternion`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Quaternion):
 supports functions such as
