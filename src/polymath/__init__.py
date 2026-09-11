@@ -328,6 +328,12 @@ methods to construct an object with a new mask: :meth:`~Qube.mask_where`,
 :meth:`~Qube.mask_where_between`, :meth:`~Qube.mask_where_outside`, and
 :meth:`~Qube.clip`.
 
+:meth:`~Qube.mask_nans_infs` is the exception to this rule, modifying an object in place.
+A PolyMath object is never meant to hold a NaN or an infinity, so this method masks every
+element in which one appears and replaces the whole item with the default value for its
+class. Apply it to values arriving from outside PolyMath, where such a value might have
+crept in.
+
 ****************
 Units
 ****************

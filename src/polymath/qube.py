@@ -383,6 +383,82 @@ class Qube:
             self._default = type(self)._default_for(item, drank, dtype)
 
     ######################################################################################
+    # Floating-point error control
+    ######################################################################################
+
+    ignore_fp_errors = np.errstate(divide='ignore', over='ignore', under='ignore',
+                                   invalid='ignore')
+    """A decorator that suppresses the floating-point errors NumPy reports.
+
+    Apply it to a function or method whose arithmetic might divide by zero, overflow,
+    underflow, or produce a NaN::
+
+        @Qube.ignore_fp_errors
+        def precision(self):
+            ...
+
+    Such an error is rarely meaningful inside PolyMath, because a masked element may hold
+    any value and an invalid result is masked rather than reported. Decorating an entry
+    point costs about 600 ns, against roughly 1 us for a numpy.errstate context manager
+    built at each use, so apply it where a whole operation begins rather than around the
+    individual array operations inside one.
+
+    This object is a decorator only. NumPy permits a single errstate to be entered just
+    once, so ``with Qube.ignore_fp_errors:`` raises a TypeError the second time it runs; a
+    block that needs the suppression should call numpy.errstate itself. The decorator form
+    recreates the state on every call and therefore nests safely.
+
+    For the duration of a decorated call this overrides whatever the caller has
+    configured, so a caller's ``np.errstate(invalid='raise')`` does not fire inside
+    PolyMath. NumPy holds the state in a context variable, so the suppression reaches the
+    calling thread alone, and the caller's settings are restored on return.
+    """
+
+    def mask_nans_infs(self):
+        """Mask every element in which a NaN or an infinity appears, in place.
+
+        This method should be called on any polymath object that might contain NaNs or
+        positive or negative infinities.
+
+        An element is masked if a NaN or an infinity of either sign appears anywhere
+        within its item, and the entire item is replaced by the default value for this
+        class. This method does not check derivatives.
+
+        Returns:
+            Qube: This object, possibly modified in place.
+
+        Raises:
+            ValueError: If this object is read-only.
+        """
+
+        if not self.is_float():
+            return self
+
+        finite = np.isfinite(self._values)
+        if np.all(finite):
+            return self
+
+        self.require_writable()
+
+        new_mask = np.logical_not(finite)
+        if self._rank:
+            new_mask = np.any(new_mask, axis=tuple(range(-self._rank, 0)))
+
+        default = type(self)._default_for(self._item, self._drank, 'float')
+        if self._is_scalar:
+            self._values = default
+        else:
+            self._values[new_mask] = default
+
+        if self._shape:
+            new_mask = Qube.or_(self._mask, new_mask)
+
+        self._set_mask(new_mask)
+
+        self._clear_cache()
+        return self
+
+    ######################################################################################
     # Builtin type support
     ######################################################################################
 

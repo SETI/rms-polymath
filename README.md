@@ -561,6 +561,11 @@ methods to construct an object with a new mask:
 and
 `clip()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.clip).
 
+`mask_nans_infs()`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#polymath.Qube.mask_nans_infs)
+is the exception to this rule, modifying an object in place. A PolyMath object is never
+meant to hold a NaN or an infinity, so this method masks every element in which one
+appears and replaces the whole item with the default value for its class.
+
 ## Units
 
 PolyMath objects also support embedded unit using the
