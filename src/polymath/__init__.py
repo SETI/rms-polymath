@@ -153,9 +153,16 @@ primary axes).
 :class:`Matrix3` functions :meth:`~Matrix3.rotate` and :meth:`~Matrix3.unrotate` apply a
 rotation to another object. Methods :meth:`~Matrix3.x_rotation`,
 :meth:`~Matrix3.y_rotation`, :meth:`~Matrix3.z_rotation`, :meth:`~Matrix3.axis_rotation`,
-:meth:`~Matrix3.pole_rotation`, :meth:`~Matrix3.from_euler`, and :meth:`~Matrix.unitary`
-are convenient, alternative ways to define a rotation matrix. Use
-:meth:`~Matrix3.to_euler` and :meth:`~Matrix3.to_quaternion` to reverse these definitions.
+:meth:`~Matrix3.pole_rotation`, and :meth:`~Matrix3.from_euler` are convenient,
+alternative ways to define a rotation matrix. Use :meth:`~Matrix3.to_euler` and
+:meth:`~Matrix3.to_quaternion` to reverse these definitions.
+
+Three methods check and repair rotation matrices that have drifted.
+:meth:`~Matrix3.precision` reports how far each matrix departs from being a rotation;
+:meth:`~Matrix3.mask_non_unitary` masks those that stray too far; and
+:meth:`~Matrix3.to_unitary` replaces each matrix by the nearest exact rotation matrix.
+:meth:`~Matrix3.as_matrix3` applies the same checks during conversion through its
+`unitarize`, `validate`, and `tol` options.
 
 :class:`Quaternion` supports functions such as :meth:`~Quaternion.conj` (conjugate),
 :meth:`~Quaternion.to_parts` (for the Scalar and Vector3 components),
@@ -320,6 +327,12 @@ methods to construct an object with a new mask: :meth:`~Qube.mask_where`,
 :meth:`~Qube.mask_where_le`, :meth:`~Qube.mask_where_lt`, :meth:`~Qube.mask_where_ne`,
 :meth:`~Qube.mask_where_between`, :meth:`~Qube.mask_where_outside`, and
 :meth:`~Qube.clip`.
+
+:meth:`~Qube.mask_nans_infs` is the exception to this rule, modifying an object in place.
+A PolyMath object is never meant to hold a NaN or an infinity, so this method masks every
+element in which one appears and replaces the whole item with the default value for its
+class. Apply it to values arriving from outside PolyMath, where such a value might have
+crept in.
 
 ****************
 Units

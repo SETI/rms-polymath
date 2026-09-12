@@ -52,8 +52,8 @@ class Matrix3(Matrix):
     _DERIV_CLASS = Matrix
 
     @staticmethod
-    def as_matrix3(arg, *, recursive=True):
-        """Convert the argument to Matrix3. The result is not checked to be unitary.
+    def as_matrix3(arg, *, recursive=True, unitarize=False, validate=False, tol=None):
+        """Convert the argument to Matrix3.
 
         Quaternions are converted to matrices.
 
@@ -61,22 +61,39 @@ class Matrix3(Matrix):
             arg (Matrix3Like): The object to convert to Matrix3.
             recursive (bool, optional): True to include derivatives in the returned
                 result.
+            unitarize (bool, optional): True to convert matrices to the nearest exact
+                unitary rotation matrix. Matrices that cannot be converted to a rotation
+                matrix are masked.
+            validate (bool, optional): Same as `unitarize`, but raise a ValueError if any
+                matrix is invalid rather than masking it. This option supersedes
+                `unitarize`.
+            tol (float | None, optional): An upper limit on the level of deviation from
+                unitarity in the given matrix values. Matrices with errors above this
+                tolerance raise a ValueError if `validate` is True or are masked if
+                `unitarize` is True. Use None to only reject or mask matrices with a
+                negative determinant, which represent reflections rather than pure
+                rotations, or a zero determinant, which are singular.
 
         Returns:
             Matrix3: The argument converted to a Matrix3.
         """
 
+        if isinstance(arg, Qube._QUATERNION_CLASS):
+            return arg.to_matrix3(recursive=recursive)  # checks are not needed
+
         if isinstance(arg, Matrix3):
-            return arg if recursive else arg.wod
+            result = arg
+        elif isinstance(arg, Qube):
+            result = Matrix3(arg._values, arg._mask, example=arg)
+        else:
+            result = Matrix3(arg)
 
-        if isinstance(arg, Qube):
-            if isinstance(arg, Qube._QUATERNION_CLASS):
-                return arg.to_matrix3(recursive=recursive)
+        if unitarize or validate:
+            result = result.to_unitary(recursive=recursive, tol=tol, validate=validate)
+        elif not recursive:
+            result = result.wod
 
-            arg = Matrix3(arg._values, arg._mask, example=arg)
-            return arg if recursive else arg.wod
-
-        return Matrix3(arg)
+        return result
 
     @staticmethod
     def twovec(vector1, axis1, vector2, axis2, *, recursive=True):
@@ -448,6 +465,188 @@ class Matrix3(Matrix):
             return arg
 
     ######################################################################################
+    # Rotation matrix tests and conversions
+    ######################################################################################
+
+    def precision(self, *, tol=None, allpos=False):
+        """The departure of each of these matrices from a perfectly unitary rotation.
+
+        For each matrix, the value returned is the root-mean-square of the nine elements
+        of ``self * self.T`` minus the identity matrix. It is zero for a matrix that is
+        exactly unitary, and it increases roughly in proportion to the errors in the
+        matrix elements otherwise.
+
+        If a matrix has a negative determinant, it describes a reflection rather than a
+        pure rotation; if its determinant is zero, it is singular. In the returned Scalar,
+        the returned values associated with either kind of matrix are masked.
+
+        Parameters:
+            tol (float | None): An upper limit on the precision. If specified, precision
+                values that meet or exceed `tol` will be masked. Use None to ignore this
+                option.
+            allpos (bool, optional): Set to True if all matrices are known to have a
+                positive determinant. This makes it possible to skip the check for
+                negative or zero-valued determinants, which can be time-consuming.
+
+        Returns:
+            Scalar: The departure from a unitary rotation of each matrix, with the same
+            shape as this object. A value is masked if it is masked in this object, if the
+            error reaches `tol`, or, unless `allpos` is True, if the determinant of the
+            matrix is negative or zero.
+
+        Raises:
+            ValueError: If this object has a denominator.
+        """
+
+        if self._drank:
+            raise ValueError(f'{type(self).__name__}.precision() does not support '
+                             'denominators')
+
+        vals = self._values
+        resids = np.matmul(vals, np.swapaxes(vals, -1, -2)) - Matrix3.IDENTITY._values
+        rms = np.sqrt(np.mean(resids**2, axis=(-2, -1)))
+
+        if allpos:
+            new_mask = self._mask
+        else:
+            new_mask = Qube.or_(self._mask, np.linalg.det(vals) <= 0.)
+
+        # Qube.or_() can return the mask of this object itself, so the tolerance must not
+        # be merged in place
+        if tol is not None:
+            new_mask = Qube.or_(new_mask, rms >= tol)
+
+        return Scalar(rms, new_mask)
+
+    def mask_non_unitary(self, *, tol=None, allpos=False):
+        """This Matrix3 with every matrix that is not a valid rotation masked.
+
+        Matrices with a negative or zero determinant are always masked, because they
+        describe reflections, not pure rotations. Supply `tol` to mask those that are too
+        imprecise as well.
+
+        Parameters:
+            tol (float | None, optional): An upper limit on the precision of a matrix, as
+                returned by :meth:`precision`. Matrices whose precision reaches this value
+                are masked. Use None to ignore this option.
+            allpos (bool, optional): Set to True if all matrices are known to have a
+                positive determinant. This makes it possible to skip the check for
+                negative or zero-valued determinants, which can be time-consuming.
+
+        Returns:
+            Matrix3: A shallow clone of this object, potentially with a new mask.
+
+        Raises:
+            ValueError: If this object has a denominator.
+        """
+
+        return self.remask_or(self.precision(tol=tol, allpos=allpos)._mask)
+
+    def to_unitary(self, *, recursive=True, tol=None, validate=False, allpos=False):
+        """The nearest exactly unitary rotation matrix to each of these matrices.
+
+        Parameters:
+            recursive (bool, optional): True to include the derivatives in the returned
+                object.
+            tol (float | None, optional): An upper limit on the precision of a matrix, as
+                returned by :meth:`precision`. Matrices whose precision reaches this value
+                are masked or rejected. Use None to mask or reject only those matrices
+                whose determinant is negative or zero.
+            validate (bool, optional): True to raise a ValueError if any unmasked matrix
+                would be masked by this conversion; False to mask it instead.
+            allpos (bool, optional): Set to True if all matrices are known to have a
+                positive determinant. This makes it possible to skip the check for
+                negative or zero-valued determinants, which can be time-consuming.
+
+        Returns:
+            Matrix3: The nearest rotation matrix to each matrix of this object. It has
+            the same shape as this object. A matrix is masked if it is masked in this
+            object, if its precision reaches `tol`, or, unless `allpos` is True, if its
+            determinant is negative or zero.
+
+        Raises:
+            ValueError: If this object has a denominator.
+            ValueError: If `validate` is True and any unmasked matrix would be masked by
+                this conversion.
+            ValueError: If the decomposition fails for any matrix.
+
+        Notes:
+            Each matrix is replaced by the matrix with a determinant of 1 that minimizes
+            the sum of the squares of the differences between corresponding elements. It
+            is derived from the singular value decomposition ``self = U S V.T`` as the
+            product ``U V.T``, after negating the column of `U` belonging to the smallest
+            singular value if that product would otherwise have a determinant of -1. The
+            result is a proper rotation to within machine precision, so :meth:`precision`
+            returns approximately zero for it.
+
+            Each derivative is projected onto the space of derivatives tangent to the
+            returned matrix, meaning that the product of the derivative and the transpose
+            of the returned matrix is antisymmetric. A derivative that is already tangent
+            is unchanged.
+        """
+
+        if self._drank:
+            raise ValueError(f'{type(self).__name__}.to_unitary() does not support '
+                             'denominators')
+
+        vals = self._values
+
+        # Mask (or reject) every matrix that no rotation is close to, plus any that are
+        # imprecise beyond the given tolerance
+        prec = self.precision(tol=tol, allpos=allpos)
+        if validate and np.any(prec._mask != self._mask):
+            raise ValueError(f'{type(self).__name__}.to_unitary() input contains an '
+                             'invalid rotation matrix')
+
+        new_mask = Qube.or_(self._mask, prec._mask)
+
+        # The decomposition can fail it there's a single non-finite values
+        try:
+            (u, _, vt) = np.linalg.svd(vals)
+        except np.linalg.LinAlgError as err:
+            raise ValueError(f'{type(self).__name__}.to_unitary() input could not be '
+                             'decomposed') from err
+
+        # The product U V.T has the same determinant sign as the input, so it is a
+        # reflection wherever the input is. NumPy orders the singular values from largest
+        # to smallest, so negating the last column of U flips that sign at the smallest
+        # cost in distance, yielding the nearest matrix that is a proper rotation.
+        flip = np.where(np.linalg.det(u) * np.linalg.det(vt) < 0., -1., 1.)
+        u[..., -1] *= flip[..., np.newaxis]
+        new_vals = np.matmul(u, vt)
+
+        obj = Matrix3(new_vals, new_mask)
+
+        # Fill in derivatives if necessary
+        if recursive and self._derivs:
+            new_derivs = {}
+            for key, deriv in self._derivs.items():
+                dvals = deriv._values
+                mvals = new_vals
+                if deriv._drank:
+                    # Move the matrix axes last so they broadcast against the matrices
+                    axis = -2 - deriv._drank
+                    dvals = np.moveaxis(dvals, (axis, axis + 1), (-2, -1))
+                    mvals = new_vals.reshape(new_vals.shape[:-2]
+                                             + deriv._drank * (1,) + (3, 3))
+
+                # Project onto the tangent space: dR = (dM - R dM.T R) / 2. This is the
+                # exact derivative of the nearest unitary matrix in the limit where this
+                # object is already unitary, and it leaves a tangent derivative unchanged.
+                product = np.matmul(mvals, np.matmul(np.swapaxes(dvals, -1, -2), mvals))
+                new_dvals = 0.5 * (dvals - product)
+
+                if deriv._drank:
+                    new_dvals = np.moveaxis(new_dvals, (-2, -1), (axis, axis + 1))
+
+                new_derivs[key] = Matrix(new_dvals, Qube.or_(deriv._mask, new_mask),
+                                         example=deriv)
+
+            obj.insert_derivs(new_derivs)
+
+        return obj
+
+    ######################################################################################
     # Overrides of arithmetic operators
     ######################################################################################
 
@@ -645,7 +844,8 @@ class Matrix3(Matrix):
         Parameters:
             recursive (bool, optional): True to return the derivatives of the reciprocal
                 too; otherwise, derivatives are removed.
-            nozeros (bool, optional): Ignored for Matrix3.
+            nozeros (bool, optional): Ignored for Matrix3. The name matches
+                :meth:`~polymath.Matrix.reciprocal`, which this method overrides.
 
         Returns:
             Matrix3: The transpose of this matrix.
