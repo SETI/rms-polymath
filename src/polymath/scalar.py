@@ -14,7 +14,6 @@ import functools
 import numpy as np
 import numbers
 import sys
-import warnings
 
 from polymath.qube import Qube
 from polymath.unit import Unit
@@ -471,13 +470,11 @@ class Scalar(Qube):
             obj = Scalar._new_from_parts(np.arcsin(temp_values), temp_mask, nrank=0,
                                          example=self)
         else:
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+            try:
+                with np.errstate(all='ignore', invalid='raise'):
                     func_values = np.arcsin(self._values)
-                except RuntimeWarning as err:
-                    raise ValueError('Scalar.arcsin() of value outside domain (-1,1)'
-                                     ) from err
+            except FloatingPointError as err:
+                raise ValueError('Scalar.arcsin() value outside domain (-1,1)') from err
 
             obj = Scalar._new_from_parts(func_values, self._mask, nrank=0, example=self)
 
@@ -530,13 +527,11 @@ class Scalar(Qube):
             obj = Scalar._new_from_parts(np.arccos(temp_values), temp_mask, nrank=0,
                                          example=self)
         else:
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+            try:
+                with np.errstate(all='ignore', invalid='raise'):
                     func_values = np.arccos(self._values)
-                except RuntimeWarning as err:
-                    raise ValueError('Scalar.arccos() of value outside domain (-1,1)'
-                                     ) from err
+            except FloatingPointError as err:
+                raise ValueError('Scalar.arccos() value outside domain (-1,1)') from err
 
             obj = Scalar._new_from_parts(func_values, self._mask, nrank=0, example=self)
 
@@ -650,12 +645,11 @@ class Scalar(Qube):
             sqrt_vals = np.sqrt(no_negs._values)
         else:
             no_negs = self
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+            try:
+                with np.errstate(all='ignore', invalid='raise'):
                     sqrt_vals = np.sqrt(no_negs._values)
-                except RuntimeWarning as err:
-                    raise ValueError('Scalar.sqrt() of negative value') from err
+            except FloatingPointError as err:
+                raise ValueError('Scalar.sqrt() of negative value') from err
 
         obj = Scalar._new_from_parts(sqrt_vals, no_negs._mask, nrank=0,
                                      unit=Unit.sqrt_unit(no_negs._unit), example=no_negs)
@@ -696,12 +690,11 @@ class Scalar(Qube):
             log_values = np.log(no_negs._values)
         else:
             no_negs = self
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+            try:
+                with np.errstate(all='ignore', divide='raise', invalid='raise'):
                     log_values = np.log(no_negs._values)
-                except RuntimeWarning as err:
-                    raise ValueError('Scalar.log() of non-positive value') from err
+            except FloatingPointError as err:
+                raise ValueError('Scalar.log() of non-positive value') from err
 
         obj = Scalar._new_from_parts(log_values, no_negs._mask, nrank=0, example=no_negs)
 
@@ -741,12 +734,11 @@ class Scalar(Qube):
             exp_values = np.exp(no_oflow._values)
         else:
             no_oflow = self
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+            try:
+                with np.errstate(all='ignore', over='raise'):
                     exp_values = np.exp(no_oflow._values)
-                except RuntimeWarning as err:
-                    raise ValueError('Scalar.exp() overflow encountered') from err
+            except FloatingPointError as err:
+                raise ValueError('Scalar.exp() overflow encountered') from err
 
         obj = Scalar._new_from_parts(exp_values, no_oflow._mask, nrank=0,
                                      example=no_oflow)
@@ -1490,13 +1482,12 @@ class Scalar(Qube):
         # mask out zeros if necessary
         if nozeros:
             denom = self
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+            try:
+                with np.errstate(all='ignore', divide='raise'):
                     denom_inv_values = 1. / denom._values
-                    denom_inv_mask = denom._mask
-                except (ZeroDivisionError, RuntimeWarning) as err:
-                    raise ValueError('divide by zero in Scalar.reciprocal()') from err
+                denom_inv_mask = denom._mask
+            except (ZeroDivisionError, FloatingPointError) as err:
+                raise ValueError('divide by zero in Scalar.reciprocal()') from err
         else:
             denom = self.mask_where_eq(0, replace=1)
             denom_inv_values = 1. / denom._values
@@ -1950,11 +1941,11 @@ class Scalar(Qube):
                 elif expo._values < 0:
                     expo = expo.as_float()
 
-            # Plow forward with the results blindly, then mask nan and inf.
-            # Zero to a negative power creates a RuntTimeWarning, which needs to be
-            # suppressed.
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
+            # Plow forward with the results blindly, then mask nan and inf. Zero to a
+            # negative power is a floating-point error, which has to be suppressed here
+            # rather than filtered as a warning, because a caller could have configured
+            # NumPy to raise on it instead.
+            with np.errstate(all='ignore'):
                 new_values = self._values ** expo._values
 
             new_mask = Qube.or_(self._mask, expo._mask)

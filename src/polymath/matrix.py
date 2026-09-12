@@ -11,7 +11,6 @@ solution of linear systems, along with the methods that extract rows and columns
 
 import math
 import numpy as np
-import warnings
 
 from polymath.qube    import Qube
 from polymath.scalar  import Scalar
@@ -391,13 +390,11 @@ class Matrix(Qube):
                 new_mask = Qube.or_(self._mask, mask)
 
         # Invert the array
-        with warnings.catch_warnings():
-            warnings.filterwarnings('error')
-            try:
-                new_values = np.linalg.inv(old_values)
-            except (RuntimeWarning, np.linalg.LinAlgError) as err:
-                raise ValueError(f'{type(self).__name__}.inverse() input is singular'
-                                 ) from err
+        try:
+            new_values = np.linalg.inv(old_values)
+        except np.linalg.LinAlgError as err:
+            raise ValueError(f'{type(self).__name__}.inverse() input is singular'
+                             ) from err
 
         # Construct the result
         obj = Matrix(new_values, new_mask, unit=Unit.unit_power(self._unit, -1))
@@ -461,13 +458,11 @@ class Matrix(Qube):
 
             columns = values.reshape(new_shape + (size, math.prod(denom)))
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    solution = np.linalg.solve(a_vals, columns)
-                except (RuntimeWarning, np.linalg.LinAlgError) as err:
-                    raise ValueError(f'{type(self).__name__}.solve() matrix is singular'
-                                     ) from err
+            try:
+                solution = np.linalg.solve(a_vals, columns)
+            except np.linalg.LinAlgError as err:
+                raise ValueError(f'{type(self).__name__}.solve() matrix is singular'
+                                 ) from err
 
             return solution.reshape(values.shape)
 
