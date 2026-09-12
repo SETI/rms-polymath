@@ -93,6 +93,19 @@ def test_matrix3_mask_non_unitary_keeps_derivatives() -> None:
     assert 't' in matrix.mask_non_unitary().derivs
 
 
+def test_matrix3_mask_non_unitary_allpos_keeps_a_reflection() -> None:
+    """With allpos=True, a reflection is not masked."""
+
+    assert not Matrix3(np.diag([1., 1., -1.])).mask_non_unitary(allpos=True).mask
+
+
+def test_matrix3_mask_non_unitary_allpos_still_applies_tol() -> None:
+    """With allpos=True, tol still masks an imprecise matrix."""
+
+    matrix = Matrix3(np.diag([1., 1., 1.001]))
+    assert matrix.mask_non_unitary(tol=1.e-6, allpos=True).mask
+
+
 def test_matrix3_mask_non_unitary_rejects_denominators() -> None:
     """An object with a denominator cannot be evaluated."""
 

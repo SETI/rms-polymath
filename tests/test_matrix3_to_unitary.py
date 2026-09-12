@@ -259,6 +259,34 @@ def test_matrix3_to_unitary_omits_derivatives_when_not_recursive() -> None:
     assert not matrix.to_unitary(recursive=False).derivs
 
 
+def test_matrix3_to_unitary_allpos_does_not_mask_a_reflection() -> None:
+    """With allpos=True, the determinant is not tested, so nothing is masked."""
+
+    result = Matrix3(np.diag([1., 1., -2.])).to_unitary(allpos=True)
+    assert not result.mask
+
+
+def test_matrix3_to_unitary_allpos_still_returns_a_rotation() -> None:
+    """With allpos=True, the value returned is still a proper rotation."""
+
+    result = Matrix3(np.diag([1., 1., -2.])).to_unitary(allpos=True)
+    assert np.linalg.det(result.vals) == pytest.approx(1.)
+
+
+def test_matrix3_to_unitary_allpos_accepts_a_reflection_under_validate() -> None:
+    """With allpos=True, validate has no determinant to object to."""
+
+    result = Matrix3(np.diag([1., 1., -2.])).to_unitary(allpos=True, validate=True)
+    assert not result.mask
+
+
+def test_matrix3_to_unitary_allpos_still_applies_tol() -> None:
+    """With allpos=True, tol still masks an imprecise matrix."""
+
+    result = Matrix3(np.diag([1., 1., 1.001])).to_unitary(tol=1.e-6, allpos=True)
+    assert result.mask
+
+
 def test_matrix3_to_unitary_rejects_denominators() -> None:
     """An object with a denominator cannot be evaluated."""
 

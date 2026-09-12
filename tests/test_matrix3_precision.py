@@ -93,6 +93,44 @@ def test_matrix3_precision_omits_derivatives() -> None:
     assert not matrix.precision().derivs
 
 
+def test_matrix3_precision_allpos_skips_the_determinant_test() -> None:
+    """With allpos=True, a reflection is no longer masked."""
+
+    result = Matrix3(np.diag([1., 1., -1.])).precision(allpos=True)
+    assert not result.mask
+
+
+def test_matrix3_precision_allpos_keeps_the_residual() -> None:
+    """With allpos=True, the residual is still evaluated."""
+
+    result = Matrix3(2. * np.identity(3)).precision(allpos=True)
+    assert result.vals == pytest.approx(np.sqrt(3.))
+
+
+def test_matrix3_precision_allpos_preserves_the_existing_mask() -> None:
+    """With allpos=True, an element masked in this object stays masked."""
+
+    values = np.stack([np.identity(3), np.identity(3)])
+    result = Matrix3(values, [False, True]).precision(allpos=True)
+    assert np.array_equal(result.mask, [False, True])
+
+
+def test_matrix3_precision_allpos_still_applies_tol() -> None:
+    """With allpos=True, an imprecise matrix is still masked by tol."""
+
+    result = Matrix3(np.diag([1., 1., 1.001])).precision(tol=1.e-6, allpos=True)
+    assert result.mask
+
+
+def test_matrix3_precision_tol_does_not_modify_this_object() -> None:
+    """Merging tol into the mask must not write through to this object's mask."""
+
+    values = np.stack([np.identity(3), np.diag([1., 1., 1.001])])
+    matrix = Matrix3(values, [False, False])
+    matrix.precision(tol=1.e-6, allpos=True)
+    assert not np.any(matrix.mask)
+
+
 def test_matrix3_precision_rejects_denominators() -> None:
     """An object with a denominator cannot be evaluated."""
 
