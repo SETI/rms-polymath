@@ -383,36 +383,8 @@ class Qube:
             self._default = type(self)._default_for(item, drank, dtype)
 
     ######################################################################################
-    # Floating-point error control
+    # Disallowed floating-point values
     ######################################################################################
-
-    ignore_fp_errors = np.errstate(divide='ignore', over='ignore', under='ignore',
-                                   invalid='ignore')
-    """A decorator that suppresses the floating-point errors NumPy reports.
-
-    Apply it to a function or method whose arithmetic might divide by zero, overflow,
-    underflow, or produce a NaN::
-
-        @Qube.ignore_fp_errors
-        def precision(self):
-            ...
-
-    Such an error is rarely meaningful inside PolyMath, because a masked element may hold
-    any value and an invalid result is masked rather than reported. Decorating an entry
-    point costs about 600 ns, against roughly 1 us for a numpy.errstate context manager
-    built at each use, so apply it where a whole operation begins rather than around the
-    individual array operations inside one.
-
-    This object is a decorator only. NumPy permits a single errstate to be entered just
-    once, so ``with Qube.ignore_fp_errors:`` raises a TypeError the second time it runs; a
-    block that needs the suppression should call numpy.errstate itself. The decorator form
-    recreates the state on every call and therefore nests safely.
-
-    For the duration of a decorated call this overrides whatever the caller has
-    configured, so a caller's ``np.errstate(invalid='raise')`` does not fire inside
-    PolyMath. NumPy holds the state in a context variable, so the suppression reaches the
-    calling thread alone, and the caller's settings are restored on return.
-    """
 
     def mask_nans_infs(self):
         """Mask every element in which a NaN or an infinity appears, in place.
