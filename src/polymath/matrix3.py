@@ -550,16 +550,18 @@ class Matrix3(Matrix):
             ValueError: If this object has a denominator.
             ValueError: If `validate` is True and any unmasked matrix would be masked by
                 this conversion.
-            ValueError: If the decomposition fails for any matrix.
+            ValueError: If the decomposition or the refinement that follows it fails for
+                any matrix.
 
         Notes:
             Each matrix is replaced by the matrix with a determinant of 1 that minimizes
             the sum of the squares of the differences between corresponding elements. It
             is derived from the singular value decomposition ``self = U S V.T`` as the
             product ``U V.T``, after negating the column of `U` belonging to the smallest
-            singular value if that product would otherwise have a determinant of -1. The
-            result is a proper rotation to within machine precision, so :meth:`precision`
-            returns approximately zero for it.
+            singular value if that product would otherwise have a determinant of -1. One
+            iteration of the Newton method for the nearest orthogonal matrix then tightens
+            the precision of that product. The result is a proper rotation to within
+            machine precision, so :meth:`precision` returns approximately zero for it.
 
             Each derivative is projected onto the space of derivatives tangent to the
             returned matrix, meaning that the product of the derivative and the transpose
@@ -596,6 +598,26 @@ class Matrix3(Matrix):
         flip = np.where(np.linalg.det(u) * np.linalg.det(vt) < 0., -1., 1.)
         u[..., -1] *= flip[..., np.newaxis]
         new_vals = np.matmul(u, vt)
+
+        # The refinement below inverts a matrix that is singular wherever the input is,
+        # so the masked matrices, whose values are arbitrary, are replaced by matrices
+        # that are known to be invertible
+        if np.any(new_mask):
+            vals = np.where(np.asarray(new_mask)[..., np.newaxis, np.newaxis], new_vals,
+                            vals)
+
+        # One iteration of the Newton method for the nearest orthogonal matrix,
+        #    https://wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
+        # The decomposition is already unitary to within a few multiples of the machine
+        # precision, and this iteration, for which that matrix is a fixed point, removes
+        # most of what remains.
+        try:
+            bvals = (np.matmul(np.linalg.inv(new_vals), vals)
+                     + np.matmul(np.swapaxes(vals, -1, -2), new_vals))
+            new_vals = 2. * np.matmul(vals, np.linalg.inv(bvals))
+        except np.linalg.LinAlgError as err:
+            raise ValueError(f'{type(self).__name__}.to_unitary() input could not be '
+                             'refined') from err
 
         obj = Matrix3(new_vals, new_mask)
 

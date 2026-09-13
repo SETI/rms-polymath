@@ -55,6 +55,17 @@ def test_matrix3_to_unitary_of_a_badly_perturbed_matrix_is_unitary() -> None:
     assert np.max(perturbed.to_unitary().precision().vals) < 1.e-14
 
 
+def test_matrix3_to_unitary_is_unitary_to_within_a_fraction_of_an_ulp() -> None:
+    """The refinement of the decomposition leaves an error below the machine epsilon.
+
+    The decomposition alone lands near 4.e-16 for this sample.
+    """
+
+    np.random.seed(6003)
+    perturbed = Matrix3(_rotations(400).vals + 0.1 * np.random.randn(400, 3, 3))
+    assert perturbed.to_unitary().precision().mean().vals < 2.5e-16
+
+
 def test_matrix3_to_unitary_of_a_perturbed_matrix_is_not_masked() -> None:
     """A 10% perturbation of a rotation is repairable, so nothing is masked."""
 
@@ -285,6 +296,14 @@ def test_matrix3_to_unitary_allpos_still_applies_tol() -> None:
 
     result = Matrix3(np.diag([1., 1., 1.001])).to_unitary(tol=1.e-6, allpos=True)
     assert result.mask
+
+
+def test_matrix3_to_unitary_allpos_rejects_a_singular_matrix() -> None:
+    """With allpos=True, a singular matrix is not masked, so the refinement fails."""
+
+    matrix = Matrix3(np.diag([1., 1., 0.]))
+    with pytest.raises(ValueError, match='could not be refined'):
+        matrix.to_unitary(allpos=True)
 
 
 def test_matrix3_to_unitary_rejects_denominators() -> None:
