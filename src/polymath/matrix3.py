@@ -156,43 +156,25 @@ class Matrix3(Matrix):
             for key, deriv in unit1._derivs.items():
                 denoms[key] = deriv._denom
             for key, deriv in vector2._derivs.items():
-                if key in denoms:
-                    if deriv._denom != denoms[key]:  # pragma: no cover
-                        # This is unreachable because unit(), ucross(), and broadcast()
-                        # fail earlier when the derivatives have incompatible
-                        # denominators.
-                        raise ValueError(f'derivative "{key}" denominator mismatch in '
-                                         f'Matrix3.twovec(): {denoms[key]}, '
-                                         f'{deriv._denom}')
-                else:
-                    denoms[key] = vector2._derivs[key].denom
+                if key not in denoms:
+                    denoms[key] = deriv._denom
 
             derivs = {}
             for key, denom in denoms.items():
                 drank = len(denom)
                 deriv = np.zeros(unit1._shape + (3, 3) + denom)
 
+                # unit2 and unit3 inherit every derivative of unit1 and vector2 via
+                # the cross products, but unit1 only has its own.
                 suffix = (drank + 1) * (slice(None),)
                 if key in unit1._derivs:
                     deriv[(Ellipsis, axis1) + suffix] = unit1._derivs[key]._values
-                if key in unit2._derivs:  # pragma: no cover
-                    # This branch is impossible to test because if unit1 has a
-                    # derivative, then unit2 and unit3 will inherit it via cross
-                    # products.
-                    deriv[(Ellipsis, axis2) + suffix] = unit2._derivs[key]._values
-                if key in unit3._derivs:  # pragma: no cover
-                    # This branch is impossible to test because if unit1 has a
-                    # derivative, then unit2 and unit3 will inherit it via cross
-                    # products.
-                    deriv[(Ellipsis, axis3) + suffix] = unit3._derivs[key]._values
+                deriv[(Ellipsis, axis2) + suffix] = unit2._derivs[key]._values
+                deriv[(Ellipsis, axis3) + suffix] = unit3._derivs[key]._values
 
                 derivs[key] = Matrix3(deriv, mask=result._mask, drank=drank)
 
             result.insert_derivs(derivs)
-
-        if unit1.readonly and vector2.readonly:  # pragma: no cover
-            # This is impossible to reach because unit() does not preserve readonly.
-            result = result.as_readonly()
 
         return result
 
