@@ -450,6 +450,22 @@ class Matrix3(Matrix):
     # Rotation matrix tests and conversions
     ######################################################################################
 
+    @staticmethod
+    def _unitary_rms(vals):
+        """The departure of each of these matrix values from a perfectly unitary matrix.
+
+        Parameters:
+            vals (numpy.ndarray): An array of matrix values, with shape (..., 3, 3).
+
+        Returns:
+            numpy.ndarray: The root-mean-square of the nine elements of the product of
+            each matrix with its transpose, minus the identity matrix. Its shape is that
+            of `vals` without the last two axes.
+        """
+
+        resids = np.matmul(vals, np.swapaxes(vals, -1, -2)) - Matrix3.IDENTITY._values
+        return np.sqrt(np.mean(resids**2, axis=(-2, -1)))
+
     def precision(self, *, tol=None, allpos=False):
         """The departure of each of these matrices from a perfectly unitary rotation.
 
@@ -485,8 +501,7 @@ class Matrix3(Matrix):
                              'denominators')
 
         vals = self._values
-        resids = np.matmul(vals, np.swapaxes(vals, -1, -2)) - Matrix3.IDENTITY._values
-        rms = np.sqrt(np.mean(resids**2, axis=(-2, -1)))
+        rms = Matrix3._unitary_rms(vals)
 
         if allpos:
             new_mask = self._mask
@@ -550,8 +565,7 @@ class Matrix3(Matrix):
             ValueError: If this object has a denominator.
             ValueError: If `validate` is True and any unmasked matrix would be masked by
                 this conversion.
-            ValueError: If the decomposition or the refinement that follows it fails for
-                any matrix.
+            ValueError: If the decomposition fails for any matrix.
 
         Notes:
             Each matrix is replaced by the matrix with a determinant of 1 that minimizes
@@ -559,8 +573,9 @@ class Matrix3(Matrix):
             is derived from the singular value decomposition ``self = U S V.T`` as the
             product ``U V.T``, after negating the column of `U` belonging to the smallest
             singular value if that product would otherwise have a determinant of -1. One
-            iteration of the Newton method for the nearest orthogonal matrix then tightens
-            the precision of that product. The result is a proper rotation to within
+            iteration of the Newton method for the nearest orthogonal matrix is then
+            applied to that product wherever it tightens the precision, which is where the
+            matrix is near a rotation already. The result is a proper rotation to within
             machine precision, so :meth:`precision` returns approximately zero for it.
 
             Each derivative is projected onto the space of derivatives tangent to the
@@ -600,8 +615,9 @@ class Matrix3(Matrix):
         new_vals = np.matmul(u, vt)
 
         # The refinement below inverts a matrix that is singular wherever the input is,
-        # so the masked matrices, whose values are arbitrary, are replaced by matrices
-        # that are known to be invertible
+        # and NumPy inverts them as a batch, so one masked matrix, whose values are
+        # arbitrary, could cost the whole array its refinement. Substitute values that
+        # are known to be invertible.
         if np.any(new_mask):
             vals = np.where(np.asarray(new_mask)[..., np.newaxis, np.newaxis], new_vals,
                             vals)
@@ -614,10 +630,18 @@ class Matrix3(Matrix):
         try:
             bvals = (np.matmul(np.linalg.inv(new_vals), vals)
                      + np.matmul(np.swapaxes(vals, -1, -2), new_vals))
-            new_vals = 2. * np.matmul(vals, np.linalg.inv(bvals))
-        except np.linalg.LinAlgError as err:
-            raise ValueError(f'{type(self).__name__}.to_unitary() input could not be '
-                             'refined') from err
+            refined = 2. * np.matmul(vals, np.linalg.inv(bvals))
+        except np.linalg.LinAlgError:
+            # A singular matrix has no inverse, so it cannot be refined and the
+            # decomposition stands. This arises only for a matrix that escaped masking
+            # because allpos=True was set against its contract.
+            pass
+        else:
+            # The iteration inverts a matrix as ill-conditioned as the input, so it
+            # tightens the precision of a matrix near a rotation but can loosen that of
+            # one far from any rotation. Keep it only where it helps.
+            better = Matrix3._unitary_rms(refined) <= Matrix3._unitary_rms(new_vals)
+            new_vals = np.where(better[..., np.newaxis, np.newaxis], refined, new_vals)
 
         obj = Matrix3(new_vals, new_mask)
 

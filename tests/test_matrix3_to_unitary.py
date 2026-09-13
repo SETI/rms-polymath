@@ -66,6 +66,19 @@ def test_matrix3_to_unitary_is_unitary_to_within_a_fraction_of_an_ulp() -> None:
     assert perturbed.to_unitary().precision().mean().vals < 2.5e-16
 
 
+def test_matrix3_to_unitary_of_an_arbitrary_matrix_is_not_loosened() -> None:
+    """The refinement of the decomposition is discarded where it would not help.
+
+    For a matrix far from any rotation, the refinement inverts a matrix as badly
+    conditioned as that matrix, and it reaches 4.e-14 for this sample. The
+    decomposition alone stays near 1.e-15.
+    """
+
+    np.random.seed(6004)
+    arbitrary = Matrix3(np.random.randn(400, 3, 3))
+    assert np.max(arbitrary.to_unitary().precision().vals) < 1.5e-15
+
+
 def test_matrix3_to_unitary_of_a_perturbed_matrix_is_not_masked() -> None:
     """A 10% perturbation of a rotation is repairable, so nothing is masked."""
 
@@ -298,12 +311,15 @@ def test_matrix3_to_unitary_allpos_still_applies_tol() -> None:
     assert result.mask
 
 
-def test_matrix3_to_unitary_allpos_rejects_a_singular_matrix() -> None:
-    """With allpos=True, a singular matrix is not masked, so the refinement fails."""
+def test_matrix3_to_unitary_allpos_keeps_the_decomposition_of_a_singular_matrix() -> None:
+    """A singular matrix has no inverse, so the refinement is skipped rather than failing.
 
-    matrix = Matrix3(np.diag([1., 1., 0.]))
-    with pytest.raises(ValueError, match='could not be refined'):
-        matrix.to_unitary(allpos=True)
+    With allpos=True the matrix is not masked, and the nearest rotation to it is the
+    identity.
+    """
+
+    result = Matrix3(np.diag([1., 1., 0.])).to_unitary(allpos=True)
+    assert np.max(np.abs(result.vals - np.identity(3))) == pytest.approx(0., abs=1.e-15)
 
 
 def test_matrix3_to_unitary_rejects_denominators() -> None:
