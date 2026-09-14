@@ -24,6 +24,120 @@ __all__ = ['Scalar']
 _EXP_CUTOFF = np.log(sys.float_info.max)
 _TWOPI = np.pi * 2.
 
+# Each of these operations must pin the NumPy error settings, so that a value outside its
+# domain is detected whether or not the caller has NumPy configured to warn. The settings
+# are pinned by a decorator rather than by a context manager built at the point of use,
+# because the decorator is roughly 0.5 microseconds per call cheaper, and they are applied
+# to a helper rather than to the calling method so that only the branch that needs them
+# pays for them and only the one operation can raise.
+
+
+@np.errstate(all='ignore', invalid='raise')
+def _arcsin_values(values):
+    """The arcsine of each value, in radians.
+
+    Parameters:
+        values (numpy.ndarray | float): The values to convert, nominally within the
+            domain [-1,1].
+
+    Returns:
+        numpy.ndarray | float: The arcsine of each value.
+
+    Raises:
+        FloatingPointError: If any value is outside the domain [-1,1].
+    """
+
+    return np.arcsin(values)
+
+
+@np.errstate(all='ignore', invalid='raise')
+def _arccos_values(values):
+    """The arccosine of each value, in radians.
+
+    Parameters:
+        values (numpy.ndarray | float): The values to convert, nominally within the
+            domain [-1,1].
+
+    Returns:
+        numpy.ndarray | float: The arccosine of each value.
+
+    Raises:
+        FloatingPointError: If any value is outside the domain [-1,1].
+    """
+
+    return np.arccos(values)
+
+
+@np.errstate(all='ignore', invalid='raise')
+def _sqrt_values(values):
+    """The square root of each value.
+
+    Parameters:
+        values (numpy.ndarray | float): The values whose square roots are returned,
+            nominally non-negative.
+
+    Returns:
+        numpy.ndarray | float: The square root of each value.
+
+    Raises:
+        FloatingPointError: If any value is negative.
+    """
+
+    return np.sqrt(values)
+
+
+@np.errstate(all='ignore', divide='raise', invalid='raise')
+def _log_values(values):
+    """The natural logarithm of each value.
+
+    Parameters:
+        values (numpy.ndarray | float): The values whose logarithms are returned,
+            nominally positive.
+
+    Returns:
+        numpy.ndarray | float: The natural logarithm of each value.
+
+    Raises:
+        FloatingPointError: If any value is zero or negative.
+    """
+
+    return np.log(values)
+
+
+@np.errstate(all='ignore', over='raise')
+def _exp_values(values):
+    """The exponential ``e ** x`` of each value.
+
+    Parameters:
+        values (numpy.ndarray | float): The values to exponentiate, nominally small
+            enough that the result is finite.
+
+    Returns:
+        numpy.ndarray | float: The exponential of each value.
+
+    Raises:
+        FloatingPointError: If any value overflows to infinity.
+    """
+
+    return np.exp(values)
+
+
+@np.errstate(all='ignore', divide='raise')
+def _reciprocal_values(values):
+    """The reciprocal of each value.
+
+    Parameters:
+        values (numpy.ndarray | float): The values to invert, nominally nonzero.
+
+    Returns:
+        numpy.ndarray | float: The reciprocal of each value.
+
+    Raises:
+        FloatingPointError: If any value is zero.
+    """
+
+    return 1. / values
+
 
 class Scalar(Qube):
     """Represent dimensionless scalar values in the PolyMath framework.
@@ -471,8 +585,7 @@ class Scalar(Qube):
                                          example=self)
         else:
             try:
-                with np.errstate(all='ignore', invalid='raise'):
-                    func_values = np.arcsin(self._values)
+                func_values = _arcsin_values(self._values)
             except FloatingPointError as err:
                 raise ValueError('Scalar.arcsin() value outside domain (-1,1)') from err
 
@@ -528,8 +641,7 @@ class Scalar(Qube):
                                          example=self)
         else:
             try:
-                with np.errstate(all='ignore', invalid='raise'):
-                    func_values = np.arccos(self._values)
+                func_values = _arccos_values(self._values)
             except FloatingPointError as err:
                 raise ValueError('Scalar.arccos() value outside domain (-1,1)') from err
 
@@ -646,8 +758,7 @@ class Scalar(Qube):
         else:
             no_negs = self
             try:
-                with np.errstate(all='ignore', invalid='raise'):
-                    sqrt_vals = np.sqrt(no_negs._values)
+                sqrt_vals = _sqrt_values(no_negs._values)
             except FloatingPointError as err:
                 raise ValueError('Scalar.sqrt() of negative value') from err
 
@@ -691,8 +802,7 @@ class Scalar(Qube):
         else:
             no_negs = self
             try:
-                with np.errstate(all='ignore', divide='raise', invalid='raise'):
-                    log_values = np.log(no_negs._values)
+                log_values = _log_values(no_negs._values)
             except FloatingPointError as err:
                 raise ValueError('Scalar.log() of non-positive value') from err
 
@@ -735,8 +845,7 @@ class Scalar(Qube):
         else:
             no_oflow = self
             try:
-                with np.errstate(all='ignore', over='raise'):
-                    exp_values = np.exp(no_oflow._values)
+                exp_values = _exp_values(no_oflow._values)
             except FloatingPointError as err:
                 raise ValueError('Scalar.exp() overflow encountered') from err
 
@@ -1483,8 +1592,7 @@ class Scalar(Qube):
         if nozeros:
             denom = self
             try:
-                with np.errstate(all='ignore', divide='raise'):
-                    denom_inv_values = 1. / denom._values
+                denom_inv_values = _reciprocal_values(denom._values)
                 denom_inv_mask = denom._mask
             except (ZeroDivisionError, FloatingPointError) as err:
                 raise ValueError('divide by zero in Scalar.reciprocal()') from err
