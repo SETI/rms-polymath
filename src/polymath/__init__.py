@@ -330,9 +330,9 @@ methods to construct an object with a new mask: :meth:`~Qube.mask_where`,
 
 :meth:`~Qube.mask_nans_infs` is the exception to this rule, modifying an object in place.
 A PolyMath object is never meant to hold a NaN or an infinity, so this method masks every
-element in which one appears and replaces the whole item with the default value for its
-class. Apply it to values arriving from outside PolyMath, where such a value might have
-crept in.
+item in which one appears. It also replaces the array items with finite values. The user
+must apply this method to any array arriving from outside PolyMath if that array might
+contain a non-finite value.
 
 ****************
 Units
