@@ -383,6 +383,54 @@ class Qube:
             self._default = type(self)._default_for(item, drank, dtype)
 
     ######################################################################################
+    # Disallowed floating-point values
+    ######################################################################################
+
+    def mask_nans_infs(self):
+        """Mask every element in which a NaN or an infinity appears, in place.
+
+        This method should be called on any polymath object that might contain NaNs or
+        positive or negative infinities.
+
+        An element is masked if a NaN or an infinity of either sign appears anywhere
+        within its item, and the entire item is replaced by the default value for this
+        class. This method does not check derivatives.
+
+        Returns:
+            Qube: This object, possibly modified in place.
+
+        Raises:
+            ValueError: If this object is read-only.
+        """
+
+        if not self.is_float():
+            return self
+
+        finite = np.isfinite(self._values)
+        if np.all(finite):
+            return self
+
+        self.require_writable()
+
+        new_mask = np.logical_not(finite)
+        if self._rank:
+            new_mask = np.any(new_mask, axis=tuple(range(-self._rank, 0)))
+
+        default = type(self)._default_for(self._item, self._drank, 'float')
+        if self._is_scalar:
+            self._values = default
+        else:
+            self._values[new_mask] = default
+
+        if self._shape:
+            new_mask = Qube.or_(self._mask, new_mask)
+
+        self._set_mask(new_mask)
+
+        self._clear_cache()
+        return self
+
+    ######################################################################################
     # Builtin type support
     ######################################################################################
 

@@ -46,7 +46,7 @@ def test_quaternion_simple_1_d_case() -> None:
     assert Quaternion.as_quaternion(a) == a
     a = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
     assert Quaternion.as_quaternion(a) == a
-    m = Matrix3((Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).unitary())
+    m = Matrix3(Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     DEL = 1.e-6
@@ -54,7 +54,7 @@ def test_quaternion_simple_1_d_case() -> None:
     N = 100
     m = Matrix(N * [Matrix.IDENTITY3.values])
     m += 0.1 * np.random.randn(N,3,3)
-    m = Matrix3(m).unitary()
+    m = Matrix3(m).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     assert (Matrix(m2) - Matrix(m)).rms().max() < DEL
@@ -331,7 +331,7 @@ def test_quaternion_simple_1_d_case() -> None:
     assert_rms_less_than(diff, DEL)
 
     m1 = Matrix3(np.random.randn(3, 3))
-    m1 = m1.unitary()  # make it a rotation matrix
+    m1 = Matrix3(m1).to_unitary()  # make it a rotation matrix
     q = Quaternion.from_matrix3(m1)
     m2 = q.to_matrix3()
     DEL2 = 1.e-6
@@ -340,7 +340,7 @@ def test_quaternion_simple_1_d_case() -> None:
     assert_rms_less_than(diff, DEL2)
 
     m = Matrix3(np.random.randn(5, 3, 3, 3))
-    m = m.unitary()  # make each a rotation matrix
+    m = m.to_unitary()  # make each a rotation matrix
     q = Quaternion.from_matrix3(m)
     assert type(q) == Quaternion
     assert q.shape == (5, 3)
@@ -705,7 +705,7 @@ def test_quaternion_test_from_euler_with_parity_true() -> None:
     assert Quaternion.as_quaternion(a) == a
     a = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
     assert Quaternion.as_quaternion(a) == a
-    m = Matrix3((Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).unitary())
+    m = Matrix3(Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     DEL = 1.e-6
@@ -713,7 +713,7 @@ def test_quaternion_test_from_euler_with_parity_true() -> None:
     N = 100
     m = Matrix(N * [Matrix.IDENTITY3.values])
     m += 0.1 * np.random.randn(N,3,3)
-    m = Matrix3(m).unitary()
+    m = Matrix3(m).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     assert (Matrix(m2) - Matrix(m)).rms().max() < DEL
@@ -849,7 +849,7 @@ def test_quaternion_test_with_non_zero_angle() -> None:
     assert Quaternion.as_quaternion(a) == a
     a = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
     assert Quaternion.as_quaternion(a) == a
-    m = Matrix3((Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).unitary())
+    m = Matrix3(Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     DEL = 1.e-6
@@ -857,7 +857,7 @@ def test_quaternion_test_with_non_zero_angle() -> None:
     N = 100
     m = Matrix(N * [Matrix.IDENTITY3.values])
     m += 0.1 * np.random.randn(N,3,3)
-    m = Matrix3(m).unitary()
+    m = Matrix3(m).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     assert (Matrix(m2) - Matrix(m)).rms().max() < DEL
@@ -993,7 +993,7 @@ def test_quaternion_test_conj_with_drank_0_axis_roll() -> None:
     assert Quaternion.as_quaternion(a) == a
     a = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
     assert Quaternion.as_quaternion(a) == a
-    m = Matrix3((Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).unitary())
+    m = Matrix3(Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     DEL = 1.e-6
@@ -1001,7 +1001,7 @@ def test_quaternion_test_conj_with_drank_0_axis_roll() -> None:
     N = 100
     m = Matrix(N * [Matrix.IDENTITY3.values])
     m += 0.1 * np.random.randn(N,3,3)
-    m = Matrix3(m).unitary()
+    m = Matrix3(m).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     assert (Matrix(m2) - Matrix(m)).rms().max() < DEL
@@ -1139,7 +1139,7 @@ def test_quaternion_test_conj_with_derivatives() -> None:
     assert Quaternion.as_quaternion(a) == a
     a = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
     assert Quaternion.as_quaternion(a) == a
-    m = Matrix3((Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).unitary())
+    m = Matrix3(Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     DEL = 1.e-6
@@ -1147,7 +1147,7 @@ def test_quaternion_test_conj_with_derivatives() -> None:
     N = 100
     m = Matrix(N * [Matrix.IDENTITY3.values])
     m += 0.1 * np.random.randn(N,3,3)
-    m = Matrix3(m).unitary()
+    m = Matrix3(m).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     assert (Matrix(m2) - Matrix(m)).rms().max() < DEL
@@ -1284,7 +1284,7 @@ def test_quaternion_test_from_euler_with_repetition_true() -> None:
     assert Quaternion.as_quaternion(a) == a
     a = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
     assert Quaternion.as_quaternion(a) == a
-    m = Matrix3((Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).unitary())
+    m = Matrix3(Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     DEL = 1.e-6
@@ -1292,7 +1292,7 @@ def test_quaternion_test_from_euler_with_repetition_true() -> None:
     N = 100
     m = Matrix(N * [Matrix.IDENTITY3.values])
     m += 0.1 * np.random.randn(N,3,3)
-    m = Matrix3(m).unitary()
+    m = Matrix3(m).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     assert (Matrix(m2) - Matrix(m)).rms().max() < DEL
@@ -1428,7 +1428,7 @@ def test_quaternion_test_from_euler_with_frame_true() -> None:
     assert Quaternion.as_quaternion(a) == a
     a = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
     assert Quaternion.as_quaternion(a) == a
-    m = Matrix3((Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).unitary())
+    m = Matrix3(Matrix.IDENTITY3 + 0.1 * np.random.randn(3,3)).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     DEL = 1.e-6
@@ -1436,7 +1436,7 @@ def test_quaternion_test_from_euler_with_frame_true() -> None:
     N = 100
     m = Matrix(N * [Matrix.IDENTITY3.values])
     m += 0.1 * np.random.randn(N,3,3)
-    m = Matrix3(m).unitary()
+    m = Matrix3(m).to_unitary()
     q = Quaternion.as_quaternion(m)
     m2 = q.to_matrix3()
     assert (Matrix(m2) - Matrix(m)).rms().max() < DEL

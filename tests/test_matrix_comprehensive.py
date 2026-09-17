@@ -6,7 +6,7 @@
 import numpy as np
 import pytest
 
-from polymath import Scalar, Vector, Matrix, Vector3
+from polymath import Scalar, Vector, Matrix, Matrix3, Vector3
 
 
 def test_matrix_comprehensive_test_as_matrix_static_method() -> None:
@@ -85,7 +85,7 @@ def test_matrix_comprehensive_test_as_matrix_static_method() -> None:
     m13 = Matrix([[np.cos(angle), -np.sin(angle), 0.],
                   [np.sin(angle), np.cos(angle), 0.],
                   [0., 0., 1.]])
-    m14 = m13.unitary()
+    m14 = Matrix3(m13).to_unitary()
 
     assert m14.numer == (3, 3)
     assert np.allclose(m14.vals, m13.vals, atol=1e-10)
@@ -243,15 +243,9 @@ def test_matrix_comprehensive_test_as_matrix_static_method() -> None:
     m45 = m44.inverse(recursive=False)
     assert len(m45.derivs) == 0
 
-    m46 = Matrix([[1., 2.], [3., 4.]])
+    m47 = Matrix3(np.zeros((3, 3, 2)), drank=1)
     with pytest.raises(ValueError):
-        m46.unitary()
-
-    m47_vals = np.array([[[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., 0.]],
-                        [[0., 0., 0., 1.], [0., 0., 0., 0.], [0., 0., 0., 0.]]])
-    m47 = Matrix(m47_vals, drank=1)
-    with pytest.raises(ValueError):
-        m47.unitary()
+        m47.to_unitary()
 
     m48 = Matrix([[1., 2.], [3., 4.]])
     with pytest.raises(TypeError):

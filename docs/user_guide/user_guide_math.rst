@@ -226,9 +226,8 @@ Matrices and Rotations
 
 :class:`~polymath.Matrix` provides :meth:`~polymath.Matrix.transpose` (also available as
 the :attr:`~polymath.Matrix.T` property), :meth:`~polymath.Matrix.inverse`,
-:meth:`~polymath.Matrix.solve` for linear systems, :meth:`~polymath.Matrix.unitary` for
-the nearest orthonormal matrix, :meth:`~polymath.Matrix.is_diagonal`, and
-:meth:`~polymath.Matrix.identity`.
+:meth:`~polymath.Matrix.solve` for linear systems, :meth:`~polymath.Matrix.is_diagonal`,
+and :meth:`~polymath.Matrix.identity`.
 
 .. code-block:: python
 
@@ -248,6 +247,16 @@ angles, which :meth:`~polymath.Matrix3.to_euler` recovers; and
 :meth:`~polymath.Matrix3.twovec` builds the rotation that aligns two given vectors with
 two axes. Apply a rotation with ``*`` or :meth:`~polymath.Matrix3.rotate`, and apply its
 inverse with :meth:`~polymath.Matrix3.unrotate`.
+
+A long sequence of rotations accumulates rounding error, and a matrix assembled from
+measured values may not be a rotation at all.
+:meth:`~polymath.Matrix3.precision` reports how far each matrix departs from being a
+rotation, masking any matrix that no rotation is close to;
+:meth:`~polymath.Matrix3.mask_non_unitary` masks the matrices whose precision reaches a
+given tolerance; and :meth:`~polymath.Matrix3.to_unitary` removes the error by replacing
+each matrix with the nearest exact rotation matrix.
+:meth:`~polymath.Matrix3.as_matrix3` performs the same checks while converting, using its
+`unitarize`, `validate`, and `tol` options.
 
 .. code-block:: python
 

@@ -200,8 +200,8 @@ Matrix and Matrix3
 
 :class:`~polymath.Matrix` fixes the numerator rank at two, allows floats only, and adds
 the matrix algebra: :meth:`~polymath.Matrix.transpose`, :meth:`~polymath.Matrix.inverse`,
-:meth:`~polymath.Matrix.solve`, :meth:`~polymath.Matrix.unitary`, and
-:meth:`~polymath.Matrix.is_diagonal`, along with the row and column extractions. It
+:meth:`~polymath.Matrix.solve`, and :meth:`~polymath.Matrix.is_diagonal`, along with
+the row and column extractions. It
 overrides :meth:`~polymath.Matrix.__abs__`, :meth:`~polymath.Matrix.__floordiv__`, and
 :meth:`~polymath.Matrix.__mod__` to raise, because those operations have no meaning for a
 matrix, and :meth:`~polymath.Matrix.identity` and :meth:`~polymath.Matrix.reciprocal`

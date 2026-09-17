@@ -73,25 +73,6 @@ def test_matrix_misc_outer_multiply() -> None:
         Matrix.from_scalars(*[Scalar(float(i)) for i in range(5)])
     assert 'incorrect number of Scalars' in str(cm.value)
 
-    original_debug = Matrix._DEBUG
-    try:
-        Matrix._DEBUG = True
-        # Use array of matrices to ensure rms._values is an array
-        m = Matrix(np.random.randn(2, 3, 3))
-        m_unitary = m.unitary()
-        assert type(m_unitary).__name__ == 'Matrix3'
-    finally:
-        Matrix._DEBUG = original_debug
-
-    m = Matrix(np.random.randn(3, 3))
-    m_unitary = m.unitary()
-    assert type(m_unitary).__name__ == 'Matrix3'
-
-    m = Matrix(np.random.randn(3, 3, 3))
-    m = Matrix(m._values, mask=np.array([False, True, False]))
-    m_unitary = m.unitary()
-    assert type(m_unitary).__name__ == 'Matrix3'
-
     m = Matrix([[1., 2.], [3., 4.]])
 
     with pytest.raises((TypeError, AttributeError)):

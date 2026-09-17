@@ -123,6 +123,19 @@ Every class has a constant holding a single masked value, such as
     >>> Vector3.MASKED
     Vector3(-- -- --; mask)
 
+:meth:`~polymath.Qube.mask_nans_infs` is the one exception to the rule that a mask cannot
+be assigned: it modifies an object in place. A PolyMath object is never meant to hold a
+NaN or an infinity, so this method masks every element in which one appears, replacing the
+whole item with the default value for its class. Apply it to values arriving from outside
+PolyMath, where such a value might have crept in. Derivatives are not examined, so apply
+it to each of them separately if they need the same treatment.
+
+.. code-block:: python
+
+    >>> z = Scalar([1., np.nan, np.inf, 4.])
+    >>> z.mask_nans_infs()
+    Scalar(1.0 -- -- 4.0; mask)
+
 Inspecting a Mask
 =================
 
