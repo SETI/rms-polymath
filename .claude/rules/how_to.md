@@ -25,7 +25,7 @@ paths:
 
 ## 3. Document Structure
 
-```markdown
+````markdown
 # How To [Action]
 
 [1-3 sentence introduction explaining purpose and value.]
@@ -56,7 +56,7 @@ paths:
 ## Additional Information
 
 [Tips, performance notes, or links to related guides.]
-```
+````
 
 ## 4. Converting Technical Content
 

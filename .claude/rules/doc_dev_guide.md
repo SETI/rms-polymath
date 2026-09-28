@@ -34,17 +34,17 @@ what the code already says.
   and a statement of which part is the importable public package versus
   supporting code.
 - **Environment setup** — how to get a working development checkout:
-    - Clone, virtual-environment creation, and an editable install with the dev
-      extras (`pip install -e ".[dev]"`).
-    - Every environment variable needed to run, test, or build, with defaults.
-    - How to run the package's entry points locally, including a smoke test.
-    - How to run the test suite: the default invocation, how to include slower
-      or integration tiers, parallel/CI-matching flags, running a single
-      file/test, and coverage. Note the test layout and any required markers.
-    - How to run linters, type checks, formatters, and the docs build, plus any
-      one-command wrapper that runs them all.
-    - The CI/CD pipeline (what runs on which trigger) and the release process.
-    - The contribution workflow, or a pointer to the contribution guide.
+  - Clone, virtual-environment creation, and an editable install with the dev
+    extras (`pip install -e ".[dev]"`).
+  - Every environment variable needed to run, test, or build, with defaults.
+  - How to run the package's entry points locally, including a smoke test.
+  - How to run the test suite: the default invocation, how to include slower
+    or integration tiers, parallel/CI-matching flags, running a single
+    file/test, and coverage. Note the test layout and any required markers.
+  - How to run linters, type checks, formatters, and the docs build, plus any
+    one-command wrapper that runs them all.
+  - The CI/CD pipeline (what runs on which trigger) and the release process.
+  - The contribution workflow, or a pointer to the contribution guide.
 - **Architecture / class hierarchy** — see Section 3.
 - **Per-subsystem chapters** — see Section 4.
 - **Extending the system** — see Section 5.

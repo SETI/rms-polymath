@@ -45,7 +45,7 @@ Omit `examples` if the project has no `examples/` directory. The run-all-checks 
 ### Markdown (PyMarkdown)
 
 ```bash
-python -m pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
+python -m pymarkdown scan -r docs/ .claude/ README.md CONTRIBUTING.md
 ```
 
 Use the script’s `-m` option to run only Markdown lint.
@@ -80,7 +80,7 @@ Set `VENV` or `VENV_PATH` to point to the virtual environment if it is not at `.
 
 ## Execution Workflow
 
-```
+```text
 Check Progress:
 - [ ] Ruff check (src, tests, examples)
 - [ ] Ruff format --check

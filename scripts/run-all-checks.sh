@@ -64,7 +64,7 @@
 #             continuation-line indent checks come from flake8 instead.
 #   Sphinx:   make -C docs html SPHINXOPTS="-W". docs/conf.py sets nitpicky = True,
 #             so unresolved cross-references are errors here too.
-#   Markdown: pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
+#   Markdown: pymarkdown scan -r docs/ .claude/ README.md CONTRIBUTING.md
 #
 # Exit codes:
 #   0 - All requested checks passed
@@ -563,7 +563,7 @@ run_markdown_checks() {
         deactivate 2>/dev/null || true
         return 0
     fi
-    if python -m pymarkdown scan "${scan_paths[@]}"; then
+    if python -m pymarkdown scan -r "${scan_paths[@]}"; then
         print_success "PyMarkdown scan passed"
         deactivate 2>/dev/null || true
         return 0

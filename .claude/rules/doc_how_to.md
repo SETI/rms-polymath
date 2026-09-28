@@ -41,7 +41,7 @@ them consistent and link between them rather than duplicating detail.
 
 ## 3. Structure
 
-```markdown
+````markdown
 # How To [Action]
 
 [1-3 sentence introduction explaining purpose and value.]
@@ -72,7 +72,7 @@ them consistent and link between them rather than duplicating detail.
 ## Additional Information
 
 [Tips, performance notes, or links to related guides.]
-```
+````
 
 ## 4. Converting Technical Content
 

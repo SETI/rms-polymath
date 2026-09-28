@@ -37,14 +37,14 @@ description: Standards for Python library documentation using Sphinx, ReadTheDoc
 - EVERY mention of a class, method, function, module, attribute, or data
   constant in narrative prose MUST use the appropriate Sphinx cross-reference
   role:
-    - `:class:`~nav.path.module.Class``
-    - `:meth:`~nav.path.module.Class.method``
-    - `:func:`~nav.path.module.func``
-    - `:mod:`nav.path.module``
-    - `:attr:`~nav.path.module.Class.attr``
-    - `:data:`~nav.path.module.NAME``
+  - `:class:`~nav.path.module.Class``
+  - `:meth:`~nav.path.module.Class.method``
+  - `:func:`~nav.path.module.func``
+  - `:mod:`nav.path.module``
+  - `:attr:`~nav.path.module.Class.attr``
+  - `:data:`~nav.path.module.NAME``
 - Bare CamelCase or `module.symbol` text in narrative prose is a violation,
-  even when wrapped in inline literals (`` `` ``). Inline literals are for
+  even when wrapped in inline literals (```` ``). Inline literals are for
   YAML/JSON keys, file paths, CLI tokens, and shell snippets — not for API
   symbols.
 - Cross-references are NOT required (and should be omitted) inside

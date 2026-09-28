@@ -70,7 +70,7 @@ jobs:
 
       - name: PyMarkdown
         run: |
-          pymarkdown scan docs/ .claude/ README.md CONTRIBUTING.md
+          pymarkdown scan -r docs/ .claude/ README.md CONTRIBUTING.md
 
   test:
     name: Test rms-polymath

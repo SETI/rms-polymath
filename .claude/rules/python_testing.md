@@ -69,11 +69,11 @@ Configure pytest under `[tool.pytest.ini_options]`; do not add separate
   name and scope them (`function`, `module`, `session`) to the broadest reuse
   that is still safe.
 - Use the built-in fixtures instead of hand-rolling isolation:
-    - `tmp_path` / `tmp_path_factory` for filesystem work — never write into the
-      repo or a fixed temp path.
-    - `monkeypatch` for environment variables, attributes, and `sys` state — it
-      auto-reverts after the test.
-    - `capsys` (or `capfd`) to capture and assert on stdout/stderr.
+  - `tmp_path` / `tmp_path_factory` for filesystem work — never write into the
+    repo or a fixed temp path.
+  - `monkeypatch` for environment variables, attributes, and `sys` state — it
+    auto-reverts after the test.
+  - `capsys` (or `capfd`) to capture and assert on stdout/stderr.
 - If a test must mutate global or class state that no fixture manages, restore
   the original value in a fixture teardown or a `try`/`finally` so it cannot
   leak into other tests (critical under parallel execution).

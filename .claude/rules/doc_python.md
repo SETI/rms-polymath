@@ -47,15 +47,15 @@ A single `conf.py` configures the whole tree. It MUST:
 - Derive the version from installed package metadata (e.g.
   `importlib.metadata.version`) rather than hard-coding a version string.
 - Enable, at minimum, these extensions:
-    - `sphinx.ext.autodoc` — pull API docs from docstrings.
-    - `sphinx.ext.napoleon` — parse Google-style docstrings.
-    - `sphinx.ext.viewcode` — link API docs to highlighted source.
-    - `sphinx.ext.intersphinx` — cross-link to the docs of Python and key
-      third-party dependencies; populate `intersphinx_mapping` accordingly.
-    - `myst_parser` — include Markdown files (the `README`).
-    - A diagram extension (e.g. `sphinxcontrib.mermaid`) when the guides use
-      diagrams; configure it for headless/client-side rendering so CI needs no
-      browser.
+  - `sphinx.ext.autodoc` — pull API docs from docstrings.
+  - `sphinx.ext.napoleon` — parse Google-style docstrings.
+  - `sphinx.ext.viewcode` — link API docs to highlighted source.
+  - `sphinx.ext.intersphinx` — cross-link to the docs of Python and key
+    third-party dependencies; populate `intersphinx_mapping` accordingly.
+  - `myst_parser` — include Markdown files (the `README`).
+  - A diagram extension (e.g. `sphinxcontrib.mermaid`) when the guides use
+    diagrams; configure it for headless/client-side rendering so CI needs no
+    browser.
 - Set `source_suffix` to include both `.rst` and `.md`.
 - Configure Napoleon for Google-style docstrings (`napoleon_google_docstring`,
   `napoleon_use_param`, `napoleon_use_rtype`).
@@ -85,16 +85,16 @@ A single `conf.py` configures the whole tree. It MUST:
 
 - EVERY mention of a code object in narrative prose MUST use the appropriate
   Sphinx cross-reference role so it links to the API reference:
-    - `:class:`~package.module.Class``
-    - `:meth:`~package.module.Class.method``
-    - `:func:`~package.module.func``
-    - `:mod:`package.module``
-    - `:attr:`~package.module.Class.attr``
-    - `:data:`~package.module.NAME``
+  - `:class:`~package.module.Class``
+  - `:meth:`~package.module.Class.method``
+  - `:func:`~package.module.func``
+  - `:mod:`package.module``
+  - `:attr:`~package.module.Class.attr``
+  - `:data:`~package.module.NAME``
   Use `:doc:` to link other documentation pages and `:ref:` for labeled
   sections.
 - Bare CamelCase or `module.symbol` text in prose is a violation, even when
-  wrapped in inline literals. Inline literals (`` `` ``) are for YAML/JSON
+  wrapped in inline literals. Inline literals (```` ``) are for YAML/JSON
   keys, file paths, CLI tokens, environment variables, and shell snippets —
   not for API symbols.
 - Cross-references are NOT required (and should be omitted) inside
