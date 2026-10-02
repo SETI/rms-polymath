@@ -262,10 +262,6 @@ def test_qube_ext_vector_ops_dot_product() -> None:
     # Additional coverage tests for missing lines
     ##################################################################################
 
-    # Note: Testing _zero_sized_result with empty arrays is difficult because
-    # it causes IndexError when trying to index into an empty array
-    # The _zero_sized_result method is called internally for edge cases
-
     a = Scalar([1., 2., 3.])
     b = a.sum(axis=[0])  # List instead of tuple
     assert b.shape == ()
@@ -324,7 +320,9 @@ def test_qube_ext_vector_ops_dot_product() -> None:
     a = Scalar([])  # Empty array, shape (0,), _size = 0
     b = a.sum()
 
-    assert b.shape == (0,)
+    assert b.shape == ()
+    assert b == 0.
+    assert not b.mask
 
     a = Scalar(7.)  # Scalar with shape (), which is falsy
     b = a.sum(axis=None)
@@ -558,17 +556,15 @@ def test_qube_ext_vector_ops_dot_product() -> None:
     b_masked = a_masked.sum(axis=None)
     assert b_masked.mask
 
-    try:
-        a = Scalar(np.empty((0, 3)))
-        # This should trigger _zero_sized_result with axis as tuple
-        # The else clause at line 164-165 will execute after the for loop
-        b = a.sum(axis=(0,))
-        # If we get here, the indexing worked (unlikely with empty array)
-        # But the else clause should have been executed
-    except (IndexError, ValueError):
-        # Empty arrays may cause IndexError, but the else clause should still execute
-        # The coverage tool should still see the else clause being executed
-        pass
+    a = Scalar(np.empty((0, 3)))
+    b = a.sum(axis=(0,))
+    assert b.shape == (3,)
+    assert np.all(b.values == 0.)
+    assert not np.any(b.mask)
+
+    b = a.mean(axis=(0,))
+    assert b.shape == (3,)
+    assert np.all(b.mask)
 
     a = np.array([1., 2.])  # 2-vector, not 3
     b = np.array([3., 4.])  # 2-vector, not 3

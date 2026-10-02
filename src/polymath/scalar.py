@@ -962,6 +962,9 @@ class Scalar(Qube):
     def max(self, axis=None, *, builtins=None, masked=None, out=None):
         """The maximum of the unmasked values.
 
+        The maximum over no elements is undefined, so the maximum along an axis of length
+        zero is masked.
+
         Parameters:
             axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of
                 axes. The maximum is determined across these axes, leaving any remaining
@@ -988,9 +991,9 @@ class Scalar(Qube):
         self._check_axis(axis, 'max()')         # make sure axis input is valid
 
         if self._size == 0:
-            return self.wod._zero_sized_result(axis)
+            result = self.wod._zero_sized_result(axis)
 
-        if self._shape == ():
+        elif self._shape == ():
             result = self.wod
 
         elif not np.any(self._mask):
@@ -1033,6 +1036,9 @@ class Scalar(Qube):
     def min(self, axis=None, *, builtins=None, masked=None, out=None):
         """The minimum of the unmasked values.
 
+        The minimum over no elements is undefined, so the minimum along an axis of length
+        zero is masked.
+
         Parameters:
             axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of
                 axes. The minimum is determined across these axes, leaving any remaining
@@ -1059,9 +1065,9 @@ class Scalar(Qube):
         self._check_axis(axis, 'min()')         # make sure axis input is valid
 
         if self._size == 0:
-            return self.wod._zero_sized_result(axis)
+            result = self.wod._zero_sized_result(axis)
 
-        if self._shape == ():
+        elif self._shape == ():
             result = self.wod
 
         elif not np.any(self._mask):
@@ -1104,6 +1110,8 @@ class Scalar(Qube):
     def argmax(self, axis=None, *, builtins=None, masked=None):
         """The index of the maximum of the unmasked values along the specified axis.
 
+        Along an axis of length zero there is no index, so the result is masked.
+
         This returns an integer Scalar array of the same shape as self, except that the
         specified axis has been removed. Each value indicates the index of the maximum
         along that axis. The index is masked where the values along the axis are all
@@ -1139,9 +1147,9 @@ class Scalar(Qube):
 
         if self._size == 0:
             ints = self.zeros(self.shape, dtype='int')
-            return ints._zero_sized_result(axis)
+            result = ints._zero_sized_result(axis)
 
-        if not np.any(self._mask):
+        elif not np.any(self._mask):
             result = Scalar(np.argmax(self._values, axis=axis), mask=False)
 
         # If all masked, use the argmax values but leave the result masked
@@ -1178,6 +1186,8 @@ class Scalar(Qube):
     def argmin(self, axis=None, *, builtins=None, masked=None):
         """The index of the minimum of the unmasked values along the specified axis.
 
+        Along an axis of length zero there is no index, so the result is masked.
+
         This returns an integer Scalar array of the same shape as self, except that the
         specified axis has been removed. Each value indicates the index of the minimum
         along that axis. The index is masked where the values along the axis are all
@@ -1210,9 +1220,9 @@ class Scalar(Qube):
 
         if self._size == 0:
             ints = self.zeros(self.shape, dtype='int')
-            return ints._zero_sized_result(axis)
+            result = ints._zero_sized_result(axis)
 
-        if not np.any(self._mask):
+        elif not np.any(self._mask):
             result = Scalar(np.argmin(self._values, axis=axis), mask=False)
 
         # If all masked, use the argmin values but leave the result masked
@@ -1411,6 +1421,9 @@ class Scalar(Qube):
     def median(self, axis=None, *, builtins=None, masked=None, out=None):
         """The median of the unmasked values.
 
+        The median over no elements is undefined, so the median along an axis of length
+        zero is masked.
+
         Parameters:
             axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of
                 axes. The median is determined across these axes, leaving any remaining
@@ -1437,9 +1450,9 @@ class Scalar(Qube):
         self._check_axis(axis, 'median()')      # make sure axis input is valid
 
         if self._size == 0:
-            return self.wod._zero_sized_result(axis)
+            result = self.wod.as_float()._zero_sized_result(axis)
 
-        if self._shape == ():
+        elif self._shape == ():
             result = self.wod.as_float()
 
         elif not np.any(self._mask):
@@ -1518,7 +1531,7 @@ class Scalar(Qube):
     def sort(self, axis=0):
         """The array sorted along the specified axis from minimum to maximum.
 
-        Masked values appear at the end.
+        Masked values appear at the end. An array with no elements is returned unchanged.
 
         Parameters:
             axis (int, optional): An integer axis to sort along.
@@ -1534,10 +1547,11 @@ class Scalar(Qube):
             raise ValueError('Scalar.sort() does not support denominators')
         self._check_axis(axis, 'sort()')        # make sure axis input is valid
 
+        # An array with no elements is already sorted
         if self._size == 0:
-            return self.wod._zero_sized_result(axis)
+            result = self.copy(recursive=False)
 
-        if not np.any(self._mask):
+        elif not np.any(self._mask):
             result = Scalar(np.sort(self._values, axis=axis), mask=False, unit=self._unit)
         else:
             max_possible = Scalar._maxval(self._values.dtype)

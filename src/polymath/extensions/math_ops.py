@@ -2163,6 +2163,9 @@ def sum(self, axis=None, *, recursive=True, builtins=None, masked=None, out=None
 
     This method is overridden by :meth:`~polymath.Boolean.sum`.
 
+    A sum over no elements is zero and unmasked, whatever the mask of this object, so the
+    sum along an axis of length zero is zero.
+
     Parameters:
         axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.
             The sum is determined across these axes, leaving any remaining axes in the
@@ -2198,6 +2201,9 @@ def sum(self, axis=None, *, recursive=True, builtins=None, masked=None, out=None
 def mean(self, axis=None, *, recursive=True, builtins=None, masked=None, dtype=None,
          out=None):
     """The mean of the unmasked values along the specified axis or axes.
+
+    A mean over no elements is undefined, so the mean along an axis of length zero is
+    masked.
 
     Parameters:
         axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of axes.

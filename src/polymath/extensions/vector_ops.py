@@ -33,14 +33,14 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
         _combine_as_mean (bool, optional): True to combine as a mean; False to combine as
             a sum.
 
+    A sum over no elements is zero and unmasked, whatever the mask of the object. A mean
+    over no elements is undefined, so it is masked.
+
     Returns:
         Qube: The mean or sum of the unmasked values.
     """
 
     arg._check_axis(axis, 'mean()' if _combine_as_mean else 'sum()')
-
-    if arg._size == 0:
-        return arg._zero_sized_result(axis=axis)
 
     # Select the NumPy function
     if _combine_as_mean:
@@ -56,8 +56,18 @@ def _mean_or_sum(arg, axis=None, *, recursive=True, _combine_as_mean=False):
     else:
         new_axis = tuple(a % arg._ndims for a in axis)
 
+    # A sum over no elements is zero, whatever the mask
+    if arg._size == 0 and not _combine_as_mean:
+        obj = Qube._new_from_parts(np.sum(arg._values, axis=new_axis), False,
+                                   nrank=arg._nrank, drank=arg._drank,
+                                   unit=arg._unit, example=arg)
+
+    # A mean over no elements is undefined
+    elif arg._size == 0:
+        obj = arg.as_float()._zero_sized_result(axis)
+
     # If there's no mask, this is easy
-    if not np.any(arg._mask):
+    elif not np.any(arg._mask):
         obj = Qube._new_from_parts(func(arg._values, axis=new_axis), False,
                                    nrank=arg._nrank, drank=arg._drank,
                                    unit=arg._unit, example=arg)
@@ -173,28 +183,33 @@ def _check_axis(arg, axis, op):
 
 
 def _zero_sized_result(self, axis):
-    """A zero-sized result obtained by collapsing one or more axes.
+    """The fully masked result of collapsing axes of an object with no elements.
+
+    A reduction such as a minimum, maximum, median, or mean has no value over zero
+    elements, so every element of the result is masked and holds the default item. The
+    result has the shape of this object with the collapsed axes removed, and the same
+    item shape, unit, and class. It is itself empty if a remaining axis has length zero.
 
     Parameters:
         axis (int | tuple[int, ...] | None): The axis or axes to collapse; None to
             collapse every axis.
 
     Returns:
-        Qube: A zero-sized result with the specified axes collapsed.
+        Qube: A fully masked object with the specified axes collapsed.
     """
 
     if axis is None:
-        return self.flatten().as_size_zero()
-
-    # Construct an index to obtain the correct shape
-    indx = self._ndims * [slice(None)]
-    if isinstance(axis, (list, tuple)):
-        for i in axis:
-            indx[i] = 0
+        new_shape = ()
     else:
-        indx[axis] = 0
+        axes = axis if isinstance(axis, (list, tuple)) else (axis,)
+        collapsed = {a % self._ndims for a in axes}
+        new_shape = tuple(n for i, n in enumerate(self._shape) if i not in collapsed)
 
-    return self[tuple(indx)]
+    new_values = np.empty(new_shape + self._item, dtype=self._values.dtype)
+    new_values[...] = self._default
+
+    return type(self)._new_from_parts(new_values, True, nrank=self._nrank,
+                                      drank=self._drank, unit=self._unit, example=self)
 
 
 @staticmethod
