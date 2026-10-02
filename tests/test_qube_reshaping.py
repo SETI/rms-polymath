@@ -556,8 +556,12 @@ def test_qube_reshaping_move_axis_with_scalar_source_destination() -> None:
     assert b.shape == (4, 3)
 
 
-def test_qube_reshaping_move_axis_reshape_when_ndims_rank_when_rank_3_and_object_has() -> None:
-    """move_axis reshape when ndims < rank # When rank=3 and object has shape (3, 4), it gets reshaped to (1, 3, 4) # Then moving axis 0 to position 2 results in (3, 4, 1)."""
+def test_qube_reshaping_move_axis_reshapes_when_ndims_below_rank() -> None:
+    """move_axis() on an object with fewer dimensions than the requested rank.
+
+    An object of shape (3, 4) is first reshaped to (1, 3, 4), so moving axis 0 to position
+    2 gives (3, 4, 1).
+    """
 
     np.random.seed(2292)
 
@@ -644,8 +648,8 @@ def test_qube_reshaping_test_move_axis_with_recursive_true_and_derivatives() -> 
     assert b.d_dt.shape == (4, 3)
 
 
-def test_qube_reshaping_test_stack_with_float_arg_logic_float_arg_is_none_or_not_qub() -> None:
-    """Test stack with float_arg logic (float_arg is None or not qubed) # Case: float_arg is None."""
+def test_qube_reshaping_stack_of_float_scalars() -> None:
+    """Qube.stack() of two float Scalars."""
 
     np.random.seed(2292)
 
@@ -655,7 +659,7 @@ def test_qube_reshaping_test_stack_with_float_arg_logic_float_arg_is_none_or_not
     assert c.shape == (2, 3)
 
 
-def test_qube_reshaping_case_float_arg_is_not_none_but_qubed_is_true_arg_was_convert() -> None:
+def test_qube_reshaping_stack_with_float_arg_converted() -> None:
     """Case: float_arg is not None but qubed is True (arg was converted)."""
 
     np.random.seed(2292)
@@ -666,8 +670,8 @@ def test_qube_reshaping_case_float_arg_is_not_none_but_qubed_is_true_arg_was_con
     assert c.shape == (2, 3)
 
 
-def test_qube_reshaping_test_stack_with_int_arg_logic_int_arg_is_none_or_not_qubed_c() -> None:
-    """Test stack with int_arg logic (int_arg is None or not qubed) # Case: int_arg is None, float_arg is None."""
+def test_qube_reshaping_stack_of_int_scalars() -> None:
+    """Qube.stack() of two integer Scalars."""
 
     np.random.seed(2292)
 
@@ -688,8 +692,8 @@ def test_qube_reshaping_case_int_arg_is_not_none_but_qubed_is_true() -> None:
     assert c.shape == (2, 3)
 
 
-def test_qube_reshaping_test_stack_with_bool_arg_logic_bool_arg_is_none_or_not_qubed() -> None:
-    """Test stack with bool_arg logic (bool_arg is None or not qubed) # Case: bool_arg is None, int_arg is None, float_arg is None."""
+def test_qube_reshaping_stack_of_booleans_and_arrays() -> None:
+    """Qube.stack() of Booleans, and of a Qube with a NumPy array."""
 
     np.random.seed(2292)
 

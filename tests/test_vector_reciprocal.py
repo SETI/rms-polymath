@@ -8,8 +8,14 @@ import pytest
 from polymath import Pair, Vector, Vector3
 
 
-def test_vector_reciprocal_print_np_abs_diffs_max_the_tolerance_is_set_by_float64_round() -> None:
-    """print(np.abs(diffs).max()) # The tolerance is set by float64 round-off, not by any property of reciprocal(): # np.linalg.inv() on this same seeded data gives a bit-identical error. The worst # of these 100 random matrices has a condition number of ~3500, which puts the # round-trip error at ~3.e-13, so 1.e-12 leaves a modest safety margin."""
+def test_vector_reciprocal_inverts_pairs_vector3s_and_random_vectors() -> None:
+    """reciprocal() inverts the denominators of a Pair, a Vector3, and random 4x4 Vectors.
+
+    The tolerance reflects float64 round-off, not reciprocal(): np.linalg.inv() gives a
+    bit-identical error on the same data. The worst of the 100 random matrices has a
+    condition number of about 3500, which puts the round-trip error at about 3e-13, so
+    1e-12 leaves a modest margin.
+    """
 
     np.random.seed(4912)
     vec = Pair([[1,0],[0,2]], drank=1)

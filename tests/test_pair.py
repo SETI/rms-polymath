@@ -117,14 +117,14 @@ def test_pair_test_basic_construction() -> None:
     assert type(p2x1_conv) == Pair
     assert np.allclose(p2x1_conv.vals, [1., 2.])
 
-    m1x2_nd = Matrix([[[1., 2.]], [[4., 5.]]])
-    assert m1x2_nd.shape == (2,)
-    assert m1x2_nd._numer == (1, 2)
-    p1x2_nd_conv = Pair.as_pair(m1x2_nd)
-    assert type(p1x2_nd_conv) == Pair
-    assert p1x2_nd_conv.shape == (2,)
-    assert np.allclose(p1x2_nd_conv.vals[0], [1., 2.])
-    assert np.allclose(p1x2_nd_conv.vals[1], [4., 5.])
+    m1x2_array = Matrix([[[1., 2.]], [[4., 5.]]])
+    assert m1x2_array.shape == (2,)
+    assert m1x2_array._numer == (1, 2)
+    p1x2_array_conv = Pair.as_pair(m1x2_array)
+    assert type(p1x2_array_conv) == Pair
+    assert p1x2_array_conv.shape == (2,)
+    assert np.allclose(p1x2_array_conv.vals[0], [1., 2.])
+    assert np.allclose(p1x2_array_conv.vals[1], [4., 5.])
 
     m2x4 = Matrix(np.random.randn(2, 2, 4))  # shape (2,), numer (2, 4)
     assert m2x4.shape == (2,)
@@ -172,12 +172,12 @@ def test_pair_test_basic_construction() -> None:
     p22_none2 = Pair.from_scalars(None, 2.)
     assert np.allclose(p22_none2.vals, [0., 2.])
 
-    x_nd = Scalar([[1., 2.], [3., 4.]], drank=1)
-    p22_none_nd = Pair.from_scalars(x_nd, None)
-    assert p22_none_nd.shape == (2,)
-    assert p22_none_nd.denom == (2,)  # Should match the denominator of x_nd
+    x_array = Scalar([[1., 2.], [3., 4.]], drank=1)
+    p22_none_array = Pair.from_scalars(x_array, None)
+    assert p22_none_array.shape == (2,)
+    assert p22_none_array.denom == (2,)  # Should match the denominator of x_array
 
-    assert np.allclose(p22_none_nd.vals[0, :, 0], [1., 0.])
+    assert np.allclose(p22_none_array.vals[0, :, 0], [1., 0.])
 
     p_all_none = Pair.from_scalars(None, None)
     assert type(p_all_none) == Pair
@@ -339,7 +339,7 @@ def test_pair_test_basic_construction() -> None:
         p44.clip2d(lower, upper_bad)
 
 
-def test_pair_test_clip2d_with_masked_lower_limit_should_be_treated_as_non() -> None:
+def test_pair_clip2d_with_masked_lower_limit_treated_as_none() -> None:
     """Test clip2d with masked lower limit (should be treated as None)."""
 
     np.random.seed(2599)
@@ -353,7 +353,7 @@ def test_pair_test_clip2d_with_masked_lower_limit_should_be_treated_as_non() -> 
     assert np.allclose(p45_clipped.vals, [4., 4.], atol=1e-10)
 
 
-def test_pair_test_clip2d_with_masked_upper_limit_should_be_treated_as_non() -> None:
+def test_pair_clip2d_with_masked_upper_limit_treated_as_none() -> None:
     """Test clip2d with masked upper limit (should be treated as None)."""
 
     np.random.seed(2599)
@@ -415,11 +415,11 @@ def test_pair_test_dot_with_n_d() -> None:
 
     np.random.seed(2599)
 
-    p_dot_nd_a = Pair(np.random.randn(4, 1, 5, 2))
-    p_dot_nd_b = Pair(np.random.randn(8, 5, 2))
-    dot_nd_result = p_dot_nd_a.dot(p_dot_nd_b)
+    p_dot_array_a = Pair(np.random.randn(4, 1, 5, 2))
+    p_dot_array_b = Pair(np.random.randn(8, 5, 2))
+    dot_array_result = p_dot_array_a.dot(p_dot_array_b)
 
-    assert dot_nd_result.shape == (4, 8, 5)
+    assert dot_array_result.shape == (4, 8, 5)
 
 
 def test_pair_test_norm() -> None:
@@ -572,8 +572,11 @@ def test_pair_test_round_trip_rot90_four_times_should_return_original() -> None:
     assert np.allclose(p62.vals, p62_round.vals, atol=1e-10)
 
 
-def test_pair_test_angle_consistency_angle_of_rot90_note_rot90_does_x_y_y_() -> None:
-    """Test angle consistency: angle of rot90 # Note: rot90 does (x,y) -> (y,-x), which rotates by 90 degrees counterclockwise # For (1,0) -> (0,-1), the angle goes from 0 to 3π/2 (270 degrees)."""
+def test_pair_angle_consistency_angle_of_rot90() -> None:
+    """Pair.angle() of a rot90() result.
+
+    rot90() maps (x, y) to (y, -x), so (1, 0) becomes (0, -1), whose angle is 3*pi/2.
+    """
 
     np.random.seed(2599)
 

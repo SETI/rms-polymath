@@ -11,8 +11,10 @@ from typing import Any, cast
 from polymath import Qube, Scalar, Vector, Vector3, Boolean
 
 
-def test_qube_ext_pickler_test_set_pickle_digits_set_the_desired_number_of_decimal_dig() -> None:
-    """Test set_pickle_digits # Set the desired number of decimal digits of precision in the storage of this # object's floating-point values and their derivatives."""
+def test_qube_ext_pickler_set_pickle_digits() -> None:
+    """set_pickle_digits() sets the decimal precision used to store floating-point values and
+    their derivatives.
+    """
 
     np.random.seed(2599)
 
@@ -873,8 +875,10 @@ def test_qube_ext_pickler_test_constant_decoding() -> None:
     # Actually, this is tested indirectly through the invalid values encoding test above
 
 
-def test_qube_ext_pickler_test_nbytes_3_decoding_this_is_tested_through_the_encode_dec() -> None:
-    """Test nbytes == 3 decoding # This is tested through the encode/decode cycle with appropriate digits # We need to create a scenario where nbytes == 3 # This requires: 2 < bytes_needed <= 3 # bytes_needed = log(unique_values_needed) / log(256) # unique_values_needed = span / precision + 1 # Need size > 200 to avoid 'literal' encoding # Let's try with a specific range and precision."""
+def test_qube_ext_pickler_nbytes_3_decoding() -> None:
+    """Pickling round trip of more than 200 values whose span and precision need three bytes
+    per value.
+    """
 
     np.random.seed(2599)
 
@@ -886,8 +890,10 @@ def test_qube_ext_pickler_test_nbytes_3_decoding_this_is_tested_through_the_enco
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_nbytes_5_decoding_similar_approach_need_size_200() -> None:
-    """Test nbytes == 5 decoding # Similar approach, need size > 200."""
+def test_qube_ext_pickler_nbytes_5_decoding() -> None:
+    """Pickling round trip of more than 200 values whose span and precision need five bytes
+    per value.
+    """
 
     np.random.seed(2599)
 
@@ -899,8 +905,10 @@ def test_qube_ext_pickler_test_nbytes_5_decoding_similar_approach_need_size_200(
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_nbytes_6_decoding_need_size_200() -> None:
-    """Test nbytes == 6 decoding # Need size > 200."""
+def test_qube_ext_pickler_nbytes_6_decoding() -> None:
+    """Pickling round trip of more than 200 values whose span and precision need six bytes
+    per value.
+    """
 
     np.random.seed(2599)
 
@@ -912,8 +920,10 @@ def test_qube_ext_pickler_test_nbytes_6_decoding_need_size_200() -> None:
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_single_precision_calculation_this_is_triggered_when_dig() -> None:
-    """Test single precision calculation # This is triggered when digits is a number and dtype is float32 # We need to trigger the else branch in fpzip_compress."""
+def test_qube_ext_pickler_single_precision_with_few_values() -> None:
+    """Pickling round trip of a few values at a precision that single-precision fpzip
+    compression can hold.
+    """
 
     np.random.seed(2599)
 
@@ -925,8 +935,8 @@ def test_qube_ext_pickler_test_single_precision_calculation_this_is_triggered_wh
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_array_ndim_4_reshaping_create_a_5d_array() -> None:
-    """Test array.ndim > 4 reshaping # Create a 5D array."""
+def test_qube_ext_pickler_five_dimensional_array() -> None:
+    """Pickling round trip of a five-dimensional array."""
 
     np.random.seed(2599)
 
@@ -951,8 +961,8 @@ def test_qube_ext_pickler_test_fpzip_reference_encoding() -> None:
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_pickle_debug_path_we_need_to_set_pickle_debug_to_true() -> None:
-    """Test _PICKLE_DEBUG path # We need to set _PICKLE_DEBUG to True."""
+def test_qube_ext_pickler_pickle_debug() -> None:
+    """Pickling with _PICKLE_DEBUG set to True."""
 
     np.random.seed(2599)
 
@@ -983,8 +993,10 @@ def test_qube_ext_pickler_test_pickle_debug_path_we_need_to_set_pickle_debug_to_
     # We'll skip these for now
 
 
-def test_qube_ext_pickler_test_corners_mask_encoding_create_a_mask_with_edges_all_true() -> None:
-    """Test CORNERS mask encoding # Create a mask with edges all True."""
+def test_qube_ext_pickler_corners_mask_encoding() -> None:
+    """Pickling round trip of a mask whose edges are all True, which uses the CORNERS
+    encoding.
+    """
 
     np.random.seed(2599)
 
@@ -999,8 +1011,8 @@ def test_qube_ext_pickler_test_corners_mask_encoding_create_a_mask_with_edges_al
     assert np.array_equal(b.mask, a.mask)
 
 
-def test_qube_ext_pickler_test_fpzip_decompress_with_bits_0_this_happens_when_fpzip_co() -> None:
-    """Test fpzip_decompress with bits == 0 # This happens when fpzip compression is lossless."""
+def test_qube_ext_pickler_fpzip_lossless() -> None:
+    """Pickling round trip with lossless fpzip compression at double precision."""
 
     np.random.seed(2599)
 
@@ -1012,8 +1024,8 @@ def test_qube_ext_pickler_test_fpzip_decompress_with_bits_0_this_happens_when_fp
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_fpzip_decompress_with_bits_0_this_happens_when_fpzip_co_2() -> None:
-    """Test fpzip_decompress with bits > 0 # This happens when fpzip compression is lossy # We need to trigger lossy compression by using lower precision."""
+def test_qube_ext_pickler_fpzip_lossy() -> None:
+    """Pickling round trip with lossy fpzip compression at ten digits."""
 
     np.random.seed(2599)
 
@@ -1069,8 +1081,8 @@ def test_qube_ext_pickler_test_getstate_with_derivatives_and_antimask() -> None:
     assert ('t' in b.derivs)
 
 
-def test_qube_ext_pickler_test_setstate_with_values_writability_check_this_is_tested_t() -> None:
-    """Test __setstate__ with values writability check # This is tested through normal pickling, but let's be explicit."""
+def test_qube_ext_pickler_setstate_round_trip() -> None:
+    """Pickling round trip of a Scalar through __getstate__() and __setstate__()."""
 
     np.random.seed(2599)
 
@@ -1079,14 +1091,6 @@ def test_qube_ext_pickler_test_setstate_with_values_writability_check_this_is_te
     b = Scalar.__new__(Scalar)
     b.__setstate__(state)
     assert b.shape == a.shape
-
-
-def test_qube_ext_pickler_test_decode_floats_with_single_item_create_a_vector_with_a_s() -> None:
-    """Test _decode_floats with single item # Create a Vector with a single item that uses items encoding."""
-
-    np.random.seed(2599)
-
-    Vector([[1., 2., 3.]])  # Single item
 
 
 def test_qube_ext_pickler_make_it_large_enough_to_trigger_items_encoding() -> None:
@@ -1107,8 +1111,8 @@ def test_qube_ext_pickler_make_it_large_enough_to_trigger_items_encoding() -> No
     # Actually, this is already tested through the invalid values encoding test above
 
 
-def test_qube_ext_pickler_test_reference_value_calculation_paths_these_are_tested_thro() -> None:
-    """Test reference value calculation paths # These are tested through the different reference values above # But let's make sure they're using the scaled encoding # Test with 'smallest' reference."""
+def test_qube_ext_pickler_smallest_reference_value() -> None:
+    """Pickling round trip with the 'smallest' reference value."""
 
     np.random.seed(2599)
 
@@ -1133,8 +1137,9 @@ def test_qube_ext_pickler_test_with_largest_reference() -> None:
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_fpzip_reference_encoding_this_should_use_fpzip_compress() -> None:
-    """Test fpzip reference encoding # This should use fpzip compression directly."""
+def test_qube_ext_pickler_fpzip_reference_encoding() -> None:
+    """Pickling round trip with the 'fpzip' reference, which uses fpzip compression directly.
+    """
 
     np.random.seed(2599)
 
@@ -1146,8 +1151,10 @@ def test_qube_ext_pickler_test_fpzip_reference_encoding_this_should_use_fpzip_co
     assert b.shape == a.shape
 
 
-def test_qube_ext_pickler_test_single_precision_calculation_this_is_in_fpzip_compress_() -> None:
-    """Test single precision calculation # This is in fpzip_compress, triggered when digits is a number and dtype is float32 # We need to trigger the else branch."""
+def test_qube_ext_pickler_single_precision_with_many_values() -> None:
+    """Pickling round trip of 300 values at a precision that single-precision fpzip
+    compression can hold.
+    """
 
     np.random.seed(2599)
 
@@ -1157,21 +1164,6 @@ def test_qube_ext_pickler_test_single_precision_calculation_this_is_in_fpzip_com
     b = Scalar.__new__(Scalar)
     b.__setstate__(state)
     assert b.shape == a.shape
-
-
-def test_qube_ext_pickler_test_array_ndim_4_reshaping_create_a_5d_array_2() -> None:
-    """Test array.ndim > 4 reshaping # Create a 5D array."""
-
-    np.random.seed(2599)
-
-    a = Scalar(np.arange(2*3*4*5*6).reshape(2, 3, 4, 5, 6))
-    a.set_pickle_digits(8, 'mean')
-    state = a.__getstate__()
-    b = Scalar.__new__(Scalar)
-    b.__setstate__(state)
-    assert b.shape == a.shape
-
-
 
 
 def test_qube_ext_pickler_invalid_digits_value_is_rejected() -> None:

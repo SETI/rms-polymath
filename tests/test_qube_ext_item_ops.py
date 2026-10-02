@@ -400,8 +400,10 @@ def test_qube_ext_item_ops_simple_case_join_1_d_denominator_to_numerator() -> No
     assert type(b) == Matrix
 
 
-def test_qube_ext_item_ops_complex_n_d_case_join_with_shape_for_shape_2_numer_3_denom_2() -> None:
-    """Complex n-D case: join with shape # For shape (2,), numer (3,), denom (2,), we need values shape (2, 3, 2) # But 2*3*2 = 12, not 24. Let's use a different size."""
+def test_qube_ext_item_ops_join_items_n_d_with_shape() -> None:
+    """join_items() of a Vector with shape (2,), numerator (3,), and denominator (2,) joins
+    them into a Matrix item (3, 2).
+    """
 
     np.random.seed(8736)
 
@@ -449,8 +451,8 @@ def test_qube_ext_item_ops_test_with_drank_0_should_return_without_derivatives()
     ##################################################################################
 
 
-def test_qube_ext_item_ops_simple_case_split_numerator_to_denominator_use_matrix_which_() -> None:
-    """Simple case: split numerator to denominator # Use Matrix which has _NRANK=2, so we can split it."""
+def test_qube_ext_item_ops_split_items_numerator_to_denominator() -> None:
+    """split_items() moves part of a Matrix numerator into the denominator."""
 
     np.random.seed(8736)
 
@@ -467,8 +469,8 @@ def test_qube_ext_item_ops_simple_case_split_numerator_to_denominator_use_matrix
     assert isinstance(b, Qube)
 
 
-def test_qube_ext_item_ops_complex_n_d_case_split_with_shape_use_matrix_which_has_nrank() -> None:
-    """Complex n-D case: split with shape # Use Matrix which has _NRANK=2, so we can split it properly."""
+def test_qube_ext_item_ops_split_items_n_d_with_shape() -> None:
+    """split_items() of an N-dimensional Matrix preserves its shape."""
 
     np.random.seed(8736)
 
@@ -483,8 +485,8 @@ def test_qube_ext_item_ops_complex_n_d_case_split_with_shape_use_matrix_which_ha
     assert b.denom == (4,)  # Remaining becomes denom
 
 
-def test_qube_ext_item_ops_test_with_classes_parameter_use_matrix_which_has_nrank_2_so_() -> None:
-    """Test with classes parameter # Use Matrix which has _NRANK=2, so we can split it properly."""
+def test_qube_ext_item_ops_split_items_with_classes_parameter() -> None:
+    """split_items() with the classes parameter."""
 
     np.random.seed(8736)
 
@@ -557,8 +559,10 @@ def test_qube_ext_item_ops_test_with_classes_parameter() -> None:
     ##################################################################################
 
 
-def test_qube_ext_item_ops_simple_case_chain_multiplication_for_chain_we_need_a_denom_t() -> None:
-    """Simple case: chain multiplication # For chain, we need a.denom to match b.numer."""
+def test_qube_ext_item_ops_chain_multiplication() -> None:
+    """chain() multiplies two objects when the denominator of the first matches the numerator
+    of the second.
+    """
 
     np.random.seed(8736)
 
@@ -580,8 +584,10 @@ def test_qube_ext_item_ops_simple_case_chain_multiplication_for_chain_we_need_a_
     assert type(c) == Vector
 
 
-def test_qube_ext_item_ops_test_with_matmul_operator_chain_multiplication_for_chain_to_() -> None:
-    """Test with __matmul__ operator (chain multiplication) # For chain to work, a.denom must match b.numer."""
+def test_qube_ext_item_ops_chain_multiplication_with_matmul_operator() -> None:
+    """The @ operator performs chain multiplication when the denominator of the first operand
+    matches the numerator of the second.
+    """
 
     np.random.seed(8736)
 

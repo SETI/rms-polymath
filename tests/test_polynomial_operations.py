@@ -9,8 +9,8 @@ import pytest
 from polymath import Scalar, Vector, Polynomial
 
 
-def test_polynomial_operations_test_deriv_derivative_of_x_2_2x_3_is_2x_2() -> None:
-    """Test deriv # Derivative of x^2 + 2x + 3 is 2x + 2."""
+def test_polynomial_operations_deriv() -> None:
+    """Polynomial.deriv() of x**2 + 2x + 3 is 2x + 2."""
 
     np.random.seed(2599)
 
@@ -62,8 +62,8 @@ def test_polynomial_operations_test_deriv_derivative_of_x_2_2x_3_is_2x_2() -> No
         p_zero.roots()
 
 
-def test_polynomial_operations_test_with_n_d_arrays_complicated_cases_create_array_of_polyn() -> None:
-    """Test with n-D arrays (complicated cases) # Create array of polynomials."""
+def test_polynomial_operations_with_n_d_arrays() -> None:
+    """Polynomial operations on N-dimensional arrays of polynomials."""
 
     np.random.seed(2599)
 
@@ -118,8 +118,8 @@ def test_polynomial_operations_test_roots_with_array_mask_for_array_of_polynomia
     assert isinstance(roots_array_mask, Scalar)
 
 
-def test_polynomial_operations_test_roots_with_all_coefficients_zero_this_tests_the_all_zer() -> None:
-    """Test roots with all coefficients zero # This tests the all_zeros code path."""
+def test_polynomial_operations_roots_with_all_coefficients_zero() -> None:
+    """Polynomial.roots() when every coefficient is zero."""
 
     np.random.seed(2599)
 
@@ -155,8 +155,11 @@ def test_polynomial_operations_test_roots_with_multiple_leading_zeros_scalar_cas
     assert roots_multi_zero.shape == (3,)
 
 
-def test_polynomial_operations_test_roots_with_array_of_polynomials_requiring_shifts_use_sa() -> None:
-    """Test roots with array of polynomials requiring shifts # Use same order for both to avoid shape mismatch."""
+def test_polynomial_operations_roots_of_array_requiring_shifts() -> None:
+    """Polynomial.roots() of an array whose leading zero coefficients must be shifted out.
+
+    Both polynomials have the same order, to avoid a shape mismatch.
+    """
 
     np.random.seed(2599)
 
@@ -171,8 +174,9 @@ def test_polynomial_operations_test_roots_with_array_of_polynomials_requiring_sh
     assert roots_shift_array.shape[1:] == (2, 1)
 
 
-def test_polynomial_operations_test_roots_with_recursive_derivatives_use_a_higher_order_pol() -> None:
-    """Test roots with recursive derivatives # Use a higher order polynomial to ensure we hit the recursive path."""
+def test_polynomial_operations_roots_with_recursive_derivatives() -> None:
+    """Polynomial.roots() with recursive=True on a higher-order polynomial with derivatives.
+    """
 
     np.random.seed(2599)
 
@@ -184,7 +188,7 @@ def test_polynomial_operations_test_roots_with_recursive_derivatives_use_a_highe
     assert roots_with_deriv.shape[0] == 3
 
 
-def test_polynomial_operations_test_roots_with_array_mask_not_scalar_to_hit_array_mask_copy() -> None:
+def test_polynomial_operations_roots_with_array_mask() -> None:
     """Test roots with array mask (not scalar) to hit array mask copy path."""
 
     np.random.seed(2599)
@@ -211,8 +215,8 @@ def test_polynomial_operations_test_roots_with_all_coefficients_zero_in_array_ca
     assert isinstance(roots_all_zeros_array, Scalar)
 
 
-def test_polynomial_operations_test_roots_with_array_requiring_shifts_and_mask_indices_crea() -> None:
-    """Test roots with array requiring shifts and mask_indices # Create array where some polynomials need different numbers of shifts."""
+def test_polynomial_operations_roots_of_array_requiring_shifts_and_mask_indices() -> None:
+    """Polynomial.roots() of an array whose elements need different numbers of shifts."""
 
     np.random.seed(2599)
 
@@ -227,8 +231,8 @@ def test_polynomial_operations_test_roots_with_array_requiring_shifts_and_mask_i
     assert roots_shift_array2.shape[1:] == (2, 1)
 
 
-def test_polynomial_operations_test_roots_on_array_of_polynomials_use_simple_linear_polynom() -> None:
-    """Test roots on array of polynomials # Use simple linear polynomials: [1, 2] -> root at -2."""
+def test_polynomial_operations_roots_on_array_of_polynomials() -> None:
+    """Polynomial.roots() of an array of linear polynomials; [1, 2] has its root at -2."""
 
     np.random.seed(2599)
 
@@ -268,8 +272,10 @@ def test_polynomial_operations_test_with_partial_mask() -> None:
     assert np.any(p_partial_mask.mask)
 
 
-def test_polynomial_operations_test_recursive_parameter_create_polynomial_with_derivatives() -> None:
-    """Test recursive parameter # Create polynomial with derivatives."""
+def test_polynomial_operations_recursive_parameter() -> None:
+    """Polynomial.deriv() and eval() keep derivatives with recursive=True and drop them with
+    recursive=False.
+    """
 
     np.random.seed(2599)
 
@@ -299,8 +305,8 @@ def test_polynomial_operations_test_that_roots_respects_recursive() -> None:
     assert hasattr(roots_recursive, 'd_dt')
 
 
-def test_polynomial_operations_test_higher_order_polynomial_roots_cubic_x_3_6x_2_11x_6_x_1_() -> None:
-    """Test higher order polynomial roots (cubic) # x^3 - 6x^2 + 11x - 6 = (x-1)(x-2)(x-3) = 0."""
+def test_polynomial_operations_roots_of_cubic() -> None:
+    """Polynomial.roots() of x**3 - 6x**2 + 11x - 6 are 1, 2, and 3."""
 
     np.random.seed(2599)
 
@@ -383,8 +389,8 @@ def test_polynomial_operations_test_roots_mask_extraneous_zeros() -> None:
     assert valid_roots[0] == -2. or abs(valid_roots[0] - -2.) <= 1e-10
 
 
-def test_polynomial_operations_test_roots_mask_duplicated_values_create_polynomial_with_dup() -> None:
-    """Test roots mask duplicated values # Create polynomial with duplicate roots: (x-1)^2 = x^2 - 2x + 1."""
+def test_polynomial_operations_roots_mask_duplicated_values() -> None:
+    """Polynomial.roots() masks the duplicate of a double root, as in (x - 1)**2."""
 
     np.random.seed(2599)
 
@@ -495,8 +501,8 @@ def test_polynomial_operations_test_roots_mask_duplicated_values_with_array() ->
     assert np.any(~np.isfinite(roots_dup_array.values))
 
 
-def test_polynomial_operations_test_eval_with_order_0_and_nested_derivatives_create_a_const() -> None:
-    """Test eval with order 0 and nested derivatives # Create a constant polynomial with derivatives that have derivatives."""
+def test_polynomial_operations_eval_order_0_with_nested_derivatives() -> None:
+    """Polynomial.eval() of a constant polynomial whose derivatives have derivatives."""
 
     np.random.seed(2599)
 
@@ -512,8 +518,10 @@ def test_polynomial_operations_test_eval_with_order_0_and_nested_derivatives_cre
     assert type(result_const_deriv.d_dt) == Scalar
 
 
-def test_polynomial_operations_test_eval_with_order_0_derivative_with_tail_this_requires_a_() -> None:
-    """Test eval with order 0, derivative with tail # This requires a polynomial with drank > 0 # Create a Vector with drank=1 first."""
+def test_polynomial_operations_eval_order_0_derivative_with_tail() -> None:
+    """Polynomial.eval() of an order-0 polynomial whose derivative has a denominator (drank >
+    0).
+    """
 
     np.random.seed(2599)
 
@@ -540,8 +548,10 @@ def test_polynomial_operations_test_eval_with_order_0_derivative_with_tail_drank
     assert hasattr(result_const_deriv_drank, 'd_dt')
 
 
-def test_polynomial_operations_test_eval_with_order_0_nested_derivatives_with_tail_drank_0_() -> None:
-    """Test eval with order 0, nested derivatives with tail (drank > 0) # This tests the full nested derivative conversion path."""
+def test_polynomial_operations_eval_order_0_nested_derivatives_with_tail() -> None:
+    """Polynomial.eval() of an order-0 polynomial with nested derivatives that have
+    denominators.
+    """
 
     np.random.seed(2599)
 
@@ -562,8 +572,10 @@ def test_polynomial_operations_test_eval_with_order_0_nested_derivatives_with_ta
     assert type(result_const_nested_drank.d_dt) == Scalar
 
 
-def test_polynomial_operations_also_test_nested_derivative_that_is_constant_order_0_with_no() -> None:
-    """Also test nested derivative that is constant (order 0) with no tail (drank=0) # This tests the else branch when dvalue_tail is empty."""
+def test_polynomial_operations_eval_order_0_nested_derivative_without_tail() -> None:
+    """Polynomial.eval() of an order-0 polynomial with a constant nested derivative and no
+    denominator.
+    """
 
     np.random.seed(2599)
 
@@ -602,8 +614,9 @@ def test_polynomial_operations_test_roots_with_scalar_mask_false_2() -> None:
     assert not np.any(roots_mask_false.mask)
 
 
-def test_polynomial_operations_test_roots_with_all_zeros_case_create_polynomial_where_all_c() -> None:
-    """Test roots with all_zeros case # Create polynomial where all coefficients are zero for some elements."""
+def test_polynomial_operations_roots_with_all_zeros_case() -> None:
+    """Polynomial.roots() of an array in which some polynomials have all-zero coefficients.
+    """
 
     np.random.seed(2599)
 
@@ -617,8 +630,8 @@ def test_polynomial_operations_test_roots_with_all_zeros_case_create_polynomial_
     assert roots_all_zeros.shape == (2, 2, 2)
 
 
-def test_polynomial_operations_test_roots_with_array_shifts_and_mask_indices_create_array_w() -> None:
-    """Test roots with array shifts and mask_indices # Create array where some elements need different numbers of shifts # This tests the array case (shift_shape is not empty)."""
+def test_polynomial_operations_roots_with_array_shifts_and_mask_indices() -> None:
+    """Polynomial.roots() of an array whose elements need different numbers of shifts."""
 
     np.random.seed(2599)
 
@@ -632,8 +645,8 @@ def test_polynomial_operations_test_roots_with_array_shifts_and_mask_indices_cre
     assert roots_array_shifts.shape == (3, 2, 2)
 
 
-def test_polynomial_operations_test_roots_duplicate_detection_scalar_case_create_polynomial() -> None:
-    """Test roots duplicate detection scalar case # Create polynomial with duplicate roots in scalar case."""
+def test_polynomial_operations_roots_duplicate_detection_scalar_case() -> None:
+    """Polynomial.roots() of (x - 1)**2 flags the duplicate root."""
 
     np.random.seed(2599)
 
@@ -643,8 +656,8 @@ def test_polynomial_operations_test_roots_duplicate_detection_scalar_case_create
     assert np.any(~np.isfinite(roots_dup_scalar.values))
 
 
-def test_polynomial_operations_test_roots_with_derivatives_this_tests_the_code_path_for_add() -> None:
-    """Test roots with derivatives # This tests the code path for adding derivatives to roots."""
+def test_polynomial_operations_roots_with_derivatives() -> None:
+    """Polynomial.roots() with recursive=True attaches derivatives to the roots."""
 
     np.random.seed(2599)
 
@@ -680,8 +693,9 @@ def test_polynomial_operations_test_roots_with_scalar_mask_false_duplicate_test(
         assert not roots_mask_false2.mask
 
 
-def test_polynomial_operations_test_roots_with_all_zeros_case_create_polynomial_where_all_c_2() -> None:
-    """Test roots with all_zeros case # Create polynomial where all coefficients are zero."""
+def test_polynomial_operations_roots_of_all_zero_scalar_polynomial_are_masked() -> None:
+    """Polynomial.roots() of a scalar polynomial with all-zero coefficients masks every root.
+    """
 
     np.random.seed(2599)
 
@@ -698,8 +712,8 @@ def test_polynomial_operations_test_roots_with_all_zeros_case_create_polynomial_
         assert (roots_all_zeros2.mask or not np.any(np.isfinite(roots_all_zeros2.values)))
 
 
-def test_polynomial_operations_test_roots_with_array_shifts_and_mask_indices_create_array_w_2() -> None:
-    """Test roots with array shifts and mask_indices # Create array where some elements need different numbers of shifts # This tests the array case (shift_shape is not empty)."""
+def test_polynomial_operations_roots_with_zero_to_three_shifts_per_element() -> None:
+    """Polynomial.roots() of an array needing from zero to three shifts per element."""
 
     np.random.seed(2599)
 
@@ -715,8 +729,8 @@ def test_polynomial_operations_test_roots_with_array_shifts_and_mask_indices_cre
     # and len(mask_indices) > 0
 
 
-def test_polynomial_operations_test_roots_duplicate_detection_scalar_case_create_polynomial_2() -> None:
-    """Test roots duplicate detection scalar case # Create polynomial with duplicate roots in scalar case."""
+def test_polynomial_operations_roots_flag_duplicate_of_x_minus_2_squared() -> None:
+    """Polynomial.roots() of (x - 2)**2 flags the duplicate root."""
 
     np.random.seed(2599)
 
@@ -727,8 +741,11 @@ def test_polynomial_operations_test_roots_duplicate_detection_scalar_case_create
                    (isinstance(roots_dup_scalar2.mask, bool) and roots_dup_scalar2.mask))
 
 
-def test_polynomial_operations_test_roots_with_derivatives_this_tests_the_code_path_for_add_2() -> None:
-    """Test roots with derivatives # This tests the code path for adding derivatives to roots # Use a linear polynomial for simplicity: x + 2 = 0, root at -2 # Derivative of polynomial: 1 (constant, nonzero at root) # Derivative of polynomial w.r.t. t: some constant."""
+def test_polynomial_operations_roots_of_linear_polynomial_with_derivative() -> None:
+    """Polynomial.roots() with recursive=True gives the derivative of each root.
+
+    For x + 2 with a d/dt derivative of 1, the root is -2 and its d/dt is -1.
+    """
 
     np.random.seed(2599)
 

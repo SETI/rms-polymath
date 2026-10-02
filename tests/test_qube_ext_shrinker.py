@@ -99,7 +99,7 @@ def test_qube_ext_shrinker_simple_1_d_case_shapeless_object_with_array_antimask(
     assert a == b  # Shapeless objects return unchanged
 
 
-def test_qube_ext_shrinker_complex_n_d_case_2_d_array_with_2_d_antimask_matches_full_sh() -> None:
+def test_qube_ext_shrinker_2_d_array_with_2_d_antimask_matching_full_shape() -> None:
     """Complex n-D case: 2-D array with 2-D antimask (matches full shape)."""
 
     np.random.seed(8736)
@@ -193,7 +193,7 @@ def test_qube_ext_shrinker_test_with_entirely_masked_object() -> None:
     assert b.readonly
 
 
-def test_qube_ext_shrinker_test_with_antimask_that_has_no_overlap_with_object_s_antimas() -> None:
+def test_qube_ext_shrinker_antimask_with_no_overlap_with_object_antimask() -> None:
     """Test with antimask that has no overlap with object's antimask."""
 
     np.random.seed(8736)
@@ -471,7 +471,7 @@ def test_qube_ext_shrinker_test_that_unshrunk_object_is_read_only() -> None:
     assert isinstance(c.readonly, bool)
 
 
-def test_qube_ext_shrinker_test_round_trip_shrink_then_unshrink_should_preserve_unmaske() -> None:
+def test_qube_ext_shrinker_round_trip_preserves_unmasked_values() -> None:
     """Test round-trip: shrink then unshrink should preserve unmasked values."""
 
     np.random.seed(8736)
@@ -525,8 +525,10 @@ def test_qube_ext_shrinker_test_with_boolean() -> None:
     assert np.all(c.mask[~antimask])
 
 
-def test_qube_ext_shrinker_test_with_extra_dimensions_in_antimask_should_broadcast_note() -> None:
-    """Test with extra dimensions in antimask (should broadcast) # Note: unshrink expects antimask to match rightmost dimensions # For a 1-D object, we can't easily add extra dimensions to antimask # Instead, test with a 2-D object."""
+def test_qube_ext_shrinker_round_trip_of_2_d_object() -> None:
+    """shrink() then unshrink() of a 2-D object with a 2-D antimask restores the selected
+    values.
+    """
 
     np.random.seed(8736)
 
@@ -544,31 +546,6 @@ def test_qube_ext_shrinker_test_with_extra_dimensions_in_antimask_should_broadca
     c = b.unshrink(antimask)
     assert c.shape == a.shape
     assert np.allclose(c.values[antimask], a.values[antimask])
-
-
-def test_qube_ext_shrinker_test_with_object_that_has_extra_dimensions_for_shape_2_2_5_t() -> None:
-    """Test with object that has extra dimensions # For shape (2, 2, 5), the rightmost dimensions to match are (2, 5) # But shrink expects antimask to match the rightmost axes after the shape # Actually, for a 3-D object, we need to test differently # Let's use a simpler 2-D case that works."""
-
-    np.random.seed(8736)
-
-    ##################################################################################
-    # shrink()
-    ##################################################################################
-
-    a = Scalar(np.arange(20).reshape(4, 5))
-    antimask = np.array([[True, False, True, False, True],
-                         [False, False, False, False, False],
-                         [True, True, False, False, False],
-                         [False, False, False, False, False]])
-    b = a.shrink(antimask)
-    c = b.unshrink(antimask)
-
-    assert c.shape == a.shape
-    assert np.allclose(c.values[antimask], a.values[antimask])
-
-    ##################################################################################
-    # Additional coverage tests for missing lines
-    ##################################################################################
 
 
 def test_qube_ext_shrinker_test_shrink_with_disable_shrinking_for_testing_only() -> None:
@@ -594,8 +571,8 @@ def test_qube_ext_shrinker_test_shrink_with_disable_shrinking_for_testing_only()
         Qube._DISABLE_SHRINKING = original_disable
 
 
-def test_qube_ext_shrinker_test_shrink_with_object_that_needs_broadcasting_antimask_has() -> None:
-    """Test shrink with object that needs broadcasting (antimask has fewer dims) # For a 2-D object, antimask should match the rightmost dimensions # A 1-D antimask can't be broadcast to match (4, 5), so we need a different test # Let's test with a 3-D object where antimask matches only the last 2 dims."""
+def test_qube_ext_shrinker_shrink_broadcasts_antimask_with_fewer_dims() -> None:
+    """shrink() of a 3-D object with an antimask that matches only its last two axes."""
 
     np.random.seed(8736)
 
@@ -613,8 +590,10 @@ def test_qube_ext_shrinker_test_shrink_with_object_that_needs_broadcasting_antim
     assert b.readonly
 
 
-def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_that_requires_broadcasting_t() -> None:
-    """Test shrink with shape mismatch that requires broadcasting # The antimask shape must be broadcastable to the rightmost dimensions # For a (4, 5) object, antimask should be (4, 5) or broadcastable to it # An extra row won't work, but we can test with a compatible shape."""
+def test_qube_ext_shrinker_shrink_of_2_d_object_is_readonly() -> None:
+    """shrink() of a 2-D object with an antimask of the same shape returns a read-only
+    result.
+    """
 
     np.random.seed(8736)
 
@@ -753,8 +732,8 @@ def test_qube_ext_shrinker_test_unshrink_with_scalar_object_shapeless() -> None:
     assert np.all(b.mask)
 
 
-def test_qube_ext_shrinker_test_unshrink_with_default_as_qube_this_is_harder_to_trigger() -> None:
-    """Test unshrink with default as Qube # This is harder to trigger, but we can try with a Vector that has a default # Actually, Vector doesn't have a Qube default, so let's test with Scalar # The default path is when default is a Qube instance."""
+def test_qube_ext_shrinker_unshrink_scalar_with_default() -> None:
+    """shrink() then unshrink() of a 1-D Scalar restores its shape."""
 
     np.random.seed(8736)
 
@@ -769,8 +748,8 @@ def test_qube_ext_shrinker_test_unshrink_with_default_as_qube_this_is_harder_to_
     assert c.shape == a.shape
 
 
-def test_qube_ext_shrinker_test_unshrink_with_is_array_path_vs_is_scalar_path_is_array_() -> None:
-    """Test unshrink with _is_array path vs _is_scalar path # _is_array path."""
+def test_qube_ext_shrinker_unshrink_is_array_path() -> None:
+    """unshrink() of an object whose values are an array."""
 
     np.random.seed(8736)
 
@@ -785,8 +764,10 @@ def test_qube_ext_shrinker_test_unshrink_with_is_array_path_vs_is_scalar_path_is
     assert c.shape == a.shape
 
 
-def test_qube_ext_shrinker_is_scalar_path_test_with_a_scalar_that_gets_shrunk_when_a_sc() -> None:
-    """_is_scalar path - test with a scalar that gets shrunk # When a scalar is shrunk, it becomes a scalar, and unshrink with shape should work."""
+def test_qube_ext_shrinker_unshrink_is_scalar_path() -> None:
+    """unshrink() of a shapeless Scalar with antimask False and a shape returns a fully
+    masked object of that shape.
+    """
 
     np.random.seed(8736)
 
@@ -842,8 +823,8 @@ def test_qube_ext_shrinker_test_shrink_with_cache_path() -> None:
         Qube._DISABLE_CACHE = original_disable_cache
 
 
-def test_qube_ext_shrinker_test_shrink_with_disable_cache_false_this_path_is_hit_when_w() -> None:
-    """Test shrink with _DISABLE_CACHE=False # This path is hit when we return masked_single early."""
+def test_qube_ext_shrinker_shrink_with_cache_enabled_returns_masked_single_early() -> None:
+    """shrink() with the cache enabled returns the masked singleton early."""
 
     np.random.seed(8736)
 
@@ -875,40 +856,6 @@ def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_requiring_broadcast_t
     ##################################################################################
 
     Scalar(np.arange(20).reshape(4, 5))
-
-
-def test_qube_ext_shrinker_create_antimask_that_requires_broadcasting_of_self_antimask_() -> None:
-    """Create antimask that requires broadcasting of self # antimask shape (4, 5) matches after, but we need to trigger the broadcast_to path # Let's create a case where new_after != after."""
-
-    np.random.seed(8736)
-
-    ##################################################################################
-    # shrink()
-    ##################################################################################
-
-    np.array([[True, False, True, False, True],
-                         [False, False, False, False, False],
-                         [True, True, False, False, False],
-                         [False, False, False, False, False]])
-
-
-def test_qube_ext_shrinker_this_should_work_but_let_s_test_with_a_shape_that_requires_b() -> None:
-    """This should work, but let's test with a shape that requires broadcasting # Actually, for a (4, 5) object, antimask (4, 5) is correct # This happens when new_after != after # Let's use a 3-D object where antimask matches only last 2 dims."""
-
-    np.random.seed(8736)
-
-    ##################################################################################
-    # shrink()
-    ##################################################################################
-
-    a = Scalar(np.arange(40).reshape(2, 4, 5))
-    antimask = np.array([[True, False, True, False, True],
-                         [False, False, False, False, False],
-                         [True, True, False, False, False],
-                         [False, False, False, False, False]])  # (4, 5) antimask for (2, 4, 5) object
-
-    b = a.shrink(antimask)
-    assert b.readonly
 
 
 def test_qube_ext_shrinker_test_shrink_with_all_mask_true_2() -> None:
@@ -981,8 +928,9 @@ def test_qube_ext_shrinker_test_unshrink_with_derivatives() -> None:
     assert c.d_dt.shape == a.d_dt.shape
 
 
-def test_qube_ext_shrinker_test_shrink_with_broadcast_to_path_extras_0_lines_63_65_this() -> None:
-    """Test shrink with broadcast_to path (extras < 0, lines 63-65) # This happens when antimask has more dimensions than self."""
+def test_qube_ext_shrinker_shrink_broadcast_to_path_with_extras() -> None:
+    """shrink() of a 1-D object with an antimask that has more dimensions than the object.
+    """
 
     np.random.seed(8736)
 
@@ -1019,26 +967,8 @@ def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_that_requires_broadca
     assert b.readonly
 
 
-def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_self_needs_broadcasting_when() -> None:
-    """Test shrink with shape mismatch - self needs broadcasting # When self._shape != new_shape, self is broadcast # For a (4, 5) object, antimask should be (4, 5) or broadcastable # Let's test with a compatible shape that triggers the path."""
-
-    np.random.seed(8736)
-
-    ##################################################################################
-    # shrink()
-    ##################################################################################
-
-    a = Scalar(np.arange(20).reshape(4, 5))
-    antimask = np.array([[True, False, True, False, True],
-                         [False, False, False, False, False],
-                         [True, True, False, False, False],
-                         [False, False, False, False, False]])
-    b = a.shrink(antimask)
-    assert b.readonly
-
-
-def test_qube_ext_shrinker_test_shrink_with_antimask_shape_mismatch_when_antimask_shape() -> None:
-    """Test shrink with antimask shape mismatch # When antimask.shape != new_after, antimask is broadcast # For a (4, 5) object, antimask (1, 5) should be broadcastable."""
+def test_qube_ext_shrinker_shrink_with_antimask_shape_mismatch() -> None:
+    """shrink() of a (4, 5) object broadcasts a (1, 5) antimask."""
 
     np.random.seed(8736)
 
@@ -1053,8 +983,10 @@ def test_qube_ext_shrinker_test_shrink_with_antimask_shape_mismatch_when_antimas
     assert b.readonly
 
 
-def test_qube_ext_shrinker_test_shrink_with_all_mask_true_after_indexing_we_need_mask_f() -> None:
-    """Test shrink with all mask True after indexing # We need mask (from self._mask[antimask]) to be all True # This happens when all selected elements are masked, but object is not fully masked."""
+def test_qube_ext_shrinker_shrink_selecting_only_masked_elements() -> None:
+    """shrink() when every selected element is masked, although the object is not fully
+    masked.
+    """
 
     np.random.seed(8736)
 
@@ -1103,8 +1035,8 @@ def test_qube_ext_shrinker_test_unshrink_with_is_scalar_path() -> None:
     assert np.all(b.mask)
 
 
-def test_qube_ext_shrinker_test_unshrink_with_default_as_qube_this_is_when_default_is_a() -> None:
-    """Test unshrink with default as Qube # This is when default is a Qube instance, not a scalar # Vector has a default that might be a Qube # For a Vector with shape (3,), shrinking with [True, False, True] gives shape (2,) # Unshrinking should restore to original shape (3,)."""
+def test_qube_ext_shrinker_unshrink_vector_with_default() -> None:
+    """shrink() then unshrink() of a Vector restores its shape and numerator."""
 
     np.random.seed(8736)
 
@@ -1157,8 +1089,10 @@ def test_qube_ext_shrinker_test_unshrink_with_derivatives_2() -> None:
     assert c.d_dt.shape == a.shape
 
 
-def test_qube_ext_shrinker_test_shrink_with_cache_path_when_returning_masked_single_thi() -> None:
-    """Test shrink with cache path when returning masked_single # This path is hit when object is fully masked or antimask is False."""
+def test_qube_ext_shrinker_shrink_with_cache_returns_masked_single_when_fully_masked() -> None:
+    """shrink() with the cache enabled returns the masked singleton when the object is fully
+    masked or the antimask is False.
+    """
 
     np.random.seed(8736)
 
@@ -1185,8 +1119,10 @@ def test_qube_ext_shrinker_test_shrink_with_cache_path_when_returning_masked_sin
         Qube._DISABLE_CACHE = original_disable_cache
 
 
-def test_qube_ext_shrinker_test_shrink_with_all_mask_true_after_indexing_this_is_hit_wh() -> None:
-    """Test shrink with all mask True after indexing # This is hit when np.all(mask) is True after constructing the mask."""
+def test_qube_ext_shrinker_shrink_with_cache_selecting_only_masked_elements() -> None:
+    """shrink() with the cache enabled, when every selected element is masked, returns the
+    masked singleton and caches it.
+    """
 
     np.random.seed(8736)
 
@@ -1207,8 +1143,8 @@ def test_qube_ext_shrinker_test_shrink_with_all_mask_true_after_indexing_this_is
         Qube._DISABLE_CACHE = original_disable_cache
 
 
-def test_qube_ext_shrinker_test_unshrink_with_default_as_qube_manually_set_default_to_a() -> None:
-    """Test unshrink with default as Qube # Manually set _default to a Qube to test this path."""
+def test_qube_ext_shrinker_unshrink_with_qube_default() -> None:
+    """unshrink() fills unselected positions using a default that is a Qube."""
 
     np.random.seed(8736)
 
@@ -1231,8 +1167,11 @@ def test_qube_ext_shrinker_test_unshrink_with_default_as_qube_manually_set_defau
     assert np.all(c.mask[~antimask])
 
 
-def test_qube_ext_shrinker_test_unshrink_with_is_array_false_path_to_hit_lines_173_174_() -> None:
-    """Test unshrink with _is_array False path # To hit lines 173-174, we need self._is_array to be False # Manually set _values and _is_array to test this path."""
+def test_qube_ext_shrinker_unshrink_with_is_array_false() -> None:
+    """unshrink() of an object whose values are not an array.
+
+    The values and the array flag are set directly to reach this case.
+    """
 
     np.random.seed(8736)
 
@@ -1271,25 +1210,6 @@ def test_qube_ext_shrinker_test_unshrink_with_scalar_object_2() -> None:
     c = b.unshrink(antimask)
     assert c._is_scalar
     assert c == a
-
-
-def test_qube_ext_shrinker_test_shrink_with_shape_mismatch_requiring_broadcast_to_use_a() -> None:
-    """Test shrink with shape mismatch requiring broadcast_to # Use a 3-D object where antimask matches only last 2 dims."""
-
-    np.random.seed(8736)
-
-    ##################################################################################
-    # shrink()
-    ##################################################################################
-
-    a = Scalar(np.arange(40).reshape(2, 4, 5))
-    antimask = np.array([[True, False, True, False, True],
-                         [False, False, False, False, False],
-                         [True, True, False, False, False],
-                         [False, False, False, False, False]])
-
-    b = a.shrink(antimask)
-    assert b.readonly
 
 
 def test_qube_ext_shrinker_test_unshrink_with_derivatives_3() -> None:

@@ -9,8 +9,10 @@ import pytest
 from polymath import Scalar, Vector, Matrix, Pair
 
 
-def test_vector_comprehensive_test_as_vector_static_method_simple_case_vector_to_vector() -> None:
-    """Test as_vector static method # Simple case: Vector to Vector."""
+def test_vector_comprehensive_as_vector() -> None:
+    """Vector.as_vector() returns a Vector unchanged and converts a Scalar to a one-item
+    Vector.
+    """
 
     np.random.seed(1234)
 

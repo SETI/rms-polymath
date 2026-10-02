@@ -7,7 +7,7 @@ import numpy as np
 from polymath import Matrix3
 
 
-def test_matrix3_euler_conversion_to_euler_angles_and_back_always_returns_the_same_() -> None:
+def test_matrix3_euler_round_trip_through_euler_angles_returns_the_same_matrix() -> None:
     """Conversion to Euler angles and back always returns the same matrix."""
 
     np.random.seed(5072)

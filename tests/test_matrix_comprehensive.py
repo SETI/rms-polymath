@@ -256,8 +256,8 @@ def test_matrix_comprehensive_test_as_matrix_static_method() -> None:
         m50.identity()
 
 
-def test_matrix_comprehensive_note_matrix_doesn_t_have_a_solve_method_in_the_base_class_so() -> None:
-    """Note: Matrix doesn't have a solve() method in the base class # Solving is typically done via inverse() * vector."""
+def test_matrix_comprehensive_solve_via_inverse() -> None:
+    """Multiplying a Matrix inverse by a Vector solves the linear system."""
 
     np.random.seed(9012)
 
