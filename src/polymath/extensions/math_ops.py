@@ -191,7 +191,7 @@ def __iadd__(self, /, arg):
         TypeError: If this object holds integers but the result does not.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     # Handle a simple right-hand value...
     if self._rank == 0 and isinstance(arg, (*_NUMERIC_TYPES, np.ndarray)):
@@ -350,7 +350,7 @@ def __isub__(self, /, arg):
         TypeError: If this object holds integers but the result does not.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     # Handle a simple right-hand value...
     if self._rank == 0 and isinstance(arg, (*_NUMERIC_TYPES, np.ndarray)):
@@ -520,7 +520,7 @@ def __imul__(self, /, arg):
         TypeError: If this object holds integers but the result does not.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     # If a number...
     if isinstance(arg, _NUMERIC_TYPES):
@@ -767,7 +767,7 @@ def __itruediv__(self, /, arg):
     if not self.is_float():
         raise TypeError(f'integer {type(self)} "/=" operation returns non-integer result')
 
-    self.require_writeable()
+    self.require_writable()
 
     # If a number...
     if isinstance(arg, _NUMERIC_TYPES) and arg != 0:
@@ -988,7 +988,7 @@ def __ifloordiv__(self, /, arg):
         ValueError: If this object is read-only.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     # If a number...
     if isinstance(arg, _NUMERIC_TYPES) and arg != 0:
@@ -1169,7 +1169,7 @@ def __imod__(self, /, arg):
         ValueError: If this object is read-only.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     # If a number...
     if isinstance(arg, _NUMERIC_TYPES) and arg != 0:
@@ -1376,7 +1376,7 @@ def __ipow__(self, /, arg):
         TypeError: If this object holds integers but the result does not.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     result = self ** arg                # if this raises an exception, stop
     if self.is_int() and not result.is_int():
@@ -1823,7 +1823,7 @@ def __iand__(self, /, arg):
         ValueError: If this object is read-only.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     if isinstance(arg, np.ma.MaskedArray):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
@@ -1850,7 +1850,7 @@ def __ior__(self, /, arg):
         ValueError: If this object is read-only.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     if isinstance(arg, np.ma.MaskedArray):
         arg = Qube._BOOLEAN_CLASS(arg != 0)
@@ -1877,7 +1877,7 @@ def __ixor__(self, /, arg):
         ValueError: If this object is read-only.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     if isinstance(arg, np.ma.MaskedArray):
         arg = Qube._BOOLEAN_CLASS(arg != 0)

@@ -150,7 +150,7 @@ def __setitem__(self, indx, arg):
             selected shape.
     """
 
-    self.require_writeable()
+    self.require_writable()
 
     # Handle indexing of a shapeless object, and indices consistent with
     # shapeless indexing

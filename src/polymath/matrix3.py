@@ -853,7 +853,7 @@ class Matrix3(Matrix):
                 object shapes are incompatible, or if this Matrix3 is not writable.
         """
 
-        self.require_writeable()
+        self.require_writable()
 
         # Attempt a conversion to Matrix3
         original_arg = arg

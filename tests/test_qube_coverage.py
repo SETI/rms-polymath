@@ -193,7 +193,7 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
     a = Scalar([1., 2., 3.])
     a = a.as_readonly()
     try:
-        a.require_writeable()
+        a.require_writable()
     except ValueError:
         pass  # Expected
 
@@ -1069,13 +1069,13 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
 
     a = Scalar([1., 2., 3.]).as_readonly()
     try:
-        a.require_writeable()
+        a.require_writable()
         pytest.fail("Expected ValueError for readonly object")
     except ValueError:
         pass
 
     a = Scalar([1., 2., 3.]).as_readonly()
-    b = a.require_writeable(force=True)
+    b = a.require_writable(force=True)
 
     assert a is not b
 
@@ -1086,15 +1086,15 @@ def test_qube_coverage_test_example_not_a_qube() -> None:
     readonly_mask.setflags(write=False)
     a._mask = readonly_mask
 
-    a.require_writeable()
+    a.require_writable()
     # The mask should have been copied via remask
-    # Note: The actual writeability depends on remask implementation
+    # Note: The actual writability depends on remask implementation
 
     a = Scalar([1., 2., 3.])
     deriv = Scalar([0.1, 0.2, 0.3]).as_readonly()
     a.insert_deriv('t', deriv)
 
-    a.require_writeable()
+    a.require_writable()
 
     assert not a._derivs['t']._readonly
 
