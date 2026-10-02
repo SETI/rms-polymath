@@ -25,7 +25,7 @@ Welcome to the Documentation for rms-polymath!
    :caption: Project:
 
    contributing
-   CODE_OF_CONDUCT
+   code_of_conduct
 
 Indices and tables
 ==================

@@ -1,3 +1,7 @@
+# rms-polymath
+
+<!-- pyml disable MD025 -->
+
 [![GitHub release; latest by date](https://img.shields.io/github/v/release/SETI/rms-polymath)](https://github.com/SETI/rms-polymath/releases)
 [![GitHub Release Date](https://img.shields.io/github/release-date/SETI/rms-polymath)](https://github.com/SETI/rms-polymath/releases)
 [![Test Status](https://img.shields.io/github/actions/workflow/status/SETI/rms-polymath/run-tests.yml?branch=main)](https://github.com/SETI/rms-polymath/actions)

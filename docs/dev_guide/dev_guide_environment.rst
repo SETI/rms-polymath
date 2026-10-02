@@ -108,7 +108,7 @@ passing CI. Run it after every change.
    ./scripts/run-all-checks.sh            # everything, in parallel
    ./scripts/run-all-checks.sh -s         # everything, sequentially, easier to read
    ./scripts/run-all-checks.sh -c         # code checks only
-   ./scripts/run-all-checks.sh -d         # Sphinx and Markdown only
+   ./scripts/run-all-checks.sh -d         # Sphinx, codespell, and PyMarkdown only
    ./scripts/run-all-checks.sh --pytest   # one check; combine flags as needed
 
 The checks it enables by default are:
@@ -129,6 +129,9 @@ The checks it enables by default are:
      - Continuation-line indentation only (codes E12x and E13x), which ruff does not
        implement. The per-file exemptions in ``.flake8`` are authoritative for these
        codes alone.
+   * - mypy
+     - ``--mypy``
+     - Type checking of ``tests/`` only, which are fully annotated.
    * - pytest
      - ``--pytest``
      - The test suite and the coverage floor.
@@ -139,19 +142,28 @@ The checks it enables by default are:
      - ``--stubtest``
      - The two stubs, ``__init__.pyi`` and ``typedefs.pyi``, match the runtime API. See
        :doc:`dev_guide_typing`.
+   * - pip-audit
+     - ``--pip-audit``
+     - No installed dependency has a known vulnerability. The package itself is
+       skipped, because it is installed from the checkout rather than from PyPI.
    * - Sphinx
      - ``--sphinx``
      - The documentation builds with warnings as errors and with nitpicky
        cross-reference checking.
+   * - codespell
+     - ``--codespell``
+     - Typos and British spellings in ``src/``, ``tests/``, ``docs/``, ``scripts/``,
+       ``README.md``, and ``CONTRIBUTING.md``. The words it is told to accept, each with
+       its reason, are in ``[tool.codespell]`` in ``pyproject.toml``.
    * - PyMarkdown
      - ``--pymarkdown``
      - Markdown style for ``docs/``, ``.claude/``, ``README.md``, and ``CONTRIBUTING.md``.
 
-Four more checks are wired in but disabled by default: ``ruff format --check``, mypy,
-bandit, and vulture. Leave them disabled. In particular, never run mypy on ``src/``: the
-modules there are deliberately unannotated, so it would report meaningless errors. When
-the ``--mypy`` check is enabled it runs against ``tests/`` only, which are fully
-annotated. Run it by hand the same way:
+Three more checks are wired in but disabled by default: ``ruff format --check``, bandit,
+and vulture. Leave them disabled; ``ruff format`` in particular would remove the column
+alignment the code uses deliberately. Never run mypy on ``src/``: the modules there are
+deliberately unannotated, so it would report meaningless errors. Run it by hand the way
+the check script does:
 
 .. code-block:: sh
 
@@ -160,9 +172,10 @@ annotated. Run it by hand the same way:
 Building the Documentation
 ==========================
 
-The documentation builds with ``-W``, so any warning is an error, and ``docs/conf.py``
-sets nitpicky mode, so a cross-reference with no target is an error too. Both apply in
-the check script, in CI, and on ReadTheDocs. Sphinx 9 or later is required, because
+The documentation builds with ``-W``, so any warning is an error, and in nitpicky mode,
+so a cross-reference with no target is an error too. The check script and CI pass ``-n``
+as well, and ``docs/conf.py`` sets nitpicky mode itself so that the ReadTheDocs build,
+which takes no extra options, applies it too. Sphinx 9 or later is required, because
 earlier versions cannot resolve the references to the aliases in
 :mod:`polymath.typedefs`.
 
@@ -174,20 +187,20 @@ earlier versions cannot resolve the references to the aliases in
 Continuous Integration
 ======================
 
-Four GitHub Actions workflows live in ``.github/workflows/``.
+Three GitHub Actions workflows live in ``.github/workflows/``.
 
 * ``run-tests.yml`` runs on every pull request against ``main``, on every push to
-  ``main``, weekly, and on demand. Its lint job runs ruff, flake8, pyroma, stubtest,
-  Sphinx, and PyMarkdown on Python 3.13, which is the check script's default set minus
-  pytest. Its test job runs pytest with coverage on Ubuntu, macOS, and Windows for each
+  ``main``, weekly, and on demand. Its lint job runs ruff, flake8, mypy, pip-audit,
+  pyroma, stubtest, Sphinx, codespell, and PyMarkdown on Python 3.13, which is the check
+  script's default set minus pytest. Its test job runs pytest with coverage on Ubuntu, macOS, and Windows for each
   of Python 3.11, 3.12, and 3.13, and uploads coverage to Codecov from one cell of the
   matrix.
-* ``audit.yml`` runs ``pip-audit`` weekly and on demand. It is deliberately not part of
-  the pull request gate, because a vulnerability advisory can appear without any change
-  to the repository.
 * ``publish_to_pypi.yml`` builds and validates the distribution and uploads it to PyPI
   when a GitHub Release is published.
 * ``publish_to_test_pypi.yml`` does the same for Test PyPI, on demand.
+
+Dependabot, configured in ``.github/dependabot.yml``, opens a weekly pull request when
+an action used by these workflows has a newer release.
 
 ReadTheDocs builds the documentation from ``.readthedocs.yaml``, installing the package
 with the ``docs`` extra on Python 3.12.

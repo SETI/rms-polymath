@@ -8,11 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Detailed rules
 
 `.claude/rules/*.md` hold the authoritative detailed standards (Python style, testing,
-documentation, dependencies, environment) and load automatically. The `doc_*` and
-`how_to` rules are scoped to the files they govern, so they load only when you touch
-`README.md` or `docs/`. Process standards live in `.claude/skills/` and load on demand:
-`git-workflow`, `pull-request`, `bug-report`. This file records only what you would
-otherwise get wrong.
+documentation, dependencies, environment) and load automatically. The standards for each
+kind of document build on `doc_python` and live in `.claude/skills/`, loaded on demand:
+`doc-readme`, `doc-user-guide`, `doc-dev-guide`, `doc-how-to`. So do the process
+standards: `git-workflow`, `pull-request`, `bug-report`. This file records only what you
+would otherwise get wrong.
 
 ## Verifying changes
 
@@ -23,8 +23,11 @@ required to run exactly that set. Run it after any change.
   `./scripts/setup-venv.sh`, which is idempotent. Never install into system Python.
 - Useful flags: `-c/--code`, `-d/--docs`, `-m/--markdown`, `-s/--sequential`, or a single check
   such as `--pytest` / `--ruff-check` / `--sphinx`.
-- `ruff format`, `mypy`, `bandit`, and `vulture` are disabled by default in the script. Leave them
-  disabled; in particular see the mypy rule below.
+- `ruff format`, `bandit`, and `vulture` are disabled by default in the script. Leave them
+  disabled. Its mypy check runs on `tests/` only; see the mypy rule below.
+- `codespell` enforces American spelling as well as typos. A word it flags that is correct here
+  goes in `ignore-words-list` in `pyproject.toml` with its reason; a one-off goes on its own
+  line as `codespell:ignore <word>`.
 - Docs preview: `./scripts/read-docs.sh`.
 
 ## Python style
@@ -123,11 +126,12 @@ history, user requests, or issue numbers in a docstring.
 
 ## Documentation
 
-Sphinx builds are warning-as-error (`-W`) in CI, in the check script, and in `read-docs.sh`, so any
-new warning breaks the build. `docs/conf.py` also sets `nitpicky = True`, rather than passing `-n`
-at each call site, so a cross-reference with no target is an error in all three too. The only
-exemptions are in `nitpick_ignore_regex`, and they cover the informal type words the docstrings use
-(`optional`, `array-like`, `scalar`, `vector-like`, `convertible`), which name no Python object.
+Sphinx builds are warning-as-error (`-W`) and nitpicky (`-n`) in CI, in the check script, and in
+`read-docs.sh`, so any new warning or cross-reference with no target breaks the build.
+`docs/conf.py` also sets `nitpicky = True`, so the ReadTheDocs build, which passes no `-n`, is
+nitpicky too. The only exemptions are in `nitpick_ignore_regex`, and they cover the informal
+type words the docstrings use (`optional`, `array-like`, `scalar`, `vector-like`,
+`convertible`), which name no Python object.
 Never add an entry for a symbol this project owns, or for a third-party class that intersphinx can
 resolve — `numpy.ndarray` and `numbers.Real` link, while `np.ndarray` and `number` do not; write
 the resolvable spelling. Narrative docs are `.rst`; Markdown is only for README/CONTRIBUTING

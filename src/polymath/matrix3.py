@@ -891,7 +891,7 @@ class Matrix3(Matrix):
     #
     #   Axes 4-string: e.g. 'sxyz' or 'ryxy'
     #
-    #   - first character : rotations are applied to 's'tatic or 'r'otating
+    #   - first character : rotations are applied to a static ('s') or rotating ('r')
     #     frame
     #   - remaining characters : successive rotation axis 'x', 'y', or 'z'
     #
