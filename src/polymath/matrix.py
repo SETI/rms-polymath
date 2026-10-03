@@ -297,7 +297,7 @@ class Matrix(Qube):
         # Slice away the last element
         sliced = values[..., :-1]
 
-        # Reshape so that only elemenents in the first column can be nonzero
+        # Reshape so that only elements in the first column can be nonzero
         reshaped = sliced.reshape(self._shape + (size-1, size + 1))
 
         # Slice away the first column

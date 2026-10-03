@@ -111,7 +111,7 @@ def test_qube_new_from_parts_marks_a_read_only_array() -> None:
     """A read-only values array yields a read-only object with a read-only mask."""
 
     values = np.zeros((4, 3))
-    values.flags['WRITEABLE'] = False
+    values.setflags(write=False)
     mask = np.zeros(4, dtype='bool')
 
     obj = Qube._new_from_parts(values, mask, nrank=1)

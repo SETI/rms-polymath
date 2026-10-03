@@ -9,8 +9,8 @@ import pytest
 from polymath import Scalar, Vector, Boolean, Unit
 
 
-def test_qube_ext_math_ops_test_pos_self_element_by_element() -> None:
-    """Test __pos__ # +self, element by element."""
+def test_qube_ext_math_ops_pos() -> None:
+    """Unary plus returns the object's values unchanged, element by element."""
 
     np.random.seed(2599)
 
@@ -598,8 +598,8 @@ def test_qube_ext_math_ops_test_pos_self_element_by_element() -> None:
         pass  # Expected
 
 
-def test_qube_ext_math_ops_test_mul_by_number_internal_method_this_is_an_internal_metho() -> None:
-    """Test _mul_by_number (internal method) # This is an internal method, so we test it indirectly through multiplication."""
+def test_qube_ext_math_ops_mul_by_number() -> None:
+    """Multiplying a Scalar by a Python number scales each value."""
 
     np.random.seed(2599)
 
@@ -620,8 +620,8 @@ def test_qube_ext_math_ops_test_mul_by_number_with_derivatives_indirectly() -> N
     assert np.allclose(b.d_dt.values, [0.2, 0.4, 0.6])
 
 
-def test_qube_ext_math_ops_test_reciprocal_an_object_equivalent_to_the_reciprocal_of_th() -> None:
-    """Test reciprocal # An object equivalent to the reciprocal of this object. # This method is not implemented for the base class."""
+def test_qube_ext_math_ops_reciprocal_of_scalar() -> None:
+    """Scalar.reciprocal() returns the reciprocal of each value."""
 
     np.random.seed(2599)
 
@@ -631,8 +631,8 @@ def test_qube_ext_math_ops_test_reciprocal_an_object_equivalent_to_the_reciproca
     assert np.allclose(b.values, [1., 0.5, 0.25])
 
 
-def test_qube_ext_math_ops_test_zero_an_object_of_this_subclass_containing_all_zeros() -> None:
-    """Test zero # An object of this subclass containing all zeros."""
+def test_qube_ext_math_ops_zero() -> None:
+    """zero() of a Scalar returns the shapeless Scalar 0."""
 
     np.random.seed(2599)
 
@@ -643,8 +643,8 @@ def test_qube_ext_math_ops_test_zero_an_object_of_this_subclass_containing_all_z
     assert np.allclose(b.values, 0.)
 
 
-def test_qube_ext_math_ops_test_identity_an_object_of_this_subclass_equivalent_to_the_i() -> None:
-    """Test identity # An object of this subclass equivalent to the identity. # This method is overridden by Scalar, Matrix, and Boolean."""
+def test_qube_ext_math_ops_identity() -> None:
+    """identity() of a Scalar returns the shapeless Scalar 1."""
 
     np.random.seed(2599)
 
@@ -656,8 +656,8 @@ def test_qube_ext_math_ops_test_identity_an_object_of_this_subclass_equivalent_t
     assert np.allclose(b.values, 1.)
 
 
-def test_qube_ext_math_ops_test_sum_the_sum_of_the_unmasked_values_along_the_specified_() -> None:
-    """Test sum # The sum of the unmasked values along the specified axis or axes."""
+def test_qube_ext_math_ops_sum_of_unmasked_values() -> None:
+    """sum() adds the unmasked values along the specified axis or axes."""
 
     np.random.seed(2599)
 
@@ -678,8 +678,8 @@ def test_qube_ext_math_ops_test_sum_with_axis() -> None:
     assert b.shape == (3, 2)
 
 
-def test_qube_ext_math_ops_test_mean_the_mean_of_the_unmasked_values_along_the_specifie() -> None:
-    """Test mean # The mean of the unmasked values along the specified axis or axes."""
+def test_qube_ext_math_ops_mean_of_unmasked_values() -> None:
+    """mean() averages the unmasked values along the specified axis or axes."""
 
     np.random.seed(2599)
 

@@ -48,7 +48,7 @@ def _array_to_readonly(arg):
     if not isinstance(arg, np.ndarray):
         return arg
 
-    arg.flags['WRITEABLE'] = False
+    arg.setflags(write=False)
     return arg
 
 
@@ -116,10 +116,10 @@ def match_readonly(self, arg):
     return self
 
 
-def require_writeable(self, force=False):
+def require_writable(self, force=False):
     """Ensure that this object is writable.
 
-    :meth:`~polymath.Qube.require_writable` is an alternative name for this method.
+    :meth:`~polymath.Qube.require_writeable` is an alternative name for this method.
 
     Parameters:
         force (bool, optional): True to return a new copy if this object is read-only;
@@ -149,10 +149,10 @@ def require_writeable(self, force=False):
     return self
 
 
-def require_writable(self, force=False):
+def require_writeable(self, force=False):
     """Ensure that this object is writable.
 
-    This is an alternative name for :meth:`~polymath.Qube.require_writeable`.
+    This is an alternative name for :meth:`~polymath.Qube.require_writable`.
 
     Parameters:
         force (bool, optional): True to return a new copy if this object is read-only;
@@ -165,7 +165,7 @@ def require_writable(self, force=False):
         ValueError: If this object is read-only but `force` is False.
     """
 
-    return self.require_writeable(force=force)
+    return self.require_writable(force=force)
 
 
 def copy(self, *, recursive=True, readonly=False):

@@ -137,7 +137,7 @@ def delete_deriv(self, key, *, override=False):
     """
 
     if not override:
-        self.require_writeable()
+        self.require_writable()
 
     if key in self._derivs:
         del self._derivs[key]
@@ -163,7 +163,7 @@ def delete_derivs(self, *, override=False, preserve=None):
     """
 
     if not override:
-        self.require_writeable()
+        self.require_writable()
 
     # If something is being preserved...
     if preserve:

@@ -85,10 +85,10 @@ def test_qube_unit_classes_for_which_units_are_not_allowed() -> None:
     assert set(vals[1].keys()) == {'t'}
     assert np.all(vals[1]['t'] == (400000, 500000, 600000))
 
-    a_nd = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
-    vals = a_nd.into_unit()
+    a_array = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
+    vals = a_array.into_unit()
     assert vals.shape == (2, 3, 4)
-    expected = a_nd.values * 1000  # KM to M conversion
+    expected = a_array.values * 1000  # KM to M conversion
     assert np.allclose(vals, expected)
 
     a_unitless = Scalar((1., 2., 3.))
@@ -122,9 +122,9 @@ def test_qube_unit_classes_for_which_units_are_not_allowed() -> None:
     with pytest.raises(ValueError):
         a.confirm_unit(Unit.KM)
 
-    a_nd = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
-    result = a_nd.confirm_unit(Unit.CM)
-    assert result == a_nd
+    a_array = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
+    result = a_array.confirm_unit(Unit.CM)
+    assert result == a_array
 
     a_unitless = Scalar((1., 2., 3.))
     result = a_unitless.confirm_unit(None)
@@ -146,10 +146,10 @@ def test_qube_unit_classes_for_which_units_are_not_allowed() -> None:
     a = Scalar((1., 2., 3.), unit=Unit.S)
     assert not a.is_unitless()
 
-    a_nd = Scalar(np.random.rand(2, 3, 4))
-    assert a_nd.is_unitless()
-    a_nd = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
-    assert not a_nd.is_unitless()
+    a_array = Scalar(np.random.rand(2, 3, 4))
+    assert a_array.is_unitless()
+    a_array = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
+    assert not a_array.is_unitless()
 
     a = Scalar((1., 2., 3.), unit=Unit.KM)
     assert not a.is_unitless()
@@ -164,10 +164,10 @@ def test_qube_unit_classes_for_which_units_are_not_allowed() -> None:
     # Additional comprehensive tests for set_unit
     ##################################################################################
 
-    a_nd = Scalar(np.random.rand(2, 3, 4))
-    a_nd.set_unit(Unit.KM)
-    assert a_nd.units == Unit.KM
-    assert a_nd.shape == (2, 3, 4)
+    a_array = Scalar(np.random.rand(2, 3, 4))
+    a_array.set_unit(Unit.KM)
+    assert a_array.units == Unit.KM
+    assert a_array.shape == (2, 3, 4)
 
     a = Scalar((1., 2., 3.), unit=Unit.KM)
     a.set_unit(None)
@@ -248,11 +248,11 @@ def test_qube_unit_test_with_n_d_arrays() -> None:
     assert a.units == Unit.KM
     assert np.all(a.values == (1,2,3))
 
-    a_nd = Scalar(np.random.rand(2, 3, 4), unit=Unit.KM)
-    b_nd = a_nd.without_unit()
-    assert b_nd.units == None
-    assert b_nd.shape == (2, 3, 4)
-    assert np.all(a_nd.values == b_nd.values)
+    a_array = Scalar(np.random.rand(2, 3, 4), unit=Unit.KM)
+    b_array = a_array.without_unit()
+    assert b_array.units == None
+    assert b_array.shape == (2, 3, 4)
+    assert np.all(a_array.values == b_array.values)
 
 
 def test_qube_unit_test_with_recursive_false_should_strip_derivatives() -> None:
@@ -289,7 +289,7 @@ def test_qube_unit_test_with_recursive_false_should_strip_derivatives() -> None:
     assert len(b.derivs) == 0
 
 
-def test_qube_unit_test_with_recursive_true_should_keep_derivatives_and_strip_t() -> None:
+def test_qube_unit_recursive_keeps_derivatives_and_strips_their_units() -> None:
     """Test with recursive=True (should keep derivatives and strip their units)."""
 
     a = Scalar((1.,2.,3.))
@@ -395,8 +395,8 @@ def test_qube_unit_test_with_read_only_object() -> None:
     ##################################################################################
 
 
-def test_qube_unit_test_with_angle_units_values_are_in_standard_units_radians_i() -> None:
-    """Test with angle units # Values are in standard units (radians), into_unit converts to degrees."""
+def test_qube_unit_into_unit_with_angle_units() -> None:
+    """set_unit() and into_unit(); values stored in radians convert into degrees."""
 
     a = Scalar((1.,2.,3.))
     assert a.units == None
@@ -427,8 +427,8 @@ def test_qube_unit_test_with_angle_units_values_are_in_standard_units_radians_i(
     assert np.allclose(vals, expected)
 
 
-def test_qube_unit_test_with_time_units_values_are_in_standard_units_seconds_in() -> None:
-    """Test with time units # Values are in standard units (seconds), into_unit converts to minutes."""
+def test_qube_unit_into_unit_with_time_units() -> None:
+    """set_unit() and into_unit(); values stored in seconds convert into minutes."""
 
     a = Scalar((1.,2.,3.))
     assert a.units == None
@@ -525,10 +525,10 @@ def test_qube_unit_test_with_n_d_arrays_and_recursive_true() -> None:
     assert a.units == Unit.KM
     assert np.all(a.values == (1,2,3))
 
-    a_nd = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
-    da_dt_nd = Scalar(np.random.rand(2, 3, 4), unit=Unit.CM/Unit.S)
-    a_nd.insert_deriv('t', da_dt_nd)
-    vals = a_nd.into_unit(recursive=True)
+    a_array = Scalar(np.random.rand(2, 3, 4), unit=Unit.M)
+    da_dt_array = Scalar(np.random.rand(2, 3, 4), unit=Unit.CM/Unit.S)
+    a_array.insert_deriv('t', da_dt_array)
+    vals = a_array.into_unit(recursive=True)
     assert vals[0].shape == (2, 3, 4)
     assert vals[1]['t'].shape == (2, 3, 4)
 

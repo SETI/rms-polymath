@@ -1003,8 +1003,11 @@ def test_units_create_unit_with_angle_exponent_5_to_test_more_false_cases() -> N
     # (which hits KeyError at line 1028, not 1026).
 
 
-def test_units_test_with_a_unit_that_matches_unitless_structure_unitless_ha() -> None:
-    """Test with a unit that matches UNITLESS structure # UNITLESS has name='' (empty string), not None, so this won't trigger # line 1026 fall-through, but it tests the lookup path."""
+def test_units_create_name_for_unit_matching_unitless_structure() -> None:
+    """create_name() for a unit with the exponents and triple of UNITLESS.
+
+    UNITLESS has the name '', not None, so the lookup finds it.
+    """
 
     np.random.seed(7456)
     assert repr(Unit.KM) == "Unit(km)"
@@ -1090,8 +1093,12 @@ def test_units_test_with_a_unit_that_matches_unitless_structure_unitless_ha() ->
     assert name is not None
 
 
-def test_units_to_actually_test_line_1026_fall_through_we_d_need_to_tempora() -> None:
-    """To actually test line 1026 fall-through, we'd need to temporarily # set a standard unit's name to None. Let's do that for testing: # Save original name."""
+def test_units_create_name_falls_through_when_a_standard_unit_has_no_name() -> None:
+    """create_name() keeps searching when the matching standard unit has no name.
+
+    The name of the unitless standard unit is set to None for the test and restored
+    afterward.
+    """
 
     np.random.seed(7456)
     assert repr(Unit.KM) == "Unit(km)"
@@ -1191,8 +1198,8 @@ def test_units_to_actually_test_line_1026_fall_through_we_d_need_to_tempora() ->
     ##################################################################################
 
 
-def test_units_create_a_unit_where_target_power_doesn_t_divide_evenly_by_an() -> None:
-    """Create a unit where target_power doesn't divide evenly by any standard unit's power # For example, angle exponent 7: when checking STER (power 2), p = 7 // 2 = 3, # and 3 * 2 = 6 != 7, so the condition is False."""
+def test_units_create_name_when_power_not_divisible_by_any_standard_unit() -> None:
+    """create_name() of angle**7, a power that no standard unit's power divides evenly."""
 
     np.random.seed(7456)
     assert repr(Unit.KM) == "Unit(km)"
@@ -1534,7 +1541,7 @@ def test_units_sqrt_of_a_mixed_name_derives_from_the_dimensions() -> None:
     assert result.get_name() == 'km*rad'
 
 
-def test_units_name_to_dict_drops_a_cancelled_name() -> None:
+def test_units_name_to_dict_drops_a_canceled_name() -> None:
     """A name that cancels out entirely is absent from the result."""
 
     assert Unit.name_to_dict('km/km') == {}

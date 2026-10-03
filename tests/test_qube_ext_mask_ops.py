@@ -636,7 +636,7 @@ def test_qube_ext_mask_ops_test_mask_where_outside_with_mask_endpoints_as_list()
     assert b.mask[4]  # 5 > 4, masked
 
 
-def test_qube_ext_mask_ops_test_limit_from_qube_with_masked_qube_limit_that_has_mask_ar() -> None:
+def test_qube_ext_mask_ops_limit_from_qube_with_masked_qube_limit_with_mask_array() -> None:
     """Test _limit_from_qube with masked Qube limit that has mask array."""
 
     np.random.seed(8736)
@@ -651,7 +651,7 @@ def test_qube_ext_mask_ops_test_limit_from_qube_with_masked_qube_limit_that_has_
     assert b.values[2] == 3.  # Index 2 has masked limit, treated as -inf
 
 
-def test_qube_ext_mask_ops_test_limit_from_qube_with_masked_qube_limit_using_mask_where() -> None:
+def test_qube_ext_mask_ops_limit_from_qube_with_masked_qube_limit_in_mask_where_ge() -> None:
     """Test _limit_from_qube with masked Qube limit using mask_where_ge."""
 
     np.random.seed(8736)
@@ -688,8 +688,8 @@ def test_qube_ext_mask_ops_test_limit_from_qube_with_qube_limit_that_has_matchin
     assert b.shape == a.shape
 
 
-def test_qube_ext_mask_ops_test_limit_from_qube_lines_447_449_when_limit_is_np_ndarray_() -> None:
-    """Test _limit_from_qube lines 447-449: when limit is np.ndarray and self._rank is truthy # This requires self to have rank > 0 (array shape, not scalar) # _rank is the number of shape dimensions, not item dimensions."""
+def test_qube_ext_mask_ops_limit_from_qube_with_ndarray_limit_and_nonzero_rank() -> None:
+    """mask_where_le() with a NumPy array limit on an object of rank 3."""
 
     np.random.seed(8736)
 
@@ -706,8 +706,8 @@ def test_qube_ext_mask_ops_test_limit_from_qube_lines_447_449_when_limit_is_np_n
     assert b.shape == a.shape
 
 
-def test_qube_ext_mask_ops_test_limit_from_qube_line_465_when_limit_numer_is_truthy_and() -> None:
-    """Test _limit_from_qube line 465: when limit._numer is truthy and matches self._numer # For now, let's test that the function works with matching numer (even if empty)."""
+def test_qube_ext_mask_ops_limit_from_qube_with_limit_numer_matching_self_numer() -> None:
+    """mask_where_le() with a Scalar limit whose numerator matches the object's."""
 
     np.random.seed(8736)
 

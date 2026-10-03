@@ -106,7 +106,7 @@ Module by Module
        settings. Only the unmasked elements are stored; masked elements are restored
        from the default value.
    * - ``readonly_ops``
-     - :meth:`~polymath.Qube.as_readonly`, :meth:`~polymath.Qube.require_writeable`,
+     - :meth:`~polymath.Qube.as_readonly`, :meth:`~polymath.Qube.require_writable`,
        :meth:`~polymath.Qube.match_readonly`, :meth:`~polymath.Qube.copy`, and
        :meth:`~polymath.Qube.__copy__`. Read-only status is implemented by clearing the
        writable flag of the values array and the mask array, so a determined caller can
@@ -157,7 +157,7 @@ Invariants Every Extension Must Respect
   operation that computes fresh values may return a writable one.
 * **Never modify an operand.** Operations return new objects; only the in-place operators
   and the methods documented as in-place modify their receiver, and those call
-  :meth:`~polymath.Qube.require_writeable` first.
+  :meth:`~polymath.Qube.require_writable` first.
 * **Clear or prune the cache.** Anything that changes an object clears its cache, and a
   copy that retains the cache drops the entries that describe the original.
 * **Shrinking is transparent.** The result of an operation must not depend on whether

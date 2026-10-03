@@ -159,18 +159,20 @@ def test_vector3_basic_test_as_vector3_with_n_d_1x3_matrix() -> None:
 
     np.random.seed(2599)
 
-    m1x3_nd = Matrix([[[1., 2., 3.]], [[4., 5., 6.]]])
-    assert m1x3_nd.shape == (2,)
-    assert m1x3_nd._numer == (1, 3)
-    v1x3_nd_conv = Vector3.as_vector3(m1x3_nd)
-    assert type(v1x3_nd_conv) == Vector3
-    assert v1x3_nd_conv.shape == (2,)
-    assert np.allclose(v1x3_nd_conv.vals[0], [1., 2., 3.])
-    assert np.allclose(v1x3_nd_conv.vals[1], [4., 5., 6.])
+    m1x3_array = Matrix([[[1., 2., 3.]], [[4., 5., 6.]]])
+    assert m1x3_array.shape == (2,)
+    assert m1x3_array._numer == (1, 3)
+    v1x3_array_conv = Vector3.as_vector3(m1x3_array)
+    assert type(v1x3_array_conv) == Vector3
+    assert v1x3_array_conv.shape == (2,)
+    assert np.allclose(v1x3_array_conv.vals[0], [1., 2., 3.])
+    assert np.allclose(v1x3_array_conv.vals[1], [4., 5., 6.])
 
 
-def test_vector3_basic_test_as_vector3_with_qube_rank_1_and_first_numerator_dimensi() -> None:
-    """Test as_vector3 with Qube rank > 1 and first numerator dimension == 3 # Create a Vector with shape that has rank > 1 and first numer dim == 3 # This would be a Vector with drank > 0, where the first numer dim is 3 # Actually, let's create a Matrix with shape (3, N) where N > 1 # But wait, for line 53, we need arg.rank > 1 and arg._numer[0] == 3 # rank = nrank + drank, so we need nrank + drank > 1 and _numer[0] == 3 # For a Matrix with _numer = (3, 4), we have nrank=2, so rank=2 > 1, and _numer[0] == 3."""
+def test_vector3_basic_as_vector3_with_rank_above_1_and_leading_numerator_3() -> None:
+    """Vector3.as_vector3() of a Matrix with numerator (3, 4) moves the second axis into the
+    denominator.
+    """
 
     np.random.seed(2599)
 
@@ -225,7 +227,7 @@ def test_vector3_basic_test_from_scalars_with_zero() -> None:
     assert np.allclose(v20.vals, [1., 0., 3.])
 
 
-def test_vector3_basic_test_from_scalars_with_none_docstring_says_none_is_converted() -> None:
+def test_vector3_basic_from_scalars_converts_none_to_zero() -> None:
     """Test from_scalars with None (docstring says None is converted to zero Scalar)."""
 
     np.random.seed(2599)
@@ -239,13 +241,13 @@ def test_vector3_basic_test_from_scalars_with_none_and_n_d_scalars() -> None:
 
     np.random.seed(2599)
 
-    x_nd = Scalar([[1., 2.], [3., 4.]], drank=1)
-    y_nd = Scalar([[5., 6.], [7., 8.]], drank=1)
-    v20_none_nd = Vector3.from_scalars(x_nd, None, y_nd)
-    assert v20_none_nd.shape == (2,)
-    assert v20_none_nd.denom == (2,)  # Should match the denominator of x_nd and y_nd
+    x_array = Scalar([[1., 2.], [3., 4.]], drank=1)
+    y_array = Scalar([[5., 6.], [7., 8.]], drank=1)
+    v20_none_array = Vector3.from_scalars(x_array, None, y_array)
+    assert v20_none_array.shape == (2,)
+    assert v20_none_array.denom == (2,)  # Should match the denominator of x_array and y_array
 
-    assert np.allclose(v20_none_nd.vals[0, :, 0], [1., 0., 5.])
+    assert np.allclose(v20_none_array.vals[0, :, 0], [1., 0., 5.])
 
 
 def test_vector3_basic_test_from_scalars_with_all_none() -> None:
@@ -281,8 +283,9 @@ def test_vector3_basic_test_from_scalars_with_z_none() -> None:
     assert np.allclose(v_z_none.vals, [1., 2., 0.])
 
 
-def test_vector3_basic_test_from_scalars_with_exactly_1_non_none_arg_skips_if_block() -> None:
-    """Test from_scalars with exactly 1 non-None arg (skips if block at line 108, goes directly to 110) # This tests the case where len(scalars) = 1, so the if len(scalars) > 1: block is skipped."""
+def test_vector3_basic_from_scalars_with_one_non_none_arg() -> None:
+    """Vector3.from_scalars() with a single non-None argument fills the others with zero.
+    """
 
     np.random.seed(2599)
 
@@ -292,8 +295,8 @@ def test_vector3_basic_test_from_scalars_with_exactly_1_non_none_arg_skips_if_bl
     assert np.allclose(v_one_arg.vals, [0., 2., 0.])
 
 
-def test_vector3_basic_test_from_scalars_with_multiple_scalars_requiring_broadcasti() -> None:
-    """Test from_scalars with multiple scalars requiring broadcasting # Create scalars with different shapes that need broadcasting."""
+def test_vector3_basic_from_scalars_broadcasts_multiple_scalars() -> None:
+    """Vector3.from_scalars() broadcasts Scalars of different shapes."""
 
     np.random.seed(2599)
 
@@ -311,8 +314,8 @@ def test_vector3_basic_test_from_scalars_with_multiple_scalars_requiring_broadca
     assert np.allclose(v_broad.vals[1, 1], [2., 4., 5.])
 
 
-def test_vector3_basic_test_from_scalars_with_broadcasting_and_none_x_is_none_y_and() -> None:
-    """Test from_scalars with broadcasting and None # x is None, y and z need broadcasting - this ensures len(scalars) = 2, triggering line 108."""
+def test_vector3_basic_from_scalars_with_broadcasting_and_none() -> None:
+    """Vector3.from_scalars() with x None broadcasts y and z and sets x to zero."""
 
     np.random.seed(2599)
 
@@ -328,8 +331,10 @@ def test_vector3_basic_test_from_scalars_with_broadcasting_and_none_x_is_none_y_
     assert np.allclose(v_broad_none.vals[0, 1], [0., 4., 5.])
 
 
-def test_vector3_basic_test_from_scalars_with_exactly_2_non_none_args_that_need_bro() -> None:
-    """Test from_scalars with exactly 2 non-None args that need broadcasting # This explicitly tests the case where len(scalars) = 2, ensuring the if block is entered # Case 1: x=None, y and z have different shapes requiring broadcast."""
+def test_vector3_basic_from_scalars_with_two_non_none_args_broadcasting() -> None:
+    """Vector3.from_scalars() with x None broadcasts y and z of shapes (2,) and (2, 1) to (2,
+    2).
+    """
 
     np.random.seed(2599)
 
@@ -345,7 +350,7 @@ def test_vector3_basic_test_from_scalars_with_exactly_2_non_none_args_that_need_
     assert np.allclose(v_broad2.vals[1, 1], [0., 2., 4.])
 
 
-def test_vector3_basic_case_2_y_none_x_and_z_have_different_shapes_requiring_broadc() -> None:
+def test_vector3_basic_from_scalars_y_none_x_and_z_broadcasting() -> None:
     """Case 2: y=None, x and z have different shapes requiring broadcast."""
 
     np.random.seed(2599)
@@ -362,8 +367,8 @@ def test_vector3_basic_case_2_y_none_x_and_z_have_different_shapes_requiring_bro
     assert np.allclose(v_broad3.vals[1, 1], [2., 0., 4.])
 
 
-def test_vector3_basic_case_3_all_three_non_none_but_with_different_shapes_requirin() -> None:
-    """Case 3: All three non-None, but with different shapes requiring broadcast # This ensures len(scalars) = 3, which is > 1, so should enter the if block."""
+def test_vector3_basic_from_scalars_three_args_broadcasting() -> None:
+    """Vector3.from_scalars() broadcasts three non-None Scalars of different shapes."""
 
     np.random.seed(2599)
 
@@ -444,8 +449,8 @@ def test_vector3_basic_test_class_constants() -> None:
     assert Vector3.AXES[2] == Vector3.ZAXIS
 
 
-def test_vector3_basic_test_that_vector3_only_accepts_floats_not_ints_integers_shou() -> None:
-    """Test that Vector3 only accepts floats (not ints) # Integers should be coerced to float."""
+def test_vector3_basic_coerces_ints_to_floats() -> None:
+    """Vector3 coerces integer input to float."""
 
     np.random.seed(2599)
 

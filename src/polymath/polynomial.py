@@ -277,7 +277,7 @@ class Polynomial(Vector):
             Polynomial: This polynomial modified in-place.
         """
 
-        self.require_writeable()
+        self.require_writable()
         arg = Polynomial.as_polynomial(arg)
         # Ensure both have compatible orders
         max_order = max(self.order, arg.order)
@@ -351,7 +351,7 @@ class Polynomial(Vector):
             Polynomial: This polynomial modified in-place.
         """
 
-        self.require_writeable()
+        self.require_writable()
         arg = Polynomial.as_polynomial(arg)
         # Ensure both have compatible orders
         max_order = max(self.order, arg.order)

@@ -36,7 +36,7 @@ def set_unit(self, unit, *, override=False):
         raise TypeError(f'units are disallowed in class {type(self).__name__}')
 
     if not override:
-        self.require_writeable()
+        self.require_writable()
 
     unit = Unit.as_unit(unit)
 

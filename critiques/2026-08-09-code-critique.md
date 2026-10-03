@@ -348,7 +348,7 @@ These were not reproduced end-to-end but look wrong on reading.
 
 - **`Vector.element_div()` derivative unit** (`vector.py:786`). `arg_inv_sq` holds
   `divisor**(-2)` but is constructed with `Unit.unit_power(arg._unit, -1)`. Observed
-  behavior matches: dividing km by s yields a `d/dt` derivative labelled `km/s` where the
+  behavior matches: dividing km by s yields a `d/dt` derivative labeled `km/s` where the
   quotient rule gives `km/s**2`. Values are right; the unit is off by one power.
 
 - **`unshrink()` loses the shape when the shrunken object is fully masked**

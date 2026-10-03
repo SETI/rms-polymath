@@ -69,7 +69,7 @@ class Boolean(Scalar):
         """The sum of the unmasked values along the specified axis or axes.
 
         This is an override of :meth:`Qube.sum`, adding the `value` option to count False
-        values instead of True values.
+        values instead of True values. A count over no elements is zero and unmasked.
 
         Parameters:
             axis (int | tuple[int, ...] | None, optional): An integer axis or a tuple of

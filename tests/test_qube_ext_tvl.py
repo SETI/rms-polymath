@@ -91,11 +91,11 @@ def test_qube_ext_tvl_test_truth_table_true_and_masked_masked() -> None:
     assert not result.values[2]
     # Note: The mask behavior here may differ from docstring expectation
 
-    a_nd = Boolean(np.random.rand(2, 3, 4) > 0.5)
-    b_nd = Boolean(np.random.rand(2, 3, 4) > 0.5)
-    result = a_nd.tvl_and(b_nd)
+    a_array = Boolean(np.random.rand(2, 3, 4) > 0.5)
+    b_array = Boolean(np.random.rand(2, 3, 4) > 0.5)
+    result = a_array.tvl_and(b_array)
     assert result.shape == (2, 3, 4)
-    expected = a_nd.values & b_nd.values
+    expected = a_array.values & b_array.values
     assert np.all(result.values == expected)
 
     Qube.prefer_builtins(True)
@@ -201,11 +201,11 @@ def test_qube_ext_tvl_test_with_n_d_arrays() -> None:
     # tvl_and(self, arg, builtins=None, masked=None)
     ##################################################################################
 
-    a_nd = Boolean(np.random.rand(2, 3, 4) > 0.5)
-    b_nd = Boolean(np.random.rand(2, 3, 4) > 0.5)
-    result = a_nd.tvl_or(b_nd)
+    a_array = Boolean(np.random.rand(2, 3, 4) > 0.5)
+    b_array = Boolean(np.random.rand(2, 3, 4) > 0.5)
+    result = a_array.tvl_or(b_array)
     assert result.shape == (2, 3, 4)
-    expected = a_nd.values | b_nd.values
+    expected = a_array.values | b_array.values
     assert np.all(result.values == expected)
 
 
@@ -228,7 +228,7 @@ def test_qube_ext_tvl_test_builtins_parameter() -> None:
     Qube.prefer_builtins(False)
 
 
-def test_qube_ext_tvl_test_builtins_true_with_masked_result_and_masked_parameter_f() -> None:
+def test_qube_ext_tvl_or_builtins_true_with_masked_result_and_masked_parameter() -> None:
     """Test builtins=True with masked result and masked parameter for tvl_or."""
 
     np.random.seed(7456)
@@ -378,7 +378,7 @@ def test_qube_ext_tvl_test_builtins_parameter_2() -> None:
     Qube.prefer_builtins(False)
 
 
-def test_qube_ext_tvl_test_builtins_true_with_masked_result_and_masked_parameter_f_2() -> None:
+def test_qube_ext_tvl_any_builtins_true_with_masked_result_and_masked_parameter() -> None:
     """Test builtins=True with masked result and masked parameter for tvl_any."""
 
     np.random.seed(7456)
@@ -1095,8 +1095,10 @@ def test_qube_ext_tvl_test_builtins_parameter_9() -> None:
     ##################################################################################
 
 
-def test_qube_ext_tvl_test_tvl_op_with_bool_comparison_and_builtins_true_this_test() -> None:
-    """Test _tvl_op with bool comparison and builtins=True # This tests the branch where comparison is a bool and builtins is None then True."""
+def test_qube_ext_tvl_op_with_bool_comparison_and_builtins_true() -> None:
+    """tvl comparisons of a Scalar with a number return a bool when prefer_builtins(True) is
+    in effect.
+    """
 
     np.random.seed(7456)
 
@@ -1154,7 +1156,7 @@ def test_qube_ext_tvl_test_tvl_op_with_maskedarray_as_arg() -> None:
     assert not result.mask[2]
 
 
-def test_qube_ext_tvl_test_tvl_op_with_non_qube_non_maskedarray_arg_should_use_arg() -> None:
+def test_qube_ext_tvl_op_with_plain_number_arg() -> None:
     """Test _tvl_op with non-Qube, non-MaskedArray arg (should use arg_mask=False)."""
 
     np.random.seed(7456)
@@ -1178,8 +1180,10 @@ def test_qube_ext_tvl_test_tvl_op_with_non_qube_non_maskedarray_arg_should_use_a
     assert result == Boolean(True)
 
 
-def test_qube_ext_tvl_test_with_masked_self_and_non_qube_arg_with_prefer_builtins_() -> None:
-    """Test with masked self and non-Qube arg # With prefer_builtins(False), result should always be a Boolean."""
+def test_qube_ext_tvl_with_masked_self_and_non_qube_arg() -> None:
+    """tvl operations on a masked object with a non-Qube argument return a Boolean when
+    prefer_builtins(False) is in effect.
+    """
 
     np.random.seed(7456)
 

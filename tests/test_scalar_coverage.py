@@ -669,7 +669,8 @@ def test_scalar_coverage_test_invalid_dtype() -> None:
     a = Scalar([])
     b = a.max()
 
-    assert b.shape == (0,)
+    assert b.shape == ()
+    assert b.mask
 
     a = Scalar([1., 2., 3.], mask=[False, True, False])
     b = a.max()
@@ -677,7 +678,8 @@ def test_scalar_coverage_test_invalid_dtype() -> None:
 
     a = Scalar([])
     b = a.min()
-    assert b.shape == (0,)
+    assert b.shape == ()
+    assert b.mask
 
     a = Scalar([1., 2., 3.], mask=[True, False, False])
     b = a.min()
@@ -694,7 +696,8 @@ def test_scalar_coverage_test_invalid_dtype() -> None:
 
     a = Scalar([])
     b = a.argmax()
-    assert b.shape == (0,)
+    assert b.shape == ()
+    assert b.mask
 
     a = Scalar([1., 2., 3.], mask=[True, False, False])
     b = a.argmax()
@@ -711,7 +714,8 @@ def test_scalar_coverage_test_invalid_dtype() -> None:
 
     a = Scalar([])
     b = a.argmin()
-    assert b.shape == (0,)
+    assert b.shape == ()
+    assert b.mask
 
     a = Scalar([1., 2., 3.], mask=[True, False, False])
     b = a.argmin()
@@ -788,7 +792,8 @@ def test_scalar_coverage_test_invalid_dtype() -> None:
 
     a = Scalar([])
     b = a.median()
-    assert b.shape == (0,)
+    assert b.shape == ()
+    assert b.mask
 
     a = Scalar([1., 2., 3., 4., 5.], mask=[True, False, False, False, True])
     b = a.median()
@@ -804,7 +809,7 @@ def test_scalar_coverage_test_invalid_dtype() -> None:
         _ = a.sort()
 
     a = Scalar([])
-    with pytest.raises(IndexError):
-        _ = a.sort()
+    b = a.sort()
+    assert b.shape == (0,)
 
 

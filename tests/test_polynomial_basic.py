@@ -9,8 +9,11 @@ import pytest
 from polymath import Vector, Polynomial
 
 
-def test_polynomial_basic_test_basic_construction_polynomial_is_a_vector_subclass_so_i() -> None:
-    """Test basic construction # Polynomial is a Vector subclass, so it should accept Vector-like inputs # Coefficients are in decreasing order: [a, b, c] = a*x^2 + b*x + c."""
+def test_polynomial_basic_construction() -> None:
+    """Polynomial construction from Vector-like input.
+
+    Coefficients are in decreasing order, so [a, b, c] is a*x**2 + b*x + c.
+    """
 
     np.random.seed(2599)
 
@@ -179,7 +182,7 @@ def test_polynomial_basic_test_as_vector_with_recursive_true() -> None:
     assert type(v_with_deriv.d_dt) == Vector
 
 
-def test_polynomial_basic_test_eval_with_zero_order_polynomial_and_zero_order_derivati() -> None:
+def test_polynomial_basic_eval_order_0_polynomial_with_order_0_derivative() -> None:
     """Test eval with zero-order polynomial and zero-order derivative."""
 
     np.random.seed(2599)
@@ -192,8 +195,11 @@ def test_polynomial_basic_test_eval_with_zero_order_polynomial_and_zero_order_de
     assert result.d_dt.values == 3.
 
 
-def test_polynomial_basic_test_eval_with_zero_order_polynomial_and_non_zero_order_deri() -> None:
-    """Test eval with zero-order polynomial and non-zero-order derivative # Manually set derivative to bypass numerator shape check."""
+def test_polynomial_basic_eval_order_0_polynomial_with_nonzero_order_derivative() -> None:
+    """Polynomial.eval() of an order-0 Polynomial with a derivative of nonzero order.
+
+    The derivative is assigned directly to bypass the numerator shape check.
+    """
 
     np.random.seed(2599)
 
@@ -205,7 +211,7 @@ def test_polynomial_basic_test_eval_with_zero_order_polynomial_and_non_zero_orde
     assert result3.d_dt.values == 1.
 
 
-def test_polynomial_basic_test_eval_with_zero_order_polynomial_zero_order_derivative_w() -> None:
+def test_polynomial_basic_eval_order_0_polynomial_with_order_0_nested_derivative() -> None:
     """Test eval with zero-order polynomial, zero-order derivative with zero-order nested derivative."""
 
     np.random.seed(2599)
@@ -219,7 +225,7 @@ def test_polynomial_basic_test_eval_with_zero_order_polynomial_zero_order_deriva
     assert result2.d_dt.values == 4.
 
 
-def test_polynomial_basic_test_eval_with_zero_order_polynomial_non_zero_order_derivati() -> None:
+def test_polynomial_basic_eval_order_0_polynomial_with_nested_derivatives() -> None:
     """Test eval with zero-order polynomial, non-zero-order derivative with nested derivatives."""
 
     np.random.seed(2599)
@@ -235,7 +241,7 @@ def test_polynomial_basic_test_eval_with_zero_order_polynomial_non_zero_order_de
     assert result4.d_dt.values == 5.
 
 
-def test_polynomial_basic_test_eval_with_zero_order_polynomial_non_zero_order_derivati_2() -> None:
+def test_polynomial_basic_eval_order_0_polynomial_with_drank_1_nested_derivative() -> None:
     """Test eval with zero-order polynomial, non-zero-order derivative with nested derivative that has drank > 0."""
 
     np.random.seed(2599)

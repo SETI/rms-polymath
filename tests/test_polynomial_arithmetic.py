@@ -229,8 +229,8 @@ def test_polynomial_arithmetic_test_itruediv_with_vector_item_1() -> None:
     assert p_itdiv_vec.values[1] == 4. or abs(p_itdiv_vec.values[1] - 4.) <= 1e-10
 
 
-def test_polynomial_arithmetic_test_itruediv_with_vector_item_1_this_tests_the_branch_isins() -> None:
-    """Test __itruediv__ with Vector item == (1,) # This tests the branch: isinstance(arg, Vector) and arg.item == (1,) # Verify that Vector([4.]) has item == (1,)."""
+def test_polynomial_arithmetic_itruediv_with_vector_item_1() -> None:
+    """Polynomial in-place division by a Vector whose item is (1,)."""
 
     np.random.seed(2599)
 
@@ -243,8 +243,8 @@ def test_polynomial_arithmetic_test_itruediv_with_vector_item_1_this_tests_the_b
     assert p_itdiv_vec2.values[1] == 4. or abs(p_itdiv_vec2.values[1] - 4.) <= 1e-10
 
 
-def test_polynomial_arithmetic_test_iadd_when_arg_order_max_order_this_tests_the_branch_if_() -> None:
-    """Test __iadd__ when arg.order < max_order # This tests the branch: if arg.order < max_order: arg = arg.at_least_order(max_order) # Need case where self.order > arg.order, so max_order = self.order and arg.order < max_order."""
+def test_polynomial_arithmetic_iadd_when_arg_order_below_max_order() -> None:
+    """Polynomial in-place addition of a lower-order Polynomial raises its order first."""
 
     np.random.seed(2599)
 
@@ -258,8 +258,8 @@ def test_polynomial_arithmetic_test_iadd_when_arg_order_max_order_this_tests_the
     assert p_iadd_self_larger.values[3] == 10. or abs(p_iadd_self_larger.values[3] - 10.) <= 1e-10  # 4 + 6 = 10
 
 
-def test_polynomial_arithmetic_test_mul_with_derivative_else_branch_create_two_polynomials_() -> None:
-    """Test __mul__ with derivative else branch # Create two polynomials with different derivative keys."""
+def test_polynomial_arithmetic_mul_with_derivative_else_branch() -> None:
+    """Polynomial multiplication of two operands with different derivative keys."""
 
     np.random.seed(2599)
 

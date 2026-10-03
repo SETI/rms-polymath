@@ -9,8 +9,10 @@ import pytest
 from polymath import Matrix3, Matrix, Vector, Vector3, Scalar, Quaternion, Unit
 
 
-def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() -> None:
-    """Test basic construction # Arrays of wrong shape raise ValueError."""
+def test_matrix3_basic_construction() -> None:
+    """Matrix3 rejects input of the wrong shape with ValueError, and Matrix3.zeros() builds a
+    zero-filled object.
+    """
 
     np.random.seed(2599)
     DEL = 1.e-12
@@ -604,8 +606,13 @@ def test_matrix3_test_basic_construction_arrays_of_wrong_shape_raise_valueerr() 
         Matrix3.twovec(v1, 0, v2, 1, recursive=True)
 
 
-def test_matrix3_test_twovec_with_derivatives_in_unit1_unit2_and_unit3_we_nee() -> None:
-    """Test twovec with derivatives in unit1, unit2, and unit3 # We need to test when key is in unit1._derivs, unit2._derivs, and unit3._derivs # unit1 is created from vector1 using .unit(), which preserves derivatives # unit2 and unit3 are created from cross products (ucross), which also preserve derivatives."""
+def test_matrix3_twovec_with_derivatives_in_unit1_unit2_and_unit3() -> None:
+    """Matrix3.twovec() with recursive=True carries derivatives that are present in both
+    input vectors.
+
+    The first unit vector comes from unit(), and the other two from ucross(); both
+    preserve derivatives.
+    """
 
     np.random.seed(2599)
 
@@ -620,8 +627,10 @@ def test_matrix3_test_twovec_with_derivatives_in_unit1_unit2_and_unit3_we_nee() 
     assert type(m) == Matrix3
 
 
-def test_matrix3_test_with_different_derivative_keys_to_test_branches_test_ca() -> None:
-    """Test with different derivative keys to test branches # Test case where key is only in vector2, not in unit1 # This tests the branch where key is NOT in unit1._derivs but IS in unit2._derivs and unit3._derivs."""
+def test_matrix3_twovec_with_different_derivative_keys() -> None:
+    """Matrix3.twovec() with recursive=True carries a derivative that only the second vector
+    has.
+    """
 
     np.random.seed(2599)
 
@@ -635,8 +644,10 @@ def test_matrix3_test_with_different_derivative_keys_to_test_branches_test_ca() 
     assert type(m) == Matrix3
 
 
-def test_matrix3_test_case_where_key_is_in_unit1_but_we_want_to_test_all_bran() -> None:
-    """Test case where key is in unit1 but we want to test all branches # If v1 has 't1' and v2 has 't2', then all units will have both keys # But we can test the True branches for all three."""
+def test_matrix3_twovec_with_a_different_derivative_on_each_vector() -> None:
+    """Matrix3.twovec() with recursive=True carries derivatives with different keys from each
+    vector.
+    """
 
     np.random.seed(2599)
 
@@ -652,8 +663,8 @@ def test_matrix3_test_case_where_key_is_in_unit1_but_we_want_to_test_all_bran() 
     assert type(m) == Matrix3
 
 
-def test_matrix3_test_with_different_axis_combination_to_ensure_all_paths_are() -> None:
-    """Test with different axis combination to ensure all paths are covered # For axis1=1, axis2=2, we have axis3=0 # This uses the if branch: unit3 = unit1.ucross(vector2), unit2 = unit3.ucross(unit1)."""
+def test_matrix3_twovec_with_axes_1_and_2_covers_all_paths() -> None:
+    """Matrix3.twovec() with axis1=1 and axis2=2, so that the third axis is 0."""
 
     np.random.seed(2599)
 
@@ -668,8 +679,8 @@ def test_matrix3_test_with_different_axis_combination_to_ensure_all_paths_are() 
     assert type(m) == Matrix3
 
 
-def test_matrix3_test_else_branch_this_happens_when_3_axis2_axis1_3_1_for_axi() -> None:
-    """Test else branch # This happens when (3 + axis2 - axis1) % 3 != 1 # For axis1=0, axis2=2: (3 + 2 - 0) % 3 = 2, so uses else branch."""
+def test_matrix3_twovec_else_branch() -> None:
+    """Matrix3.twovec() with axis1=0 and axis2=2, so that (3 + axis2 - axis1) % 3 is 2."""
 
     np.random.seed(2599)
 
@@ -690,8 +701,8 @@ def test_matrix3_test_else_branch_this_happens_when_3_axis2_axis1_3_1_for_axi() 
     assert type(m) == Matrix3
 
 
-def test_matrix3_test_twovec_with_readonly_inputs_the_code_checks_if_unit1_re() -> None:
-    """Test twovec with readonly inputs # The code checks if unit1.readonly and vector2.readonly, then sets result as readonly # However, unit() doesn't preserve readonly, so unit1.readonly will be False # This means the condition at line 143 will be False, so line 144 won't execute # To test line 144, we would need unit1.readonly to be True, but unit() doesn't preserve it # So this path might be hard to test. Let's test that the function works with readonly inputs."""
+def test_matrix3_twovec_with_readonly_inputs() -> None:
+    """Matrix3.twovec() accepts read-only input vectors and returns a Matrix3."""
 
     np.random.seed(2599)
 

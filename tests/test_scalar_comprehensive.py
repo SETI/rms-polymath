@@ -61,8 +61,12 @@ def test_scalar_comprehensive_test_int_method() -> None:
     assert s8.is_int()
 
 
-def test_scalar_comprehensive_test_with_top_parameter_inclusive_true_by_default_so_the_top() -> None:
-    """Test with top parameter; inclusive=True by default, so the top value itself is # in range (and gets shifted down by one), whereas anything above it is masked."""
+def test_scalar_comprehensive_top_parameter_is_inclusive_by_default() -> None:
+    """Scalar.int() with a top limit is inclusive by default.
+
+    The top value itself stays in range and is shifted down by one, while anything above
+    it is masked; with inclusive=False the top value is masked too.
+    """
 
     np.random.seed(5678)
 
@@ -334,8 +338,8 @@ def test_scalar_comprehensive_test_le_method() -> None:
     assert result
 
 
-def test_scalar_comprehensive_n_d_test_cases_test_sin_with_n_d_array() -> None:
-    """n-D test cases # Test sin with n-D array."""
+def test_scalar_comprehensive_sin_of_n_d_array() -> None:
+    """sin() of an N-dimensional Scalar."""
 
     np.random.seed(5678)
 
