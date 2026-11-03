@@ -29,9 +29,11 @@
 
 # Introduction
 
-`PolyMath` expands on the NumPy module and introduces a variety of additional data types
-and features to simplify 3-D geometry calculations. It is a product of the the [PDS
-Ring-Moon Systems Node](https://pds-rings.seti.org).
+`PolyMath` expands on the NumPy module to simplify 3-D geometry calculations. It
+introduces a variety of additional data types (Scalar, Vector, Matrix, Quaternion, etc.)
+and supports array-based calculations, broadcasting, masks, units, and analytic
+derivatives. It is a product of the [PDS Ring-Moon Systems
+Node](https://pds-rings.seti.org).
 
 # Installation
 
@@ -55,30 +57,6 @@ or
 from polymath import (Boolean, Matrix, Matrix3, Pair, Quaternion, Qube, Scalar, Unit,
                       Vector, Vector3)
 ```
-
-# Type Annotations
-
-PolyMath ships type stubs and a `py.typed` marker, so a type checker such as mypy
-understands the signatures of every class. The
-`polymath.typedefs`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#module-polymath.typedefs)
-module supplements the stubs with aliases naming what each constructor accepts, for use in
-your own annotations:
-
-```python
-from polymath import Scalar, Vector3
-from polymath.typedefs import Vector3Like
-
-def speed(velocity: Vector3Like) -> Scalar:
-    return Vector3.as_vector3(velocity).norm()
-```
-
-`ScalarLike` accepts anything that `Scalar` converts: a number, a nested sequence, a NumPy
-array, or any PolyMath object. `BooleanLike`, `PairLike`, `VectorLike`, `Vector3Like`,
-`MatrixLike`, `Matrix3Like`, `QuaternionLike`, and `QubeLike` do the same for the other
-classes, and `ValsType` and `MaskType` name what the `values` and `mask` properties return.
-Each alias is an ordinary runtime object, so it can be imported and used anywhere. See the
-[User Guide](https://rms-polymath.readthedocs.io/en/latest/user_guide/user_guide_typing.html)
-for details.
 
 # Features
 
@@ -807,6 +785,30 @@ generated automatically.
   we want the precision to be based on the more "typical" values.
 * "logmean": Absolute accuracy will be `10**(-digits)` times the log-mean of the absolute
   values in the array.
+
+# Type Annotations
+
+PolyMath ships type stubs and a `py.typed` marker, so a type checker such as mypy
+understands the signatures of every class. The
+`polymath.typedefs`[![image](https://raw.githubusercontent.com/SETI/rms-polymath/main/icons/link.png)](https://rms-polymath.readthedocs.io/en/latest/module.html#module-polymath.typedefs)
+module supplements the stubs with aliases naming what each constructor accepts, for use in
+your own annotations:
+
+```python
+from polymath import Scalar, Vector3
+from polymath.typedefs import Vector3Like
+
+def speed(velocity: Vector3Like) -> Scalar:
+    return Vector3.as_vector3(velocity).norm()
+```
+
+`ScalarLike` accepts anything that `Scalar` converts: a number, a nested sequence, a NumPy
+array, or any PolyMath object. `BooleanLike`, `PairLike`, `VectorLike`, `Vector3Like`,
+`MatrixLike`, `Matrix3Like`, `QuaternionLike`, and `QubeLike` do the same for the other
+classes, and `ValsType` and `MaskType` name what the `values` and `mask` properties return.
+Each alias is an ordinary runtime object, so it can be imported and used anywhere. See the
+[User Guide](https://rms-polymath.readthedocs.io/en/latest/user_guide/user_guide_typing.html)
+for details.
 
 # Contributing
 
