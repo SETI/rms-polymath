@@ -32,7 +32,7 @@
 `PolyMath` expands on the NumPy module to simplify 3-D geometry calculations. It
 introduces a variety of additional data types (Scalar, Vector, Matrix, Quaternion, etc.)
 and supports array-based calculations, broadcasting, masks, units, and analytic
-derivatives. It is a product of the the [PDS Ring-Moon Systems
+derivatives. It is a product of the [PDS Ring-Moon Systems
 Node](https://pds-rings.seti.org).
 
 # Installation
