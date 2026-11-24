@@ -299,10 +299,10 @@ def stack(*args, recursive=True):
             if int_arg is None or not qubed:
                 int_arg = arg
                 subclass_indx = i
-        elif arg.is_bool() and int_arg is None and float_arg is None:
-            if bool_arg is None or not qubed:
-                bool_arg = arg
-                subclass_indx = i
+        elif (arg.is_bool() and int_arg is None and float_arg is None
+              and (bool_arg is None or not qubed)):
+            bool_arg = arg
+            subclass_indx = i
 
         if arg._unit is not None:
             if unit is None:
